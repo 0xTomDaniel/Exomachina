@@ -6,7 +6,9 @@ def project(status: dict | None, execution: str, result: dict | None = None) -> 
     if execution in {"FAILED", "TERMINATED", "TIMED_OUT", "CANCELED"}:
         return "failed"
     if status and (status.get("phase") == "child-failed" or
-                   (result and result.get("status") == "failed")):
+                   (result and result.get("status") in {"failed", "incident"})):
+        return "failed"
+    if result and result.get("status") in {"failed", "incident"}:
         return "failed"
     if execution == "COMPLETED" and result and result.get("status") in {
             "accepted", "aborted", "expired"}:

@@ -1,15 +1,29 @@
 import copy
+import json
 import sys
 import unittest
 from pathlib import Path
 
-from author import materialize, template
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
 from definition import authorize_run_inputs, digest, validate, validate_run_inputs
 from failure_projection import (decide_closed_failed_child, failure_incident,
                                 no_effect_failure_path, project)
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "temporal-quality-reconciliation"))
 from a2a_outcome import ReceiverKind, lookup_result, send_ambiguous, send_completed, submitted
+
+
+def materialized_v1(bindings):
+    source = json.loads((ROOT / "definitions" / "v1-template.json").read_text())
+    child = source["child"]
+    child_digest = digest(child)
+    for node in source["root"]["nodes"].values():
+        if node["type"] == "nested_factory" and node["child_digest"] == "@child":
+            node["child_digest"] = child_digest
+    return {"schema": source["schema"], "root": source["root"],
+            "children": {child_digest: child}, "bindings": bindings,
+            "run_inputs": source["run_inputs"]}
 
 
 class ContractTests(unittest.TestCase):
@@ -20,7 +34,7 @@ class ContractTests(unittest.TestCase):
         bindings = {name: {"role": role, "url": f"http://127.0.0.1:{41470 + n}",
                            "identity": name, "approved": True}
                     for n, (name, role) in enumerate(names.items())}
-        package = materialize(template("withheld-a2c-v4-mixed.json"), bindings)
+        package = materialized_v1(bindings)
         original = validate(package, bindings)
         self.assertEqual(original, digest(package))
         changed = copy.deepcopy(package)

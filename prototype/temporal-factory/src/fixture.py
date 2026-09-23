@@ -43,12 +43,17 @@ def sha256_text(value: str) -> str:
 
 
 def branch_brief(instance: str, result_type: str, *,
-                 scope_status: str | None = None) -> dict[str, Any]:
+                 scope_status: str | None = None,
+                 question: str | None = None) -> dict[str, Any]:
     """Create one named instance of either already-declared result type."""
     if not instance or not isinstance(instance, str) or result_type not in BRIEFS:
         raise ValueError("unknown branch instance or result type")
     value = deepcopy(BRIEFS[result_type])
     value["instance"] = instance
+    if question is not None:
+        if not isinstance(question, str):
+            raise ValueError("question must be a string")
+        value["question"] = question
     if scope_status is not None:
         if result_type != "counter_evidence" or scope_status not in {"requires_scope", "clear"}:
             raise ValueError("invalid scope_status for branch result type")
@@ -58,23 +63,24 @@ def branch_brief(instance: str, result_type: str, *,
 
 def assignment(run_id: str, definition_digest: str, instance: str, *,
                result_type: str | None = None, scope_status: str | None = None,
-               drop_ack: bool = False) -> dict[str, Any]:
+               question: str | None = None) -> dict[str, Any]:
     """Make a stable logical assignment for an existing Strands/A2A receiver."""
     kind = result_type or instance
-    brief = branch_brief(instance, kind, scope_status=scope_status)
+    brief = branch_brief(instance, kind, scope_status=scope_status, question=question)
     return {
         "op": "assign", "action_id": f"{run_id}:{instance}",
         "run_id": run_id, "definition_digest": definition_digest,
-        "brief": canonical(brief), "drop_ack": drop_ack,
+        "brief": canonical(brief),
     }
 
 
 def branch_value(receipt: dict[str, Any], instance: str, *, run_id: str,
                  definition_digest: str, result_type: str | None = None,
-                 scope_status: str | None = None) -> dict[str, Any]:
+                 scope_status: str | None = None,
+                 question: str | None = None) -> dict[str, Any]:
     """Validate one A2A result and decode its typed application payload."""
     kind = result_type or instance
-    expected = branch_brief(instance, kind, scope_status=scope_status)
+    expected = branch_brief(instance, kind, scope_status=scope_status, question=question)
     if receipt.get("action_id") != f"{run_id}:{instance}":
         raise ValueError("branch action binding mismatch")
     if receipt.get("run_id") != run_id or receipt.get("definition_digest") != definition_digest:
@@ -100,7 +106,8 @@ def branch_value(receipt: dict[str, Any], instance: str, *, run_id: str,
 
 def typed_join(receipts: dict[str, dict[str, Any]], *, run_id: str,
                definition_digest: str, declarations: dict[str, str] | None = None,
-               scope_status_by_instance: dict[str, str] | None = None) -> dict[str, Any]:
+               scope_status_by_instance: dict[str, str] | None = None,
+               question: str | None = None) -> dict[str, Any]:
     """Join both useful branch types only after their exact results validate."""
     declared = declarations or {"source_evidence": "source_evidence",
                                 "counter_evidence": "counter_evidence"}
@@ -109,7 +116,8 @@ def typed_join(receipts: dict[str, dict[str, Any]], *, run_id: str,
         raise ValueError("join requires declared source and counterevidence results")
     values = {instance: branch_value(receipts[instance], instance,
               run_id=run_id, definition_digest=definition_digest,
-              result_type=result_type, scope_status=scopes.get(instance))
+              result_type=result_type, scope_status=scopes.get(instance),
+              question=question)
               for instance, result_type in declared.items()}
     claims = [{**claim, "branch_instance": instance}
               for instance, value in values.items()

@@ -2,9 +2,13 @@
 from __future__ import annotations
 
 import copy
+import sys
 import tempfile
 import unittest
+from contextlib import nullcontext
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from a2a_outcome import (EffectKind, OutcomeJournal, Phase, ReceiverKind, lookup_result,
                          send_ambiguous, send_completed, submitted)
@@ -121,7 +125,7 @@ class A2AOutcomeTests(unittest.TestCase):
             send_completed(send_ambiguous(self.base), self.receipt)
 
     def test_journal_reopen_and_conflicting_binding(self):
-        with tempfile.TemporaryDirectory(prefix="exo-tq-quality-", dir="/tmp") as directory:
+        with nullcontext(tempfile.mkdtemp(prefix="exo-proto-interpreter-", dir="/tmp")) as directory:
             path = Path(directory) / "outcomes.sqlite3"
             journal = OutcomeJournal(path)
             record, created = journal.begin(self.base)
@@ -187,7 +191,7 @@ class ReleaseOutcomeTests(unittest.TestCase):
                                  Phase.INCIDENT)
 
     def test_release_journal_reopen_and_exact_binding(self):
-        with tempfile.TemporaryDirectory(prefix="exo-tq-quality-", dir="/tmp") as directory:
+        with nullcontext(tempfile.mkdtemp(prefix="exo-proto-interpreter-", dir="/tmp")) as directory:
             path = Path(directory) / "outcomes.sqlite3"
             journal = OutcomeJournal(path)
             record, created = journal.begin(self.base)

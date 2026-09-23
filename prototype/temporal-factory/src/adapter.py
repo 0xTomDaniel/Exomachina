@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import sys
 import time
 import urllib.error
 import urllib.request
@@ -15,13 +14,9 @@ from temporalio import activity
 from a2a_outcome import (EffectKind, OutcomeJournal, Phase, ReceiverKind, lookup_result,
                          send_ambiguous, send_completed, submitted)
 from quality_authority import QualityKind, decide_quality
-
-COMMON = Path(__file__).resolve().parents[2] / "2026-09-22" / "decision-round" / "common"
-sys.path.insert(0, str(COMMON))
-import long_client as a2a  # noqa: E402
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "2026-09-22" / "arbitration" / "common"))
-import fixture  # noqa: E402
-import receiver_client  # noqa: E402
+import long_client as a2a
+import fixture
+import receiver_client
 
 
 def _get_json(url: str) -> dict:
@@ -30,7 +25,7 @@ def _get_json(url: str) -> dict:
 
 
 def _log(kind: str, **fields) -> None:
-    path = os.environ.get("EXO_TEMPORAL_ACTIVITY_LOG")
+    path = os.environ.get("EXO_ACTIVITY_LOG")
     if path:
         with Path(path).open("a") as stream:
             stream.write(json.dumps({"kind": kind, "wall_time": time.time(), **fields},
@@ -77,7 +72,7 @@ def _invoke(url: str, identity: str, role: str, command: dict,
             lookup_supported: bool) -> dict:
     """Record intent before send; reconcile uncertainty without resubmission."""
     _identity(url, role, identity)
-    journal_path = os.environ.get("EXO_TQ_OUTCOME_DB")
+    journal_path = os.environ.get("EXO_OUTCOME_DB")
     if not journal_path:
         raise RuntimeError("durable A2A outcome journal is not configured")
     journal = OutcomeJournal(Path(journal_path))
@@ -157,7 +152,8 @@ def _bounded_lookup(journal: OutcomeJournal, record, url: str, identity: str,
 async def assign(input: dict) -> dict:
     _log("assign-start", run=input["run"], instance=input["instance"])
     command = fixture.assignment(input["run"], input["digest"], input["instance"],
-        result_type=input["result_type"], scope_status=input["scope_status"])
+        result_type=input["result_type"], scope_status=input["scope_status"],
+        question=input.get("question"))
     try:
         result = await asyncio.to_thread(_invoke, input["url"], input["identity"],
             "capability", command, input["lookup_supported"])
@@ -173,6 +169,9 @@ async def assign(input: dict) -> dict:
                 raise ValueError("assignment artifact digest mismatch")
             if artifact.get("author") != input["identity"]:
                 raise ValueError("assignment author identity mismatch")
+            fixture.branch_value(result, input["instance"], run_id=input["run"],
+                definition_digest=input["digest"], result_type=input["result_type"],
+                scope_status=input["scope_status"], question=input.get("question"))
         except Exception as error:
             return {"unresolved": "assignment-evidence-inconsistent",
                     "action_id": command["action_id"], "error_type": type(error).__name__}
@@ -201,11 +200,16 @@ async def review(input: dict) -> dict:
     except Exception as error:
         return {"inconsistent": "quality-evidence-unavailable",
                 "error_type": type(error).__name__}
-    decision = decide_quality(binding=input["binding"],
-        observed_endpoint=input["url"], observed_identity=input["identity"],
-        command=input["command"], assignment_id=input["assignment_id"],
-        attempt=input["attempt"], task=task, lookup=lookup,
-        send_payload=result["artifact"])
+    try:
+        decision = decide_quality(binding=input["binding"],
+            observed_endpoint=input["url"], observed_identity=input["identity"],
+            command=input["command"], assignment_id=input["assignment_id"],
+            attempt=input["attempt"], task=task, lookup=lookup,
+            send_payload=result["artifact"])
+    except Exception as error:
+        return {"inconsistent": "quality-evidence-inconsistent",
+                "error_type": type(error).__name__,
+                "action_id": input["command"]["action_id"]}
     if decision.kind == QualityKind.INCONSISTENT:
         return {"inconsistent": decision.incident, "reasons": list(decision.reasons),
                 "action_id": input["command"]["action_id"]}
@@ -223,7 +227,7 @@ async def typed_join(input: dict) -> dict:
     _log("join-start", run=input["run"], instances=sorted(input["receipts"]))
     return fixture.typed_join(input["receipts"], run_id=input["run"],
         definition_digest=input["digest"], declarations=input["declarations"],
-        scope_status_by_instance=input["scopes"])
+        scope_status_by_instance=input["scopes"], question=input.get("question"))
 
 
 @activity.defn
@@ -238,7 +242,7 @@ def _release(input: dict) -> dict:
     if health.get("identity") != input["identity"] or health.get("mode") != input["mode"]:
         raise ValueError("release receiver identity/mode changed")
     command = input["command"]
-    journal_path = os.environ.get("EXO_TQ_OUTCOME_DB")
+    journal_path = os.environ.get("EXO_OUTCOME_DB")
     if not journal_path:
         raise RuntimeError("durable release outcome journal is not configured")
     kind = ReceiverKind.PARTICIPATING if input["mode"] == "participating" else ReceiverKind.OPAQUE

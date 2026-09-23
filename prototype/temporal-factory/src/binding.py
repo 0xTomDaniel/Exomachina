@@ -12,9 +12,18 @@ import os
 import re
 from pathlib import Path
 
+from definition import validate
 
-DEPLOYMENT = "exo-tq-version-factory"
-QUEUE = "exo-tq-version-factory"
+
+DEPLOYMENT = "exo-factory"
+QUEUE = "exo-factory"
+NAMESPACE = "exomachina"
+INTERPRETER_FILES = (
+    "worker.py", "factory.py", "adapter.py", "binding.py", "buildinfo.py",
+    "definition.py", "fixture.py", "failure_projection.py",
+    "incident_projection.py", "quality_authority.py", "a2a_outcome.py",
+    "long_client.py", "receiver_client.py",
+)
 
 
 def canonical(value: object) -> bytes:
@@ -26,23 +35,22 @@ def digest(value: object) -> str:
 
 
 def source_digest(directory: Path) -> str:
-    directory = directory.resolve()
     files = {name: hashlib.sha256((directory / name).read_bytes()).hexdigest()
-             for name in ("worker.py", "factory.py", "adapter.py", "binding.py",
-                          "definition.py", "long_client.py")}
-    common = directory.parents[2] / "2026-09-22" / "arbitration" / "common"
-    for name in ("fixture.py", "receiver_client.py"):
-        files[f"arbitration/common/{name}"] = hashlib.sha256((common / name).read_bytes()).hexdigest()
+             for name in INTERPRETER_FILES}
     return digest(files)
+
+
+def build_id_for(code_digest: str) -> str:
+    if not re.fullmatch(r"[0-9a-f]{64}", code_digest):
+        raise ValueError("invalid worker source digest")
+    return "b-" + code_digest[:12]
 
 
 def make_manifest(package: dict, contracts: dict, quality_policy: dict,
                   *, build_id: str, code_digest: str, python: str,
                   temporalio: str) -> dict:
-    from definition import validate
-
     validate(package)
-    if not re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", build_id):
+    if build_id != build_id_for(code_digest):
         raise ValueError("invalid immutable worker build ID")
     if set(contracts) != set(package["bindings"]):
         raise ValueError("one contract per bound service required")
@@ -68,8 +76,6 @@ def make_manifest(package: dict, contracts: dict, quality_policy: dict,
 def verify_closure(closure: dict, package: dict, *, build_id: str,
                    definition_digest: str, document: dict | None = None) -> str:
     """Return manifest digest or fail closed on any changed dependency."""
-    from definition import validate
-
     if set(closure) != {"manifest", "manifest_digest", "contracts", "quality_policy"}:
         raise ValueError("incomplete run closure")
     manifest = closure["manifest"]
@@ -84,7 +90,10 @@ def verify_closure(closure: dict, package: dict, *, build_id: str,
                              else package["children"].get(definition_digest))
         if digest(document) != definition_digest or document != expected_document:
             raise ValueError("document differs from pinned definition")
-    if manifest["interpreter"]["deployment"] != DEPLOYMENT or manifest["interpreter"]["build_id"] != build_id:
+    interpreter = manifest["interpreter"]
+    if (interpreter["deployment"] != DEPLOYMENT
+            or interpreter["build_id"] != build_id
+            or build_id_for(interpreter["source_digest"]) != build_id):
         raise ValueError("wrong interpreter build")
     if set(closure["contracts"]) != set(manifest["services"]):
         raise ValueError("service contract set changed")
@@ -117,7 +126,9 @@ class PublicationStore:
         self.catalog = catalog
         catalog.mkdir(parents=True, exist_ok=True)
 
-    def publish(self, package: dict, closure: dict) -> str:
+    def publish(self, package: dict, closure: dict, *, label: str) -> str:
+        if not isinstance(label, str) or not label.strip():
+            raise ValueError("publication label required")
         manifest = closure["manifest"]
         key = verify_closure(closure, package,
                              build_id=manifest["interpreter"]["build_id"],
@@ -125,6 +136,7 @@ class PublicationStore:
         path = self.catalog / f"publication-{key}.json"
         record = {"manifest_digest": key, "package_digest": manifest["package_digest"],
                   "build_id": manifest["interpreter"]["build_id"],
+                  "label": label,
                   "closure": closure}
         with (self.catalog / "publication.lock").open("a+") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX)
@@ -165,10 +177,20 @@ class PublicationStore:
 
     def active(self) -> dict:
         pointer = json.loads((self.catalog / "active-publication.json").read_text())
-        record = json.loads((self.catalog / f"publication-{pointer['manifest_digest']}.json").read_text())
+        record = self.get(pointer["manifest_digest"])
         if {key: record[key] for key in pointer} != pointer:
             raise ValueError("activation pointer conflict")
         return record
+
+    def get(self, manifest_digest: str) -> dict:
+        record = json.loads((self.catalog / f"publication-{manifest_digest}.json").read_text())
+        if record["manifest_digest"] != manifest_digest:
+            raise ValueError("publication key mismatch")
+        return record
+
+    def list(self) -> list[dict]:
+        return [self.get(path.name.removeprefix("publication-").removesuffix(".json"))
+                for path in sorted(self.catalog.glob("publication-*.json"))]
 
 
 def may_retire(build_id: str, active_build: str, open_pinned_builds: list[str],

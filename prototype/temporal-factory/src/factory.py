@@ -5,11 +5,16 @@ import asyncio
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.common import RetryPolicy
+from temporalio.common import RetryPolicy, VersioningBehavior
 from temporalio.exceptions import ChildWorkflowError
 
 with workflow.unsafe.imports_passed_through():
     from adapter import assign, release, review, synthesize, typed_join
+    from binding import QUEUE, verify_closure
+    from buildinfo import BUILD_ID
+    from definition import digest, validate_run_inputs
+    from incident_projection import incident_result
+    from quality_authority import quality_action_id
 
 
 ACTIVITY_TIMEOUT = timedelta(seconds=90)
@@ -21,13 +26,14 @@ def _activity(fn, input: dict):
                                      retry_policy=RETRY)
 
 
-@workflow.defn
+@workflow.defn(versioning_behavior=VersioningBehavior.PINNED)
 class FactoryRun:
     def __init__(self) -> None:
         self.phase = "starting"
         self.run_id = ""
         self.definition_digest = ""
         self.package_digest = ""
+        self.manifest_digest = ""
         self.node = ""
         self.completed: list[str] = []
         self.child_id: str | None = None
@@ -53,6 +59,7 @@ class FactoryRun:
             "phase": self.phase, "run": self.run_id,
             "definition_digest": self.definition_digest,
             "package_digest": self.package_digest, "node": self.node,
+            "manifest_digest": self.manifest_digest, "interpreter_build": BUILD_ID,
             "completed": self.completed, "child_id": self.child_id,
             "current_revision": self.current and self.current["revision"],
             "current_sha256": self.current and self.current["sha256"],
@@ -109,10 +116,10 @@ class FactoryRun:
                 or command["sha256"] != self.current["sha256"]):
             raise ValueError("stale or wrong-run Director command")
 
-    async def _hold_unresolved(self, reason: str, receipt: dict) -> None:
+    async def _hold_unresolved(self, reason: str, receipt: dict) -> dict:
         self.phase = reason
         self.unresolved = receipt
-        await workflow.wait_condition(lambda: False)
+        return incident_result(self.run_id, self.definition_digest, reason, receipt)
 
     async def run_node(self, document: dict, package: dict, input: dict) -> dict:
         nodes = document["nodes"]
@@ -121,6 +128,8 @@ class FactoryRun:
         joined: dict | None = None
         at = document["start"]
         while True:
+            verify_closure(input["closure"], package, build_id=BUILD_ID,
+                           definition_digest=self.definition_digest, document=document)
             self.node = at
             node = nodes[at]
             kind = node["type"]
@@ -128,23 +137,22 @@ class FactoryRun:
             if kind == "parallel":
                 jobs = []
                 for instance, branch in node["branches"].items():
+                    verify_closure(input["closure"], package, build_id=BUILD_ID,
+                                   definition_digest=self.definition_digest, document=document)
                     service = bindings[branch["service"]]
-                    barrier = input.get("faults", {}).get("assignment_barrier")
                     jobs.append(_activity(assign, {
                         "run": self.run_id, "digest": self.definition_digest,
                         "instance": instance, "result_type": branch["result_type"],
                         "scope_status": branch["scope_status"],
-                        "drop_ack": input.get("faults", {}).get("drop_assignment_ack") == instance,
                         "url": service["url"], "identity": service["identity"],
-                        "lookup_supported": not input.get("faults", {}).get("opaque_assignment", False),
-                        "barrier": barrier if barrier and barrier["instance"] == instance else None,
-                        "delay_after_remote": input.get("faults", {}).get("delay_assignment", {}).get(instance, 0),
+                        "lookup_supported": True,
+                        "question": self.run_inputs.get("question"),
                     }))
                 receipts = await asyncio.gather(*jobs)
                 branches = dict(zip(node["branches"], receipts, strict=True))
                 unknown = next((value for value in receipts if "unresolved" in value), None)
                 if unknown:
-                    await self._hold_unresolved("unresolved-assignment", unknown)
+                    return await self._hold_unresolved("unresolved-assignment", unknown)
                 self.completed.append(at)
                 at = node["next"]
             elif kind == "join":
@@ -158,12 +166,13 @@ class FactoryRun:
                     "receipts": selected, "run": self.run_id,
                     "digest": self.definition_digest,
                     "declarations": declarations, "scopes": scopes,
+                    "question": self.run_inputs.get("question"),
                 })
                 self.completed.append(at)
                 at = node["next"]
             elif kind == "synthesize":
                 if node["resolved"] == "from_run":
-                    mode = input.get("outcome_mode")
+                    mode = self.run_inputs.get("outcome_mode")
                     if mode not in {"after_first_repair", "never"}:
                         raise ValueError("missing or invalid typed run outcome mode")
                     resolved = mode == "after_first_repair" and self.repair_count >= 1
@@ -180,22 +189,22 @@ class FactoryRun:
                 at = node["next"]
             elif kind == "quality":
                 quality = next(value for value in bindings.values() if value["role"] == "quality")
+                assignment_id = self.run_id + ":quality"
+                attempt = self.repair_count + 1
                 command = {
-                    "op": "review", "action_id": f"{self.run_id}:quality:{self.current['revision']}:{self.current['sha256'][:12]}",
+                    "op": "review", "action_id": quality_action_id(self.run_id,
+                        assignment_id, attempt, self.current["revision"], self.current["sha256"]),
                     "run_id": self.run_id, "definition_digest": self.definition_digest,
                     "artifact": self.current,
                 }
                 outcome = await _activity(review, {
                     "url": quality["url"], "identity": quality["identity"],
-                    "command": command,
-                    "barrier": input.get("faults", {}).get("quality_barrier"),
+                    "binding": quality, "command": command,
+                    "assignment_id": assignment_id, "attempt": attempt,
                 })
+                if "inconsistent" in outcome:
+                    return await self._hold_unresolved("quality-incident", outcome)
                 artifact = outcome["artifact"]
-                if (artifact["revision"] != self.current["revision"]
-                        or artifact["sha256"] != self.current["sha256"]
-                        or artifact["reviewer"] != quality["identity"]
-                        or self.current["author"] == artifact["reviewer"]):
-                    raise ValueError("Quality verdict stale or forged")
                 self.verdict = artifact
                 if artifact["accepted"] is True:
                     # This assignment is the authoritative acceptance transition
@@ -208,9 +217,6 @@ class FactoryRun:
                         "reviewer": artifact["reviewer"],
                         "quality_task_id": outcome["task_id"],
                     }
-                    if input.get("faults", {}).get("acceptance_timer_seconds"):
-                        self.phase = "accepted-before-release"
-                        await workflow.sleep(input["faults"]["acceptance_timer_seconds"])
                 self.completed.append(at + ":" + self.current["revision"])
                 at = node["next"]
             elif kind == "route":
@@ -267,20 +273,21 @@ class FactoryRun:
                     "revision": self.current["revision"],
                     "sha256": self.current["sha256"],
                     "content": self.current["content"],
-                    "drop_ack": input.get("faults", {}).get("drop_release_ack", False),
                 }
                 receipt = await _activity(release, {
                     "url": receiver["url"], "identity": receiver["identity"],
-                    "mode": input.get("faults", {}).get("release_mode", "participating"),
+                    "mode": "participating",
                     "command": command,
-                    "barrier": input.get("faults", {}).get("release_barrier"),
                 })
                 if "unresolved" in receipt:
-                    await self._hold_unresolved("unresolved-release", receipt)
+                    return await self._hold_unresolved("unresolved-release", receipt)
                 self.release_receipt = receipt
                 self.completed.append(at)
                 at = node["next"]
             elif kind == "nested_factory":
+                verify_closure(input["closure"], package, build_id=BUILD_ID,
+                               definition_digest=node["child_digest"],
+                               document=package["children"][node["child_digest"]])
                 child = package["children"][node["child_digest"]]
                 self.child_id = f"{self.run_id}:child:{node['child_digest'][:12]}"
                 self.phase = "awaiting-child"
@@ -289,15 +296,14 @@ class FactoryRun:
                         FactoryRun.run,
                         {"run": self.child_id, "definition_digest": node["child_digest"],
                          "package_digest": self.package_digest, "document": child,
-                         "package": package, "director": input["director"],
+                         "package": package, "closure": input["closure"],
+                         "director": input["director"],
                          "run_inputs": self.run_inputs,
                          "run_inputs_digest": self.run_inputs_digest,
                          "authorized_actor": self.authorized_actor,
                          "input_authority": self.input_authority,
-                         "outcome_mode": self.run_inputs.get("outcome_mode"),
-                         "faults": input.get("faults", {}),
                          "wait_seconds": input.get("wait_seconds", 40)},
-                        id=self.child_id, task_queue="arbitration-temporal")
+                        id=self.child_id, task_queue=QUEUE)
                 except ChildWorkflowError as error:
                     # This state is written in the parent's durable Workflow history.
                     # The parent has not copied child acceptance or invoked release.
@@ -321,10 +327,15 @@ class FactoryRun:
             elif kind == "complete":
                 if self.release_receipt is None or self.acceptance is None:
                     raise ValueError("completion without accepted release")
+                # Deliver exactly the accepted revision, never a later or earlier one.
+                accepted = self.child_result["artifact"] if self.child_result else self.current
+                if (accepted is None or accepted["revision"] != self.acceptance["revision"]
+                        or accepted["sha256"] != self.acceptance["sha256"]):
+                    raise ValueError("delivered artifact differs from accepted revision")
                 self.phase = "accepted"
                 return {"status": "accepted", "run": self.run_id,
                         "definition_digest": self.definition_digest,
-                        "acceptance": self.acceptance,
+                        "acceptance": self.acceptance, "artifact": accepted,
                         "receipt": self.release_receipt, "released": True,
                         "completed": self.completed,
                         "child": self.child_result}
@@ -333,11 +344,25 @@ class FactoryRun:
 
     @workflow.run
     async def run(self, input: dict) -> dict:
+        expected = {"run", "definition_digest", "package_digest", "document",
+                    "package", "closure", "director", "run_inputs",
+                    "run_inputs_digest", "authorized_actor", "input_authority",
+                    "wait_seconds"}
+        if set(input) != expected:
+            raise ValueError("invalid factory start input")
         self.run_id = input["run"]
         self.definition_digest = input["definition_digest"]
         self.package_digest = input["package_digest"]
+        self.manifest_digest = verify_closure(input["closure"], input["package"],
+            build_id=BUILD_ID, definition_digest=self.definition_digest,
+            document=input["document"])
+        if self.package_digest != input["closure"]["manifest"]["package_digest"]:
+            raise ValueError("package digest differs from run closure")
         self.run_inputs = input.get("run_inputs", {})
         self.run_inputs_digest = input.get("run_inputs_digest", "")
+        if (validate_run_inputs(input["package"]["run_inputs"], self.run_inputs) != self.run_inputs
+                or digest(self.run_inputs) != self.run_inputs_digest):
+            raise ValueError("run inputs differ from pinned values")
         self.authorized_actor = input.get("authorized_actor", "")
         self.input_authority = input.get("input_authority", {})
         self._director = input["director"]
