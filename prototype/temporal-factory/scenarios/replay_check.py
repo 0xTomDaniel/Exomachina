@@ -98,6 +98,9 @@ async def collect(address: str, workflow_ids: list[str], out: Path) -> list[dict
     return rows
 
 
+RESULT_PREFIX = "EXO_REPLAY_RESULT "
+
+
 def manifest_for(build_dir: Path) -> dict:
     if not re.fullmatch(r"b-[0-9a-f]{12}", build_dir.name):
         raise ValueError(f"invalid build ID: {build_dir.name}")
@@ -128,7 +131,12 @@ def replay_batch(home: Path, build_id: str, jobs: list[dict]) -> dict[str, dict]
         if result.returncode:
             raise RuntimeError(f"replay subprocess exited {result.returncode}: "
                                f"{(result.stderr or result.stdout).strip()}")
-        outcomes = json.loads(result.stdout)
+        # The SDK core may log to stdout (e.g. nondeterminism warnings); read only
+        # the sentinel result line.
+        lines = [line for line in result.stdout.splitlines() if line.startswith(RESULT_PREFIX)]
+        if len(lines) != 1:
+            raise ValueError("replay subprocess produced no result line")
+        outcomes = json.loads(lines[0][len(RESULT_PREFIX):])
         if set(outcomes) != {job["key"] for job in jobs}:
             raise ValueError("replay subprocess returned incomplete results")
         return outcomes
@@ -208,7 +216,7 @@ def main() -> int:
     if args._replay_build:
         jobs = json.load(sys.stdin)
         outcomes = asyncio.run(replay_in_build(args._replay_build.resolve(), jobs))
-        print(json.dumps(outcomes, sort_keys=True))
+        print(RESULT_PREFIX + json.dumps(outcomes, sort_keys=True), flush=True)
         return 0
 
     home = args.home.resolve()

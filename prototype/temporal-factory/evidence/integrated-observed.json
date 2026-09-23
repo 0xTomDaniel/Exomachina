@@ -1,0 +1,1996 @@
+{
+  "cold_before_harness": {
+    "runner_dir_has_pgdata": false,
+    "runner_events": [
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "build-added",
+        "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f",
+        "time": 1790193452.9957702
+      }
+    ],
+    "runner_ready_file": false
+  },
+  "finished_at": 1790193483.810751,
+  "harness_exit": -15,
+  "home": "/tmp/exo-proto-int-r2",
+  "path1": {
+    "agent_card": {
+      "capabilities": {
+        "streaming": false
+      },
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ],
+      "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+      "name": "research-factory",
+      "preferredTransport": "JSONRPC",
+      "protocolVersion": "0.3.0",
+      "security": [
+        {
+          "fixtureBearer": []
+        }
+      ],
+      "securitySchemes": {
+        "fixtureBearer": {
+          "scheme": "bearer",
+          "type": "http"
+        }
+      },
+      "skills": [
+        {
+          "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+          "id": "verified-research@1",
+          "name": "Verified research",
+          "tags": [
+            "research",
+            "verified"
+          ]
+        }
+      ],
+      "url": "http://127.0.0.1:44800/",
+      "version": "0.1.0"
+    },
+    "capability_actions": {
+      "counter_alpha": [
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:counter_alpha",
+          "artifact": "{\"author\":\"d8c6a434-4bd1-4ede-9c1c-1258c5948cfb\",\"content\":\"fixture-result:{\\\"instance\\\":\\\"counter_alpha\\\",\\\"kind\\\":\\\"counter_evidence@1\\\",\\\"objections\\\":[{\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"question\\\":\\\"Can the customer use the documented capability?\\\",\\\"scope_status\\\":\\\"clear\\\"}\",\"revision\":\"r2\",\"sha256\":\"84c3f830a2638a83ddb22cfc1c19b33c2f07d646bf3e3c3d03f2de683390102f\"}",
+          "attempts": 1,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+          "task_id": "4239ef85-2576-4a62-be8f-58667b61d9ac"
+        }
+      ],
+      "counter_beta": [
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:counter_beta",
+          "artifact": "{\"author\":\"45e1ffbf-c4f8-404b-ad11-81bca0665cf1\",\"content\":\"fixture-result:{\\\"instance\\\":\\\"counter_beta\\\",\\\"kind\\\":\\\"counter_evidence@1\\\",\\\"objections\\\":[{\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"question\\\":\\\"Can the customer use the documented capability?\\\",\\\"scope_status\\\":\\\"requires_scope\\\"}\",\"revision\":\"r2\",\"sha256\":\"725fd458955e6f19c68031fec23cd22584117c0a04be121ca2441d1f33399f37\"}",
+          "attempts": 1,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+          "task_id": "e9c61c15-5363-4363-983c-72fd1541521f"
+        }
+      ],
+      "source_alpha": [
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:source_alpha",
+          "artifact": "{\"author\":\"2146ebcc-be33-4332-8f12-db458cd345a8\",\"content\":\"fixture-result:{\\\"availability\\\":\\\"documented\\\",\\\"claims\\\":[{\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"instance\\\":\\\"source_alpha\\\",\\\"kind\\\":\\\"source_evidence@1\\\",\\\"question\\\":\\\"Can the customer use the documented capability?\\\"}\",\"revision\":\"r2\",\"sha256\":\"cb2bce586fb2462b9c5bdcc174b2d9454404e1456d4fdc979cfd6173ec160d47\"}",
+          "attempts": 1,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+          "task_id": "678ab1d5-fbb9-4292-9447-12b4f742c55e"
+        }
+      ],
+      "source_beta": [
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:source_beta",
+          "artifact": "{\"author\":\"f1cd2583-7e71-4a4f-ba80-8faad568fbe6\",\"content\":\"fixture-result:{\\\"availability\\\":\\\"documented\\\",\\\"claims\\\":[{\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"instance\\\":\\\"source_beta\\\",\\\"kind\\\":\\\"source_evidence@1\\\",\\\"question\\\":\\\"Can the customer use the documented capability?\\\"}\",\"revision\":\"r2\",\"sha256\":\"8503b5c2046a8180345af8ca0b488289eca30287285e3bef1a2ab30fb0fa92cf\"}",
+          "attempts": 1,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+          "task_id": "a2591fd8-89fe-4a53-a91a-cc59451d20d9"
+        }
+      ]
+    },
+    "duplicate_start_on_new_task": {
+      "kind": "message",
+      "messageId": "7556fb9b-c7d8-4ab7-bf26-31d0198e6083",
+      "parts": [
+        {
+          "data": {
+            "error": "duplicate start; continue original Task 34277fae-eb3d-425d-80cc-811445c95d94"
+          },
+          "kind": "data"
+        }
+      ],
+      "role": "agent"
+    },
+    "health_at_start": {
+      "a2a_protocol": "0.3.0",
+      "capability": "verified-research@1",
+      "identity": "c905870f-6467-4cbb-aad9-8be1d85b987b",
+      "incarnation": 2,
+      "name": "research-factory",
+      "role": "factory-harness",
+      "runner_running": false,
+      "startup": {
+        "recovery": null,
+        "runner_started_at_startup": false
+      },
+      "unfinished_runs": 0
+    },
+    "histories": {
+      "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3": {
+        "activities": [],
+        "event_count": 14,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          }
+        }
+      },
+      "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64": {
+        "activities": [
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "typed_join",
+            "19"
+          ],
+          [
+            "synthesize",
+            "25"
+          ],
+          [
+            "review",
+            "31"
+          ],
+          [
+            "synthesize",
+            "37"
+          ],
+          [
+            "review",
+            "43"
+          ],
+          [
+            "release",
+            "49"
+          ]
+        ],
+        "event_count": 56,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          }
+        }
+      }
+    },
+    "outcome_journal": [
+      {
+        "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:counter_beta",
+        "effect_kind": "a2a",
+        "phase": "confirmed",
+        "reason": null,
+        "receiver": "participating",
+        "revision": null,
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64"
+      },
+      {
+        "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:source_alpha",
+        "effect_kind": "a2a",
+        "phase": "confirmed",
+        "reason": null,
+        "receiver": "participating",
+        "revision": null,
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64"
+      },
+      {
+        "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:counter_alpha",
+        "effect_kind": "a2a",
+        "phase": "confirmed",
+        "reason": null,
+        "receiver": "participating",
+        "revision": null,
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64"
+      },
+      {
+        "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:source_beta",
+        "effect_kind": "a2a",
+        "phase": "confirmed",
+        "reason": null,
+        "receiver": "participating",
+        "revision": null,
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64"
+      },
+      {
+        "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:quality:1:r1:7fa4ce4911d59058c64d2a52cf178359e084da283a2f5bd34cf990bf7cb33f96",
+        "effect_kind": "a2a",
+        "phase": "confirmed",
+        "reason": null,
+        "receiver": "participating",
+        "revision": null,
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64"
+      },
+      {
+        "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:quality:2:r2:af57a60be510c0f760fe09e019a8a806c6f21e49d6c1e9f319739fc9eb33d70c",
+        "effect_kind": "a2a",
+        "phase": "confirmed",
+        "reason": null,
+        "receiver": "participating",
+        "revision": null,
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64"
+      },
+      {
+        "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:release:r2",
+        "effect_kind": "release",
+        "phase": "confirmed",
+        "reason": null,
+        "receiver": "participating",
+        "revision": "r2",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64"
+      }
+    ],
+    "parallel": {
+      "assign_count": 4,
+      "scheduled_in_one_workflow_task": true,
+      "workflow_task_completed_event_ids": [
+        "4"
+      ]
+    },
+    "parallel_remote_overlap": {
+      "all_started_before_first_completed": true,
+      "assign_completes": 4,
+      "assign_starts": 4
+    },
+    "quality_actions": [
+      {
+        "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:quality:1:r1:7fa4ce4911d59058c64d2a52cf178359e084da283a2f5bd34cf990bf7cb33f96",
+        "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"88cf19f8-0baf-4ce2-8403-d0aff7e2259c\",\"revision\":\"r1\",\"sha256\":\"7fa4ce4911d59058c64d2a52cf178359e084da283a2f5bd34cf990bf7cb33f96\"}",
+        "attempts": 1,
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+        "task_id": "9be8eb94-93e9-4e93-9166-d8cb9baa6309"
+      },
+      {
+        "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:quality:2:r2:af57a60be510c0f760fe09e019a8a806c6f21e49d6c1e9f319739fc9eb33d70c",
+        "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"88cf19f8-0baf-4ce2-8403-d0aff7e2259c\",\"revision\":\"r2\",\"sha256\":\"af57a60be510c0f760fe09e019a8a806c6f21e49d6c1e9f319739fc9eb33d70c\"}",
+        "attempts": 1,
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+        "task_id": "96bc367f-103e-4230-abef-71c488abd264"
+      }
+    ],
+    "refetch_same_task": {
+      "artifacts": [
+        {
+          "artifactId": "227f89e6c6fbf3e7726bca00027ed78fa055b284cd4737fde952eb3b738c6643",
+          "parts": [
+            {
+              "data": {
+                "acceptance": {
+                  "attempt": 2,
+                  "definition_digest": "911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb",
+                  "quality_task_id": "96bc367f-103e-4230-abef-71c488abd264",
+                  "reviewer": "88cf19f8-0baf-4ce2-8403-d0aff7e2259c",
+                  "revision": "r2",
+                  "run": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "sha256": "af57a60be510c0f760fe09e019a8a806c6f21e49d6c1e9f319739fc9eb33d70c"
+                },
+                "capability": "verified-research@1",
+                "interpreter_revision": null,
+                "release_receipt": {
+                  "accepted_effect_count": 1,
+                  "attempts": 1,
+                  "definition_digest": "911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb",
+                  "release_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:release:r2",
+                  "revision": "r2",
+                  "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "sha256": "af57a60be510c0f760fe09e019a8a806c6f21e49d6c1e9f319739fc9eb33d70c"
+                },
+                "report": {
+                  "author": "factory:c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "content": "{\"assessment\":\"documented limits addressed\",\"join\":{\"branch_artifact_sha256\":{\"counter_alpha\":\"84c3f830a2638a83ddb22cfc1c19b33c2f07d646bf3e3c3d03f2de683390102f\",\"counter_beta\":\"725fd458955e6f19c68031fec23cd22584117c0a04be121ca2441d1f33399f37\",\"source_alpha\":\"cb2bce586fb2462b9c5bdcc174b2d9454404e1456d4fdc979cfd6173ec160d47\",\"source_beta\":\"8503b5c2046a8180345af8ca0b488289eca30287285e3bef1a2ab30fb0fa92cf\"},\"claims\":[{\"branch_instance\":\"source_alpha\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_alpha\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_alpha\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_alpha\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"},{\"branch_instance\":\"counter_beta\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_beta\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":true,\"revision\":\"r2\"}",
+                  "revision": "r2",
+                  "sha256": "af57a60be510c0f760fe09e019a8a806c6f21e49d6c1e9f319739fc9eb33d70c"
+                },
+                "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3",
+                "status": "accepted"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "3e10050d-a1b8-495a-8eca-b0d8a7b7402f",
+      "id": "34277fae-eb3d-425d-80cc-811445c95d94",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "c905870f-6467-4cbb-aad9-8be1d85b987b",
+        "harness_incarnation": 2,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b",
+        "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683",
+        "publication_label": "v1",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3",
+        "run_inputs_digest": "138a081a917793bef45f42f1bd26fe6279497b664bf2ed5ff513c08e4149d82e"
+      },
+      "status": {
+        "state": "completed"
+      }
+    },
+    "releases": [
+      {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "definition_digest": "911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb",
+        "fingerprint": "2eeba6dc98ac86f915f3e013569dbdf17866b088bb216de660c820a1f9d3756c",
+        "release_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:release:r2",
+        "revision": "r2",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+        "sha256": "af57a60be510c0f760fe09e019a8a806c6f21e49d6c1e9f319739fc9eb33d70c"
+      }
+    ],
+    "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3",
+    "runner_events": [
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "build-added",
+        "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f",
+        "time": 1790193452.9957702
+      },
+      {
+        "first": true,
+        "kind": "postgres-start",
+        "time": 1790193457.75782
+      },
+      {
+        "kind": "temporal-start",
+        "pid": 22087,
+        "time": 1790193457.7639081
+      },
+      {
+        "kind": "namespace-create",
+        "namespace": "exomachina",
+        "time": 1790193458.133095
+      },
+      {
+        "kind": "serve-ready",
+        "pid": 22052,
+        "time": 1790193458.138203
+      },
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "worker-start",
+        "pid": 22112,
+        "time": 1790193458.142176
+      },
+      {
+        "kind": "start",
+        "pid": 22052,
+        "reason": "factory-work:c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3",
+        "time": 1790193458.280194
+      }
+    ],
+    "runner_running_before_work": false,
+    "send_reply_state": "working",
+    "task": {
+      "_observed_states": [
+        "working",
+        "completed"
+      ],
+      "artifacts": [
+        {
+          "artifactId": "227f89e6c6fbf3e7726bca00027ed78fa055b284cd4737fde952eb3b738c6643",
+          "parts": [
+            {
+              "data": {
+                "acceptance": {
+                  "attempt": 2,
+                  "definition_digest": "911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb",
+                  "quality_task_id": "96bc367f-103e-4230-abef-71c488abd264",
+                  "reviewer": "88cf19f8-0baf-4ce2-8403-d0aff7e2259c",
+                  "revision": "r2",
+                  "run": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "sha256": "af57a60be510c0f760fe09e019a8a806c6f21e49d6c1e9f319739fc9eb33d70c"
+                },
+                "capability": "verified-research@1",
+                "interpreter_revision": null,
+                "release_receipt": {
+                  "accepted_effect_count": 1,
+                  "attempts": 1,
+                  "definition_digest": "911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb",
+                  "release_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64:release:r2",
+                  "revision": "r2",
+                  "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "sha256": "af57a60be510c0f760fe09e019a8a806c6f21e49d6c1e9f319739fc9eb33d70c"
+                },
+                "report": {
+                  "author": "factory:c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "content": "{\"assessment\":\"documented limits addressed\",\"join\":{\"branch_artifact_sha256\":{\"counter_alpha\":\"84c3f830a2638a83ddb22cfc1c19b33c2f07d646bf3e3c3d03f2de683390102f\",\"counter_beta\":\"725fd458955e6f19c68031fec23cd22584117c0a04be121ca2441d1f33399f37\",\"source_alpha\":\"cb2bce586fb2462b9c5bdcc174b2d9454404e1456d4fdc979cfd6173ec160d47\",\"source_beta\":\"8503b5c2046a8180345af8ca0b488289eca30287285e3bef1a2ab30fb0fa92cf\"},\"claims\":[{\"branch_instance\":\"source_alpha\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_alpha\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_alpha\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_alpha\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"},{\"branch_instance\":\"counter_beta\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_beta\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":true,\"revision\":\"r2\"}",
+                  "revision": "r2",
+                  "sha256": "af57a60be510c0f760fe09e019a8a806c6f21e49d6c1e9f319739fc9eb33d70c"
+                },
+                "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3",
+                "status": "accepted"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "3e10050d-a1b8-495a-8eca-b0d8a7b7402f",
+      "id": "34277fae-eb3d-425d-80cc-811445c95d94",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "c905870f-6467-4cbb-aad9-8be1d85b987b",
+        "harness_incarnation": 2,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b",
+        "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683",
+        "publication_label": "v1",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3",
+        "run_inputs_digest": "138a081a917793bef45f42f1bd26fe6279497b664bf2ed5ff513c08e4149d82e"
+      },
+      "status": {
+        "state": "completed"
+      }
+    }
+  },
+  "path2": {
+    "abort_reply": {
+      "id": "90833571-5ccc-420d-8285-9f92d2c7f280",
+      "state": "working"
+    },
+    "authoring": {
+      "approval": {
+        "approver": "director:c905870f-6467-4cbb-aad9-8be1d85b987b",
+        "package_digest": "e956f4bc35aaa84a08b6646acd0d6586258f5f62804c98a29aa5689257fe38fe",
+        "policy": "auto",
+        "status": "approved"
+      },
+      "live": {
+        "live_model_available": false,
+        "reason": "ANTHROPIC_API_KEY absent; AWS credentials/configuration absent; OPENAI_API_KEY absent"
+      },
+      "outcome": {
+        "approval": {
+          "approver": "authoring-session",
+          "package_digest": "e956f4bc35aaa84a08b6646acd0d6586258f5f62804c98a29aa5689257fe38fe",
+          "policy": "auto",
+          "status": "approved"
+        },
+        "model": {
+          "id": "scripted-authoring-fixture",
+          "kind": "scripted",
+          "live": false
+        },
+        "package": {
+          "bindings": {
+            "counter_alpha": {
+              "approved": true,
+              "identity": "d8c6a434-4bd1-4ede-9c1c-1258c5948cfb",
+              "role": "capability",
+              "url": "http://127.0.0.1:45202"
+            },
+            "counter_beta": {
+              "approved": true,
+              "identity": "45e1ffbf-c4f8-404b-ad11-81bca0665cf1",
+              "role": "capability",
+              "url": "http://127.0.0.1:45203"
+            },
+            "quality": {
+              "approved": true,
+              "identity": "88cf19f8-0baf-4ce2-8403-d0aff7e2259c",
+              "role": "quality",
+              "url": "http://127.0.0.1:45204"
+            },
+            "release": {
+              "approved": true,
+              "identity": "4833adea-adff-410f-b497-732272d36c5c",
+              "role": "release",
+              "url": "http://127.0.0.1:45205"
+            },
+            "source_alpha": {
+              "approved": true,
+              "identity": "2146ebcc-be33-4332-8f12-db458cd345a8",
+              "role": "capability",
+              "url": "http://127.0.0.1:45200"
+            },
+            "source_beta": {
+              "approved": true,
+              "identity": "f1cd2583-7e71-4a4f-ba80-8faad568fbe6",
+              "role": "capability",
+              "url": "http://127.0.0.1:45201"
+            }
+          },
+          "children": {
+            "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a": {
+              "name": "verified_research",
+              "nodes": {
+                "abort": {
+                  "type": "abort"
+                },
+                "director": {
+                  "next": "abort",
+                  "reason": "repair_exhausted",
+                  "type": "director_wait"
+                },
+                "done": {
+                  "type": "complete"
+                },
+                "draft_clear": {
+                  "next": "independent_quality",
+                  "resolved": true,
+                  "type": "synthesize"
+                },
+                "draft_repair": {
+                  "next": "independent_quality",
+                  "resolved": "after_repair",
+                  "type": "synthesize"
+                },
+                "draft_unresolved": {
+                  "next": "independent_quality",
+                  "resolved": false,
+                  "type": "synthesize"
+                },
+                "gather": {
+                  "branches": {
+                    "counter_alpha": {
+                      "capability": "counter_evidence@1",
+                      "result_type": "counter_evidence",
+                      "scope_status": "clear",
+                      "service": "counter_alpha"
+                    },
+                    "source_alpha": {
+                      "capability": "source_evidence@1",
+                      "result_type": "source_evidence",
+                      "scope_status": null,
+                      "service": "source_alpha"
+                    },
+                    "source_beta": {
+                      "capability": "source_evidence@1",
+                      "result_type": "source_evidence",
+                      "scope_status": null,
+                      "service": "source_beta"
+                    }
+                  },
+                  "next": "join_all",
+                  "type": "parallel"
+                },
+                "independent_quality": {
+                  "next": "route_verdict",
+                  "type": "quality"
+                },
+                "join_all": {
+                  "branches": [
+                    "source_alpha",
+                    "source_beta",
+                    "counter_alpha"
+                  ],
+                  "next": "route_scope",
+                  "type": "join"
+                },
+                "publish": {
+                  "next": "done",
+                  "service": "release",
+                  "type": "release"
+                },
+                "repair": {
+                  "exhausted": "director",
+                  "max_repairs": 1,
+                  "next": "draft_repair",
+                  "type": "repair"
+                },
+                "route_scope": {
+                  "cases": {
+                    "clear": "draft_clear",
+                    "requires_scope": "draft_unresolved"
+                  },
+                  "field": "join.route_status",
+                  "type": "route"
+                },
+                "route_verdict": {
+                  "cases": {
+                    "false": "repair",
+                    "true": "publish"
+                  },
+                  "field": "verdict.accepted",
+                  "type": "route"
+                }
+              },
+              "revision": "v5",
+              "start": "gather"
+            }
+          },
+          "root": {
+            "name": "parent_verified_research",
+            "nodes": {
+              "done": {
+                "type": "complete"
+              },
+              "invoke_child": {
+                "child": "verified_research",
+                "child_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                "next": "done",
+                "type": "nested_factory"
+              }
+            },
+            "revision": "v5",
+            "start": "invoke_child"
+          },
+          "run_inputs": {
+            "question": {
+              "allowed_actors": [
+                "fixture-operator"
+              ],
+              "may_affect_acceptance": false,
+              "required": false,
+              "source": "caller",
+              "type": "string"
+            }
+          },
+          "schema": 1
+        },
+        "package_digest": "e956f4bc35aaa84a08b6646acd0d6586258f5f62804c98a29aa5689257fe38fe",
+        "rounds": [
+          {
+            "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+            "errors": [
+              {
+                "code": "validation_error",
+                "message": "route must cover each typed value",
+                "missing_cases": [
+                  "requires_scope"
+                ],
+                "path": "child.nodes.route_scope.cases"
+              }
+            ],
+            "round": 1,
+            "valid": false
+          },
+          {
+            "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+            "errors": [],
+            "round": 2,
+            "valid": true
+          }
+        ],
+        "status": "approved",
+        "template": {
+          "child": {
+            "name": "verified_research",
+            "nodes": {
+              "abort": {
+                "type": "abort"
+              },
+              "director": {
+                "next": "abort",
+                "reason": "repair_exhausted",
+                "type": "director_wait"
+              },
+              "done": {
+                "type": "complete"
+              },
+              "draft_clear": {
+                "next": "independent_quality",
+                "resolved": true,
+                "type": "synthesize"
+              },
+              "draft_repair": {
+                "next": "independent_quality",
+                "resolved": "after_repair",
+                "type": "synthesize"
+              },
+              "draft_unresolved": {
+                "next": "independent_quality",
+                "resolved": false,
+                "type": "synthesize"
+              },
+              "gather": {
+                "branches": {
+                  "counter_alpha": {
+                    "capability": "counter_evidence@1",
+                    "result_type": "counter_evidence",
+                    "scope_status": "clear",
+                    "service": "counter_alpha"
+                  },
+                  "source_alpha": {
+                    "capability": "source_evidence@1",
+                    "result_type": "source_evidence",
+                    "scope_status": null,
+                    "service": "source_alpha"
+                  },
+                  "source_beta": {
+                    "capability": "source_evidence@1",
+                    "result_type": "source_evidence",
+                    "scope_status": null,
+                    "service": "source_beta"
+                  }
+                },
+                "next": "join_all",
+                "type": "parallel"
+              },
+              "independent_quality": {
+                "next": "route_verdict",
+                "type": "quality"
+              },
+              "join_all": {
+                "branches": [
+                  "source_alpha",
+                  "source_beta",
+                  "counter_alpha"
+                ],
+                "next": "route_scope",
+                "type": "join"
+              },
+              "publish": {
+                "next": "done",
+                "service": "release",
+                "type": "release"
+              },
+              "repair": {
+                "exhausted": "director",
+                "max_repairs": 1,
+                "next": "draft_repair",
+                "type": "repair"
+              },
+              "route_scope": {
+                "cases": {
+                  "clear": "draft_clear",
+                  "requires_scope": "draft_unresolved"
+                },
+                "field": "join.route_status",
+                "type": "route"
+              },
+              "route_verdict": {
+                "cases": {
+                  "false": "repair",
+                  "true": "publish"
+                },
+                "field": "verdict.accepted",
+                "type": "route"
+              }
+            },
+            "revision": "v5",
+            "start": "gather"
+          },
+          "root": {
+            "name": "parent_verified_research",
+            "nodes": {
+              "done": {
+                "type": "complete"
+              },
+              "invoke_child": {
+                "child": "verified_research",
+                "child_digest": "@child",
+                "next": "done",
+                "type": "nested_factory"
+              }
+            },
+            "revision": "v5",
+            "start": "invoke_child"
+          },
+          "run_inputs": {
+            "question": {
+              "allowed_actors": [
+                "fixture-operator"
+              ],
+              "may_affect_acceptance": false,
+              "required": false,
+              "source": "caller",
+              "type": "string"
+            }
+          },
+          "schema": 1
+        },
+        "tool_calls": [
+          {
+            "result": {
+              "bindings": {
+                "counter_alpha": {
+                  "approved": true,
+                  "role": "capability"
+                },
+                "counter_beta": {
+                  "approved": true,
+                  "role": "capability"
+                },
+                "quality": {
+                  "approved": true,
+                  "role": "quality"
+                },
+                "release": {
+                  "approved": true,
+                  "role": "release"
+                },
+                "source_alpha": {
+                  "approved": true,
+                  "role": "capability"
+                },
+                "source_beta": {
+                  "approved": true,
+                  "role": "capability"
+                }
+              },
+              "bounds": {
+                "max_repairs": [
+                  1,
+                  2
+                ],
+                "nodes_per_definition": 32,
+                "parallel_branches": [
+                  2,
+                  4
+                ],
+                "run_input_fields": 16
+              },
+              "input_sources": [
+                "caller",
+                "director",
+                "verified_artifact"
+              ],
+              "input_types": [
+                "boolean",
+                "integer",
+                "number",
+                "string"
+              ],
+              "node_fields": {
+                "abort": [
+                  "type"
+                ],
+                "complete": [
+                  "type"
+                ],
+                "director_wait": [
+                  "next",
+                  "reason",
+                  "type"
+                ],
+                "join": [
+                  "branches",
+                  "next",
+                  "type"
+                ],
+                "nested_factory": [
+                  "child",
+                  "child_digest",
+                  "next",
+                  "type"
+                ],
+                "parallel": [
+                  "branches",
+                  "next",
+                  "type"
+                ],
+                "quality": [
+                  "next",
+                  "type"
+                ],
+                "release": [
+                  "next",
+                  "service",
+                  "type"
+                ],
+                "repair": [
+                  "exhausted",
+                  "max_repairs",
+                  "next",
+                  "type"
+                ],
+                "route": [
+                  "cases",
+                  "field",
+                  "type"
+                ],
+                "synthesize": [
+                  "next",
+                  "resolved",
+                  "type"
+                ]
+              },
+              "result_types": {
+                "counter_evidence": "counter_evidence@1",
+                "source_evidence": "source_evidence@1"
+              },
+              "route_values": {
+                "join.requires_scope": [
+                  "false",
+                  "true"
+                ],
+                "join.route_status": [
+                  "clear",
+                  "requires_scope"
+                ],
+                "verdict.accepted": [
+                  "false",
+                  "true"
+                ]
+              },
+              "rules": [
+                "All route cases must cover their typed values.",
+                "Source and counter evidence must meet at a typed join.",
+                "Quality must review a candidate before release.",
+                "Repair must have a bounded exhausted edge to Director wait and abort.",
+                "The root may only invoke its digest-pinned child and complete."
+              ],
+              "schema": 1,
+              "template_fields": [
+                "schema",
+                "root",
+                "child",
+                "run_inputs"
+              ]
+            },
+            "tool": "describe_vocabulary"
+          },
+          {
+            "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+            "result": {
+              "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+              "errors": [
+                {
+                  "code": "validation_error",
+                  "message": "route must cover each typed value",
+                  "missing_cases": [
+                    "requires_scope"
+                  ],
+                  "path": "child.nodes.route_scope.cases"
+                }
+              ],
+              "ok": false
+            },
+            "tool": "validate_draft"
+          },
+          {
+            "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+            "result": {
+              "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+              "errors": [],
+              "ok": true,
+              "package_digest": "e956f4bc35aaa84a08b6646acd0d6586258f5f62804c98a29aa5689257fe38fe"
+            },
+            "tool": "submit_draft"
+          }
+        ]
+      },
+      "publication": {
+        "build_id": "b-e3d01047763d",
+        "label": "v2",
+        "manifest_digest": "b7b6b319ee66d5dbcbca5d408396d243994f5da50253174174ff29c5c0cf77e3",
+        "package_digest": "e956f4bc35aaa84a08b6646acd0d6586258f5f62804c98a29aa5689257fe38fe"
+      },
+      "seconds": 0.007,
+      "status": "published"
+    },
+    "director_runs": [
+      {
+        "build_id": "b-05b5760359e6",
+        "closed": 1,
+        "label": "v1",
+        "manifest_digest": "a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b",
+        "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3",
+        "task_id": "34277fae-eb3d-425d-80cc-811445c95d94"
+      },
+      {
+        "build_id": "b-05b5760359e6",
+        "closed": 1,
+        "label": "v1",
+        "manifest_digest": "a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b",
+        "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8",
+        "task_id": "90833571-5ccc-420d-8285-9f92d2c7f280"
+      },
+      {
+        "build_id": "b-e3d01047763d",
+        "closed": 1,
+        "label": "v2",
+        "manifest_digest": "b7b6b319ee66d5dbcbca5d408396d243994f5da50253174174ff29c5c0cf77e3",
+        "package_digest": "e956f4bc35aaa84a08b6646acd0d6586258f5f62804c98a29aa5689257fe38fe",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a",
+        "task_id": "0151271b-bddb-45e1-8d27-66ee5a4db755"
+      }
+    ],
+    "harness_pid": 22051,
+    "health_after_restart": {
+      "a2a_protocol": "0.3.0",
+      "capability": "verified-research@1",
+      "identity": "c905870f-6467-4cbb-aad9-8be1d85b987b",
+      "incarnation": 3,
+      "name": "research-factory",
+      "role": "factory-harness",
+      "runner_running": true,
+      "startup": {
+        "recovery": {
+          "address": "127.0.0.1:44002",
+          "builds": {
+            "b-e3d01047763d": {
+              "pid": 22281,
+              "source_digest": "e3d01047763d5f4dde7abce73fac8a7466840731a770717a4289136070997dd8"
+            }
+          },
+          "namespace": "exomachina",
+          "pid": 22245,
+          "pids": {
+            "postgres": 22248,
+            "temporal": 22255
+          },
+          "rss_kib": {
+            "postgres": 15632,
+            "temporal": 124272
+          },
+          "running": true,
+          "worker_rss_kib": {
+            "b-e3d01047763d": 20288
+          }
+        },
+        "runner_started_at_startup": true
+      },
+      "unfinished_runs": 1
+    },
+    "health_after_v2": {
+      "a2a_protocol": "0.3.0",
+      "capability": "verified-research@1",
+      "identity": "c905870f-6467-4cbb-aad9-8be1d85b987b",
+      "incarnation": 2,
+      "name": "research-factory",
+      "role": "factory-harness",
+      "runner_running": true,
+      "startup": {
+        "recovery": null,
+        "runner_started_at_startup": false
+      },
+      "unfinished_runs": 1
+    },
+    "health_before_authoring": {
+      "a2a_protocol": "0.3.0",
+      "capability": "verified-research@1",
+      "identity": "c905870f-6467-4cbb-aad9-8be1d85b987b",
+      "incarnation": 2,
+      "name": "research-factory",
+      "role": "factory-harness",
+      "runner_running": true,
+      "startup": {
+        "recovery": null,
+        "runner_started_at_startup": false
+      },
+      "unfinished_runs": 1
+    },
+    "histories": {
+      "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8": {
+        "activities": [],
+        "event_count": 14,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          }
+        }
+      },
+      "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64": {
+        "activities": [
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "typed_join",
+            "19"
+          ],
+          [
+            "synthesize",
+            "25"
+          ],
+          [
+            "review",
+            "31"
+          ],
+          [
+            "synthesize",
+            "37"
+          ],
+          [
+            "review",
+            "43"
+          ],
+          [
+            "synthesize",
+            "49"
+          ],
+          [
+            "review",
+            "55"
+          ]
+        ],
+        "event_count": 74,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          }
+        }
+      },
+      "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a": {
+        "activities": [],
+        "event_count": 14,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-e3d01047763d",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-e3d01047763d",
+            "deployment": "exo-factory"
+          }
+        }
+      },
+      "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380": {
+        "activities": [
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "typed_join",
+            "16"
+          ],
+          [
+            "synthesize",
+            "22"
+          ],
+          [
+            "review",
+            "28"
+          ],
+          [
+            "release",
+            "34"
+          ]
+        ],
+        "event_count": 41,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-e3d01047763d",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-e3d01047763d",
+            "deployment": "exo-factory"
+          }
+        }
+      }
+    },
+    "interpreter_b2": {
+      "b1_build_id": "b-05b5760359e6",
+      "build_id": "b-e3d01047763d",
+      "change": "complete result adds interpreter_revision",
+      "path": "/tmp/exo-proto-int-r2/interpreter-b2",
+      "source_digest": "e3d01047763d5f4dde7abce73fac8a7466840731a770717a4289136070997dd8"
+    },
+    "outcome_journal": {
+      "v1": [
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:counter_alpha",
+          "effect_kind": "a2a",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": null,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:source_alpha",
+          "effect_kind": "a2a",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": null,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:counter_beta",
+          "effect_kind": "a2a",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": null,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:source_beta",
+          "effect_kind": "a2a",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": null,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:1:r1:3581a0068c4c2c74f634f7e83e80e08311b263b89a0cd245918ef8d9e5202430",
+          "effect_kind": "a2a",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": null,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:2:r2:ea040a0c623551136ea2f53b176d693afcda2945eafcebcda11bbea9b62e0552",
+          "effect_kind": "a2a",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": null,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:3:r3:8f51984c5f8cd98170ffdfac8cd8a962131e82631141542b66a359adb0281cb6",
+          "effect_kind": "a2a",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": null,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64"
+        }
+      ],
+      "v2": [
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380:counter_alpha",
+          "effect_kind": "a2a",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": null,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380:source_beta",
+          "effect_kind": "a2a",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": null,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380:source_alpha",
+          "effect_kind": "a2a",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": null,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380:quality:1:r1:781ad7b59b4963f46b22936a92ebba006e5b6b717492578a4d543384b8642c3d",
+          "effect_kind": "a2a",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": null,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380:release:r1",
+          "effect_kind": "release",
+          "phase": "confirmed",
+          "reason": null,
+          "receiver": "participating",
+          "revision": "r1",
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380"
+        }
+      ]
+    },
+    "publications_after_v2": {
+      "active": {
+        "build_id": "b-e3d01047763d",
+        "label": "v2",
+        "manifest_digest": "b7b6b319ee66d5dbcbca5d408396d243994f5da50253174174ff29c5c0cf77e3"
+      },
+      "all": [
+        {
+          "build_id": "b-05b5760359e6",
+          "label": "v1",
+          "manifest_digest": "a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b",
+          "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683"
+        },
+        {
+          "build_id": "b-e3d01047763d",
+          "label": "v2",
+          "manifest_digest": "b7b6b319ee66d5dbcbca5d408396d243994f5da50253174174ff29c5c0cf77e3",
+          "package_digest": "e956f4bc35aaa84a08b6646acd0d6586258f5f62804c98a29aa5689257fe38fe"
+        }
+      ]
+    },
+    "quality_actions": {
+      "v1": [
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:1:r1:3581a0068c4c2c74f634f7e83e80e08311b263b89a0cd245918ef8d9e5202430",
+          "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"88cf19f8-0baf-4ce2-8403-d0aff7e2259c\",\"revision\":\"r1\",\"sha256\":\"3581a0068c4c2c74f634f7e83e80e08311b263b89a0cd245918ef8d9e5202430\"}",
+          "attempts": 1,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+          "task_id": "3c4f9183-8685-4220-ae9c-f26e6ecf728b"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:2:r2:ea040a0c623551136ea2f53b176d693afcda2945eafcebcda11bbea9b62e0552",
+          "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"88cf19f8-0baf-4ce2-8403-d0aff7e2259c\",\"revision\":\"r2\",\"sha256\":\"ea040a0c623551136ea2f53b176d693afcda2945eafcebcda11bbea9b62e0552\"}",
+          "attempts": 1,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+          "task_id": "e2a010cd-e109-40a4-9c5c-9009f2d26b14"
+        },
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:3:r3:8f51984c5f8cd98170ffdfac8cd8a962131e82631141542b66a359adb0281cb6",
+          "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"88cf19f8-0baf-4ce2-8403-d0aff7e2259c\",\"revision\":\"r3\",\"sha256\":\"8f51984c5f8cd98170ffdfac8cd8a962131e82631141542b66a359adb0281cb6\"}",
+          "attempts": 1,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+          "task_id": "a61c0fc5-cd47-4f56-abbf-31dbfeace26c"
+        }
+      ],
+      "v2": [
+        {
+          "action_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380:quality:c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380:quality:1:r1:781ad7b59b4963f46b22936a92ebba006e5b6b717492578a4d543384b8642c3d",
+          "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"88cf19f8-0baf-4ce2-8403-d0aff7e2259c\",\"revision\":\"r1\",\"sha256\":\"781ad7b59b4963f46b22936a92ebba006e5b6b717492578a4d543384b8642c3d\"}",
+          "attempts": 1,
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380",
+          "task_id": "662c9a5b-551e-4bad-9402-dc3ddccf08b6"
+        }
+      ]
+    },
+    "releases": {
+      "v1": [],
+      "v2": [
+        {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+          "fingerprint": "254259a7196547838396da755ffd75e35db0e83261107c2c3ccff6726dddb534",
+          "release_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380:release:r1",
+          "revision": "r1",
+          "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380",
+          "sha256": "781ad7b59b4963f46b22936a92ebba006e5b6b717492578a4d543384b8642c3d"
+        }
+      ]
+    },
+    "runner_events": [
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "build-added",
+        "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f",
+        "time": 1790193452.9957702
+      },
+      {
+        "first": true,
+        "kind": "postgres-start",
+        "time": 1790193457.75782
+      },
+      {
+        "kind": "temporal-start",
+        "pid": 22087,
+        "time": 1790193457.7639081
+      },
+      {
+        "kind": "namespace-create",
+        "namespace": "exomachina",
+        "time": 1790193458.133095
+      },
+      {
+        "kind": "serve-ready",
+        "pid": 22052,
+        "time": 1790193458.138203
+      },
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "worker-start",
+        "pid": 22112,
+        "time": 1790193458.142176
+      },
+      {
+        "kind": "start",
+        "pid": 22052,
+        "reason": "factory-work:c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3",
+        "time": 1790193458.280194
+      },
+      {
+        "kind": "attach",
+        "pid": 22052,
+        "reason": "factory-work:c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8",
+        "time": 1790193470.883041
+      },
+      {
+        "build_id": "b-e3d01047763d",
+        "kind": "build-added",
+        "source_digest": "e3d01047763d5f4dde7abce73fac8a7466840731a770717a4289136070997dd8",
+        "time": 1790193472.82127
+      },
+      {
+        "kind": "attach",
+        "pid": 22052,
+        "reason": "factory-work:c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a",
+        "time": 1790193473.009512
+      },
+      {
+        "build_id": "b-e3d01047763d",
+        "kind": "worker-start",
+        "pid": 22227,
+        "time": 1790193473.296982
+      },
+      {
+        "kind": "serve-stop",
+        "pid": 22052,
+        "time": 1790193478.0750139
+      },
+      {
+        "first": false,
+        "kind": "postgres-start",
+        "time": 1790193479.3793888
+      },
+      {
+        "kind": "temporal-start",
+        "pid": 22255,
+        "time": 1790193479.3848
+      },
+      {
+        "kind": "serve-ready",
+        "pid": 22245,
+        "time": 1790193479.7050161
+      },
+      {
+        "build_id": "b-e3d01047763d",
+        "kind": "worker-start",
+        "pid": 22281,
+        "time": 1790193479.709981
+      },
+      {
+        "kind": "start",
+        "pid": 22245,
+        "reason": "recover-unfinished:1",
+        "time": 1790193479.7127092
+      },
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "worker-start",
+        "pid": 22282,
+        "time": 1790193479.7141619
+      },
+      {
+        "kind": "attach",
+        "pid": 22245,
+        "reason": "director-command:c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8",
+        "time": 1790193480.292696
+      }
+    ],
+    "runner_status_two_builds": {
+      "address": "127.0.0.1:44002",
+      "builds": {
+        "b-05b5760359e6": {
+          "pid": 22112,
+          "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f"
+        },
+        "b-e3d01047763d": {
+          "pid": 22227,
+          "source_digest": "e3d01047763d5f4dde7abce73fac8a7466840731a770717a4289136070997dd8"
+        }
+      },
+      "namespace": "exomachina",
+      "pid": 22052,
+      "pids": {
+        "postgres": 22066,
+        "temporal": 22087
+      },
+      "rss_kib": {
+        "postgres": 15552,
+        "temporal": 203008
+      },
+      "running": true,
+      "worker_rss_kib": {
+        "b-05b5760359e6": 75792,
+        "b-e3d01047763d": 73904
+      }
+    },
+    "runner_stop": {
+      "address": "127.0.0.1:44002",
+      "builds": {},
+      "namespace": "exomachina",
+      "pid": null,
+      "pids": {},
+      "rss_kib": {},
+      "running": false,
+      "worker_rss_kib": {}
+    },
+    "same_harness_process_for_v2": true,
+    "v1_child_status_at_wait": {
+      "authoritative_acceptance": null,
+      "authorized_actor": "fixture-operator",
+      "child_id": null,
+      "completed": [
+        "gather",
+        "join_all",
+        "route_scope:true",
+        "draft_unresolved:r1",
+        "independent_quality:r1",
+        "route_verdict:false",
+        "repair:1",
+        "draft_repair:r2",
+        "independent_quality:r2",
+        "route_verdict:false",
+        "repair:2",
+        "draft_repair:r3",
+        "independent_quality:r3",
+        "route_verdict:false",
+        "repair:exhausted"
+      ],
+      "current_revision": "r3",
+      "current_sha256": "8f51984c5f8cd98170ffdfac8cd8a962131e82631141542b66a359adb0281cb6",
+      "deadline": 1790194371.370229,
+      "definition_digest": "911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb",
+      "incident": null,
+      "input_authority": {
+        "outcome_mode": {
+          "actor": "fixture-operator",
+          "source": "caller"
+        },
+        "question": {
+          "actor": "fixture-operator",
+          "source": "caller"
+        }
+      },
+      "interpreter_build": "b-05b5760359e6",
+      "manifest_digest": "a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b",
+      "node": "director",
+      "owner_epoch": 2,
+      "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683",
+      "phase": "awaiting-director",
+      "quality_verdict": {
+        "accepted": false,
+        "reason": "counterevidence remains unresolved",
+        "reviewer": "88cf19f8-0baf-4ce2-8403-d0aff7e2259c",
+        "revision": "r3",
+        "sha256": "8f51984c5f8cd98170ffdfac8cd8a962131e82631141542b66a359adb0281cb6"
+      },
+      "release_receipt": null,
+      "repair_count": 2,
+      "run": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+      "run_inputs": {
+        "outcome_mode": "never",
+        "question": "What limits the same customer use?"
+      },
+      "run_inputs_digest": "3624c1ffdd564a676fe29b485ba047012c8f2be8de7e5d83c1ca70750689579d",
+      "unresolved": null
+    },
+    "v1_send_reply_state": "working",
+    "v1_task_final": {
+      "_observed_states": [
+        "completed"
+      ],
+      "artifacts": [
+        {
+          "artifactId": "9052695f4950d1c9f2eacaa78e3fbc1b4471dbb040093d53353a9c9954907672",
+          "parts": [
+            {
+              "data": {
+                "acceptance": null,
+                "capability": "verified-research@1",
+                "interpreter_revision": null,
+                "release_receipt": null,
+                "report": null,
+                "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8",
+                "status": "aborted"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "c0c25f2e-979d-4030-a7df-c049695884da",
+      "id": "90833571-5ccc-420d-8285-9f92d2c7f280",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "c905870f-6467-4cbb-aad9-8be1d85b987b",
+        "harness_incarnation": 3,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b",
+        "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683",
+        "publication_label": "v1",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8",
+        "run_inputs_digest": "3624c1ffdd564a676fe29b485ba047012c8f2be8de7e5d83c1ca70750689579d"
+      },
+      "status": {
+        "state": "completed"
+      }
+    },
+    "v1_waiting_task_after_restart": {
+      "_observed_states": [
+        "input-required"
+      ],
+      "contextId": "c0c25f2e-979d-4030-a7df-c049695884da",
+      "id": "90833571-5ccc-420d-8285-9f92d2c7f280",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "c905870f-6467-4cbb-aad9-8be1d85b987b",
+        "harness_incarnation": 3,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b",
+        "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683",
+        "publication_label": "v1",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8",
+        "run_inputs_digest": "3624c1ffdd564a676fe29b485ba047012c8f2be8de7e5d83c1ca70750689579d"
+      },
+      "status": {
+        "message": {
+          "kind": "message",
+          "messageId": "1c1a27b7-09d7-4bcb-acd8-a6ba25dbbe55",
+          "parts": [
+            {
+              "data": {
+                "director_wait": {
+                  "child_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+                  "phase": "awaiting-child"
+                }
+              },
+              "kind": "data"
+            }
+          ],
+          "role": "agent"
+        },
+        "state": "input-required"
+      }
+    },
+    "v1_waiting_task_after_v2": {
+      "contextId": "c0c25f2e-979d-4030-a7df-c049695884da",
+      "id": "90833571-5ccc-420d-8285-9f92d2c7f280",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "c905870f-6467-4cbb-aad9-8be1d85b987b",
+        "harness_incarnation": 2,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b",
+        "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683",
+        "publication_label": "v1",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8",
+        "run_inputs_digest": "3624c1ffdd564a676fe29b485ba047012c8f2be8de7e5d83c1ca70750689579d"
+      },
+      "status": {
+        "message": {
+          "kind": "message",
+          "messageId": "a06327db-9abc-43c3-a3b9-73e3c0eda2ab",
+          "parts": [
+            {
+              "data": {
+                "director_wait": {
+                  "child_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+                  "phase": "awaiting-child"
+                }
+              },
+              "kind": "data"
+            }
+          ],
+          "role": "agent"
+        },
+        "state": "input-required"
+      }
+    },
+    "v1_waiting_task_before": {
+      "_observed_states": [
+        "working",
+        "input-required"
+      ],
+      "contextId": "c0c25f2e-979d-4030-a7df-c049695884da",
+      "id": "90833571-5ccc-420d-8285-9f92d2c7f280",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "c905870f-6467-4cbb-aad9-8be1d85b987b",
+        "harness_incarnation": 2,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b",
+        "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683",
+        "publication_label": "v1",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8",
+        "run_inputs_digest": "3624c1ffdd564a676fe29b485ba047012c8f2be8de7e5d83c1ca70750689579d"
+      },
+      "status": {
+        "message": {
+          "kind": "message",
+          "messageId": "168b4ee6-144e-4f70-b9d5-cfe7d9122741",
+          "parts": [
+            {
+              "data": {
+                "director_wait": {
+                  "child_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+                  "phase": "awaiting-child"
+                }
+              },
+              "kind": "data"
+            }
+          ],
+          "role": "agent"
+        },
+        "state": "input-required"
+      }
+    },
+    "v2_task": {
+      "_observed_states": [
+        "working",
+        "completed"
+      ],
+      "artifacts": [
+        {
+          "artifactId": "a8baf901bd30afbab4d05725feece59a06a417556aae0f90d239aa670785f6f4",
+          "parts": [
+            {
+              "data": {
+                "acceptance": {
+                  "attempt": 1,
+                  "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                  "quality_task_id": "662c9a5b-551e-4bad-9402-dc3ddccf08b6",
+                  "reviewer": "88cf19f8-0baf-4ce2-8403-d0aff7e2259c",
+                  "revision": "r1",
+                  "run": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380",
+                  "sha256": "781ad7b59b4963f46b22936a92ebba006e5b6b717492578a4d543384b8642c3d"
+                },
+                "capability": "verified-research@1",
+                "interpreter_revision": "b2",
+                "release_receipt": {
+                  "accepted_effect_count": 1,
+                  "attempts": 1,
+                  "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                  "release_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380:release:r1",
+                  "revision": "r1",
+                  "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380",
+                  "sha256": "781ad7b59b4963f46b22936a92ebba006e5b6b717492578a4d543384b8642c3d"
+                },
+                "report": {
+                  "author": "factory:c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380",
+                  "content": "{\"assessment\":\"documented limits addressed\",\"join\":{\"branch_artifact_sha256\":{\"counter_alpha\":\"0f0537a3c539af2e1170a49ee7d84d486900ea3062e0123f856f9a3782f70420\",\"source_alpha\":\"29ce44469e5b0119d78391ccd0da62a9853b03e9f35c26db2c4e61a576708c85\",\"source_beta\":\"4c8e364e61ed4b3b77965608948db2a2070e42bea2b70ff62a43c40d547faa39\"},\"claims\":[{\"branch_instance\":\"source_alpha\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_alpha\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_alpha\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_alpha\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":false,\"route_status\":\"clear\",\"run_id\":\"c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":true,\"revision\":\"r1\"}",
+                  "revision": "r1",
+                  "sha256": "781ad7b59b4963f46b22936a92ebba006e5b6b717492578a4d543384b8642c3d"
+                },
+                "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a",
+                "status": "accepted"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "50fecafa-7413-4e26-a457-2799a3cc8cd2",
+      "id": "0151271b-bddb-45e1-8d27-66ee5a4db755",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "c905870f-6467-4cbb-aad9-8be1d85b987b",
+        "harness_incarnation": 2,
+        "interpreter_build": "b-e3d01047763d",
+        "manifest_digest": "b7b6b319ee66d5dbcbca5d408396d243994f5da50253174174ff29c5c0cf77e3",
+        "package_digest": "e956f4bc35aaa84a08b6646acd0d6586258f5f62804c98a29aa5689257fe38fe",
+        "publication_label": "v2",
+        "run_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a",
+        "run_inputs_digest": "160f1d38295583c88486728087391f09d73f1ddd0f8d34691475ad57dea99ede"
+      },
+      "status": {
+        "state": "completed"
+      }
+    }
+  },
+  "python": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python",
+  "runner_stop_final": {
+    "address": "127.0.0.1:44002",
+    "builds": {},
+    "namespace": "exomachina",
+    "pid": null,
+    "pids": {},
+    "rss_kib": {},
+    "running": false,
+    "worker_rss_kib": {}
+  },
+  "started_at": 1790193445.351756,
+  "testbed_down": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  },
+  "testbed_up": {
+    "bindings": {
+      "counter_alpha": {
+        "approved": true,
+        "identity": "d8c6a434-4bd1-4ede-9c1c-1258c5948cfb",
+        "role": "capability",
+        "url": "http://127.0.0.1:45202"
+      },
+      "counter_beta": {
+        "approved": true,
+        "identity": "45e1ffbf-c4f8-404b-ad11-81bca0665cf1",
+        "role": "capability",
+        "url": "http://127.0.0.1:45203"
+      },
+      "quality": {
+        "approved": true,
+        "identity": "88cf19f8-0baf-4ce2-8403-d0aff7e2259c",
+        "role": "quality",
+        "url": "http://127.0.0.1:45204"
+      },
+      "release": {
+        "approved": true,
+        "identity": "4833adea-adff-410f-b497-732272d36c5c",
+        "role": "release",
+        "url": "http://127.0.0.1:45205"
+      },
+      "source_alpha": {
+        "approved": true,
+        "identity": "2146ebcc-be33-4332-8f12-db458cd345a8",
+        "role": "capability",
+        "url": "http://127.0.0.1:45200"
+      },
+      "source_beta": {
+        "approved": true,
+        "identity": "f1cd2583-7e71-4a4f-ba80-8faad568fbe6",
+        "role": "capability",
+        "url": "http://127.0.0.1:45201"
+      }
+    },
+    "health": {
+      "counter_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "d8c6a434-4bd1-4ede-9c1c-1258c5948cfb",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "counter_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "45e1ffbf-c4f8-404b-ad11-81bca0665cf1",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "quality": {
+        "a2a_protocol": "0.3.0",
+        "identity": "88cf19f8-0baf-4ce2-8403-d0aff7e2259c",
+        "incarnation": 1,
+        "role": "quality"
+      },
+      "release": {
+        "identity": "4833adea-adff-410f-b497-732272d36c5c",
+        "incarnation": 1,
+        "mode": "participating"
+      },
+      "source_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "2146ebcc-be33-4332-8f12-db458cd345a8",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "source_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "f1cd2583-7e71-4a4f-ba80-8faad568fbe6",
+        "incarnation": 1,
+        "role": "capability"
+      }
+    },
+    "pids": {
+      "counter_alpha": {
+        "identity": "d8c6a434-4bd1-4ede-9c1c-1258c5948cfb",
+        "pid": 21981,
+        "port": 45202
+      },
+      "counter_beta": {
+        "identity": "45e1ffbf-c4f8-404b-ad11-81bca0665cf1",
+        "pid": 21982,
+        "port": 45203
+      },
+      "quality": {
+        "identity": "88cf19f8-0baf-4ce2-8403-d0aff7e2259c",
+        "pid": 21985,
+        "port": 45204
+      },
+      "release": {
+        "identity": "4833adea-adff-410f-b497-732272d36c5c",
+        "pid": 21989,
+        "port": 45205
+      },
+      "source_alpha": {
+        "identity": "2146ebcc-be33-4332-8f12-db458cd345a8",
+        "pid": 21977,
+        "port": 45200
+      },
+      "source_beta": {
+        "identity": "f1cd2583-7e71-4a4f-ba80-8faad568fbe6",
+        "pid": 21980,
+        "port": 45201
+      }
+    }
+  },
+  "v1_publication": {
+    "approval": {
+      "approver": "operator:fixture-operator",
+      "decision": "operator reviewed hand-written template",
+      "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683",
+      "policy": "human",
+      "status": "approved"
+    },
+    "publication": {
+      "build_id": "b-05b5760359e6",
+      "label": "v1",
+      "manifest_digest": "a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b",
+      "package_digest": "04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683"
+    },
+    "source": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/definitions/v1-template.json"
+  }
+}
