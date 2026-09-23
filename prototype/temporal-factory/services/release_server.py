@@ -11,11 +11,13 @@ import hashlib
 import json
 import os
 import sqlite3
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote
 from uuid import uuid4
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from fixture import canonical, sha256_text
 
 

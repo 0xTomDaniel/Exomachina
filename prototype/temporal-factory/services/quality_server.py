@@ -17,7 +17,7 @@ from a2a.server.apps import A2AFastAPIApplication
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.types import AgentCard, AgentCapabilities, AgentSkill
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "decision-round" / "common"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 import harness_server as prior  # noqa: E402
 from fixture import canonical, quality_decision  # noqa: E402
 

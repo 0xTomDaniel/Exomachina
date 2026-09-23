@@ -1,0 +1,460 @@
+{
+  "home": "/tmp/exo-proto-testbed-20260923-t1",
+  "port_base": 45100,
+  "checks": {
+    "all_healthy": true,
+    "a2a_capability_completed": true,
+    "a2a_quality_accepted": true,
+    "idempotent_up_same_pids": true,
+    "idempotent_up_same_incarnation": true,
+    "restart_same_identities": true,
+    "restart_incremented_incarnation": true,
+    "first_down_stopped": true,
+    "second_down_stopped": true
+  },
+  "first_up": {
+    "bindings": {
+      "counter_alpha": {
+        "approved": true,
+        "identity": "3d12f55a-6725-4c5d-b7f9-76bf02da681b",
+        "role": "capability",
+        "url": "http://127.0.0.1:45102"
+      },
+      "counter_beta": {
+        "approved": true,
+        "identity": "770e908e-0056-43ba-a3df-6b23f877e41f",
+        "role": "capability",
+        "url": "http://127.0.0.1:45103"
+      },
+      "quality": {
+        "approved": true,
+        "identity": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+        "role": "quality",
+        "url": "http://127.0.0.1:45104"
+      },
+      "release": {
+        "approved": true,
+        "identity": "ceccfbde-6c9e-4fcc-a944-8a924ccc2cac",
+        "role": "release",
+        "url": "http://127.0.0.1:45105"
+      },
+      "source_alpha": {
+        "approved": true,
+        "identity": "1e683010-621b-45fa-b476-f13f2f19e307",
+        "role": "capability",
+        "url": "http://127.0.0.1:45100"
+      },
+      "source_beta": {
+        "approved": true,
+        "identity": "f3d9147a-3918-41fe-8909-3c153c114db5",
+        "role": "capability",
+        "url": "http://127.0.0.1:45101"
+      }
+    },
+    "health": {
+      "counter_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "3d12f55a-6725-4c5d-b7f9-76bf02da681b",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "counter_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "770e908e-0056-43ba-a3df-6b23f877e41f",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "quality": {
+        "a2a_protocol": "0.3.0",
+        "identity": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+        "incarnation": 1,
+        "role": "quality"
+      },
+      "release": {
+        "identity": "ceccfbde-6c9e-4fcc-a944-8a924ccc2cac",
+        "incarnation": 1,
+        "mode": "participating"
+      },
+      "source_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "1e683010-621b-45fa-b476-f13f2f19e307",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "source_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "f3d9147a-3918-41fe-8909-3c153c114db5",
+        "incarnation": 1,
+        "role": "capability"
+      }
+    },
+    "pids": {
+      "counter_alpha": {
+        "identity": "3d12f55a-6725-4c5d-b7f9-76bf02da681b",
+        "pid": 14424,
+        "port": 45102
+      },
+      "counter_beta": {
+        "identity": "770e908e-0056-43ba-a3df-6b23f877e41f",
+        "pid": 14425,
+        "port": 45103
+      },
+      "quality": {
+        "identity": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+        "pid": 14465,
+        "port": 45104
+      },
+      "release": {
+        "identity": "ceccfbde-6c9e-4fcc-a944-8a924ccc2cac",
+        "pid": 14466,
+        "port": 45105
+      },
+      "source_alpha": {
+        "identity": "1e683010-621b-45fa-b476-f13f2f19e307",
+        "pid": 14422,
+        "port": 45100
+      },
+      "source_beta": {
+        "identity": "f3d9147a-3918-41fe-8909-3c153c114db5",
+        "pid": 14423,
+        "port": 45101
+      }
+    }
+  },
+  "first_status": {
+    "services": {
+      "counter_alpha": {
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "identity": "3d12f55a-6725-4c5d-b7f9-76bf02da681b",
+          "incarnation": 1,
+          "role": "capability"
+        },
+        "healthy": true,
+        "pid": 14424,
+        "port": 45102
+      },
+      "counter_beta": {
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "identity": "770e908e-0056-43ba-a3df-6b23f877e41f",
+          "incarnation": 1,
+          "role": "capability"
+        },
+        "healthy": true,
+        "pid": 14425,
+        "port": 45103
+      },
+      "quality": {
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "identity": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+          "incarnation": 1,
+          "role": "quality"
+        },
+        "healthy": true,
+        "pid": 14465,
+        "port": 45104
+      },
+      "release": {
+        "health": {
+          "identity": "ceccfbde-6c9e-4fcc-a944-8a924ccc2cac",
+          "incarnation": 1,
+          "mode": "participating"
+        },
+        "healthy": true,
+        "pid": 14466,
+        "port": 45105
+      },
+      "source_alpha": {
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "identity": "1e683010-621b-45fa-b476-f13f2f19e307",
+          "incarnation": 1,
+          "role": "capability"
+        },
+        "healthy": true,
+        "pid": 14422,
+        "port": 45100
+      },
+      "source_beta": {
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "identity": "f3d9147a-3918-41fe-8909-3c153c114db5",
+          "incarnation": 1,
+          "role": "capability"
+        },
+        "healthy": true,
+        "pid": 14423,
+        "port": 45101
+      }
+    }
+  },
+  "a2a": {
+    "capability": {
+      "a2a_protocol": "0.3.0",
+      "action_id": "testbed-smoke:source_alpha",
+      "artifact": {
+        "author": "1e683010-621b-45fa-b476-f13f2f19e307",
+        "content": "fixture-result:{\"availability\":\"documented\",\"claims\":[{\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"instance\":\"source_alpha\",\"kind\":\"source_evidence@1\",\"question\":\"Can the customer use the documented capability?\"}",
+        "revision": "r2",
+        "sha256": "cb2bce586fb2462b9c5bdcc174b2d9454404e1456d4fdc979cfd6173ec160d47"
+      },
+      "definition_digest": "smoke-definition",
+      "harness_identity": "1e683010-621b-45fa-b476-f13f2f19e307",
+      "harness_role": "capability",
+      "run_id": "testbed-smoke",
+      "task_id": "2987a1ca-ce22-487b-ba28-d6712c7fd257"
+    },
+    "quality": {
+      "a2a_protocol": "0.3.0",
+      "action_id": "testbed-smoke:quality",
+      "artifact": {
+        "accepted": true,
+        "reason": "counterevidence addressed for exact revision",
+        "reviewer": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+        "revision": "r1",
+        "sha256": "9a4f8b0f290fe4bae7efe574262dc22c9415a7ff9f2a0205b77e015b2762f8e9"
+      },
+      "definition_digest": "smoke-definition",
+      "harness_identity": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+      "harness_role": "quality",
+      "run_id": "testbed-smoke",
+      "task_id": "8dd21d37-930e-4d0e-b453-5d9830f18476"
+    }
+  },
+  "second_up_without_down": {
+    "bindings": {
+      "counter_alpha": {
+        "approved": true,
+        "identity": "3d12f55a-6725-4c5d-b7f9-76bf02da681b",
+        "role": "capability",
+        "url": "http://127.0.0.1:45102"
+      },
+      "counter_beta": {
+        "approved": true,
+        "identity": "770e908e-0056-43ba-a3df-6b23f877e41f",
+        "role": "capability",
+        "url": "http://127.0.0.1:45103"
+      },
+      "quality": {
+        "approved": true,
+        "identity": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+        "role": "quality",
+        "url": "http://127.0.0.1:45104"
+      },
+      "release": {
+        "approved": true,
+        "identity": "ceccfbde-6c9e-4fcc-a944-8a924ccc2cac",
+        "role": "release",
+        "url": "http://127.0.0.1:45105"
+      },
+      "source_alpha": {
+        "approved": true,
+        "identity": "1e683010-621b-45fa-b476-f13f2f19e307",
+        "role": "capability",
+        "url": "http://127.0.0.1:45100"
+      },
+      "source_beta": {
+        "approved": true,
+        "identity": "f3d9147a-3918-41fe-8909-3c153c114db5",
+        "role": "capability",
+        "url": "http://127.0.0.1:45101"
+      }
+    },
+    "health": {
+      "counter_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "3d12f55a-6725-4c5d-b7f9-76bf02da681b",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "counter_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "770e908e-0056-43ba-a3df-6b23f877e41f",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "quality": {
+        "a2a_protocol": "0.3.0",
+        "identity": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+        "incarnation": 1,
+        "role": "quality"
+      },
+      "release": {
+        "identity": "ceccfbde-6c9e-4fcc-a944-8a924ccc2cac",
+        "incarnation": 1,
+        "mode": "participating"
+      },
+      "source_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "1e683010-621b-45fa-b476-f13f2f19e307",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "source_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "f3d9147a-3918-41fe-8909-3c153c114db5",
+        "incarnation": 1,
+        "role": "capability"
+      }
+    },
+    "pids": {
+      "counter_alpha": {
+        "identity": "3d12f55a-6725-4c5d-b7f9-76bf02da681b",
+        "pid": 14424,
+        "port": 45102
+      },
+      "counter_beta": {
+        "identity": "770e908e-0056-43ba-a3df-6b23f877e41f",
+        "pid": 14425,
+        "port": 45103
+      },
+      "quality": {
+        "identity": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+        "pid": 14465,
+        "port": 45104
+      },
+      "release": {
+        "identity": "ceccfbde-6c9e-4fcc-a944-8a924ccc2cac",
+        "pid": 14466,
+        "port": 45105
+      },
+      "source_alpha": {
+        "identity": "1e683010-621b-45fa-b476-f13f2f19e307",
+        "pid": 14422,
+        "port": 45100
+      },
+      "source_beta": {
+        "identity": "f3d9147a-3918-41fe-8909-3c153c114db5",
+        "pid": 14423,
+        "port": 45101
+      }
+    }
+  },
+  "first_down": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  },
+  "restart_up": {
+    "bindings": {
+      "counter_alpha": {
+        "approved": true,
+        "identity": "3d12f55a-6725-4c5d-b7f9-76bf02da681b",
+        "role": "capability",
+        "url": "http://127.0.0.1:45102"
+      },
+      "counter_beta": {
+        "approved": true,
+        "identity": "770e908e-0056-43ba-a3df-6b23f877e41f",
+        "role": "capability",
+        "url": "http://127.0.0.1:45103"
+      },
+      "quality": {
+        "approved": true,
+        "identity": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+        "role": "quality",
+        "url": "http://127.0.0.1:45104"
+      },
+      "release": {
+        "approved": true,
+        "identity": "ceccfbde-6c9e-4fcc-a944-8a924ccc2cac",
+        "role": "release",
+        "url": "http://127.0.0.1:45105"
+      },
+      "source_alpha": {
+        "approved": true,
+        "identity": "1e683010-621b-45fa-b476-f13f2f19e307",
+        "role": "capability",
+        "url": "http://127.0.0.1:45100"
+      },
+      "source_beta": {
+        "approved": true,
+        "identity": "f3d9147a-3918-41fe-8909-3c153c114db5",
+        "role": "capability",
+        "url": "http://127.0.0.1:45101"
+      }
+    },
+    "health": {
+      "counter_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "3d12f55a-6725-4c5d-b7f9-76bf02da681b",
+        "incarnation": 2,
+        "role": "capability"
+      },
+      "counter_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "770e908e-0056-43ba-a3df-6b23f877e41f",
+        "incarnation": 2,
+        "role": "capability"
+      },
+      "quality": {
+        "a2a_protocol": "0.3.0",
+        "identity": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+        "incarnation": 2,
+        "role": "quality"
+      },
+      "release": {
+        "identity": "ceccfbde-6c9e-4fcc-a944-8a924ccc2cac",
+        "incarnation": 2,
+        "mode": "participating"
+      },
+      "source_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "1e683010-621b-45fa-b476-f13f2f19e307",
+        "incarnation": 2,
+        "role": "capability"
+      },
+      "source_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "f3d9147a-3918-41fe-8909-3c153c114db5",
+        "incarnation": 2,
+        "role": "capability"
+      }
+    },
+    "pids": {
+      "counter_alpha": {
+        "identity": "3d12f55a-6725-4c5d-b7f9-76bf02da681b",
+        "pid": 14573,
+        "port": 45102
+      },
+      "counter_beta": {
+        "identity": "770e908e-0056-43ba-a3df-6b23f877e41f",
+        "pid": 14577,
+        "port": 45103
+      },
+      "quality": {
+        "identity": "96b71bf3-16b2-4fb0-90e5-0f6eae6e02ba",
+        "pid": 14579,
+        "port": 45104
+      },
+      "release": {
+        "identity": "ceccfbde-6c9e-4fcc-a944-8a924ccc2cac",
+        "pid": 14580,
+        "port": 45105
+      },
+      "source_alpha": {
+        "identity": "1e683010-621b-45fa-b476-f13f2f19e307",
+        "pid": 14571,
+        "port": 45100
+      },
+      "source_beta": {
+        "identity": "f3d9147a-3918-41fe-8909-3c153c114db5",
+        "pid": 14572,
+        "port": 45101
+      }
+    }
+  },
+  "final_down": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  }
+}

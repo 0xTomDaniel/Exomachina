@@ -8,6 +8,13 @@
       "source": "caller",
       "allowed_actors": ["fixture-operator"],
       "may_affect_acceptance": true
+    },
+    "question": {
+      "type": "string",
+      "required": false,
+      "source": "caller",
+      "allowed_actors": ["fixture-operator"],
+      "may_affect_acceptance": false
     }
   },
   "root": {
