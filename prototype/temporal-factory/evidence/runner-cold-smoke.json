@@ -1,0 +1,290 @@
+{
+  "cold_start_passed": true,
+  "events": [
+    {
+      "first": true,
+      "kind": "postgres-start",
+      "time": 1790193306.455337
+    },
+    {
+      "kind": "temporal-start",
+      "pid": 20854,
+      "time": 1790193306.4629
+    },
+    {
+      "kind": "namespace-create",
+      "namespace": "exomachina",
+      "time": 1790193307.054177
+    },
+    {
+      "kind": "serve-ready",
+      "pid": 20802,
+      "time": 1790193307.055109
+    },
+    {
+      "kind": "start",
+      "pid": 20802,
+      "reason": "clean-cold",
+      "time": 1790193307.1628811
+    },
+    {
+      "kind": "attach",
+      "pid": 20802,
+      "reason": "clean-cold-attach",
+      "time": 1790193307.303433
+    },
+    {
+      "build_id": "b-05b5760359e6",
+      "kind": "build-added",
+      "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f",
+      "time": 1790193307.340178
+    },
+    {
+      "build_id": "b-05b5760359e6",
+      "kind": "worker-start",
+      "pid": 20897,
+      "time": 1790193307.5652711
+    },
+    {
+      "kind": "serve-stop",
+      "pid": 20802,
+      "time": 1790193320.5178409
+    },
+    {
+      "first": false,
+      "kind": "postgres-start",
+      "time": 1790193320.8756711
+    },
+    {
+      "kind": "temporal-start",
+      "pid": 21039,
+      "time": 1790193320.8808541
+    },
+    {
+      "kind": "serve-ready",
+      "pid": 21029,
+      "time": 1790193321.208655
+    },
+    {
+      "build_id": "b-05b5760359e6",
+      "kind": "worker-start",
+      "pid": 21066,
+      "time": 1790193321.2137759
+    },
+    {
+      "kind": "start",
+      "pid": 21029,
+      "reason": "clean-warm",
+      "time": 1790193321.2245288
+    },
+    {
+      "kind": "serve-stop",
+      "pid": 21029,
+      "time": 1790193322.997875
+    }
+  ],
+  "final_ready": {
+    "address": "127.0.0.1:46002",
+    "builds": {
+      "b-05b5760359e6": {
+        "pid": 21066,
+        "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f"
+      }
+    },
+    "namespace": "exomachina",
+    "pid": 21029,
+    "pids": {
+      "postgres": null,
+      "temporal": 21039
+    },
+    "running": false,
+    "started_at": "2026-09-23T19:55:20.688722+00:00"
+  },
+  "observations": {
+    "attach": {
+      "address": "127.0.0.1:46002",
+      "builds": {},
+      "namespace": "exomachina",
+      "pid": 20802,
+      "pids": {
+        "postgres": 20819,
+        "temporal": 20854
+      },
+      "rss_kib": {
+        "postgres": 15616,
+        "temporal": 144288
+      },
+      "running": true,
+      "worker_rss_kib": {}
+    },
+    "build": {
+      "build_id": "b-05b5760359e6",
+      "files": [
+        "worker.py",
+        "factory.py",
+        "adapter.py",
+        "binding.py",
+        "buildinfo.py",
+        "definition.py",
+        "fixture.py",
+        "failure_projection.py",
+        "incident_projection.py",
+        "quality_authority.py",
+        "a2a_outcome.py",
+        "long_client.py",
+        "receiver_client.py"
+      ],
+      "path": "/private/tmp/exo-proto-runner-cold-20260923-195413/runner/builds/b-05b5760359e6",
+      "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f"
+    },
+    "cold_start": {
+      "address": "127.0.0.1:46002",
+      "builds": {},
+      "namespace": "exomachina",
+      "pid": 20802,
+      "pids": {
+        "postgres": 20819,
+        "temporal": 20854
+      },
+      "rss_kib": {
+        "postgres": 15616,
+        "temporal": 143920
+      },
+      "running": true,
+      "worker_rss_kib": {}
+    },
+    "cold_stop": {
+      "address": "127.0.0.1:46002",
+      "builds": {},
+      "namespace": "exomachina",
+      "pid": null,
+      "pids": {},
+      "rss_kib": {},
+      "running": false,
+      "worker_rss_kib": {}
+    },
+    "status": {
+      "address": "127.0.0.1:46002",
+      "builds": {},
+      "namespace": "exomachina",
+      "pid": 20802,
+      "pids": {
+        "postgres": 20819,
+        "temporal": 20854
+      },
+      "rss_kib": {
+        "postgres": 15616,
+        "temporal": 144288
+      },
+      "running": true,
+      "worker_rss_kib": {}
+    },
+    "warm_event_checks": {
+      "namespace_not_created": true,
+      "postgres_start_first_false": true,
+      "schema_setup_guard": "schema setup only executes when _start_postgres first is true"
+    },
+    "warm_start": {
+      "address": "127.0.0.1:46002",
+      "builds": {
+        "b-05b5760359e6": {
+          "pid": 21066,
+          "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f"
+        }
+      },
+      "namespace": "exomachina",
+      "pid": 21029,
+      "pids": {
+        "postgres": 21032,
+        "temporal": 21039
+      },
+      "rss_kib": {
+        "postgres": 15536,
+        "temporal": 122384
+      },
+      "running": true,
+      "worker_rss_kib": {
+        "b-05b5760359e6": 20080
+      }
+    },
+    "warm_stop": {
+      "address": "127.0.0.1:46002",
+      "builds": {},
+      "namespace": "exomachina",
+      "pid": null,
+      "pids": {},
+      "rss_kib": {},
+      "running": false,
+      "worker_rss_kib": {}
+    },
+    "worker": {
+      "api": "describe_worker_deployment_version",
+      "build_id": "b-05b5760359e6",
+      "pollers": "worker_deployment_version_info {\n  version: \"exo-factory.b-05b5760359e6\"\n  create_time {\n    seconds: 1790193318\n    nanos: 63203000\n  }\n  task_queue_infos {\n    name: \"exo-factory\"\n    type: TASK_QUEUE_TYPE_WORKFLOW\n  }\n  task_queue_infos {\n    name: \"exo-factory\"\n    type: TASK_QUEUE_TYPE_ACTIVITY\n  }\n  deployment_version {\n    build_id: \"b-05b5760359e6\"\n    deployment_name: \"exo-factory\"\n  }\n  status: WORKER_DEPLOYMENT_VERSION_STATUS_INACTIVE\n}\nversion_task_queues {\n  name: \"exo-factory\"\n  type: TASK_QUEUE_TYPE_WORKFLOW\n}\nversion_task_queues {\n  name: \"exo-factory\"\n  type: TASK_QUEUE_TYPE_ACTIVITY\n}\n",
+      "registered": true,
+      "version": "exo-factory.b-05b5760359e6"
+    },
+    "worker_status": {
+      "address": "127.0.0.1:46002",
+      "builds": {
+        "b-05b5760359e6": {
+          "pid": 20897,
+          "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f"
+        }
+      },
+      "namespace": "exomachina",
+      "pid": 20802,
+      "pids": {
+        "postgres": 20819,
+        "temporal": 20854
+      },
+      "rss_kib": {
+        "postgres": 15616,
+        "temporal": 169712
+      },
+      "running": true,
+      "worker_rss_kib": {
+        "b-05b5760359e6": 63968
+      }
+    }
+  },
+  "ports": {
+    "front_member": 32501,
+    "frontend": 46002,
+    "history": 46005,
+    "history_member": 32503,
+    "http": 46003,
+    "match_member": 32502,
+    "matching": 46004,
+    "metrics": 46012,
+    "postgres": 32500,
+    "pprof": 46011,
+    "worker": 46006,
+    "worker_member": 32504
+  },
+  "result": "PASS",
+  "stages": [
+    {
+      "reason": "clean-cold",
+      "returncode": 0,
+      "stage": "start",
+      "stderr": "",
+      "stdout": "{\"address\": \"127.0.0.1:46002\", \"builds\": {}, \"namespace\": \"exomachina\", \"pid\": 20802, \"pids\": {\"postgres\": 20819, \"temporal\": 20854}, \"rss_kib\": {\"postgres\": 15616, \"temporal\": 143920}, \"running\": true, \"worker_rss_kib\": {}}"
+    },
+    {
+      "reason": null,
+      "returncode": 0,
+      "stage": "status",
+      "stderr": "",
+      "stdout": "{\"address\": \"127.0.0.1:46002\", \"builds\": {}, \"namespace\": \"exomachina\", \"pid\": 20802, \"pids\": {\"postgres\": 20819, \"temporal\": 20854}, \"rss_kib\": {\"postgres\": 15616, \"temporal\": 144288}, \"running\": true, \"worker_rss_kib\": {}}"
+    },
+    {
+      "reason": "clean-warm",
+      "returncode": 0,
+      "stage": "start",
+      "stderr": "",
+      "stdout": "{\"address\": \"127.0.0.1:46002\", \"builds\": {\"b-05b5760359e6\": {\"pid\": 21066, \"source_digest\": \"05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f\"}}, \"namespace\": \"exomachina\", \"pid\": 21029, \"pids\": {\"postgres\": 21032, \"temporal\": 21039}, \"rss_kib\": {\"postgres\": 15536, \"temporal\": 122384}, \"running\": true, \"worker_rss_kib\": {\"b-05b5760359e6\": 20080}}"
+    }
+  ],
+  "state_dir": "/tmp/exo-proto-runner-cold-20260923-195413"
+}
