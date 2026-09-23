@@ -1,0 +1,117 @@
+steps:
+  - id: source
+    run: exo-arb assign --instance source_evidence --type source_evidence --drop-ack true
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: counter
+    run: exo-arb assign --instance counter_evidence --type counter_evidence
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: join_evidence
+    depends: [source, counter]
+    run: exo-arb join --branches source_evidence,counter_evidence
+  - id: synthesize_r1
+    depends: join_evidence
+    run: exo-arb synthesize --revision r1 --resolved false
+  - id: quality_r1
+    depends: synthesize_r1
+    run: exo-arb quality --revision r1
+    output: VERDICT_R1
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: route_r1
+    depends: quality_r1
+    action: router.route
+    with:
+      value: ${VERDICT_R1}
+      routes:
+        accepted: [accept_r1, release_r1]
+        rejected: [repair_r2, quality_r2, route_r2]
+  - id: accept_r1
+    run: exo-arb accept --revision r1
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: release_r1
+    depends: accept_r1
+    run: exo-arb release --revision r1
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: repair_r2
+    run: exo-arb repair --from r1 --to r2 --resolved input
+  - id: quality_r2
+    depends: repair_r2
+    run: exo-arb quality --revision r2
+    output: VERDICT_R2
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: route_r2
+    depends: quality_r2
+    action: router.route
+    with:
+      value: ${VERDICT_R2}
+      routes:
+        accepted: [accept_r2, release_r2]
+        rejected: [repair_r3, quality_r3, route_r3]
+  - id: accept_r2
+    run: exo-arb accept --revision r2
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: release_r2
+    depends: accept_r2
+    run: exo-arb release --revision r2
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: repair_r3
+    run: exo-arb repair --from r2 --to r3 --resolved input
+  - id: quality_r3
+    depends: repair_r3
+    run: exo-arb quality --revision r3
+    output: VERDICT_R3
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: route_r3
+    depends: quality_r3
+    action: router.route
+    with:
+      value: ${VERDICT_R3}
+      routes:
+        accepted: [accept_r3, release_r3]
+        rejected: [director_wait, abort_after_wait]
+  - id: accept_r3
+    run: exo-arb accept --revision r3
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: release_r3
+    depends: accept_r3
+    run: exo-arb release --revision r3
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: director_wait
+    action: human.task
+    with:
+      prompt: Repairs exhausted; authorize abort of the exact current revision
+      form:
+        type: object
+        additionalProperties: false
+        properties:
+          decision:
+            type: string
+            enum: [abort]
+          revision:
+            type: string
+            enum: [r3]
+        required: [decision, revision]
+  - id: abort_after_wait
+    depends: director_wait
+    run: exo-arb abort --revision r3

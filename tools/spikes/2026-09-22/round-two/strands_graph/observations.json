@@ -1,0 +1,153 @@
+{
+  "in_flight_overlap": {
+    "remote": {
+      "accepted_count": 1,
+      "claim": {
+        "completed": 1,
+        "epoch": 2,
+        "owner": "second",
+        "run_id": "run-v1"
+      },
+      "local_effects": [
+        {
+          "remote_id": "3ba63a3587e3f475",
+          "state": "accepted"
+        }
+      ],
+      "submit_attempt_owners": [
+        "second",
+        "first"
+      ]
+    },
+    "stale_completion": {
+      "epoch": 1,
+      "error": "RuntimeError: run claim expired before completion",
+      "owner": "first"
+    }
+  },
+  "lost_ack": {
+    "after_recovery": {
+      "accepted_count": 1,
+      "claim": {
+        "completed": 1,
+        "epoch": 2,
+        "owner": "second",
+        "run_id": "run-v1"
+      },
+      "local_effects": [
+        {
+          "remote_id": "3ba63a3587e3f475",
+          "state": "accepted"
+        }
+      ],
+      "submit_attempt_owners": [
+        "first"
+      ]
+    },
+    "before_kill": {
+      "accepted_count": 1,
+      "claim": {
+        "completed": 0,
+        "epoch": 1,
+        "owner": "first",
+        "run_id": "run-v1"
+      },
+      "local_effects": [
+        {
+          "remote_id": null,
+          "state": "pending"
+        }
+      ],
+      "submit_attempt_owners": [
+        "first"
+      ]
+    },
+    "recovered": {
+      "epoch": 2,
+      "graph": {
+        "digest": "13006bf806f984afc400f33b717fda748f7e1bfac03ae8321276585d6c8e1e56",
+        "execution_order": [
+          "research_a",
+          "research_b",
+          "join",
+          "review",
+          "deliver"
+        ],
+        "interrupts": [],
+        "node_statuses": {
+          "deliver": "completed",
+          "join": "completed",
+          "research_a": "completed",
+          "research_b": "completed",
+          "review": "completed"
+        },
+        "revision": 1,
+        "run_id": "run-v1",
+        "status": "completed"
+      },
+      "owner": "second"
+    },
+    "sigkill_after_remote_accept": true
+  },
+  "sdk": "strands-agents==1.57.0",
+  "session_manager": "FileSessionManager",
+  "stale_owner": {
+    "claim_rejected_during_valid_lease": {
+      "claim": "rejected",
+      "owner": "early"
+    },
+    "owner_a": {
+      "epoch": 1,
+      "error": "RuntimeError: stale run claim: a epoch 1",
+      "owner": "a"
+    },
+    "owner_b": {
+      "epoch": 2,
+      "graph": {
+        "digest": "13006bf806f984afc400f33b717fda748f7e1bfac03ae8321276585d6c8e1e56",
+        "execution_order": [
+          "research_b",
+          "research_a",
+          "join",
+          "review",
+          "deliver"
+        ],
+        "interrupts": [],
+        "node_statuses": {
+          "deliver": "completed",
+          "join": "completed",
+          "research_a": "completed",
+          "research_b": "completed",
+          "review": "completed"
+        },
+        "revision": 1,
+        "run_id": "run-v1",
+        "status": "completed"
+      },
+      "owner": "b"
+    },
+    "post_completion_claim": {
+      "claim": "rejected",
+      "owner": "c"
+    },
+    "remote": {
+      "accepted_count": 1,
+      "claim": {
+        "completed": 1,
+        "epoch": 2,
+        "owner": "b",
+        "run_id": "run-v1"
+      },
+      "local_effects": [
+        {
+          "remote_id": "3ba63a3587e3f475",
+          "state": "accepted"
+        }
+      ],
+      "submit_attempt_owners": [
+        "b"
+      ]
+    }
+  },
+  "synthetic_remote_only": true
+}

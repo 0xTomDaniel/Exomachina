@@ -1,0 +1,325 @@
+{
+  "footprint": {
+    "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+    "footprint_exit_code": 0,
+    "physical_footprint_bytes_deduplicated": 723716504,
+    "pid_count": 51,
+    "processes": [
+      {
+        "command": "/tmp/exo-tq-package-e/venv/bin/python /tmp/exo-tq-package-e/app/launcher.py start",
+        "pid": 96224,
+        "ppid": 89043,
+        "role": "bundle_child"
+      },
+      {
+        "command": "/private/tmp/exo-tq-package-e/pg/bin/postgres -D /private/tmp/exo-tq-package-e/state/pgdata -p 31300 -h 127.0.0.1 -k /private/tmp/exo-tq-package-e/state/pgsocket -c shared_buffers=128MB -c max_connections=100",
+        "pid": 96235,
+        "ppid": 1,
+        "role": "postgres_postmaster"
+      },
+      {
+        "command": "postgres: checkpointer",
+        "pid": 96236,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: background writer",
+        "pid": 96237,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: walwriter",
+        "pid": 96239,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: autovacuum launcher",
+        "pid": 96240,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: logical replication launcher",
+        "pid": 96241,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "/private/tmp/exo-tq-package-e/temporal/temporal-server --config-file /private/tmp/exo-tq-package-e/state/server.yaml --allow-no-auth start",
+        "pid": 96244,
+        "ppid": 96224,
+        "role": "bundle_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61348) idle",
+        "pid": 96248,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal_visibility 127.0.0.1(61349) idle",
+        "pid": 96249,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61350) idle",
+        "pid": 96250,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal_visibility 127.0.0.1(61351) idle",
+        "pid": 96251,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61352) idle",
+        "pid": 96252,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal_visibility 127.0.0.1(61353) idle",
+        "pid": 96253,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61354) idle",
+        "pid": 96254,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal_visibility 127.0.0.1(61355) idle",
+        "pid": 96255,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61357) idle",
+        "pid": 96257,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61358) idle",
+        "pid": 96258,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61362) idle",
+        "pid": 96259,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61365) idle",
+        "pid": 96260,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61366) idle",
+        "pid": 96261,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61367) idle",
+        "pid": 96262,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61368) idle",
+        "pid": 96263,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61370) idle",
+        "pid": 96264,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61372) idle",
+        "pid": 96265,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61373) idle",
+        "pid": 96266,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61371) idle",
+        "pid": 96267,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "/tmp/exo-tq-package-e/venv/bin/python /private/tmp/exo-tq-package-e/app/worker.py",
+        "pid": 96268,
+        "ppid": 96224,
+        "role": "bundle_child"
+      },
+      {
+        "command": "/private/tmp/exo-tq-package-e/venv/bin/python /private/tmp/exo-tq-package-e/app/slow_harness_server.py --state /private/tmp/exo-tq-package-e/state/source --role capability --port 43021",
+        "pid": 96269,
+        "ppid": 96224,
+        "role": "bundle_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61387) idle",
+        "pid": 96270,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61388) idle",
+        "pid": 96271,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61389) idle",
+        "pid": 96272,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61390) idle",
+        "pid": 96273,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61391) idle",
+        "pid": 96274,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61393) idle",
+        "pid": 96275,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61392) idle",
+        "pid": 96276,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61394) idle",
+        "pid": 96277,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61395) idle",
+        "pid": 96278,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61396) idle",
+        "pid": 96279,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61398) idle",
+        "pid": 96280,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61397) idle",
+        "pid": 96281,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61399) idle",
+        "pid": 96282,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61400) idle",
+        "pid": 96283,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61401) idle",
+        "pid": 96284,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61402) idle",
+        "pid": 96285,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "postgres: temporal temporal 127.0.0.1(61403) idle",
+        "pid": 96286,
+        "ppid": 96235,
+        "role": "postgres_child"
+      },
+      {
+        "command": "/private/tmp/exo-tq-package-e/venv/bin/python /private/tmp/exo-tq-package-e/app/prior_common/harness_server.py --state /private/tmp/exo-tq-package-e/state/counter --role capability --port 43022",
+        "pid": 96287,
+        "ppid": 96224,
+        "role": "bundle_child"
+      },
+      {
+        "command": "/private/tmp/exo-tq-package-e/venv/bin/python /private/tmp/exo-tq-package-e/app/common/quality_server.py --state /private/tmp/exo-tq-package-e/state/quality --port 43023",
+        "pid": 96288,
+        "ppid": 96224,
+        "role": "bundle_child"
+      },
+      {
+        "command": "/private/tmp/exo-tq-package-e/venv/bin/python /private/tmp/exo-tq-package-e/app/common/release_server.py --state /private/tmp/exo-tq-package-e/state/release --mode participating --port 43024",
+        "pid": 96290,
+        "ppid": 96224,
+        "role": "bundle_child"
+      },
+      {
+        "command": "/private/tmp/exo-tq-package-e/venv/bin/python /private/tmp/exo-tq-package-e/app/common/release_server.py --state /private/tmp/exo-tq-package-e/state/opaque --mode opaque --port 43025",
+        "pid": 96291,
+        "ppid": 96224,
+        "role": "bundle_child"
+      },
+      {
+        "command": "/tmp/exo-tq-package-e/venv/bin/python /private/tmp/exo-tq-package-e/app/director_server.py --state /private/tmp/exo-tq-package-e/state/director --catalog /private/tmp/exo-tq-package-e/state/catalog --address 127.0.0.1:43002 --port 43026",
+        "pid": 96297,
+        "ppid": 96224,
+        "role": "bundle_child"
+      }
+    ],
+    "sampled_unix_seconds": 1790180746.426156,
+    "sampling_retries": [],
+    "selection": "supervisor descendants plus state-bound detached processes plus explicit store descendants"
+  },
+  "max_connections": "100",
+  "membership_port_type": "smallint",
+  "postgres_connections": 42,
+  "schema": "exomachina.temporal.package-tuning/1",
+  "shared_buffers": "128MB",
+  "state_disk_kib": 78372
+}

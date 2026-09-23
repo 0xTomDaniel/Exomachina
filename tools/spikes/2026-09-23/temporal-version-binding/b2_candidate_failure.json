@@ -1,0 +1,231 @@
+{
+  "activation": {
+    "active": "0f1469d4a670469987daaccba90178986428fc3baaa70305a432e92a26e90d12",
+    "b1_set_current": {},
+    "b1_worker_registered": {
+      "BuildID": "b1",
+      "createTime": "2026-09-23T16:22:44.31708Z",
+      "currentSinceTime": "1970-01-01T00:00:00Z",
+      "deploymentName": "exo-tq-version-factory",
+      "drainageInfo": {
+        "drainageStatus": "",
+        "lastChangedTime": "0001-01-01T00:00:00Z",
+        "lastCheckedTime": "0001-01-01T00:00:00Z"
+      },
+      "metadata": null,
+      "rampPercentage": 0,
+      "rampingSinceTime": "1970-01-01T00:00:00Z",
+      "routingChangedTime": "1970-01-01T00:00:00Z",
+      "taskQueuesInfos": [
+        {
+          "name": "exo-tq-version-factory",
+          "type": "activity"
+        },
+        {
+          "name": "exo-tq-version-factory",
+          "type": "workflow"
+        }
+      ]
+    },
+    "b2_set_current": {},
+    "b2_worker_registered": {
+      "BuildID": "b2",
+      "createTime": "2026-09-23T16:22:47.424Z",
+      "currentSinceTime": "1970-01-01T00:00:00Z",
+      "deploymentName": "exo-tq-version-factory",
+      "drainageInfo": {
+        "drainageStatus": "",
+        "lastChangedTime": "0001-01-01T00:00:00Z",
+        "lastCheckedTime": "0001-01-01T00:00:00Z"
+      },
+      "metadata": null,
+      "rampPercentage": 0,
+      "rampingSinceTime": "1970-01-01T00:00:00Z",
+      "routingChangedTime": "1970-01-01T00:00:00Z",
+      "taskQueuesInfos": [
+        {
+          "name": "exo-tq-version-factory",
+          "type": "workflow"
+        },
+        {
+          "name": "exo-tq-version-factory",
+          "type": "activity"
+        }
+      ]
+    },
+    "deployment_after_activation": {
+      "createTime": "2026-09-23T16:22:44.275153Z",
+      "lastModifierIdentity": "temporal-cli:tomdaniel@MacBookPro.lan",
+      "managerIdentity": "",
+      "name": "exo-tq-version-factory",
+      "routingConfig": {
+        "currentVersionBuildID": "b2",
+        "currentVersionChangedTime": "2026-09-23T16:22:48.720446Z",
+        "currentVersionDeploymentName": "exo-tq-version-factory",
+        "rampingVersionBuildID": "",
+        "rampingVersionChangedTime": "0001-01-01T00:00:00Z",
+        "rampingVersionDeploymentName": "",
+        "rampingVersionPercentage": 0,
+        "rampingVersionPercentageChangedTime": "0001-01-01T00:00:00Z"
+      },
+      "versionSummaries": [
+        {
+          "BuildID": "b2",
+          "createTime": "2026-09-23T16:22:47.418585Z",
+          "deploymentName": "exo-tq-version-factory",
+          "drainageStatus": "unspecified"
+        },
+        {
+          "BuildID": "b1",
+          "createTime": "2026-09-23T16:22:44.275153Z",
+          "deploymentName": "exo-tq-version-factory",
+          "drainageStatus": "draining"
+        }
+      ]
+    }
+  },
+  "cleanup": {
+    "all_started_processes_stopped": true,
+    "owned_ports_closed": true,
+    "state_removed": true
+  },
+  "diagnostic_log_tails": {
+    "counter.log": "",
+    "director.log": "",
+    "postgres.log": "2026-09-23 10:22:40.106 MDT [94840] LOG:  starting PostgreSQL 16.15 (Homebrew) on aarch64-apple-darwin25.6.0, compiled by Apple clang version 21.0.0 (clang-2100.1.1.101), 64-bit\n2026-09-23 10:22:40.106 MDT [94840] LOG:  listening on IPv4 address \"127.0.0.1\", port 31265\n2026-09-23 10:22:40.107 MDT [94840] LOG:  listening on Unix socket \"/tmp/exo-tq-version-ibqnl1n2/pgsocket/.s.PGSQL.31265\"\n2026-09-23 10:22:40.114 MDT [94844] LOG:  database system was shut down at 2026-09-23 10:22:39 MDT\n2026-09-23 10:22:40.117 MDT [94840] LOG:  database system is ready to accept connections\n",
+    "quality.log": "",
+    "release.log": "",
+    "source.log": "",
+    "temporal.log": ":\"/home/runner/work/temporal/temporal/service/history/api/queryworkflow/api.go:137\"}\n{\"level\":\"info\",\"ts\":\"2026-09-23T10:24:27.721-0600\",\"msg\":\"Fail query fast due to WorkflowTask in failed state.\",\"shard-id\":2,\"address\":\"127.0.0.1:42034\",\"wf-namespace\":\"exomachina\",\"wf-namespace-id\":\"6703bcc5-0e11-4729-b0b4-d0ee310e31cf\",\"wf-id\":\"tq-version-r2:child:db09ef8474c8\",\"wf-run-id\":\"01a0cf13-b2dc-723a-837d-3f8761287fa5\",\"logging-call-at\":\"/home/runner/work/temporal/temporal/service/history/api/queryworkflow/api.go:137\"}\n{\"level\":\"info\",\"ts\":\"2026-09-23T10:24:27.982-0600\",\"msg\":\"Fail query fast due to WorkflowTask in failed state.\",\"shard-id\":2,\"address\":\"127.0.0.1:42034\",\"wf-namespace\":\"exomachina\",\"wf-namespace-id\":\"6703bcc5-0e11-4729-b0b4-d0ee310e31cf\",\"wf-id\":\"tq-version-r2:child:db09ef8474c8\",\"wf-run-id\":\"01a0cf13-b2dc-723a-837d-3f8761287fa5\",\"logging-call-at\":\"/home/runner/work/temporal/temporal/service/history/api/queryworkflow/api.go:137\"}\n{\"level\":\"info\",\"ts\":\"2026-09-23T10:24:28.240-0600\",\"msg\":\"Fail query fast due to WorkflowTask in failed state.\",\"shard-id\":2,\"address\":\"127.0.0.1:42034\",\"wf-namespace\":\"exomachina\",\"wf-namespace-id\":\"6703bcc5-0e11-4729-b0b4-d0ee310e31cf\",\"wf-id\":\"tq-version-r2:child:db09ef8474c8\",\"wf-run-id\":\"01a0cf13-b2dc-723a-837d-3f8761287fa5\",\"logging-call-at\":\"/home/runner/work/temporal/temporal/service/history/api/queryworkflow/api.go:137\"}\n{\"level\":\"info\",\"ts\":\"2026-09-23T10:24:28.498-0600\",\"msg\":\"Fail query fast due to WorkflowTask in failed state.\",\"shard-id\":2,\"address\":\"127.0.0.1:42034\",\"wf-namespace\":\"exomachina\",\"wf-namespace-id\":\"6703bcc5-0e11-4729-b0b4-d0ee310e31cf\",\"wf-id\":\"tq-version-r2:child:db09ef8474c8\",\"wf-run-id\":\"01a0cf13-b2dc-723a-837d-3f8761287fa5\",\"logging-call-at\":\"/home/runner/work/temporal/temporal/service/history/api/queryworkflow/api.go:137\"}\n{\"level\":\"info\",\"ts\":\"2026-09-23T10:24:28.755-0600\",\"msg\":\"Fail query fast due to WorkflowTask in failed state.\",\"shard-id\":2,\"address\":\"127.0.0.1:42034\",\"wf-namespace\":\"exomachina\",\"wf-namespace-id\":\"6703bcc5-0e11-4729-b0b4-d0ee310e31cf\",\"wf-id\":\"tq-version-r2:child:db09ef8474c8\",\"wf-run-id\":\"01a0cf13-b2dc-723a-837d-3f8761287fa5\",\"logging-call-at\":\"/home/runner/work/temporal/temporal/service/history/api/queryworkflow/api.go:137\"}\n{\"level\":\"info\",\"ts\":\"2026-09-23T10:24:29.015-0600\",\"msg\":\"Fail query fast due to WorkflowTask in failed state.\",\"shard-id\":2,\"address\":\"127.0.0.1:42034\",\"wf-namespace\":\"exomachina\",\"wf-namespace-id\":\"6703bcc5-0e11-4729-b0b4-d0ee310e31cf\",\"wf-id\":\"tq-version-r2:child:db09ef8474c8\",\"wf-run-id\":\"01a0cf13-b2dc-723a-837d-3f8761287fa5\",\"logging-call-at\":\"/home/runner/work/temporal/temporal/service/history/api/queryworkflow/api.go:137\"}\n{\"level\":\"info\",\"ts\":\"2026-09-23T10:24:29.273-0600\",\"msg\":\"Fail query fast due to WorkflowTask in failed state.\",\"shard-id\":2,\"address\":\"127.0.0.1:42034\",\"wf-namespace\":\"exomachina\",\"wf-namespace-id\":\"6703bcc5-0e11-4729-b0b4-d0ee310e31cf\",\"wf-id\":\"tq-version-r2:child:db09ef8474c8\",\"wf-run-id\":\"01a0cf13-b2dc-723a-837d-3f8761287fa5\",\"logging-call-at\":\"/home/runner/work/temporal/temporal/service/history/api/queryworkflow/api.go:137\"}\n{\"level\":\"info\",\"ts\":\"2026-09-23T10:24:29.529-0600\",\"msg\":\"Fail query fast due to WorkflowTask in failed state.\",\"shard-id\":2,\"address\":\"127.0.0.1:42034\",\"wf-namespace\":\"exomachina\",\"wf-namespace-id\":\"6703bcc5-0e11-4729-b0b4-d0ee310e31cf\",\"wf-id\":\"tq-version-r2:child:db09ef8474c8\",\"wf-run-id\":\"01a0cf13-b2dc-723a-837d-3f8761287fa5\",\"logging-call-at\":\"/home/runner/work/temporal/temporal/service/history/api/queryworkflow/api.go:137\"}\n{\"level\":\"info\",\"ts\":\"2026-09-23T10:24:29.785-0600\",\"msg\":\"Fail query fast due to WorkflowTask in failed state.\",\"shard-id\":2,\"address\":\"127.0.0.1:42034\",\"wf-namespace\":\"exomachina\",\"wf-namespace-id\":\"6703bcc5-0e11-4729-b0b4-d0ee310e31cf\",\"wf-id\":\"tq-version-r2:child:db09ef8474c8\",\"wf-run-id\":\"01a0cf13-b2dc-723a-837d-3f8761287fa5\",\"logging-call-at\":\"/home/runner/work/temporal/temporal/service/history/api/queryworkflow/api.go:137\"}\n",
+    "worker-b1.log": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/workflow_sandbox/_importer.py:238: UserWarning: Module definition was imported after initial workflow load.\n  warnings.warn(\n",
+    "worker-b2.log": "ackages/temporalio/worker/_workflow_instance.py\", line 526, in activate\n    self._run_once(check_conditions=index == 1 or index == 2)\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/_workflow_instance.py\", line 2732, in _run_once\n    raise self._current_activation_error\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/_workflow_instance.py\", line 2750, in _run_top_level_workflow_function\n    await coro\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/_workflow_instance.py\", line 1153, in run_workflow\n    result = await self._inbound.execute_workflow(input)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/_workflow_instance.py\", line 3144, in execute_workflow\n    return await input.run_fn(*args)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/temporal-version-binding/build_b2/factory.py\", line 334, in run\n    return await self.run_node(document, input[\"package\"], input)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/temporal-version-binding/build_b2/factory.py\", line 318, in run_node\n    raise ValueError(\"unsupported factory node\")\nValueError: unsupported factory node\nFailed activation on workflow FactoryRun with ID tq-version-r2:child:db09ef8474c8 and run ID 01a0cf13-b2dc-723a-837d-3f8761287fa5\nTraceback (most recent call last):\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/_workflow_instance.py\", line 526, in activate\n    self._run_once(check_conditions=index == 1 or index == 2)\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/_workflow_instance.py\", line 2732, in _run_once\n    raise self._current_activation_error\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/_workflow_instance.py\", line 2750, in _run_top_level_workflow_function\n    await coro\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/_workflow_instance.py\", line 1153, in run_workflow\n    result = await self._inbound.execute_workflow(input)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/_workflow_instance.py\", line 3144, in execute_workflow\n    return await input.run_fn(*args)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/temporal-version-binding/build_b2/factory.py\", line 334, in run\n    return await self.run_node(document, input[\"package\"], input)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/temporal-version-binding/build_b2/factory.py\", line 318, in run_node\n    raise ValueError(\"unsupported factory node\")\nValueError: unsupported factory node\n"
+  },
+  "error": "TimeoutError('condition not reached')",
+  "ports": {
+    "counter": 42162,
+    "director": 42166,
+    "front_member": 31253,
+    "frontend": 42033,
+    "history": 42034,
+    "history_member": 31254,
+    "http": 42043,
+    "match_member": 31255,
+    "matching": 42035,
+    "metrics": 42020,
+    "opaque": 42165,
+    "postgres": 31265,
+    "pprof": 42056,
+    "quality": 42163,
+    "release": 42164,
+    "source": 42161,
+    "worker": 42039,
+    "worker_member": 31259
+  },
+  "publications": {
+    "b1": {
+      "build_id": "b1",
+      "manifest_digest": "e75191cbd69c2d9053153bc73297cdd703e082e690fa8f99ce2a92ce23aef9ad",
+      "package_digest": "1e98db1eeb957c0befdec9b80d7a88be6f6f76bf63ba41c02a484d972e5e1720",
+      "source_digest": "89244299c4bc970d5903eb5afb1df6910e9e2ac0354da614c39033c1121e23cb"
+    },
+    "b2": {
+      "build_id": "b2",
+      "manifest_digest": "0f1469d4a670469987daaccba90178986428fc3baaa70305a432e92a26e90d12",
+      "package_digest": "087c307121857f98cb375d5643d8c6e10111097c51b5ab6b965438af00356dac",
+      "source_digest": "d03294063aae9c2050330b8b1a924168d7fc4f62962c4d1d857962aa4fb4f2a2"
+    }
+  },
+  "replay": {},
+  "retirement": {},
+  "runs": {
+    "r1_wait": {
+      "child": {
+        "authoritative_acceptance": null,
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2",
+          "independent_quality:r2",
+          "route_verdict:false",
+          "repair:2",
+          "draft:r3",
+          "independent_quality:r3",
+          "route_verdict:false",
+          "repair:exhausted"
+        ],
+        "current_revision": "r3",
+        "current_sha256": "25b6fc96efb67869b0d97e1fca6d4c10571da2d0da25f03e4067391cc991c9d2",
+        "deadline": 1790180746.935062,
+        "definition_digest": "1923ee9afeb96d9abfb03efe0b6bb0d07e6dfac00bb63a44b9d54b5f0461335e",
+        "interpreter_build": "b1",
+        "manifest_digest": "e75191cbd69c2d9053153bc73297cdd703e082e690fa8f99ce2a92ce23aef9ad",
+        "node": "director",
+        "owner_epoch": 1,
+        "package_digest": "1e98db1eeb957c0befdec9b80d7a88be6f6f76bf63ba41c02a484d972e5e1720",
+        "phase": "awaiting-director",
+        "quality_verdict": {
+          "accepted": false,
+          "reason": "counterevidence remains unresolved",
+          "reviewer": "fce2818a-ac0d-4b1b-96ed-aea2a803dc18",
+          "revision": "r3",
+          "sha256": "25b6fc96efb67869b0d97e1fca6d4c10571da2d0da25f03e4067391cc991c9d2"
+        },
+        "release_receipt": null,
+        "repair_count": 2,
+        "run": "tq-version-r1:child:1923ee9afeb9",
+        "unresolved": null
+      },
+      "original_task": {
+        "contextId": "e3df5ea1-edda-4d54-8504-85ff3752a942",
+        "id": "eaa92dd3-13a9-47a8-99ed-41cace55f1bf",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "c1a197b0-877e-4881-a17c-9f0bffaf4f1e",
+          "harness_incarnation": 1,
+          "interpreter_build": "b1",
+          "manifest_digest": "e75191cbd69c2d9053153bc73297cdd703e082e690fa8f99ce2a92ce23aef9ad",
+          "package_digest": "1e98db1eeb957c0befdec9b80d7a88be6f6f76bf63ba41c02a484d972e5e1720",
+          "run_id": "tq-version-r1"
+        },
+        "status": {
+          "state": "input-required"
+        }
+      },
+      "parent": {
+        "authoritative_acceptance": null,
+        "child_id": "tq-version-r1:child:1923ee9afeb9",
+        "completed": [],
+        "current_revision": null,
+        "current_sha256": null,
+        "deadline": null,
+        "definition_digest": "d90963c352d320664de54db4e4d38bdb57cde9ee9a21ad1f306b42c8f4f88e06",
+        "interpreter_build": "b1",
+        "manifest_digest": "e75191cbd69c2d9053153bc73297cdd703e082e690fa8f99ce2a92ce23aef9ad",
+        "node": "invoke_child",
+        "owner_epoch": 1,
+        "package_digest": "1e98db1eeb957c0befdec9b80d7a88be6f6f76bf63ba41c02a484d972e5e1720",
+        "phase": "awaiting-child",
+        "quality_verdict": null,
+        "release_receipt": null,
+        "repair_count": 0,
+        "run": "tq-version-r1",
+        "unresolved": null
+      },
+      "pinned_version": "exo-tq-version-factory.b1",
+      "task_id": "eaa92dd3-13a9-47a8-99ed-41cace55f1bf"
+    }
+  },
+  "status": "failed",
+  "versions": {
+    "postgres": "postgres (PostgreSQL) 16.15 (Homebrew)",
+    "python": "3.12.9",
+    "server": "temporal version 1.32.0",
+    "temporalio": "1.33.0"
+  }
+}

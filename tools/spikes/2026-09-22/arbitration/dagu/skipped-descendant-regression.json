@@ -1,0 +1,129 @@
+{
+  "corrected_run_evidence": "observed.json",
+  "corrective_authoring": "Explicitly include every conditional descendant in the matching router target list; publisher rejects omitted descendants",
+  "finding": "Dagu router.route skipped a direct target but scheduled its depends descendant when the descendant was not itself a router target",
+  "initial_published_definition": {
+    "closure_sha256": "235cbea44e9541a8f119e8a5948d0b8276ad2285f417dbc907030862d3c03ede",
+    "dependent_edges": {
+      "abort_after_wait": "director_wait",
+      "quality_r2": "repair_r2",
+      "quality_r3": "repair_r3",
+      "release_r1": "accept_r1",
+      "release_r2": "accept_r2",
+      "release_r3": "accept_r3"
+    },
+    "routes": {
+      "route_r1": {
+        "accepted": [
+          "accept_r1"
+        ],
+        "rejected": [
+          "repair_r2"
+        ]
+      },
+      "route_r2": {
+        "accepted": [
+          "accept_r2"
+        ],
+        "rejected": [
+          "repair_r3"
+        ]
+      },
+      "route_r3": {
+        "accepted": [
+          "accept_r3"
+        ],
+        "rejected": [
+          "director_wait"
+        ]
+      }
+    }
+  },
+  "native": {
+    "exo-arb-child-4f25e740ec5b22295951": {
+      "nodes": [
+        {
+          "error": "",
+          "id": "accept_r1",
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        {
+          "error": "exit status 1\nrecent stderr (tail):\nValueError: release requires authoritative exact current acceptance\nTraceback (most recent call last):\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/",
+          "id": "release_r1",
+          "retry_count": 2,
+          "status": "failed"
+        },
+        {
+          "error": "",
+          "id": "accept_r2",
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        {
+          "error": "",
+          "id": "release_r2",
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        {
+          "error": "",
+          "id": "repair_r3",
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        {
+          "error": "exit status 1\nrecent stderr (tail):\nValueError: Quality requested for stale or missing candidate\nTraceback (most recent call last):\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/",
+          "id": "quality_r3",
+          "retry_count": 2,
+          "status": "failed"
+        }
+      ],
+      "status": "failed"
+    },
+    "exo-arb-child-c502e46cd8c326a8c4a4": {
+      "nodes": [
+        {
+          "error": "",
+          "id": "accept_r1",
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        {
+          "error": "exit status 1\nrecent stderr (tail):\nValueError: release requires authoritative exact current acceptance\nTraceback (most recent call last):\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/",
+          "id": "release_r1",
+          "retry_count": 1,
+          "status": "running"
+        },
+        {
+          "error": "",
+          "id": "accept_r2",
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        {
+          "error": "exit status 1\nrecent stderr (tail):\nValueError: release requires authoritative exact current acceptance\nTraceback (most recent call last):\n  File \"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/",
+          "id": "release_r2",
+          "retry_count": 1,
+          "status": "running"
+        },
+        {
+          "error": "",
+          "id": "repair_r3",
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        {
+          "error": "",
+          "id": "quality_r3",
+          "retry_count": 0,
+          "status": "succeeded"
+        }
+      ],
+      "status": "running"
+    }
+  },
+  "product_guard": "release_r1 failed with release requires authoritative exact current acceptance; no unauthorized release effect",
+  "release_receiver_effects": 1,
+  "schema": "exomachina.arbitration.dagu.skipped-descendant-regression/1"
+}

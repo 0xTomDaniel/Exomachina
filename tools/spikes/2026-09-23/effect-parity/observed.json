@@ -1,0 +1,135 @@
+{
+  "base": "/var/folders/x5/cz0z1rpn17v_y33px31rqw5r0000gn/T/exo-effect-parity-em02w8sk",
+  "branch_overlap": true,
+  "director_guards": {
+    "forged": 403,
+    "stale_owner": 409,
+    "valid": 200
+  },
+  "effect_version": {
+    "@effect/cluster": "0.60.2",
+    "@effect/sql": "0.52.1",
+    "@effect/sql-sqlite-node": "0.53.0",
+    "@effect/workflow": "0.19.1",
+    "effect": "3.22.2"
+  },
+  "old_wait_restart_and_abort": {
+    "same_child": true,
+    "same_digest": true,
+    "status": "aborted"
+  },
+  "passed": true,
+  "publication_negatives": {
+    "bad_repair_bound": {
+      "error": "validate: ValueError: repair bound must be one or two",
+      "status": 400
+    },
+    "review_bypass": {
+      "error": "validate: ValueError: release bypasses current independent Quality acceptance",
+      "status": 400
+    },
+    "unsafe_code": {
+      "error": "validate: ValueError: draft: expected fields ['next', 'resolved', 'type']",
+      "status": 400
+    },
+    "wrong_join": {
+      "error": "validate: ValueError: typed join mismatch or missing predecessor",
+      "status": 400
+    }
+  },
+  "publish_v3_without_worker_restart": true,
+  "real_strands_services": true,
+  "scope": "visible A1 plus bounded negatives/restart",
+  "success_child_binding": {
+    "accepted_revision": "r2",
+    "digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+    "repair_count": 1
+  },
+  "success_counts": {
+    "acceptance": 1,
+    "assign": 2,
+    "assign-start": 2,
+    "join": 1,
+    "join-start": 1,
+    "quality": 2,
+    "quality-start": 2,
+    "release": 1,
+    "release-start": 1,
+    "route": 2,
+    "synthesize": 2,
+    "synthesize-start": 2
+  },
+  "v2_still_waiting_at_v3_publish": true,
+  "v2_wait": {
+    "child": "effect-v2-wait:child:80fc95963eee",
+    "digest": "80fc95963eeedbddf55ccea15e8675d2be4f76dd9dafb937e856bc4a17b74e40",
+    "parent": "effect-v2-wait",
+    "repairs": 2,
+    "revision": "r3"
+  },
+  "v3_exhaustion": {
+    "child": {
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "released": false,
+      "repairs": 2,
+      "revision": "r3",
+      "run": "effect-v3-exhausted:child:755d525ac2ef",
+      "status": "aborted"
+    },
+    "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+    "released": false,
+    "run": "effect-v3-exhausted",
+    "status": "aborted"
+  },
+  "v3_success": {
+    "acceptance": {
+      "attempt": 2,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "quality_identity": "7b53534d-64f2-4887-9237-de3ae542f144",
+      "quality_task_id": "1b896317-4e90-4574-a4e2-4d86d87d69a8",
+      "revision": "r2",
+      "run": "effect-v3-success:child:755d525ac2ef",
+      "sha256": "45c9ea05d712a73632b77e117fcdb617293767cb0bc1786f70144f71e97950c9"
+    },
+    "child": {
+      "acceptance": {
+        "attempt": 2,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "quality_identity": "7b53534d-64f2-4887-9237-de3ae542f144",
+        "quality_task_id": "1b896317-4e90-4574-a4e2-4d86d87d69a8",
+        "revision": "r2",
+        "run": "effect-v3-success:child:755d525ac2ef",
+        "sha256": "45c9ea05d712a73632b77e117fcdb617293767cb0bc1786f70144f71e97950c9"
+      },
+      "child": null,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "receipt": {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "release_id": "effect-v3-success:child:755d525ac2ef:release:r2",
+        "revision": "r2",
+        "run_id": "effect-v3-success:child:755d525ac2ef",
+        "sha256": "45c9ea05d712a73632b77e117fcdb617293767cb0bc1786f70144f71e97950c9"
+      },
+      "released": true,
+      "repairs": 1,
+      "run": "effect-v3-success:child:755d525ac2ef",
+      "status": "accepted"
+    },
+    "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+    "receipt": {
+      "accepted_effect_count": 1,
+      "attempts": 1,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "release_id": "effect-v3-success:child:755d525ac2ef:release:r2",
+      "revision": "r2",
+      "run_id": "effect-v3-success:child:755d525ac2ef",
+      "sha256": "45c9ea05d712a73632b77e117fcdb617293767cb0bc1786f70144f71e97950c9"
+    },
+    "released": true,
+    "repairs": 0,
+    "run": "effect-v3-success",
+    "status": "accepted"
+  }
+}

@@ -1,0 +1,289 @@
+{
+  "after_restart": {
+    "changed": {
+      "child_id": "effect-upgrade-changed:child:6f98bf6bcd4f",
+      "digest": "6f98bf6bcd4f7f813e81daad661ae96af3172cb9f87fb589362fe89157b7d9fe",
+      "event_counts": {
+        "assign": 2,
+        "assign-start": 2,
+        "join": 1,
+        "join-start": 1,
+        "quality": 3,
+        "quality-start": 3,
+        "route": 3,
+        "synthesize": 3,
+        "synthesize-start": 3
+      },
+      "helper_pid": 75761,
+      "helper_rss_bytes": 199622656
+    },
+    "pinned": {
+      "child_id": "effect-upgrade-pinned:child:6f98bf6bcd4f",
+      "digest": "6f98bf6bcd4f7f813e81daad661ae96af3172cb9f87fb589362fe89157b7d9fe",
+      "event_counts": {
+        "assign": 2,
+        "assign-start": 2,
+        "join": 1,
+        "join-start": 1,
+        "quality": 3,
+        "quality-start": 3,
+        "route": 3,
+        "synthesize": 3,
+        "synthesize-start": 3
+      },
+      "helper_pid": 75765,
+      "helper_rss_bytes": 200114176
+    }
+  },
+  "base": "/tmp/exo-effect-upgrade-phup9a53",
+  "before_upgrade": {
+    "changed": {
+      "child_id": "effect-upgrade-changed:child:6f98bf6bcd4f",
+      "digest": "6f98bf6bcd4f7f813e81daad661ae96af3172cb9f87fb589362fe89157b7d9fe",
+      "event_counts": {
+        "assign": 2,
+        "assign-start": 2,
+        "join": 1,
+        "join-start": 1,
+        "quality": 3,
+        "quality-start": 3,
+        "route": 3,
+        "synthesize": 3,
+        "synthesize-start": 3
+      },
+      "parent_id": "effect-upgrade-changed",
+      "phase": "awaiting-director",
+      "revision": "r3"
+    },
+    "pinned": {
+      "child_id": "effect-upgrade-pinned:child:6f98bf6bcd4f",
+      "digest": "6f98bf6bcd4f7f813e81daad661ae96af3172cb9f87fb589362fe89157b7d9fe",
+      "event_counts": {
+        "assign": 2,
+        "assign-start": 2,
+        "join": 1,
+        "join-start": 1,
+        "quality": 3,
+        "quality-start": 3,
+        "route": 3,
+        "synthesize": 3,
+        "synthesize-start": 3
+      },
+      "parent_id": "effect-upgrade-pinned",
+      "phase": "awaiting-director",
+      "revision": "r3"
+    }
+  },
+  "child_digest": "6f98bf6bcd4f7f813e81daad661ae96af3172cb9f87fb589362fe89157b7d9fe",
+  "decisions": {
+    "changed": {
+      "body": {
+        "id": "effect-upgrade-changed:child:6f98bf6bcd4f",
+        "recorded": true
+      },
+      "status": 200
+    },
+    "pinned": {
+      "body": {
+        "id": "effect-upgrade-pinned:child:6f98bf6bcd4f",
+        "recorded": true
+      },
+      "status": 200
+    }
+  },
+  "final": {
+    "changed": {
+      "acceptance": null,
+      "child": {
+        "exit": "Success",
+        "run": {
+          "acceptance": null,
+          "child_id": null,
+          "digest": "6f98bf6bcd4f7f813e81daad661ae96af3172cb9f87fb589362fe89157b7d9fe",
+          "id": "effect-upgrade-changed:child:6f98bf6bcd4f",
+          "phase": "aborted",
+          "repair_count": 2,
+          "revision": "r3",
+          "sha256": "06256b891ab1bf87cea454b8e17433501c5c298a59f96978ab0759af7d4d0655"
+        },
+        "state": "Complete",
+        "value": {
+          "definition_digest": "6f98bf6bcd4f7f813e81daad661ae96af3172cb9f87fb589362fe89157b7d9fe",
+          "interpreter_revision": "v2",
+          "released": false,
+          "repairs": 2,
+          "revision": "r3",
+          "run": "effect-upgrade-changed:child:6f98bf6bcd4f",
+          "status": "aborted"
+        }
+      },
+      "event_counts": {
+        "assign": 2,
+        "assign-start": 2,
+        "join": 1,
+        "join-start": 1,
+        "quality": 3,
+        "quality-start": 3,
+        "route": 3,
+        "synthesize": 3,
+        "synthesize-start": 3
+      },
+      "parent": {
+        "exit": "Success",
+        "run": {
+          "acceptance": null,
+          "child_id": "effect-upgrade-changed:child:6f98bf6bcd4f",
+          "digest": "82c3421d94482028290adb5f8ee04088a0d567a9ea703a94b111fd917a05966c",
+          "id": "effect-upgrade-changed",
+          "phase": "child-aborted",
+          "repair_count": 0,
+          "revision": null,
+          "sha256": null
+        },
+        "state": "Complete",
+        "value": {
+          "child": {
+            "definition_digest": "6f98bf6bcd4f7f813e81daad661ae96af3172cb9f87fb589362fe89157b7d9fe",
+            "interpreter_revision": "v2",
+            "released": false,
+            "repairs": 2,
+            "revision": "r3",
+            "run": "effect-upgrade-changed:child:6f98bf6bcd4f",
+            "status": "aborted"
+          },
+          "definition_digest": "82c3421d94482028290adb5f8ee04088a0d567a9ea703a94b111fd917a05966c",
+          "released": false,
+          "run": "effect-upgrade-changed",
+          "status": "aborted"
+        }
+      },
+      "release": null
+    },
+    "pinned": {
+      "acceptance": null,
+      "child": {
+        "exit": "Success",
+        "run": {
+          "acceptance": null,
+          "child_id": null,
+          "digest": "6f98bf6bcd4f7f813e81daad661ae96af3172cb9f87fb589362fe89157b7d9fe",
+          "id": "effect-upgrade-pinned:child:6f98bf6bcd4f",
+          "phase": "aborted",
+          "repair_count": 2,
+          "revision": "r3",
+          "sha256": "74f5533774ab7896037ca5c02e1fd99a3228315aeeb1bf98716ce8b0b1f7aa80"
+        },
+        "state": "Complete",
+        "value": {
+          "definition_digest": "6f98bf6bcd4f7f813e81daad661ae96af3172cb9f87fb589362fe89157b7d9fe",
+          "released": false,
+          "repairs": 2,
+          "revision": "r3",
+          "run": "effect-upgrade-pinned:child:6f98bf6bcd4f",
+          "status": "aborted"
+        }
+      },
+      "event_counts": {
+        "assign": 2,
+        "assign-start": 2,
+        "join": 1,
+        "join-start": 1,
+        "quality": 3,
+        "quality-start": 3,
+        "route": 3,
+        "synthesize": 3,
+        "synthesize-start": 3
+      },
+      "parent": {
+        "exit": "Success",
+        "run": {
+          "acceptance": null,
+          "child_id": "effect-upgrade-pinned:child:6f98bf6bcd4f",
+          "digest": "82c3421d94482028290adb5f8ee04088a0d567a9ea703a94b111fd917a05966c",
+          "id": "effect-upgrade-pinned",
+          "phase": "child-aborted",
+          "repair_count": 0,
+          "revision": null,
+          "sha256": null
+        },
+        "state": "Complete",
+        "value": {
+          "child": {
+            "definition_digest": "6f98bf6bcd4f7f813e81daad661ae96af3172cb9f87fb589362fe89157b7d9fe",
+            "released": false,
+            "repairs": 2,
+            "revision": "r3",
+            "run": "effect-upgrade-pinned:child:6f98bf6bcd4f",
+            "status": "aborted"
+          },
+          "definition_digest": "82c3421d94482028290adb5f8ee04088a0d567a9ea703a94b111fd917a05966c",
+          "released": false,
+          "run": "effect-upgrade-pinned",
+          "status": "aborted"
+        }
+      },
+      "release": null
+    }
+  },
+  "frozen_bridge_sha256": "6efd4a8802a9c57ca045ebc0f4f824a5dfed4fcfbdfddff0ad1723d8f19868b7",
+  "frozen_helper_sha256": "487cfe0e7aae1f2b00d448d8a3a1c15c94462411e873b3cd77cbdb4698a9db93",
+  "frozen_source_hashes_after": {
+    "bridge.py": "6efd4a8802a9c57ca045ebc0f4f824a5dfed4fcfbdfddff0ad1723d8f19868b7",
+    "definition.py": "17303c14b3388b5488593ecc2e76be4ff9bf6a716025a163fa02dde8b400ac7f",
+    "helper.mjs": "487cfe0e7aae1f2b00d448d8a3a1c15c94462411e873b3cd77cbdb4698a9db93"
+  },
+  "helper_v1_sha256": "487cfe0e7aae1f2b00d448d8a3a1c15c94462411e873b3cd77cbdb4698a9db93",
+  "helper_v2_sha256": "9a62e0a1409c5a2202e0cc9a37781bb27de097c0f4c114f88dbaef83704f5e8f",
+  "published": {
+    "changed": {
+      "package_digest": "4bd48fb4c79d5c1e70e6b43654abc1f69e96f48093f1f825b704b1214a49282a",
+      "root_digest": "82c3421d94482028290adb5f8ee04088a0d567a9ea703a94b111fd917a05966c"
+    },
+    "pinned": {
+      "package_digest": "4bd48fb4c79d5c1e70e6b43654abc1f69e96f48093f1f825b704b1214a49282a",
+      "root_digest": "82c3421d94482028290adb5f8ee04088a0d567a9ea703a94b111fd917a05966c"
+    }
+  },
+  "quality_actions": [
+    {
+      "accepted_count": 3,
+      "actions": 3,
+      "attempts": 3,
+      "run_id": "effect-upgrade-changed:child:6f98bf6bcd4f"
+    },
+    {
+      "accepted_count": 3,
+      "actions": 3,
+      "attempts": 3,
+      "run_id": "effect-upgrade-pinned:child:6f98bf6bcd4f"
+    }
+  ],
+  "source_hashes_after": {
+    "bridge.py": "6efd4a8802a9c57ca045ebc0f4f824a5dfed4fcfbdfddff0ad1723d8f19868b7",
+    "definition.py": "17303c14b3388b5488593ecc2e76be4ff9bf6a716025a163fa02dde8b400ac7f",
+    "helper_v1.mjs": "487cfe0e7aae1f2b00d448d8a3a1c15c94462411e873b3cd77cbdb4698a9db93",
+    "helper_v2.mjs": "9a62e0a1409c5a2202e0cc9a37781bb27de097c0f4c114f88dbaef83704f5e8f"
+  },
+  "status": "observed",
+  "store_bytes": {
+    "changed": 1639392,
+    "pinned": 1482832
+  },
+  "v2_bridge_invocations": [
+    {
+      "op": "review",
+      "revision": "r1",
+      "run": "effect-upgrade-changed:child:6f98bf6bcd4f"
+    },
+    {
+      "op": "review",
+      "revision": "r2",
+      "run": "effect-upgrade-changed:child:6f98bf6bcd4f"
+    },
+    {
+      "op": "review",
+      "revision": "r3",
+      "run": "effect-upgrade-changed:child:6f98bf6bcd4f"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+# Final position — Astra
+
+23 September 2026. **Top pick: Temporal Server 1.32.0 with the stable Python factory interpreter. Runner-up: Effect Workflow + Cluster v3. Dagu Community v2.17.0 remains the close native-YAML alternative.**
+
+This is my final recommendation for the development direction on the available evidence. It is conditional and does not qualify any current prototype for production. Confidence is moderate in Temporal first and lower in Effect second. I have read Opus's [independent position](independent-opus.md) and [final position](final-opus.md), plus both final Temporal follow-ups. We now agree on the top-two order. That agreement preserves the open failure and upgrade gates and does not require us to assign identical weights to every risk.
+
+The complete independent argument, all nine eligible candidates, both Temporal routes, exact primary paths, and the direct adversarial exchange are in [independent-astra.md](independent-astra.md). That file distinguishes the original independent assessment from later evidence updates. I have not edited selection documents, committed, sent input to Opus, or executed any new spike.
+
+## Why Temporal remains first
+
+Temporal provides native durable local parent/child execution, waits, and workflow history. The evaluated interpreter records authoritative acceptance in that history rather than in a second product acceptance store. The Director keeps a durable identity/A2A alias projection. Exomachina still owns the document language, semantic publisher, interpreter compatibility, A2A reconciliation, authorization, and local Temporal/PostgreSQL lifecycle. Native child execution does not solve arbitrary remote agents' cancellation or uncertain effects. [Original implementation and recovery evidence](../../2026-09-22/arbitration/temporal/result.md).
+
+The final evidence strengthens that choice in three specific ways:
+
+1. **A fresh frozen composition passed.** The four-branch A2C graph waited for the delayed A2A branch, retained exact typed artifacts, routed before synthesis, and produced success and exhaustion from one immutable mixed package without changing the frozen interpreter after disclosure. An older version retained its binding across publication and restart. This is a genuine fresh pass; the original frozen A2 failure and its retrospective correction remain historical evidence. **Limit:** the mixed outcomes used the direct Workflow API because the frozen Director facade does not forward `outcome_mode`. Only the all-clear path completed through the original Director A2A Task. [Final A2C result](../temporal-fresh-composition/result.md).
+2. **Two later crash seams now preserve the original Director Task.** After remote Quality r1 commit but before Activity completion, and after durable r2 acceptance but before release, Temporal/PostgreSQL restart preserved the original Task, parent/child IDs, and pinned definition. Each case ended with one authoritative acceptance, one release effect, and one submission attempt for each recorded remote action and release. These are those two observed passes, not a universal recovery guarantee. [Final recovery result](../temporal-recovery-scale/result.md).
+3. **Held external calls did not add processes in the measured range.** The final complete selected bundle measured about **761 / 790 / 837 MB with 50 PIDs** at 0/2/10 working source Tasks. Blocking calls remained within the existing Python worker. This replaces the preliminary figures from earlier raw observations. It weakens the objection that Temporal's runtime must necessarily be the most expensive under active-call load. It does not prove a production asynchronous Task implementation, peak memory, or completion of those deliberately held runs. [Final held-call measurement and topology](../temporal-recovery-scale/result.md).
+
+The strongest counterargument remains substantial owned operation: PostgreSQL, Temporal, workers, backups, migrations, a higher idle baseline, and a custom graph interpreter. Prepared-host startup is not a portable, clean-machine installation. Source rights are favorable under [Temporal's pinned MIT license](https://raw.githubusercontent.com/temporalio/temporal/v1.32.0/LICENSE), but the exact redistributed bundle still needs its artifact and notice work.
+
+I prefer that burden to the evaluated alternatives' additional local execution protocols, subject to the unresolved gates below. Acceptance is in the relevant Workflow history; parent and child executions have their own native histories. I do not imply that all runs and external effects share one global transaction.
+
+## Why Effect remains the runner-up
+
+Effect's frozen A2B result proves flexible composition within its approved profile, including four real A2A branches, delayed typed joining, conditional routing, bounded repair, and same-package success/exhaustion. Its native child execution retained nested waits, and the subsequent Director facade carried original Tasks through the exercised restart, abort, accepted-release, and participating lost-reply paths. [Effect parity result](../effect-parity/result.md).
+
+If Temporal proves unsuitable because of its PostgreSQL/server operating cost, Effect preserves the document/validator/interpreter approach while using a SQLite-backed durable helper. The shared validator is concrete evidence of architectural overlap. It is not a demonstrated low-cost migration: authority persistence, Activities, replay semantics, version routing, and the A2A facade still need qualification. [Earlier one-command bundle evidence](../../2026-09-22/decision-round/effect/packaging-result.md).
+
+Effect has a smaller demonstrated native-child coordination obligation than Dagu's separate-root route, favorable permissive source licensing, and a cheaper current held-call path. Those advantages justify second place for product fit. They do **not** establish that Effect is better tested or that its whole durable recovery surface is smaller. The parity implementation writes a separate product SQLite ledger around Effect execution, and its acceptance/continuation boundary lacks matched recovery evidence. Its current language profile also remains bounded, with composition and nesting restrictions.
+
+The strongest argument for Dagu second is still valid: native YAML avoids a maintained generic graph interpreter, and its fault evidence is broader. Its integrated follow-up proved a sealed child failure reaching the original Task and recovery from persisted gate input without enqueue. Those are important passes Effect does not match today. [Dagu failure recovery](../dagu-failure-recovery/result.md).
+
+I give greater weight to the ongoing Dagu root-relationship protocol, its active-call adaptation work, and distribution obligations. Dagu's frozen guard failure and participating no-commit liveness gap also remain adverse findings. GPL is not an exclusion; the actual compliant source-delivery and product-boundary work remains unfinished. [Dagu arbitration](../../2026-09-22/arbitration/dagu/result.md); [Dagu GPL bundle review](../../2026-09-22/decision-round/dagu/gpl-bundle-review.md).
+
+I accept Opus's source correction: Dagu failure sealing can handle any single failed-step name. The named-step dependency is in the accepted/aborted terminal-authority checks and surrounding fixture protocol. Both failure retry and sealing require exactly one failed step, leaving multiple failed steps outside those paths. That is a confirmed source limitation and a possible stranding risk, not a newly executed failure result. [Bridge](../dagu-failure-recovery/bridge.py); [reconciler](../dagu-failure-recovery/reconciler.py).
+
+## The final held-call comparison
+
+Decimal MB; physical-footprint snapshots on the same host/method, with actual working source A2A Tasks. Absolute totals include different bundle topologies and HTTP timeout arrangements.
+
+| Candidate | MB at 0 / 2 / 10 | PIDs at 0 / 2 / 10 | Observed 0-to-10 change |
+| --- | ---: | ---: | --- |
+| Temporal | 760.6 / 789.8 / 836.8 | 50 / 50 / 50 | +76.2 MB, no new PID |
+| Effect | 596.6 / 641.4 / 803.6 | 6 / 8 / 16 | +207.0 MB, ten Python bridges |
+| Dagu | 548.3 / 702.6 / 1,277.9 | 9 / 15 / 39 | +729.6 MB, ten runners, adapters, and watchers each |
+
+Sources: [Temporal final result](../temporal-recovery-scale/result.md), [Effect in-flight result](../effect-inflight-scale/result.md), [Dagu in-flight result](../dagu-inflight-scale/result.md).
+
+The exact final Temporal byte values are **760,597,296 / 789,826,520 / 836,816,048**. Earlier 782/813/854 MB and 57-PID observations are preliminary and superseded. Effect's baseline omits the lifecycle owner, separate reconciler, and opaque receiver present in the Dagu trial. Its eventual bundle must include all required responsibilities, without assuming those responsibilities necessarily require the same separate processes as Dagu. These snapshots do not isolate intrinsic engine overhead or establish a memory ceiling. A production prompt-return/working-Task lifecycle and retained interpreter-version costs remain unmeasured.
+
+## Open failure, upgrade, and product gates
+
+These are limits on the recommendation, **not requests for further fault injection**.
+
+| Gate | What is known and what remains open | Exact evidence |
+| --- | --- | --- |
+| Temporal failed child to public failure | The final follow-up did not demonstrate an unhandled child failure becoming durable `failed` on the same original Director Task. `DirectorTaskStore.get()` has accepted/aborted/expired completion handling but no explicit failed mapping. Native engine failure propagation does not itself qualify this public projection. A local fix is plausible, not proved. | [Recovery limits](../temporal-recovery-scale/result.md); [Director source](../temporal-recovery-scale/director_server.py) |
+| Temporal interpreter upgrade | No passing result establishes replay-compatible changes or old-run behavior retention through the integrated stable-interpreter/Director route. Worker Deployment Versions are a real mechanism demonstrated in the separate Zigflow route, not proof that this interpreter upgrade is safe. | [Input-correction limits](../../2026-09-22/arbitration/temporal-input-correction/result.md); [Zigflow reassessment](../zigflow-reassessment/result.md); [recovery limits](../temporal-recovery-scale/result.md) |
+| Temporal typed input propagation | The frozen Director does not carry the mixed A2C graph's required `outcome_mode`; those mixed outcomes lack original Director Task coverage. | [A2C result](../temporal-fresh-composition/result.md) |
+| Effect acceptance/continuation recovery | Direct product-ledger writes beside the engine store lack the matched original-Task recovery proof at the critical continuation boundary; broad A4 and opaque A5 coverage are incomplete. Earlier simpler implementations do not automatically qualify this one. | [Effect parity limits](../effect-parity/result.md) |
+| Effect interpreter upgrade | Replacing the helper changed an old run's output and re-entered renamed Activities despite an unchanged document digest. Stable lookup avoided duplicate remote submissions. A retained old helper/store preserved behavior, but integrated durable version routing, in-flight handling, retirement, and complete retained-version cost remain unproved. | [Effect upgrade result](../effect-upgrade-stability/result.md) |
+| Authority and closure | Effect and Temporal Task-versus-lookup consistency remain unproved; Dagu has a distinct observed identity-guard failure. Full policy/service-revision closure and production authorization remain incomplete. These different evidence states must not be collapsed into equal passes or equal observed failures. | [Effect bridge](../effect-parity/bridge.py); [Temporal adapter](../../2026-09-22/arbitration/temporal/adapter.py); [Dagu arbitration](../../2026-09-22/arbitration/dagu/result.md) |
+| One-install distribution and operation | Clean-machine installation, supported platforms, portable runtime paths, upgrades, backup/migration, and exact shipped dependencies remain product work. Effect's older packaging proof is not qualification of the new parity bundle; Dagu's GPL assembly is not cleared. | [Temporal arbitration operating limits](../../2026-09-22/arbitration/temporal/result.md); [Effect packaging](../../2026-09-22/decision-round/effect/packaging-result.md); [Dagu GPL review](../../2026-09-22/decision-round/dagu/gpl-bundle-review.md) |
+
+Automatic approval review rejected the separate local Temporal failed-child/upgrade test and the Effect Quality follow-up. Neither supplies a passing result, and I do not count either rejection as a demonstrated candidate failure. The coordinator instructed me not to retry the blocked tests; I have complied. This stop is attributable to automatic approval review and the coordinator instruction, not an explicit prohibition by the owner. Earlier proposed experiments in the independent assessment are historical and superseded as execution requests.
+
+## Agreement, remaining differences, and what could change the order
+
+I confirm conditional agreement with Opus on **Temporal first, Effect second**, and Dagu as the close alternative. My reasons remain independent: native durable local coordination and history-backed acceptance favor Temporal; compatible product architecture and lower expected operating complexity favor Effect as the fallback, with significant integration risk.
+
+I narrow two statements in Opus's final rationale. Not every possible displacing condition has been resolved in Temporal's favor: failure projection and upgrades are unproved. Its remaining risks also include behavior and authority, not just operating cost. Likewise, I do not consider Effect's total recovery surface demonstrably smaller than Dagu's. Native children remove a particular coordination protocol; the separate acceptance ledger and version-routing design can still add substantial work.
+
+I would reconsider Temporal first if the public failure path or exact active-run compatibility required a substantial additional coordinator, or if one-install PostgreSQL operation proved unsuitable. I would reconsider Effect second if its separate-store recovery or interpreter-version routing required comparable execution machinery to Dagu's while retaining the custom interpreter, or if its complete retained-version installation erased the expected operating advantage. These are decision conditions on future evidence or implementation, not requests to run tests now. A minor repairable adapter defect would be assessed by its cause and maintenance consequence rather than automatically promoting another engine.
+
+Zigflow remains a viable Temporal authoring route with activation, full A2A semantics, and version-retirement work open. Kestra, Restate, Conductor's PostgreSQL source variant, Strands Graph, Hatchet embedded, and Argo remain considered alternatives for the reasons and exact primary paths in the [complete independent assessment](independent-astra.md). I do not adopt an unexamined numerical order for those alternatives or count Zigflow as a separate eligible engine. The accepted LangGraph, n8n Community, and distributed Windmill Community exclusions remain unchanged.
+
+There is no unresolved disagreement over my final top two. There are still different weights on qualification evidence and upgrade ownership, and substantial unproved product gates. Agreement on a development direction does not close those gates.

@@ -1,0 +1,349 @@
+{
+  "active_before_kill": {
+    "activity_start": {
+      "instance": "source_evidence",
+      "kind": "assign-start",
+      "run": "a4-director-a2a-inflight:child:755d525ac2ef",
+      "wall_time": 1790136000.905349
+    },
+    "child": {
+      "authoritative_acceptance": null,
+      "child_id": null,
+      "completed": [],
+      "current_revision": null,
+      "current_sha256": null,
+      "deadline": null,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "node": "gather",
+      "owner_epoch": 1,
+      "package_digest": "9871cc5e85db27c2a8510fcfa37c181819ec73ee05fcd32e9f41f0014dce89df",
+      "phase": "parallel",
+      "quality_verdict": null,
+      "release_receipt": null,
+      "repair_count": 0,
+      "run": "a4-director-a2a-inflight:child:755d525ac2ef",
+      "unresolved": null
+    },
+    "parent": {
+      "authoritative_acceptance": null,
+      "child_id": "a4-director-a2a-inflight:child:755d525ac2ef",
+      "completed": [],
+      "current_revision": null,
+      "current_sha256": null,
+      "deadline": null,
+      "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+      "node": "invoke_child",
+      "owner_epoch": 1,
+      "package_digest": "9871cc5e85db27c2a8510fcfa37c181819ec73ee05fcd32e9f41f0014dce89df",
+      "phase": "awaiting-child",
+      "quality_verdict": null,
+      "release_receipt": null,
+      "repair_count": 0,
+      "run": "a4-director-a2a-inflight",
+      "unresolved": null
+    }
+  },
+  "counter_receiver": [
+    {
+      "accepted_count": 1,
+      "action_id": "a4-director-a2a-inflight:child:755d525ac2ef:counter_evidence",
+      "attempts": 1,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "run_id": "a4-director-a2a-inflight:child:755d525ac2ef"
+    }
+  ],
+  "freeze_after": {
+    "files": 18,
+    "inventory_sha256": "aaf68094e8ecbc958e3727f1ef6f1278a913b249b3a527210475e51ee72b3099",
+    "verified": true
+  },
+  "freeze_before": {
+    "files": 18,
+    "inventory_sha256": "aaf68094e8ecbc958e3727f1ef6f1278a913b249b3a527210475e51ee72b3099",
+    "verified": true
+  },
+  "package_digest": "9871cc5e85db27c2a8510fcfa37c181819ec73ee05fcd32e9f41f0014dce89df",
+  "quality_receiver": [
+    {
+      "accepted_count": 1,
+      "action_id": "a4-director-a2a-inflight:child:755d525ac2ef:quality:r1:f6bc91dfba51",
+      "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"b0d22d48-44c4-470f-b44d-54424db556bd\",\"revision\":\"r1\",\"sha256\":\"f6bc91dfba51e08185ad3d96df7c511bce45244e74f781d544423d42dd03bfc5\"}",
+      "attempts": 1,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "run_id": "a4-director-a2a-inflight:child:755d525ac2ef"
+    },
+    {
+      "accepted_count": 1,
+      "action_id": "a4-director-a2a-inflight:child:755d525ac2ef:quality:r2:3baed96a1a85",
+      "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"b0d22d48-44c4-470f-b44d-54424db556bd\",\"revision\":\"r2\",\"sha256\":\"3baed96a1a85c92a08a633d2f3b1a43255a2337c7304c8c3f315a0734b1d5192\"}",
+      "attempts": 1,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "run_id": "a4-director-a2a-inflight:child:755d525ac2ef"
+    }
+  ],
+  "release_receiver": [
+    {
+      "accepted_effect_count": 1,
+      "attempts": 1,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "fingerprint": "8289a8b1a3331bc7a256a0846556e2936a391c684c3577a4b448efeab2d430be",
+      "release_id": "a4-director-a2a-inflight:child:755d525ac2ef:release:r2",
+      "revision": "r2",
+      "run_id": "a4-director-a2a-inflight:child:755d525ac2ef",
+      "sha256": "3baed96a1a85c92a08a633d2f3b1a43255a2337c7304c8c3f315a0734b1d5192"
+    }
+  ],
+  "result": {
+    "acceptance": {
+      "attempt": 2,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "quality_task_id": "0da700e9-dbaa-4c8f-85bd-44756ade04c9",
+      "reviewer": "b0d22d48-44c4-470f-b44d-54424db556bd",
+      "revision": "r2",
+      "run": "a4-director-a2a-inflight:child:755d525ac2ef",
+      "sha256": "3baed96a1a85c92a08a633d2f3b1a43255a2337c7304c8c3f315a0734b1d5192"
+    },
+    "child": {
+      "acceptance": {
+        "attempt": 2,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "quality_task_id": "0da700e9-dbaa-4c8f-85bd-44756ade04c9",
+        "reviewer": "b0d22d48-44c4-470f-b44d-54424db556bd",
+        "revision": "r2",
+        "run": "a4-director-a2a-inflight:child:755d525ac2ef",
+        "sha256": "3baed96a1a85c92a08a633d2f3b1a43255a2337c7304c8c3f315a0734b1d5192"
+      },
+      "child": null,
+      "completed": [
+        "gather",
+        "join_evidence",
+        "draft:r1",
+        "independent_quality:r1",
+        "route_verdict:false",
+        "repair:1",
+        "draft:r2",
+        "independent_quality:r2",
+        "route_verdict:true",
+        "publish"
+      ],
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "receipt": {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "release_id": "a4-director-a2a-inflight:child:755d525ac2ef:release:r2",
+        "revision": "r2",
+        "run_id": "a4-director-a2a-inflight:child:755d525ac2ef",
+        "sha256": "3baed96a1a85c92a08a633d2f3b1a43255a2337c7304c8c3f315a0734b1d5192"
+      },
+      "released": true,
+      "run": "a4-director-a2a-inflight:child:755d525ac2ef",
+      "status": "accepted"
+    },
+    "completed": [
+      "invoke_child"
+    ],
+    "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+    "receipt": {
+      "accepted_effect_count": 1,
+      "attempts": 1,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "release_id": "a4-director-a2a-inflight:child:755d525ac2ef:release:r2",
+      "revision": "r2",
+      "run_id": "a4-director-a2a-inflight:child:755d525ac2ef",
+      "sha256": "3baed96a1a85c92a08a633d2f3b1a43255a2337c7304c8c3f315a0734b1d5192"
+    },
+    "released": true,
+    "run": "a4-director-a2a-inflight",
+    "status": "accepted"
+  },
+  "scope": "Activity active before remote source commit; post-commit crash remains separately proven by direct-start fault probe.",
+  "source_receiver": [
+    {
+      "accepted_count": 1,
+      "action_id": "a4-director-a2a-inflight:child:755d525ac2ef:source_evidence",
+      "attempts": 1,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "run_id": "a4-director-a2a-inflight:child:755d525ac2ef"
+    }
+  ],
+  "state": "/tmp/exo-temporal-a2a-crash-81pcmhjp",
+  "status": "passed",
+  "stopped": {
+    "postgres_pid": 31187,
+    "postgres_port_closed": true,
+    "temporal_pid": 31213,
+    "temporal_port_closed": true
+  },
+  "supervisor_events": [
+    {
+      "first": true,
+      "kind": "postgres-start",
+      "time": 1790135994.975994
+    },
+    {
+      "kind": "temporal-start",
+      "pid": 31213,
+      "time": 1790135995.240289
+    },
+    {
+      "kind": "worker-start",
+      "pid": 31241,
+      "time": 1790135995.299629
+    },
+    {
+      "kind": "service-start",
+      "name": "source",
+      "pid": 31242,
+      "time": 1790135996.598457
+    },
+    {
+      "kind": "service-start",
+      "name": "counter",
+      "pid": 31261,
+      "time": 1790135997.883807
+    },
+    {
+      "kind": "service-start",
+      "name": "quality",
+      "pid": 31262,
+      "time": 1790135999.162128
+    },
+    {
+      "kind": "service-start",
+      "name": "release",
+      "pid": 31269,
+      "time": 1790135999.420989
+    },
+    {
+      "kind": "service-start",
+      "name": "opaque",
+      "pid": 31270,
+      "time": 1790135999.678136
+    },
+    {
+      "kind": "service-start",
+      "name": "director",
+      "pid": 31271,
+      "time": 1790136000.700505
+    },
+    {
+      "kind": "postgres-restart",
+      "time": 1790136002.771105
+    },
+    {
+      "kind": "temporal-restart",
+      "pid": 31285,
+      "time": 1790136003.029647
+    }
+  ],
+  "task_after_recovery": {
+    "artifacts": [
+      {
+        "artifactId": "d67733ced67a71abe4d831f072fcc0dc7d8459a632c3fe5888708c348711a9df",
+        "parts": [
+          {
+            "data": {
+              "package_digest": "9871cc5e85db27c2a8510fcfa37c181819ec73ee05fcd32e9f41f0014dce89df",
+              "public_result": {
+                "acceptance": {
+                  "attempt": 2,
+                  "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                  "quality_task_id": "0da700e9-dbaa-4c8f-85bd-44756ade04c9",
+                  "reviewer": "b0d22d48-44c4-470f-b44d-54424db556bd",
+                  "revision": "r2",
+                  "run": "a4-director-a2a-inflight:child:755d525ac2ef",
+                  "sha256": "3baed96a1a85c92a08a633d2f3b1a43255a2337c7304c8c3f315a0734b1d5192"
+                },
+                "child": {
+                  "acceptance": {
+                    "attempt": 2,
+                    "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                    "quality_task_id": "0da700e9-dbaa-4c8f-85bd-44756ade04c9",
+                    "reviewer": "b0d22d48-44c4-470f-b44d-54424db556bd",
+                    "revision": "r2",
+                    "run": "a4-director-a2a-inflight:child:755d525ac2ef",
+                    "sha256": "3baed96a1a85c92a08a633d2f3b1a43255a2337c7304c8c3f315a0734b1d5192"
+                  },
+                  "child": null,
+                  "completed": [
+                    "gather",
+                    "join_evidence",
+                    "draft:r1",
+                    "independent_quality:r1",
+                    "route_verdict:false",
+                    "repair:1",
+                    "draft:r2",
+                    "independent_quality:r2",
+                    "route_verdict:true",
+                    "publish"
+                  ],
+                  "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                  "receipt": {
+                    "accepted_effect_count": 1,
+                    "attempts": 1,
+                    "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                    "release_id": "a4-director-a2a-inflight:child:755d525ac2ef:release:r2",
+                    "revision": "r2",
+                    "run_id": "a4-director-a2a-inflight:child:755d525ac2ef",
+                    "sha256": "3baed96a1a85c92a08a633d2f3b1a43255a2337c7304c8c3f315a0734b1d5192"
+                  },
+                  "released": true,
+                  "run": "a4-director-a2a-inflight:child:755d525ac2ef",
+                  "status": "accepted"
+                },
+                "completed": [
+                  "invoke_child"
+                ],
+                "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+                "receipt": {
+                  "accepted_effect_count": 1,
+                  "attempts": 1,
+                  "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                  "release_id": "a4-director-a2a-inflight:child:755d525ac2ef:release:r2",
+                  "revision": "r2",
+                  "run_id": "a4-director-a2a-inflight:child:755d525ac2ef",
+                  "sha256": "3baed96a1a85c92a08a633d2f3b1a43255a2337c7304c8c3f315a0734b1d5192"
+                },
+                "released": true,
+                "run": "a4-director-a2a-inflight",
+                "status": "accepted"
+              },
+              "run_id": "a4-director-a2a-inflight",
+              "status": "accepted"
+            },
+            "kind": "data"
+          }
+        ]
+      }
+    ],
+    "contextId": "ea0b03b8-f26b-45a8-87cf-005744c603ed",
+    "id": "6ec5ab05-8dd5-48a5-9d06-09ca5f33fbe0",
+    "kind": "task",
+    "metadata": {
+      "engine": "temporal",
+      "harness_identity": "8cb134cc-0448-48c6-a286-e1e69a953b4d",
+      "harness_incarnation": 1,
+      "package_digest": "9871cc5e85db27c2a8510fcfa37c181819ec73ee05fcd32e9f41f0014dce89df",
+      "run_id": "a4-director-a2a-inflight"
+    },
+    "status": {
+      "state": "completed"
+    }
+  },
+  "task_at_start": {
+    "contextId": "ea0b03b8-f26b-45a8-87cf-005744c603ed",
+    "id": "6ec5ab05-8dd5-48a5-9d06-09ca5f33fbe0",
+    "kind": "task",
+    "metadata": {
+      "engine": "temporal",
+      "harness_identity": "8cb134cc-0448-48c6-a286-e1e69a953b4d",
+      "harness_incarnation": 1,
+      "package_digest": "9871cc5e85db27c2a8510fcfa37c181819ec73ee05fcd32e9f41f0014dce89df",
+      "run_id": "a4-director-a2a-inflight"
+    },
+    "status": {
+      "state": "input-required"
+    }
+  }
+}

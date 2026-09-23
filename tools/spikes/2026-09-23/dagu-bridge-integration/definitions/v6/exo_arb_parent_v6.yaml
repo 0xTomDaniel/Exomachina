@@ -1,0 +1,24 @@
+steps:
+  - id: start_child
+    run: exo-arb start-child --child exo_arb_research_v6
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: child_gate
+    depends: start_child
+    action: human.task
+    with:
+      prompt: Resume this pinned parent after its pinned child reaches an authorized terminal outcome
+      form:
+        type: object
+        additionalProperties: false
+        properties:
+          decision:
+            type: string
+            enum: [child_completed]
+          child_run_id:
+            type: string
+        required: [decision, child_run_id]
+  - id: public_result
+    depends: child_gate
+    run: exo-arb parent-result

@@ -1,0 +1,1672 @@
+{
+  "admissions": [
+    {
+      "admission_seconds": 0.111134750302881,
+      "admitted_unix_seconds": 1790137522.6702878,
+      "director_task_id": "932c03da-2244-40b3-93ae-bf1925be9cb2",
+      "director_task_initial_state": "input-required",
+      "parent_native_run_id": "01a0cc82-d995-7d69-9de4-04de74670209",
+      "parent_workflow_id": "wait-scaling-1-exo-arb-wait-scaling-temporal-idl8jo_q"
+    },
+    {
+      "admission_seconds": 0.043443750124424696,
+      "admitted_unix_seconds": 1790137522.713739,
+      "director_task_id": "6c35f20d-ae75-436f-aff6-f14828fad243",
+      "director_task_initial_state": "input-required",
+      "parent_native_run_id": "01a0cc82-d9f5-7ef0-ad83-9497776824f0",
+      "parent_workflow_id": "wait-scaling-2-exo-arb-wait-scaling-temporal-idl8jo_q"
+    },
+    {
+      "admission_seconds": 0.05349295912310481,
+      "admitted_unix_seconds": 1790137525.403713,
+      "director_task_id": "009e8d81-41a1-4be0-bcdb-812a4054e273",
+      "director_task_initial_state": "input-required",
+      "parent_native_run_id": "01a0cc82-e46f-7367-8139-5c5657713b02",
+      "parent_workflow_id": "wait-scaling-3-exo-arb-wait-scaling-temporal-idl8jo_q"
+    },
+    {
+      "admission_seconds": 0.044627499766647816,
+      "admitted_unix_seconds": 1790137525.4483452,
+      "director_task_id": "90714dc4-fabd-4dd2-bcc8-eb52c74e029d",
+      "director_task_initial_state": "input-required",
+      "parent_native_run_id": "01a0cc82-e4a2-779d-a12a-06f2108b7941",
+      "parent_workflow_id": "wait-scaling-4-exo-arb-wait-scaling-temporal-idl8jo_q"
+    },
+    {
+      "admission_seconds": 0.06884425040334463,
+      "admitted_unix_seconds": 1790137525.517192,
+      "director_task_id": "aba43b81-9b88-4729-b488-39645fdec904",
+      "director_task_initial_state": "input-required",
+      "parent_native_run_id": "01a0cc82-e4ce-7d4a-ac6b-8559e482fdf7",
+      "parent_workflow_id": "wait-scaling-5-exo-arb-wait-scaling-temporal-idl8jo_q"
+    },
+    {
+      "admission_seconds": 0.056130458135157824,
+      "admitted_unix_seconds": 1790137525.573326,
+      "director_task_id": "c6028824-eaf2-4b92-ae77-68acb21af141",
+      "director_task_initial_state": "input-required",
+      "parent_native_run_id": "01a0cc82-e514-786c-9f21-9ef11a73e012",
+      "parent_workflow_id": "wait-scaling-6-exo-arb-wait-scaling-temporal-idl8jo_q"
+    },
+    {
+      "admission_seconds": 0.04851479222998023,
+      "admitted_unix_seconds": 1790137525.621844,
+      "director_task_id": "fbf6c139-ef02-4076-a27f-5c0b2da3a722",
+      "director_task_initial_state": "input-required",
+      "parent_native_run_id": "01a0cc82-e54d-7d9c-a67a-19c99c6ecd79",
+      "parent_workflow_id": "wait-scaling-7-exo-arb-wait-scaling-temporal-idl8jo_q"
+    },
+    {
+      "admission_seconds": 0.059721916913986206,
+      "admitted_unix_seconds": 1790137525.681568,
+      "director_task_id": "4f66df79-50ad-4394-9fc3-47e144e64303",
+      "director_task_initial_state": "input-required",
+      "parent_native_run_id": "01a0cc82-e57c-7e67-b2fd-284e00e0f5cf",
+      "parent_workflow_id": "wait-scaling-8-exo-arb-wait-scaling-temporal-idl8jo_q"
+    },
+    {
+      "admission_seconds": 0.05580883286893368,
+      "admitted_unix_seconds": 1790137525.73738,
+      "director_task_id": "137446c8-fcae-4cce-863b-6342a9fcda34",
+      "director_task_initial_state": "input-required",
+      "parent_native_run_id": "01a0cc82-e5b9-7f36-ade7-bb6e67810199",
+      "parent_workflow_id": "wait-scaling-9-exo-arb-wait-scaling-temporal-idl8jo_q"
+    },
+    {
+      "admission_seconds": 0.05768658313900232,
+      "admitted_unix_seconds": 1790137525.795069,
+      "director_task_id": "b2c03b44-df73-4bb4-80d8-daddacece7b1",
+      "director_task_initial_state": "input-required",
+      "parent_native_run_id": "01a0cc82-e5f0-79bc-a922-df2133947ac8",
+      "parent_workflow_id": "wait-scaling-10-exo-arb-wait-scaling-temporal-idl8jo_q"
+    }
+  ],
+  "candidate": "temporal-server-v1.32.0",
+  "failures": [],
+  "finished_unix_seconds": 1790137534.3318882,
+  "levels": {
+    "0": {
+      "snapshot": {
+        "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+        "footprint_exit_code": 0,
+        "physical_footprint_bytes_deduplicated": 756746768,
+        "pid_count": 49,
+        "processes": [
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/supervisor.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q",
+            "pid": 35419,
+            "ppid": 35411,
+            "role": "supervisor"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/postgresql@16/16.15/bin/postgres -D /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/pgdata -p 31565 -h 127.0.0.1 -k /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/pgsocket",
+            "pid": 35440,
+            "ppid": 1,
+            "role": "postgres_postmaster"
+          },
+          {
+            "command": "postgres: checkpointer",
+            "pid": 35441,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: background writer",
+            "pid": 35442,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: walwriter",
+            "pid": 35444,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: autovacuum launcher",
+            "pid": 35445,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: logical replication launcher",
+            "pid": 35446,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/tmp/exomachina-countertrials/temporal/runtime/temporal-server --config-file /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/server.yaml --allow-no-auth start",
+            "pid": 35461,
+            "ppid": 35419,
+            "role": "temporal_server"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64645) idle",
+            "pid": 35465,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64646) idle",
+            "pid": 35466,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64647) idle",
+            "pid": 35467,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64648) idle",
+            "pid": 35468,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64649) idle",
+            "pid": 35469,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64650) idle",
+            "pid": 35470,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64651) idle",
+            "pid": 35471,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64652) idle",
+            "pid": 35472,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64654) idle",
+            "pid": 35474,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64655) idle",
+            "pid": 35475,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64656) idle",
+            "pid": 35476,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64659) idle",
+            "pid": 35477,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64660) idle",
+            "pid": 35478,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64661) idle",
+            "pid": 35479,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64662) idle",
+            "pid": 35480,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64673) idle",
+            "pid": 35482,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/worker.py",
+            "pid": 35483,
+            "ppid": 35419,
+            "role": "workflow_worker"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/source --r",
+            "pid": 35484,
+            "ppid": 35419,
+            "role": "source"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64678) idle",
+            "pid": 35485,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64679) idle",
+            "pid": 35486,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64680) idle",
+            "pid": 35487,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64681) idle",
+            "pid": 35488,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64682) idle",
+            "pid": 35489,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64683) idle",
+            "pid": 35490,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64684) idle",
+            "pid": 35491,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64685) idle",
+            "pid": 35492,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64686) idle",
+            "pid": 35493,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64688) idle",
+            "pid": 35494,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64689) idle",
+            "pid": 35495,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64687) idle",
+            "pid": 35497,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64690) idle",
+            "pid": 35498,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64691) idle",
+            "pid": 35499,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64693) idle",
+            "pid": 35500,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64692) idle",
+            "pid": 35501,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64694) idle",
+            "pid": 35502,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64695) idle",
+            "pid": 35503,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/counter --",
+            "pid": 35504,
+            "ppid": 35419,
+            "role": "counter"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/quality --por",
+            "pid": 35505,
+            "ppid": 35419,
+            "role": "quality"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/release --mod",
+            "pid": 35506,
+            "ppid": 35419,
+            "role": "release"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/opaque --mode",
+            "pid": 35507,
+            "ppid": 35419,
+            "role": "opaque"
+          },
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/director_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/director",
+            "pid": 35508,
+            "ppid": 35419,
+            "role": "director"
+          }
+        ],
+        "sampled_unix_seconds": 1790137522.5234199,
+        "sampling_retries": [],
+        "selection": "supervisor descendants plus state-bound detached processes plus explicit store descendants"
+      },
+      "waiting_pairs": []
+    },
+    "10": {
+      "all_waits_elapsed_seconds": 2.990792667027563,
+      "director_task_states": [
+        {
+          "state": "input-required",
+          "task_id": "932c03da-2244-40b3-93ae-bf1925be9cb2"
+        },
+        {
+          "state": "input-required",
+          "task_id": "6c35f20d-ae75-436f-aff6-f14828fad243"
+        },
+        {
+          "state": "input-required",
+          "task_id": "009e8d81-41a1-4be0-bcdb-812a4054e273"
+        },
+        {
+          "state": "input-required",
+          "task_id": "90714dc4-fabd-4dd2-bcc8-eb52c74e029d"
+        },
+        {
+          "state": "input-required",
+          "task_id": "aba43b81-9b88-4729-b488-39645fdec904"
+        },
+        {
+          "state": "input-required",
+          "task_id": "c6028824-eaf2-4b92-ae77-68acb21af141"
+        },
+        {
+          "state": "input-required",
+          "task_id": "fbf6c139-ef02-4076-a27f-5c0b2da3a722"
+        },
+        {
+          "state": "input-required",
+          "task_id": "4f66df79-50ad-4394-9fc3-47e144e64303"
+        },
+        {
+          "state": "input-required",
+          "task_id": "137446c8-fcae-4cce-863b-6342a9fcda34"
+        },
+        {
+          "state": "input-required",
+          "task_id": "b2c03b44-df73-4bb4-80d8-daddacece7b1"
+        }
+      ],
+      "snapshot": {
+        "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+        "footprint_exit_code": 0,
+        "physical_footprint_bytes_deduplicated": 849300224,
+        "pid_count": 49,
+        "processes": [
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/supervisor.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q",
+            "pid": 35419,
+            "ppid": 35411,
+            "role": "supervisor"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/postgresql@16/16.15/bin/postgres -D /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/pgdata -p 31565 -h 127.0.0.1 -k /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/pgsocket",
+            "pid": 35440,
+            "ppid": 1,
+            "role": "postgres_postmaster"
+          },
+          {
+            "command": "postgres: checkpointer",
+            "pid": 35441,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: background writer",
+            "pid": 35442,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: walwriter",
+            "pid": 35444,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: autovacuum launcher",
+            "pid": 35445,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: logical replication launcher",
+            "pid": 35446,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/tmp/exomachina-countertrials/temporal/runtime/temporal-server --config-file /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/server.yaml --allow-no-auth start",
+            "pid": 35461,
+            "ppid": 35419,
+            "role": "temporal_server"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64645) idle",
+            "pid": 35465,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64646) idle",
+            "pid": 35466,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64647) idle",
+            "pid": 35467,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64648) idle",
+            "pid": 35468,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64649) idle",
+            "pid": 35469,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64650) idle",
+            "pid": 35470,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64651) idle",
+            "pid": 35471,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64652) idle",
+            "pid": 35472,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64654) idle",
+            "pid": 35474,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64655) idle",
+            "pid": 35475,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64656) idle",
+            "pid": 35476,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64659) idle",
+            "pid": 35477,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64660) idle",
+            "pid": 35478,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64661) idle",
+            "pid": 35479,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64662) idle",
+            "pid": 35480,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64673) idle",
+            "pid": 35482,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/worker.py",
+            "pid": 35483,
+            "ppid": 35419,
+            "role": "workflow_worker"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/source --r",
+            "pid": 35484,
+            "ppid": 35419,
+            "role": "source"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64678) idle",
+            "pid": 35485,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64679) idle",
+            "pid": 35486,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64680) idle",
+            "pid": 35487,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64681) idle",
+            "pid": 35488,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64682) idle",
+            "pid": 35489,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64683) idle",
+            "pid": 35490,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64684) idle",
+            "pid": 35491,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64685) idle",
+            "pid": 35492,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64686) idle",
+            "pid": 35493,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64688) idle",
+            "pid": 35494,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64689) idle",
+            "pid": 35495,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64687) idle",
+            "pid": 35497,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64690) idle",
+            "pid": 35498,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64691) idle",
+            "pid": 35499,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64693) idle",
+            "pid": 35500,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64692) idle",
+            "pid": 35501,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64694) idle",
+            "pid": 35502,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64695) idle",
+            "pid": 35503,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/counter --",
+            "pid": 35504,
+            "ppid": 35419,
+            "role": "counter"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/quality --por",
+            "pid": 35505,
+            "ppid": 35419,
+            "role": "quality"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/release --mod",
+            "pid": 35506,
+            "ppid": 35419,
+            "role": "release"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/opaque --mode",
+            "pid": 35507,
+            "ppid": 35419,
+            "role": "opaque"
+          },
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/director_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/director",
+            "pid": 35508,
+            "ppid": 35419,
+            "role": "director"
+          }
+        ],
+        "sampled_unix_seconds": 1790137528.663779,
+        "sampling_retries": [],
+        "selection": "supervisor descendants plus state-bound detached processes plus explicit store descendants"
+      },
+      "stability_snapshot": {
+        "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+        "footprint_exit_code": 0,
+        "physical_footprint_bytes_deduplicated": 849513216,
+        "pid_count": 49,
+        "processes": [
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/supervisor.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q",
+            "pid": 35419,
+            "ppid": 35411,
+            "role": "supervisor"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/postgresql@16/16.15/bin/postgres -D /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/pgdata -p 31565 -h 127.0.0.1 -k /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/pgsocket",
+            "pid": 35440,
+            "ppid": 1,
+            "role": "postgres_postmaster"
+          },
+          {
+            "command": "postgres: checkpointer",
+            "pid": 35441,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: background writer",
+            "pid": 35442,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: walwriter",
+            "pid": 35444,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: autovacuum launcher",
+            "pid": 35445,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: logical replication launcher",
+            "pid": 35446,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/tmp/exomachina-countertrials/temporal/runtime/temporal-server --config-file /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/server.yaml --allow-no-auth start",
+            "pid": 35461,
+            "ppid": 35419,
+            "role": "temporal_server"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64645) idle",
+            "pid": 35465,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64646) idle",
+            "pid": 35466,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64647) idle",
+            "pid": 35467,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64648) idle",
+            "pid": 35468,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64649) idle",
+            "pid": 35469,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64650) idle",
+            "pid": 35470,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64651) idle",
+            "pid": 35471,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64652) idle",
+            "pid": 35472,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64654) idle",
+            "pid": 35474,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64655) idle",
+            "pid": 35475,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64656) idle",
+            "pid": 35476,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64659) idle",
+            "pid": 35477,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64660) idle",
+            "pid": 35478,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64661) idle",
+            "pid": 35479,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64662) idle",
+            "pid": 35480,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64673) idle",
+            "pid": 35482,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/worker.py",
+            "pid": 35483,
+            "ppid": 35419,
+            "role": "workflow_worker"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/source --r",
+            "pid": 35484,
+            "ppid": 35419,
+            "role": "source"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64678) idle",
+            "pid": 35485,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64679) idle",
+            "pid": 35486,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64680) idle",
+            "pid": 35487,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64681) idle",
+            "pid": 35488,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64682) idle",
+            "pid": 35489,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64683) idle",
+            "pid": 35490,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64684) idle",
+            "pid": 35491,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64685) idle",
+            "pid": 35492,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64686) idle",
+            "pid": 35493,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64688) idle",
+            "pid": 35494,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64689) idle",
+            "pid": 35495,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64687) idle",
+            "pid": 35497,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64690) idle",
+            "pid": 35498,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64691) idle",
+            "pid": 35499,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64693) idle",
+            "pid": 35500,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64692) idle",
+            "pid": 35501,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64694) idle",
+            "pid": 35502,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64695) idle",
+            "pid": 35503,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/counter --",
+            "pid": 35504,
+            "ppid": 35419,
+            "role": "counter"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/quality --por",
+            "pid": 35505,
+            "ppid": 35419,
+            "role": "quality"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/release --mod",
+            "pid": 35506,
+            "ppid": 35419,
+            "role": "release"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/opaque --mode",
+            "pid": 35507,
+            "ppid": 35419,
+            "role": "opaque"
+          },
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/director_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/director",
+            "pid": 35508,
+            "ppid": 35419,
+            "role": "director"
+          }
+        ],
+        "sampled_unix_seconds": 1790137532.1543481,
+        "sampling_retries": [],
+        "selection": "supervisor descendants plus state-bound detached processes plus explicit store descendants"
+      },
+      "stability_waiting_pairs": [
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-d9cb-7bc7-98f3-03a6c8436b2e",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-1-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137531.7619798,
+          "parent_native_run_id": "01a0cc82-d995-7d69-9de4-04de74670209",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-1-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-da08-7850-ac84-6c587eefdd30",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-2-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137531.773025,
+          "parent_native_run_id": "01a0cc82-d9f5-7ef0-ad83-9497776824f0",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-2-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e486-72ab-a2d9-f2a925ca1eeb",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-3-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137531.783527,
+          "parent_native_run_id": "01a0cc82-e46f-7367-8139-5c5657713b02",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-3-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e4b2-7d0f-a12f-1cd021dbbdb9",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-4-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137531.792963,
+          "parent_native_run_id": "01a0cc82-e4a2-779d-a12a-06f2108b7941",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-4-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e4f2-7a83-90b2-d8230faf86f6",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-5-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137531.8020532,
+          "parent_native_run_id": "01a0cc82-e4ce-7d4a-ac6b-8559e482fdf7",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-5-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e52b-73ef-99b8-8e4ad00a3b8e",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-6-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137531.811921,
+          "parent_native_run_id": "01a0cc82-e514-786c-9f21-9ef11a73e012",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-6-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e564-7000-a900-9e9365dd4c7b",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-7-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137531.820958,
+          "parent_native_run_id": "01a0cc82-e54d-7d9c-a67a-19c99c6ecd79",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-7-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e598-7e30-b4cd-adb88cba59af",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-8-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137531.830473,
+          "parent_native_run_id": "01a0cc82-e57c-7e67-b2fd-284e00e0f5cf",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-8-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e5d5-70ea-b8c3-9f9ea78f6124",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-9-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137531.839089,
+          "parent_native_run_id": "01a0cc82-e5b9-7f36-ade7-bb6e67810199",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-9-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e60e-721e-87c3-90c8b0fe388e",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-10-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137531.847747,
+          "parent_native_run_id": "01a0cc82-e5f0-79bc-a922-df2133947ac8",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-10-exo-arb-wait-scaling-temporal-idl8jo_q"
+        }
+      ],
+      "waiting_pairs": [
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-d9cb-7bc7-98f3-03a6c8436b2e",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-1-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137528.25145,
+          "parent_native_run_id": "01a0cc82-d995-7d69-9de4-04de74670209",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-1-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-da08-7850-ac84-6c587eefdd30",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-2-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137528.263686,
+          "parent_native_run_id": "01a0cc82-d9f5-7ef0-ad83-9497776824f0",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-2-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e486-72ab-a2d9-f2a925ca1eeb",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-3-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137528.275952,
+          "parent_native_run_id": "01a0cc82-e46f-7367-8139-5c5657713b02",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-3-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e4b2-7d0f-a12f-1cd021dbbdb9",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-4-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137528.2864482,
+          "parent_native_run_id": "01a0cc82-e4a2-779d-a12a-06f2108b7941",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-4-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e4f2-7a83-90b2-d8230faf86f6",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-5-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137528.295018,
+          "parent_native_run_id": "01a0cc82-e4ce-7d4a-ac6b-8559e482fdf7",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-5-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e52b-73ef-99b8-8e4ad00a3b8e",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-6-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137528.3061209,
+          "parent_native_run_id": "01a0cc82-e514-786c-9f21-9ef11a73e012",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-6-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e564-7000-a900-9e9365dd4c7b",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-7-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137528.315011,
+          "parent_native_run_id": "01a0cc82-e54d-7d9c-a67a-19c99c6ecd79",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-7-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e598-7e30-b4cd-adb88cba59af",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-8-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137528.323748,
+          "parent_native_run_id": "01a0cc82-e57c-7e67-b2fd-284e00e0f5cf",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-8-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e5d5-70ea-b8c3-9f9ea78f6124",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-9-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137528.332501,
+          "parent_native_run_id": "01a0cc82-e5b9-7f36-ade7-bb6e67810199",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-9-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-e60e-721e-87c3-90c8b0fe388e",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-10-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137528.341016,
+          "parent_native_run_id": "01a0cc82-e5f0-79bc-a922-df2133947ac8",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-10-exo-arb-wait-scaling-temporal-idl8jo_q"
+        }
+      ]
+    },
+    "2": {
+      "all_waits_elapsed_seconds": 2.4610756668262184,
+      "director_task_states": [
+        {
+          "state": "input-required",
+          "task_id": "932c03da-2244-40b3-93ae-bf1925be9cb2"
+        },
+        {
+          "state": "input-required",
+          "task_id": "6c35f20d-ae75-436f-aff6-f14828fad243"
+        }
+      ],
+      "snapshot": {
+        "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+        "footprint_exit_code": 0,
+        "physical_footprint_bytes_deduplicated": 790891216,
+        "pid_count": 49,
+        "processes": [
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/supervisor.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q",
+            "pid": 35419,
+            "ppid": 35411,
+            "role": "supervisor"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/postgresql@16/16.15/bin/postgres -D /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/pgdata -p 31565 -h 127.0.0.1 -k /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/pgsocket",
+            "pid": 35440,
+            "ppid": 1,
+            "role": "postgres_postmaster"
+          },
+          {
+            "command": "postgres: checkpointer",
+            "pid": 35441,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: background writer",
+            "pid": 35442,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: walwriter",
+            "pid": 35444,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: autovacuum launcher",
+            "pid": 35445,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: logical replication launcher",
+            "pid": 35446,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/tmp/exomachina-countertrials/temporal/runtime/temporal-server --config-file /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/server.yaml --allow-no-auth start",
+            "pid": 35461,
+            "ppid": 35419,
+            "role": "temporal_server"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64645) idle",
+            "pid": 35465,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64646) idle",
+            "pid": 35466,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64647) idle",
+            "pid": 35467,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64648) idle",
+            "pid": 35468,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64649) idle",
+            "pid": 35469,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64650) idle",
+            "pid": 35470,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64651) idle",
+            "pid": 35471,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64652) idle",
+            "pid": 35472,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64654) idle",
+            "pid": 35474,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64655) idle",
+            "pid": 35475,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64656) idle",
+            "pid": 35476,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64659) idle",
+            "pid": 35477,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64660) idle",
+            "pid": 35478,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64661) idle",
+            "pid": 35479,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64662) idle",
+            "pid": 35480,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal_visibility 127.0.0.1(64673) idle",
+            "pid": 35482,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/worker.py",
+            "pid": 35483,
+            "ppid": 35419,
+            "role": "workflow_worker"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/source --r",
+            "pid": 35484,
+            "ppid": 35419,
+            "role": "source"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64678) idle",
+            "pid": 35485,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64679) idle",
+            "pid": 35486,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64680) idle",
+            "pid": 35487,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64681) idle",
+            "pid": 35488,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64682) idle",
+            "pid": 35489,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64683) idle",
+            "pid": 35490,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64684) idle",
+            "pid": 35491,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64685) idle",
+            "pid": 35492,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64686) idle",
+            "pid": 35493,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64688) idle",
+            "pid": 35494,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64689) idle",
+            "pid": 35495,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64687) idle",
+            "pid": 35497,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64690) idle",
+            "pid": 35498,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64691) idle",
+            "pid": 35499,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64693) idle",
+            "pid": 35500,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64692) idle",
+            "pid": 35501,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64694) idle",
+            "pid": 35502,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "postgres: temporal temporal 127.0.0.1(64695) idle",
+            "pid": 35503,
+            "ppid": 35440,
+            "role": "postgres_child"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/counter --",
+            "pid": 35504,
+            "ppid": 35419,
+            "role": "counter"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/quality --por",
+            "pid": 35505,
+            "ppid": 35419,
+            "role": "quality"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/release --mod",
+            "pid": 35506,
+            "ppid": 35419,
+            "role": "release"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/opaque --mode",
+            "pid": 35507,
+            "ppid": 35419,
+            "role": "opaque"
+          },
+          {
+            "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/director_server.py --state /tmp/exo-arb-wait-scaling-temporal-idl8jo_q/director",
+            "pid": 35508,
+            "ppid": 35419,
+            "role": "director"
+          }
+        ],
+        "sampled_unix_seconds": 1790137525.330775,
+        "sampling_retries": [],
+        "selection": "supervisor descendants plus state-bound detached processes plus explicit store descendants"
+      },
+      "waiting_pairs": [
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-d9cb-7bc7-98f3-03a6c8436b2e",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-1-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137525.008576,
+          "parent_native_run_id": "01a0cc82-d995-7d69-9de4-04de74670209",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-1-exo-arb-wait-scaling-temporal-idl8jo_q"
+        },
+        {
+          "child_current_revision": "r3",
+          "child_definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "child_native_run_id": "01a0cc82-da08-7850-ac84-6c587eefdd30",
+          "child_phase": "awaiting-director",
+          "child_repair_count": 2,
+          "child_workflow_id": "wait-scaling-2-exo-arb-wait-scaling-temporal-idl8jo_q:child:8c3598fc2147",
+          "observed_wait_unix_seconds": 1790137525.0202298,
+          "parent_native_run_id": "01a0cc82-d9f5-7ef0-ad83-9497776824f0",
+          "parent_phase": "awaiting-child",
+          "parent_workflow_id": "wait-scaling-2-exo-arb-wait-scaling-temporal-idl8jo_q"
+        }
+      ]
+    }
+  },
+  "package_digest": "0d066198421ab93db8edf9bf63f71ed12fad6bb8ee0f5d7481d4bea28ce4defb",
+  "ports": {
+    "engine": {
+      "front_member": 30953,
+      "frontend": 35433,
+      "history": 35434,
+      "history_member": 30954,
+      "http": 35443,
+      "match_member": 30955,
+      "matching": 35435,
+      "metrics": 36020,
+      "postgres": 31565,
+      "pprof": 35956,
+      "worker": 35439,
+      "worker_member": 30959
+    },
+    "services": {
+      "counter": 35562,
+      "director": 35566,
+      "opaque": 35565,
+      "quality": 35563,
+      "release": 35564,
+      "source": 35561
+    }
+  },
+  "ready_elapsed_seconds": 9.812705083284527,
+  "schema": "exomachina.arbitration.wait-scaling/1",
+  "start_route": "Director A2A Task",
+  "started_unix_seconds": 1790137512.378859,
+  "state": "/tmp/exo-arb-wait-scaling-temporal-idl8jo_q",
+  "status": "passed",
+  "supervisor_exit_code": 0
+}

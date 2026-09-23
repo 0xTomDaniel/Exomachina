@@ -1,0 +1,151 @@
+{
+  "assessment_date": "2026-09-22",
+  "status": "bounded_native_integration_pass",
+  "validation": {
+    "command": "EXOMACHINA_S2_KESTRA_LIVE=1 uv run pytest -q --basetemp=.kestra-final",
+    "tests_passed": 7,
+    "duration_seconds": 18.39
+  },
+  "versions": {
+    "python": "3.14.3",
+    "strands_agents": "1.57.0",
+    "a2a_sdk": "0.3.26",
+    "a2a_protocol": "0.3.0",
+    "kestra": "2.0.3",
+    "kestra_topology": "parent-owned local OSS server, JDK25, PostgreSQL16.15; not restarted by S2"
+  },
+  "definition": {
+    "namespace": "exomachina.spikes",
+    "flow_id": "exomachina_s2_factory_96f9009cf8",
+    "revision": 1,
+    "template_sha256": "1523f2e54fd1bdce011d81f44510debc3012442ce6a92a5a217d34281b714111"
+  },
+  "logical_assignment": "a6f96f7e-991a-4d21-9fd0-c1ac254656b5",
+  "native_execution": {
+    "id": "7Ha09IMpKKoPUNBYdzk0YZ",
+    "count_for_unique_flow": 1,
+    "before_restart_state": "PAUSED",
+    "final_state": "SUCCESS",
+    "state_history": [
+      {
+        "state": "CREATED",
+        "date": "2026-09-22T20:31:20.549637Z"
+      },
+      {
+        "state": "RUNNING",
+        "date": "2026-09-22T20:31:20.553597Z"
+      },
+      {
+        "state": "PAUSED",
+        "date": "2026-09-22T20:31:20.757253Z"
+      },
+      {
+        "state": "RESTARTED",
+        "date": "2026-09-22T20:31:24.055890Z"
+      },
+      {
+        "state": "RUNNING",
+        "date": "2026-09-22T20:31:24.078021Z"
+      },
+      {
+        "state": "SUCCESS",
+        "date": "2026-09-22T20:31:24.115259Z"
+      }
+    ],
+    "resume_requests_observed_by_adapter": 1,
+    "downstream_after_task_runs": 1,
+    "tasks": [
+      {
+        "id": "5gb2pZFDMCmqP6LWoalVts",
+        "task_id": "candidate",
+        "state": "SUCCESS",
+        "attempts": 1
+      },
+      {
+        "id": "5trHJXr08IXqZIOXqeOwMW",
+        "task_id": "director_gate",
+        "state": "SUCCESS",
+        "attempts": 1
+      },
+      {
+        "id": "77YnHq8V0Qh6sIVl3VYcu6",
+        "task_id": "after",
+        "state": "SUCCESS",
+        "attempts": 1
+      }
+    ]
+  },
+  "identity": {
+    "before": {
+      "identity": "83e3a97a-c5d2-4bab-908e-ba26356a126b",
+      "incarnation": 1,
+      "role": "factory",
+      "organization": "org-fixture"
+    },
+    "after_pause_restart": {
+      "identity": "83e3a97a-c5d2-4bab-908e-ba26356a126b",
+      "incarnation": 2,
+      "role": "factory",
+      "organization": "org-fixture"
+    },
+    "after_acceptance_restart": {
+      "identity": "83e3a97a-c5d2-4bab-908e-ba26356a126b",
+      "incarnation": 3,
+      "role": "factory",
+      "organization": "org-fixture"
+    },
+    "separate_capability": {
+      "identity": "cfcdfe60-4c8a-48c3-8433-64644d632b07",
+      "incarnation": 1,
+      "role": "capability",
+      "organization": "org-fixture"
+    }
+  },
+  "duplicates": {
+    "start_deliveries": 8,
+    "decision_deliveries": 8
+  },
+  "acceptance": {
+    "definition": "kestra:exomachina.spikes.exomachina_s2_factory_96f9009cf8@1",
+    "execution_id": "7Ha09IMpKKoPUNBYdzk0YZ",
+    "pause_task_run_id": "5trHJXr08IXqZIOXqeOwMW",
+    "reviewer": "fixed-native-candidate-evaluator",
+    "sha256": "a97ed3d23e44cf9dd66873ce11add7bf073fa0b38a8e718c241a7912f41056de",
+    "text": "candidate:verified native candidate"
+  },
+  "native_after_output": {
+    "value": "a97ed3d23e44cf9dd66873ce11add7bf073fa0b38a8e718c241a7912f41056de"
+  },
+  "rejections": {
+    "stale_rejection": "stale incarnation",
+    "unauthorized_rejection": "unauthorized command",
+    "unreviewed_rejection": "accepted artifact required before native resume"
+  },
+  "sources_sha256": {
+    "harness.py": "e47c75cd40ec0c3ab53887755357aa38ef41a35a84e8a49dae1828889028042c",
+    "server.py": "89a6079465a56293ef2c18469b59bbe7176f9e7fa2786170198071a5eb8e62aa",
+    "child_adapter.py": "2d57415ad9b32b2faf6343ec492fc7648b86a93384e6c050baf23c81f3527bb9",
+    "kestra_factory.py": "b11f5a6ebd7c3d36ce46236522c98c559ec83400845ee76ac91ab6c6d9d20138",
+    "kestra_adapter.py": "b80f6d920b43f5c73d6df62c85fc36b3645055e6fe7e1d190b4c1a85a3b5dfae",
+    "test_harness.py": "0124f0690df9ae2e7d4c003b9f0ec9c4701d91452ac27fad775f946878806818",
+    "test_a2a_process.py": "f8dcc93a617b7d4ce4476053d77c35fe22b7e2802d9e9833a7af0715037069e3",
+    "test_kestra_integration.py": "78a78c482f501a7364fc762c8164983461862e3b2a55acee10f342795ff82826",
+    "uv.lock": "66fa0b284ce0e254320061a8b16d37f521e0aefc23d61c793a6cb374aa8ad877"
+  },
+  "fixtures": [
+    "deterministic Strands model",
+    "deterministic native-output evaluator",
+    "local A2A authentication credentials"
+  ],
+  "unproved": [
+    "lost create-response automatic reconciliation",
+    "crash during resume or acknowledgement loss",
+    "looped or multiple Pause identity compare-and-set",
+    "native engine parent/child composition",
+    "multi-host ownership and host-loss recovery",
+    "throughput with network I/O inside ledger transaction",
+    "production authorization and TLS",
+    "one-command automatic engine/database bundling",
+    "real model/reviewer quality"
+  ]
+}

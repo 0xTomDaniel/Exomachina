@@ -1,0 +1,155 @@
+{
+  "accepted_delivery_rows": {
+    "harness-a-v1": 1,
+    "harness-b-v2": 1
+  },
+  "bypass_rejection": "unreviewed, unbounded, or unsupported factory path",
+  "catalog_digests": {
+    "v1": "9c7aa3fe79ff271382ae0db84eb23d56835637ef24e51032a62f07c10561ade6",
+    "v2": "0b7fe2709c860a8387b9548407416d7603afa76da533405b7b6bbbaeb6e85484"
+  },
+  "events": [
+    {
+      "capability": "research-a@1",
+      "kind": "assign",
+      "run": "harness-a-v1"
+    },
+    {
+      "capability": "research-b@1",
+      "kind": "assign",
+      "run": "harness-a-v1"
+    },
+    {
+      "accepted": true,
+      "kind": "review",
+      "run": "harness-a-v1"
+    },
+    {
+      "capability": "research-a@1",
+      "kind": "assign",
+      "run": "harness-b-v2"
+    },
+    {
+      "capability": "research-b@1",
+      "kind": "assign",
+      "run": "harness-b-v2"
+    },
+    {
+      "capability": "verify@1",
+      "kind": "assign",
+      "run": "harness-b-v2"
+    },
+    {
+      "accepted": true,
+      "kind": "review",
+      "run": "harness-b-v2"
+    },
+    {
+      "accepted_receipts": 1,
+      "kind": "deliver-attempt",
+      "run": "harness-b-v2"
+    },
+    {
+      "accepted_receipts": 1,
+      "kind": "deliver-attempt",
+      "run": "harness-a-v1"
+    }
+  ],
+  "owned_ports_closed": true,
+  "raced_v1_decisions": [
+    "accepted",
+    "already-decided"
+  ],
+  "results": {
+    "v1": {
+      "completed": [
+        "parallel",
+        "review",
+        "director-decision",
+        "deliver"
+      ],
+      "digest": "9c7aa3fe79ff271382ae0db84eb23d56835637ef24e51032a62f07c10561ade6",
+      "identity": "harness-a",
+      "receipt": {
+        "accepted": true,
+        "receipt": "harness-a-v1"
+      },
+      "revision": "v1",
+      "run": "harness-a-v1"
+    },
+    "v2": {
+      "completed": [
+        "parallel",
+        "verify@1",
+        "review",
+        "director-decision",
+        "deliver"
+      ],
+      "digest": "0b7fe2709c860a8387b9548407416d7603afa76da533405b7b6bbbaeb6e85484",
+      "identity": "harness-b",
+      "receipt": {
+        "accepted": true,
+        "receipt": "harness-b-v2"
+      },
+      "revision": "v2",
+      "run": "harness-b-v2"
+    }
+  },
+  "state_directory": "/tmp/exomachina-temporal-round2-e8igrwc5",
+  "status": "passed",
+  "topology": "non-development Temporal Server + PostgreSQL + one Python SDK worker",
+  "v1_after_restart": {
+    "completed": [
+      "parallel",
+      "review"
+    ],
+    "digest": "9c7aa3fe79ff271382ae0db84eb23d56835637ef24e51032a62f07c10561ade6",
+    "phase": "awaiting-decision"
+  },
+  "v1_before_publication": {
+    "completed": [
+      "parallel",
+      "review"
+    ],
+    "digest": "9c7aa3fe79ff271382ae0db84eb23d56835637ef24e51032a62f07c10561ade6",
+    "phase": "awaiting-decision"
+  },
+  "v2_after_restart": {
+    "completed": [
+      "parallel",
+      "verify@1",
+      "review"
+    ],
+    "digest": "0b7fe2709c860a8387b9548407416d7603afa76da533405b7b6bbbaeb6e85484",
+    "phase": "awaiting-decision"
+  },
+  "v2_before_restart": {
+    "completed": [
+      "parallel",
+      "verify@1",
+      "review"
+    ],
+    "digest": "0b7fe2709c860a8387b9548407416d7603afa76da533405b7b6bbbaeb6e85484",
+    "phase": "awaiting-decision"
+  },
+  "v2_decision": "accepted",
+  "versions": {
+    "postgres": "postgres (PostgreSQL) 16.15 (Homebrew)",
+    "python_sdk": "1.33.0",
+    "server_sha256": "f1663788fd4d8d702576b659db212b4d45a8dbfc0909eb7f7a86d0d442de6a60",
+    "temporal_server": "temporal version 1.32.0"
+  },
+  "warm_paused_resource": {
+    "postgres_process_count": 53,
+    "postgres_summed_rss_kib_shared_pages_double_counted": 571328,
+    "python_worker_rss_kib": 60688,
+    "temporal_server_rss_kib": 165248
+  },
+  "warm_restarted_resource": {
+    "postgres_process_count": 42,
+    "postgres_summed_rss_kib_shared_pages_double_counted": 460704,
+    "python_worker_rss_kib": 60208,
+    "temporal_server_rss_kib": 158816
+  },
+  "worker_pid_stable_through_v2_publication": true
+}

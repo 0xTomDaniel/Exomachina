@@ -1,0 +1,356 @@
+{
+  "oracle": {
+    "exhaustion": {
+      "acceptances": 0,
+      "kind": "visible-v3-exhaustion",
+      "quality_verdicts": 3,
+      "release_effects": 0,
+      "repairs": 2,
+      "run_id": "fault-wait-owner:child:8c3598fc2147",
+      "verified": true
+    },
+    "success": {
+      "acceptances": 1,
+      "kind": "visible-v3-success",
+      "quality_verdicts": 2,
+      "release_effects": 1,
+      "repairs": 1,
+      "run_id": "temporal-v3-success:child:755d525ac2ef",
+      "verified": true
+    }
+  },
+  "runs": {
+    "exhaustion": {
+      "acceptance": null,
+      "branch_intervals_ns": {
+        "counter_evidence": {
+          "end": 1790134624192911872,
+          "start": 1790134624179873024
+        },
+        "source_evidence": {
+          "end": 1790134624196460032,
+          "start": 1790134624182242048
+        }
+      },
+      "branch_receipts": {
+        "counter_evidence": {
+          "action_id": "fault-wait-owner:child:8c3598fc2147:counter_evidence",
+          "artifact": {
+            "author": "c6060461-a8e5-40c6-8ac5-dd76610870e4",
+            "content": "fixture-result:{\"instance\":\"counter_evidence\",\"kind\":\"counter_evidence@1\",\"objections\":[{\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"question\":\"What limits the same customer use?\",\"scope_status\":\"requires_scope\"}",
+            "revision": "r2",
+            "sha256": "a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b"
+          },
+          "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "harness_identity": "c6060461-a8e5-40c6-8ac5-dd76610870e4",
+          "harness_role": "capability",
+          "run_id": "fault-wait-owner:child:8c3598fc2147",
+          "task_id": "826a7bef-b917-4a56-8677-f65a3022392c"
+        },
+        "source_evidence": {
+          "action_id": "fault-wait-owner:child:8c3598fc2147:source_evidence",
+          "artifact": {
+            "author": "8e7b93d1-28af-4c3c-9123-947b4474f333",
+            "content": "fixture-result:{\"availability\":\"documented\",\"claims\":[{\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"instance\":\"source_evidence\",\"kind\":\"source_evidence@1\",\"question\":\"Can the customer use the documented capability?\"}",
+            "revision": "r2",
+            "sha256": "f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d"
+          },
+          "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "harness_identity": "8e7b93d1-28af-4c3c-9123-947b4474f333",
+          "harness_role": "capability",
+          "run_id": "fault-wait-owner:child:8c3598fc2147",
+          "task_id": "27e47473-e758-42d7-b6db-7d08d4d5c077"
+        }
+      },
+      "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+      "director_wait": {
+        "command": {
+          "accepted": true,
+          "authorized": true,
+          "decision": "abort",
+          "revision": "r3"
+        },
+        "current_revision": "r3",
+        "persisted_after_restart": true,
+        "scope": "nested_child"
+      },
+      "join": {
+        "branch_artifact_sha256": {
+          "counter_evidence": "a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b",
+          "source_evidence": "f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d"
+        },
+        "claims": [
+          {
+            "branch_instance": "source_evidence",
+            "claim": "The capability is documented",
+            "source": "source:A"
+          },
+          {
+            "branch_instance": "source_evidence",
+            "claim": "The local contract is versioned",
+            "source": "source:B"
+          }
+        ],
+        "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+        "kind": "evidence_join@1",
+        "objections": [
+          {
+            "branch_instance": "counter_evidence",
+            "objection": "A documented limit requires explicit scope",
+            "source": "source:C"
+          },
+          {
+            "branch_instance": "counter_evidence",
+            "objection": "A missing receipt must be reconciled",
+            "source": "source:D"
+          }
+        ],
+        "requires_scope": true,
+        "route_status": "requires_scope",
+        "run_id": "fault-wait-owner:child:8c3598fc2147"
+      },
+      "public_child_result": {
+        "revision": "r3",
+        "status": "aborted"
+      },
+      "public_parent_result": {
+        "revision": "r3",
+        "status": "aborted"
+      },
+      "quality_identity": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+      "release_receipt": null,
+      "repair_count": 2,
+      "revisions": [
+        {
+          "artifact": {
+            "author": "factory:fault-wait-owner:child:8c3598fc2147",
+            "content": "{\"assessment\":\"limits unresolved\",\"join\":{\"branch_artifact_sha256\":{\"counter_evidence\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\",\"source_evidence\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"},\"claims\":[{\"branch_instance\":\"source_evidence\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_evidence\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_evidence\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_evidence\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"fault-wait-owner:child:8c3598fc2147\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":false,\"revision\":\"r1\"}",
+            "revision": "r1",
+            "sha256": "fad41dc0affdfcea60c4c9496cfe50a93696df546cd634bd515db4af5edc9901"
+          },
+          "quality": {
+            "action_id": "fault-wait-owner:child:8c3598fc2147:quality:r1:fad41dc0affd",
+            "artifact": {
+              "accepted": false,
+              "reason": "counterevidence remains unresolved",
+              "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+              "revision": "r1",
+              "sha256": "fad41dc0affdfcea60c4c9496cfe50a93696df546cd634bd515db4af5edc9901"
+            },
+            "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+            "harness_identity": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "harness_role": "quality",
+            "run_id": "fault-wait-owner:child:8c3598fc2147",
+            "task_id": "ffb81096-7be6-4e42-96c0-f00fb98aacdd"
+          }
+        },
+        {
+          "artifact": {
+            "author": "factory:fault-wait-owner:child:8c3598fc2147",
+            "content": "{\"assessment\":\"limits unresolved\",\"join\":{\"branch_artifact_sha256\":{\"counter_evidence\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\",\"source_evidence\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"},\"claims\":[{\"branch_instance\":\"source_evidence\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_evidence\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_evidence\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_evidence\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"fault-wait-owner:child:8c3598fc2147\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":false,\"revision\":\"r2\"}",
+            "revision": "r2",
+            "sha256": "d65ce40e537682e059cc220085232bc07f4e9f6b89cb58b7a2f338db1fc4ab04"
+          },
+          "quality": {
+            "action_id": "fault-wait-owner:child:8c3598fc2147:quality:r2:d65ce40e5376",
+            "artifact": {
+              "accepted": false,
+              "reason": "counterevidence remains unresolved",
+              "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+              "revision": "r2",
+              "sha256": "d65ce40e537682e059cc220085232bc07f4e9f6b89cb58b7a2f338db1fc4ab04"
+            },
+            "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+            "harness_identity": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "harness_role": "quality",
+            "run_id": "fault-wait-owner:child:8c3598fc2147",
+            "task_id": "c98d367f-94f4-4b55-be2f-89eaa4d49407"
+          }
+        },
+        {
+          "artifact": {
+            "author": "factory:fault-wait-owner:child:8c3598fc2147",
+            "content": "{\"assessment\":\"limits unresolved\",\"join\":{\"branch_artifact_sha256\":{\"counter_evidence\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\",\"source_evidence\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"},\"claims\":[{\"branch_instance\":\"source_evidence\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_evidence\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_evidence\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_evidence\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"fault-wait-owner:child:8c3598fc2147\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":false,\"revision\":\"r3\"}",
+            "revision": "r3",
+            "sha256": "06055bdc1bb58e0c797b375d8b791139654f9ed50e10747c5606fe0ccec2ff3f"
+          },
+          "quality": {
+            "action_id": "fault-wait-owner:child:8c3598fc2147:quality:r3:06055bdc1bb5",
+            "artifact": {
+              "accepted": false,
+              "reason": "counterevidence remains unresolved",
+              "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+              "revision": "r3",
+              "sha256": "06055bdc1bb58e0c797b375d8b791139654f9ed50e10747c5606fe0ccec2ff3f"
+            },
+            "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+            "harness_identity": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "harness_role": "quality",
+            "run_id": "fault-wait-owner:child:8c3598fc2147",
+            "task_id": "7b3a264e-0e89-4194-a7f9-316d611e15ff"
+          }
+        }
+      ],
+      "run_id": "fault-wait-owner:child:8c3598fc2147"
+    },
+    "success": {
+      "acceptance": {
+        "count": 1,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "quality_task_id": "e2ad617a-0aa9-4c3f-add7-62c927c401fd",
+        "revision": "r2",
+        "run_id": "temporal-v3-success:child:755d525ac2ef",
+        "sha256": "be73bbf1903196e1e3b9f32157fb8fd61394867df36ec8afb5f511f171b9694c"
+      },
+      "branch_intervals_ns": {
+        "counter_evidence": {
+          "end": 1790134722345035008,
+          "start": 1790134721078821120
+        },
+        "source_evidence": {
+          "end": 1790134721094790912,
+          "start": 1790134721080542976
+        }
+      },
+      "branch_receipts": {
+        "counter_evidence": {
+          "action_id": "temporal-v3-success:child:755d525ac2ef:counter_evidence",
+          "artifact": {
+            "author": "94df2c42-9be6-458d-9d1e-c3b2c0129838",
+            "content": "fixture-result:{\"instance\":\"counter_evidence\",\"kind\":\"counter_evidence@1\",\"objections\":[{\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"question\":\"What limits the same customer use?\",\"scope_status\":\"requires_scope\"}",
+            "revision": "r2",
+            "sha256": "a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b"
+          },
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "harness_identity": "94df2c42-9be6-458d-9d1e-c3b2c0129838",
+          "harness_role": "capability",
+          "run_id": "temporal-v3-success:child:755d525ac2ef",
+          "task_id": "0a74ceab-3a53-446f-a3e0-d95df25f4e66"
+        },
+        "source_evidence": {
+          "action_id": "temporal-v3-success:child:755d525ac2ef:source_evidence",
+          "artifact": {
+            "author": "f65073a4-b1ff-42fb-a896-6c0049b84eeb",
+            "content": "fixture-result:{\"availability\":\"documented\",\"claims\":[{\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"instance\":\"source_evidence\",\"kind\":\"source_evidence@1\",\"question\":\"Can the customer use the documented capability?\"}",
+            "revision": "r2",
+            "sha256": "f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d"
+          },
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "harness_identity": "f65073a4-b1ff-42fb-a896-6c0049b84eeb",
+          "harness_role": "capability",
+          "run_id": "temporal-v3-success:child:755d525ac2ef",
+          "task_id": "80f20de7-2f03-4d01-986c-422978e4c37d"
+        }
+      },
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "director_wait": null,
+      "join": {
+        "branch_artifact_sha256": {
+          "counter_evidence": "a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b",
+          "source_evidence": "f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d"
+        },
+        "claims": [
+          {
+            "branch_instance": "source_evidence",
+            "claim": "The capability is documented",
+            "source": "source:A"
+          },
+          {
+            "branch_instance": "source_evidence",
+            "claim": "The local contract is versioned",
+            "source": "source:B"
+          }
+        ],
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "kind": "evidence_join@1",
+        "objections": [
+          {
+            "branch_instance": "counter_evidence",
+            "objection": "A documented limit requires explicit scope",
+            "source": "source:C"
+          },
+          {
+            "branch_instance": "counter_evidence",
+            "objection": "A missing receipt must be reconciled",
+            "source": "source:D"
+          }
+        ],
+        "requires_scope": true,
+        "route_status": "requires_scope",
+        "run_id": "temporal-v3-success:child:755d525ac2ef"
+      },
+      "public_child_result": {
+        "release_id": "temporal-v3-success:child:755d525ac2ef:release:r2",
+        "revision": "r2",
+        "sha256": "be73bbf1903196e1e3b9f32157fb8fd61394867df36ec8afb5f511f171b9694c",
+        "status": "accepted"
+      },
+      "public_parent_result": {
+        "release_id": "temporal-v3-success:child:755d525ac2ef:release:r2",
+        "revision": "r2",
+        "sha256": "be73bbf1903196e1e3b9f32157fb8fd61394867df36ec8afb5f511f171b9694c",
+        "status": "accepted"
+      },
+      "quality_identity": "fcb26f33-5f95-494b-9b42-7662e7fe6faa",
+      "release_receipt": {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "release_id": "temporal-v3-success:child:755d525ac2ef:release:r2",
+        "revision": "r2",
+        "run_id": "temporal-v3-success:child:755d525ac2ef",
+        "sha256": "be73bbf1903196e1e3b9f32157fb8fd61394867df36ec8afb5f511f171b9694c"
+      },
+      "repair_count": 1,
+      "revisions": [
+        {
+          "artifact": {
+            "author": "factory:temporal-v3-success:child:755d525ac2ef",
+            "content": "{\"assessment\":\"limits unresolved\",\"join\":{\"branch_artifact_sha256\":{\"counter_evidence\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\",\"source_evidence\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"},\"claims\":[{\"branch_instance\":\"source_evidence\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_evidence\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_evidence\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_evidence\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"temporal-v3-success:child:755d525ac2ef\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":false,\"revision\":\"r1\"}",
+            "revision": "r1",
+            "sha256": "de40684b05375e78b1a7f1892b2fa3f45f45d9c93d4ccc4ec41962d6db055984"
+          },
+          "quality": {
+            "action_id": "temporal-v3-success:child:755d525ac2ef:quality:r1:de40684b0537",
+            "artifact": {
+              "accepted": false,
+              "reason": "counterevidence remains unresolved",
+              "reviewer": "fcb26f33-5f95-494b-9b42-7662e7fe6faa",
+              "revision": "r1",
+              "sha256": "de40684b05375e78b1a7f1892b2fa3f45f45d9c93d4ccc4ec41962d6db055984"
+            },
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "harness_identity": "fcb26f33-5f95-494b-9b42-7662e7fe6faa",
+            "harness_role": "quality",
+            "run_id": "temporal-v3-success:child:755d525ac2ef",
+            "task_id": "c5e8350c-2bf9-4a04-9867-5102b6e7f95f"
+          }
+        },
+        {
+          "artifact": {
+            "author": "factory:temporal-v3-success:child:755d525ac2ef",
+            "content": "{\"assessment\":\"documented limits addressed\",\"join\":{\"branch_artifact_sha256\":{\"counter_evidence\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\",\"source_evidence\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"},\"claims\":[{\"branch_instance\":\"source_evidence\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_evidence\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_evidence\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_evidence\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"temporal-v3-success:child:755d525ac2ef\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":true,\"revision\":\"r2\"}",
+            "revision": "r2",
+            "sha256": "be73bbf1903196e1e3b9f32157fb8fd61394867df36ec8afb5f511f171b9694c"
+          },
+          "quality": {
+            "action_id": "temporal-v3-success:child:755d525ac2ef:quality:r2:be73bbf19031",
+            "artifact": {
+              "accepted": true,
+              "reason": "counterevidence addressed for exact revision",
+              "reviewer": "fcb26f33-5f95-494b-9b42-7662e7fe6faa",
+              "revision": "r2",
+              "sha256": "be73bbf1903196e1e3b9f32157fb8fd61394867df36ec8afb5f511f171b9694c"
+            },
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "harness_identity": "fcb26f33-5f95-494b-9b42-7662e7fe6faa",
+            "harness_role": "quality",
+            "run_id": "temporal-v3-success:child:755d525ac2ef",
+            "task_id": "e2ad617a-0aa9-4c3f-add7-62c927c401fd"
+          }
+        }
+      ],
+      "run_id": "temporal-v3-success:child:755d525ac2ef"
+    }
+  }
+}

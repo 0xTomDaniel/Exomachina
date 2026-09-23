@@ -1,0 +1,22 @@
+# Nested child Director wait scaling
+
+22 September 2026, one macOS 26.5.2 arm64 host with 64 GiB RAM. The frozen Dagu Community v2.17.0 and Temporal Server v1.32.0 arbitration bundles ran **serially**, each from a fresh isolated `/tmp` state directory. The same product-shaped exhausted path left each child at current r3 in a Director wait and its parent waiting for that child. Both bundles kept the two capability servers, Quality, Director, and participating/opaque release receivers running. Dagu used its reconciler; Temporal used its Python worker and PostgreSQL. Each parent was started through its frozen Director A2A service. The complete [Dagu](dagu.json) and [Temporal Director](temporal-director.json) evidence retains each admitted parent ID, child ID, Director Task ID, native status/run ID, timing, ports, and the PID/role list at every snapshot. Raw state and logs remain in the `/tmp` paths recorded there.
+
+| Bundle | Waiting parent/child pairs | De-duplicated physical footprint | PIDs | Time to this level after prior level* |
+| --- | ---: | ---: | ---: | ---: |
+| Dagu | 0 | 548,050,032 B | 9 | Ready in 2.68 s |
+| Dagu | 2 | 714,760,616 B | 15 | 7.11 s |
+| Dagu | 10 | 1,302,729,752 B | 39 | 9.57 s |
+| Temporal | 0 | 756,746,768 B | 49 | Ready in 9.81 s |
+| Temporal | 2 | 790,891,216 B | 49 | 2.46 s |
+| Temporal | 10 | 849,300,224 B | 49 | 2.99 s |
+
+\*The 2 and 10 stage times include a two-second settle after the last pair reached its wait. They are admission-to-wait observations, not throughput or completion benchmarks. A second snapshot three seconds after the 10-pair measurement found **1,322,882,120 B / 39 PIDs** for Dagu and **849,513,216 B / 49 PIDs** for Temporal; all ten waits still held. Both candidates admitted all ten without a rejected start, timed-out wait, or parent/child state drift. All ten Temporal Director Tasks were still `input-required` at the 10-pair snapshot.
+
+The **process-per-wait concern is observed in the frozen Dagu parent path**. At both measured active levels, every waiting pair retained one `dagu start` process, one Python `nested` parent adapter, and one Dagu shell exit watcher: 9 shared PIDs plus 3 per pair at 2 and 10. Dagu's 0-to-10 footprint increase was 754,679,720 B. Temporal retained the same 49 PIDs at all three levels, with a 92,553,456 B 0-to-10 increase. These are measured intervals; they do not establish a linear law or an envelope beyond ten waits. Dagu had the smaller warm bundle and the larger ten-wait bundle on this host.
+
+The Dagu source capability started four times across the run because the frozen v3 definition deliberately sends `--drop-ack true`; its supervisor restarted that fixture after committed lost replies. This was expected fault behavior, and all ten child waits persisted. No Temporal service restart was observed. A separate [direct-SDK Temporal run](temporal-direct.json), retained to show route/host variation, measured 770,920,224 / 804,933,576 / 871,960,640 B at 0/2/10 with 53 PIDs throughout; that route did not create Director A2A Tasks and did not retain parent native run IDs, so the Director-routed run above is the matched comparison.
+
+All snapshots used the same [probe method](footprint_probe.py): `footprint -f bytes --noCategories` over one de-duplicated PID set containing supervisor descendants, state-bound detached run processes, and PostgreSQL's explicit process tree. Dagu used dynamic candidate ports 62251–62257; Temporal used its pinned engine and service ports, including PostgreSQL 31565, frontend 35433, and services 35561–35566. The fresh supervisors exited cleanly after measurement. `freeze.py verify` passed before and after for the Dagu six-file inventory `79c3e81d2037cb44639840120921ff5e1de2a257efd886fa042404f36421290f` and the Temporal 18-file inventory `aaf68094e8ecbc958e3727f1ef6f1278a913b249b3a527210475e51ee72b3099`; no frozen source changed.
+
+This is one host and one cumulative 0→2→10 run per Director-routed candidate, with a brief repeat only at ten. Footprint is a point-in-time whole-install measure, not a peak, long-duration leak test, or clean-machine resource budget. The Temporal PostgreSQL background process count differed between its two fresh runtimes (40 versus 44 including the postmaster), so small absolute differences between runs should not be attributed to the start route alone. The measurements establish the process shape through ten concurrent nested waits, while leaving longer holds, higher concurrency, and other hosts unmeasured.

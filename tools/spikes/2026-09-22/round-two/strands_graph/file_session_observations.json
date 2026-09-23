@@ -1,0 +1,110 @@
+{
+  "fresh_process_per_command": true,
+  "resumed": {
+    "run-v1": {
+      "digest": "13006bf806f984afc400f33b717fda748f7e1bfac03ae8321276585d6c8e1e56",
+      "execution_order": [
+        "research_b",
+        "research_a",
+        "join",
+        "review",
+        "deliver"
+      ],
+      "interrupts": [],
+      "node_statuses": {
+        "deliver": "completed",
+        "join": "completed",
+        "research_a": "completed",
+        "research_b": "completed",
+        "review": "completed"
+      },
+      "revision": 1,
+      "run_id": "run-v1",
+      "status": "completed"
+    },
+    "run-v2": {
+      "digest": "8d8a56bd8b775e8b72d35f5c7f88bdac4f74137cf12a16ad5631d5a9ef604379",
+      "execution_order": [
+        "research_b",
+        "research_a",
+        "join",
+        "verify",
+        "review",
+        "deliver"
+      ],
+      "interrupts": [],
+      "node_statuses": {
+        "deliver": "completed",
+        "join": "completed",
+        "research_a": "completed",
+        "research_b": "completed",
+        "review": "completed",
+        "verify": "completed"
+      },
+      "revision": 2,
+      "run_id": "run-v2",
+      "status": "completed"
+    }
+  },
+  "started": {
+    "harness_id": "ff98acab-785c-438b-b39d-cede050c0f65",
+    "v1": {
+      "digest": "13006bf806f984afc400f33b717fda748f7e1bfac03ae8321276585d6c8e1e56",
+      "execution_order": [
+        "research_b",
+        "research_a",
+        "join",
+        "review"
+      ],
+      "interrupts": [
+        {
+          "id": "v1:before_node_call:20254391-964b-5683-8248-eb871916c406:8265aa86-1b0a-5996-ba91-057fb3bb7b1a",
+          "name": "director_gate",
+          "reason": {
+            "revision": 1,
+            "run_id": "run-v1"
+          }
+        }
+      ],
+      "node_statuses": {
+        "join": "completed",
+        "research_a": "completed",
+        "research_b": "completed",
+        "review": "completed"
+      },
+      "revision": 1,
+      "run_id": "run-v1",
+      "status": "interrupted"
+    },
+    "v2": {
+      "digest": "8d8a56bd8b775e8b72d35f5c7f88bdac4f74137cf12a16ad5631d5a9ef604379",
+      "execution_order": [
+        "research_b",
+        "research_a",
+        "join",
+        "verify",
+        "review"
+      ],
+      "interrupts": [
+        {
+          "id": "v1:before_node_call:20254391-964b-5683-8248-eb871916c406:8265aa86-1b0a-5996-ba91-057fb3bb7b1a",
+          "name": "director_gate",
+          "reason": {
+            "revision": 2,
+            "run_id": "run-v2"
+          }
+        }
+      ],
+      "node_statuses": {
+        "join": "completed",
+        "research_a": "completed",
+        "research_b": "completed",
+        "review": "completed",
+        "verify": "completed"
+      },
+      "revision": 2,
+      "run_id": "run-v2",
+      "status": "interrupted"
+    }
+  }
+}

@@ -1,0 +1,283 @@
+{
+  "assessmentDate": "2026-09-22",
+  "purpose": "Operational selection judgment for the exact candidate distribution, separate from feature coverage and eligibility.",
+  "status": "Current development direction as of 2026-09-23: Temporal Server with stable Python factory interpreter first, Effect Workflow/Cluster v3 second, Dagu Community third. The two fresh-thread debate agents converged after final frozen-composition and original-Task recovery evidence. This is not production qualification. Criterion ratings below remain the earlier partial profiles and have not been mechanically rescored.",
+  "currentDecision": {
+    "date": "2026-09-23",
+    "scope": "conditional first development path; not production qualification",
+    "ranked": [
+      "temporal",
+      "effect-workflow",
+      "dagu"
+    ],
+    "consensus": true,
+    "independentFirstAndSecond": {
+      "astra": [
+        "temporal",
+        "effect-workflow"
+      ],
+      "opus": [
+        "temporal",
+        "dagu"
+      ]
+    },
+    "decisiveEvidence": [
+      "engine-reassessment-2026-09-23.md",
+      "../tools/spikes/2026-09-23/temporal-fresh-composition/result.md",
+      "../tools/spikes/2026-09-23/temporal-recovery-scale/result.md",
+      "../tools/spikes/2026-09-23/arbitration-debate/final-astra.md",
+      "../tools/spikes/2026-09-23/arbitration-debate/final-opus.md"
+    ],
+    "openTemporalGates": [
+      "Forward typed run inputs through the Director A2A facade.",
+      "Project failed native children to the same original A2A Task as failed, with zero acceptance/release.",
+      "Retain exact interpreter and worker behavior during upgrades of waiting runs.",
+      "Prove one-command Temporal/PostgreSQL packaging, backup, migration and resource envelope.",
+      "Close common Quality identity/verdict, capability-policy pinning and remote-effect reconciliation contracts."
+    ],
+    "effectRunnerUpCondition": "Original-Task acceptance-to-release recovery, interpreter-version routing and complete bundle topology remain qualification gaps.",
+    "basis": "Holistic product fit and ownership judgment, distinct from historical feature coverage and partial criterion scores."
+  },
+  "method": {
+    "formula": "sum(criterion weight * rating / 4) for rated criteria",
+    "unknownRule": "An unknown criterion is not zero. Report a lower and upper bound by adding 0 to its full weight; do not rank incomplete profiles against complete ones.",
+    "combinationRule": "Do not add this score to weighted feature coverage. Eligibility and accepted topology gates are applied before either score can support selection. An acceptable total-installation resource envelope is still to be agreed.",
+    "scale": {
+      "0": "Severe known ownership burden, although technically possible.",
+      "1": "Recurring custom ownership or only a basic path proved.",
+      "2": "Material but tractable work with bounded evidence or a stated estimate.",
+      "3": "Modest owned work with a tested operating path.",
+      "4": "Low burden verified on the named release under the required operating model.",
+      "unknown": "No adequate basis to rate this criterion."
+    },
+    "criteria": [
+      {
+        "id": "artifact",
+        "name": "Artifact and release chain",
+        "weight": 20,
+        "question": "Can we build and redistribute the exact package with a repeatable dependency and notice process?"
+      },
+      {
+        "id": "local",
+        "name": "One-install local operation",
+        "weight": 25,
+        "question": "How much packaging, process, storage, port, total resource and restart work does one installation with multiple harness instances own?"
+      },
+      {
+        "id": "upgrades",
+        "name": "Upgrade and patch ownership",
+        "weight": 20,
+        "question": "How much release rebasing, migration, backup and compatibility work recurs?"
+      },
+      {
+        "id": "integration",
+        "name": "Factory integration and recovery",
+        "weight": 20,
+        "question": "How much engine-specific lifecycle, remote-task and recovery code must we own beyond the common product ledger and A2A adapter?"
+      },
+      {
+        "id": "governance",
+        "name": "Governance boundary operation",
+        "weight": 15,
+        "question": "How much authorization, publication and direct-API control must Exomachina operate outside the engine?"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "id": "kestra",
+      "name": "Kestra OSS v2.0.3",
+      "role": "Current fifth-ranked eligible comparator; native YAML and resource gate",
+      "eligibility": "conditional",
+      "ratings": {
+        "artifact": {
+          "rating": 2,
+          "basis": "observed",
+          "reason": "Pinned release and bounded dependency audit; final notices and redistribution review remain open."
+        },
+        "local": {
+          "rating": 1,
+          "basis": "observed",
+          "reason": "A one-command host-local bundle passed, but one warm-idle Kestra JVM used about 650 MiB RSS before PostgreSQL or Strands. A pair per harness is rejected as the default; shared-local ownership, total memory and clean-machine install are unproved."
+        },
+        "upgrades": {
+          "rating": 2,
+          "basis": "estimate",
+          "reason": "Uses an upstream release without a known source patch; migration, backup and upgrade behavior have not been tested."
+        },
+        "integration": {
+          "rating": 2,
+          "basis": "observed",
+          "reason": "Bounded S1–S4 native, harness and A2A/acceptance slices passed; ambiguous replies, multi-Pause and native child/cancel behavior remain open."
+        },
+        "governance": {
+          "rating": 1,
+          "basis": "inference",
+          "reason": "Basic Auth did not prove actor-scoped authorization; an external publisher and every direct engine path still need protection."
+        }
+      },
+      "decision": "Retain Kestra for behavior fixtures; pause expanded product-specific integration until a shared-local installation passes the resource, lifecycle and authorization gates. Do not commit to product distribution yet.",
+      "sources": [
+        "spike-results-2026-09-22.md",
+        "runtime-resource-decision-2026-09-22.md",
+        "../tools/spikes/2026-09-22/s0/kestra/result.md",
+        "../tools/spikes/2026-09-22/s0/kestra/package/result.md"
+      ]
+    },
+    {
+      "id": "conductor-source",
+      "name": "Conductor PostgreSQL source variant",
+      "role": "Conditional technical candidate",
+      "eligibility": "conditional",
+      "ratings": {
+        "artifact": {
+          "rating": 1,
+          "basis": "observed",
+          "reason": "The pinned source built without the restricted direct queue dependency; a reproducible release, complete dependency/notice audit and distribution decision remain open."
+        },
+        "local": {
+          "rating": 1,
+          "basis": "observed",
+          "reason": "Manual PostgreSQL boot and simple workflow restart passed; no one-install bundle or multi-instance helper lifecycle was tested."
+        },
+        "upgrades": {
+          "rating": 1,
+          "basis": "inference",
+          "reason": "Exomachina would own a persistent source patch, release rebase and omitted-module compatibility checks."
+        },
+        "integration": {
+          "rating": null,
+          "basis": "unknown",
+          "reason": "Only SET_VARIABLE and restart were tested; contested state, Director lifecycle, publication and remote A2A recovery were not run on this build."
+        },
+        "governance": {
+          "rating": 1,
+          "basis": "inference",
+          "reason": "OSS REST/A2A authorization needs an external boundary covering direct API and worker paths; the boundary is unproved."
+        }
+      },
+      "decision": "Keep in contention; run the same packaging and S1–S4 slices on the exact source variant before comparing complete scores.",
+      "sources": [
+        "conductor-license-follow-up-2026-09-22.md"
+      ]
+    },
+    {
+      "id": "conductor-stock",
+      "name": "Conductor stock v3.32.4 server",
+      "role": "Assessed package is blocked",
+      "eligibility": "blocked",
+      "unscoredReason": "Product rights for the bundled Orkes Community-licensed queue dependency are unresolved. This is an artifact gate, not a finding that Conductor cannot run factories.",
+      "sources": [
+        "conductor-license-follow-up-2026-09-22.md"
+      ]
+    },
+    {
+      "id": "temporal",
+      "name": "Temporal Server v1.32.0 with a stable Python interpreter",
+      "role": "Current first development choice; production qualification open",
+      "eligibility": "conditional",
+      "unscoredReason": "The frozen product-shaped trial demonstrated native child execution, Director waits, and several restart recoveries. At ten matched Director-routed waits its full trial bundle used 849 MB and retained 49 processes. The frozen interpreter failed the hidden same-definition success/exhaustion condition, so A2 remains partial; active Quality-result negatives, post-commit Director A2A failure coverage, full closure, authorization and bundled PostgreSQL operations remain open. This holistic choice is not a completed numeric score or a release qualification.",
+      "sources": [
+        "temporal-authoring-evaluation.md",
+        "runtime-resource-decision-2026-09-22.md",
+        "../tools/spikes/2026-09-22/countertrials/temporal/result.md",
+        "../tools/spikes/2026-09-22/round-two/temporal/result.md",
+        "engine-arbitration-2026-09-22.md",
+        "../tools/spikes/2026-09-22/arbitration/temporal/result.md",
+        "../tools/spikes/2026-09-22/arbitration/wait-scaling/result.md",
+        "engine-reassessment-2026-09-23.md",
+        "../tools/spikes/2026-09-23/temporal-fresh-composition/result.md",
+        "../tools/spikes/2026-09-23/temporal-recovery-scale/result.md"
+      ]
+    },
+    {
+      "id": "dagu",
+      "name": "Dagu Community",
+      "role": "Current close third; native-document alternative with cross-root and GPL bundle obligations",
+      "eligibility": "conditional",
+      "unscoredReason": "The frozen product-shaped trial passed the hidden same-definition three-branch composition and exercised recovery paths. Its full trial bundle used 1,303 MB and 39 processes at ten Director-routed nested waits because the current parent path retains three processes per pair. A separate processless human-task/shared-scanner countertrial is promising but not fully integrated and its 104 MB ten-wait sample excludes product services. The frozen Quality identity guard failed an isolated negative probe; release liveness, full closure, authorization and GPL-compliant packaging remain open. This holistic runner-up judgment is not a completed numeric score or a release qualification.",
+      "sources": [
+        "exomachina-candidate-screening.json",
+        "runtime-resource-decision-2026-09-22.md",
+        "../tools/spikes/2026-09-22/countertrials/dagu/result.md",
+        "../tools/spikes/2026-09-22/round-two/dagu/result.md",
+        "engine-arbitration-2026-09-22.md",
+        "../tools/spikes/2026-09-22/arbitration/dagu/result.md",
+        "../tools/spikes/2026-09-22/arbitration/wait-scaling/result.md",
+        "../tools/spikes/2026-09-22/arbitration/dagu-wait-alternative/result.md",
+        "engine-reassessment-2026-09-23.md",
+        "../tools/spikes/2026-09-23/dagu-bridge-integration/result.md",
+        "../tools/spikes/2026-09-23/dagu-failure-recovery/result.md",
+        "../tools/spikes/2026-09-23/dagu-inflight-scale/result.md"
+      ]
+    },
+    {
+      "id": "effect-workflow",
+      "name": "Effect Workflow + Cluster v3",
+      "role": "Current runner-up; original-Task recovery and version routing remain open",
+      "eligibility": "conditional",
+      "unscoredReason": "One unchanged SQL-backed Node helper published v2 while v1 waited and recovered both after SIGKILL. MIT-licensed direct packages and local SQLite fit the bundled-helper path, but product-owned definition semantics, atomic publication/run binding, multi-helper behavior, real A2A recovery and total Strands footprint remain unproved.",
+      "sources": [
+        "../tools/spikes/2026-09-22/round-two/effect/result.md",
+        "../tools/spikes/2026-09-22/round-two/result.md",
+        "engine-reassessment-2026-09-23.md",
+        "../tools/spikes/2026-09-23/effect-parity/result.md",
+        "../tools/spikes/2026-09-23/effect-inflight-scale/result.md",
+        "../tools/spikes/2026-09-23/effect-upgrade-stability/result.md"
+      ]
+    },
+    {
+      "id": "restate",
+      "name": "Restate Server v1.7.10 with a stable Python handler",
+      "role": "Conditional on product rights",
+      "eligibility": "conditional",
+      "unscoredReason": "A single local server and unchanged handler recovered pinned v1/v2 documents and duplicate decisions. The BUSL-1.1 server is not OSI open source; the inspected DSL-product grant is not distribution/API clearance for the exact Exomachina product. Document governance and real A2A effects remain product work.",
+      "sources": [
+        "../tools/spikes/2026-09-22/round-two/restate/result.md",
+        "../tools/spikes/2026-09-22/round-two/result.md"
+      ]
+    },
+    {
+      "id": "hatchet",
+      "name": "Hatchet embedded v0.107.0 with a stable Python worker",
+      "role": "Park for the first one-install implementation path",
+      "eligibility": "conditional",
+      "unscoredReason": "A no-Docker embedded sidecar and bundled PostgreSQL recovered pinned v1/v2 documents, but the upstream mode is framed for development/CI and SIGKILL left PostgreSQL running until scoped cleanup. Offline packaging, multi-harness lifecycle, resource and security qualification remain expensive; no unique advantage over the advancing candidates is established.",
+      "sources": [
+        "../tools/spikes/2026-09-22/round-two/hatchet/result.md",
+        "../tools/spikes/2026-09-22/round-two/result.md"
+      ]
+    },
+    {
+      "id": "argo",
+      "name": "Argo Workflows",
+      "role": "Provisional challenger",
+      "eligibility": "conditional",
+      "unscoredReason": "A pinned local distribution, Kubernetes operating footprint, one-install path and comparable recovery trial have not been run. Documentation-based feature coverage alone cannot price that ownership.",
+      "sources": [
+        "engine-evaluation.md"
+      ]
+    },
+    {
+      "id": "strands-graph",
+      "name": "Strands SDK Graph in the customized harness",
+      "role": "Seventh-ranked harness-native graph option; retain as a comparator",
+      "eligibility": "conditional",
+      "unscoredReason": "Pinned SDK Graph 1.57.0 resumed v1/v2 with documented FileSessionManager. A local SQLite claim/epoch layer rejected a stale owner, but a forced lease-expiry overlap still made two submissions; the synthetic receiver accepted one using a stable key. Publication, claim renewal, discovery, ledger/session crash consistency and real A2A recovery remain product work.",
+      "sources": [
+        "runtime-resource-decision-2026-09-22.md",
+        "https://strandsagents.com/docs/user-guide/sdk/multi-agent/graph/",
+        "https://strandsagents.com/docs/user-guide/sdk/agents/session-management/",
+        "../tools/spikes/2026-09-22/countertrials/strands_graph/result.md",
+        "../tools/spikes/2026-09-22/round-two/strands_graph/result.md"
+      ]
+    }
+  ],
+  "nextDecisionGate": {
+    "plan": "Start Temporal interpreter and authority/recovery corrections, then qualify the assembled one-install product before release. An integrated Dagu processless bridge is the only identified order-reversing countertrial and may be run before committing to Temporal-specific packaging; it is not a prerequisite to starting development.",
+    "resourceThreshold": "Not yet agreed; the measured 0/2/10-wait complete trial bundles establish a bounded comparison, not an owner-approved production envelope. Recheck clean-machine, multi-harness and longer-wait behavior in the assembled installation.",
+    "source": "engine-arbitration-2026-09-22.md",
+    "observed": "Both debate agents converged on Temporal first and Dagu second after frozen common-contract trials, a hidden composition test, matched Director-routed wait scaling, and a Dagu processless-wait countertrial. Temporal A2 remains partial; Dagu A2 passed, but its current full bundle grows by three processes per nested wait and the processless variant lacks full integration."
+  },
+  "outsideShortlist": "LangGraph is excluded by owner decision; n8n Community and distributed Windmill Community are excluded for the assessed product use. Among the nine still-eligible candidates, Temporal is first for development and Dagu runner-up; Kestra is third, Effect fourth, Restate fifth, Conductor source variant sixth, Strands Graph seventh, Hatchet eighth, and Argo ninth. Restate still requires exact rights clearance, and Hatchet is parked for the first one-install path."
+}

@@ -1,0 +1,16 @@
+steps:
+  - id: director_wait
+    action: human.task
+    with:
+      prompt: Authorize the exact child root to complete
+      form:
+        type: object
+        additionalProperties: false
+        properties:
+          decision:
+            type: string
+            enum: [accept]
+        required: [decision]
+  - id: child_continuation
+    depends: director_wait
+    run: /bin/echo child_continued

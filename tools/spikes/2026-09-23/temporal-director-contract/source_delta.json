@@ -1,0 +1,100 @@
+{
+  "added": [
+    "failure_projection.py",
+    "test_contract.py",
+    "director_trial.py",
+    "replay_trial.py",
+    "definitions/withheld-a2c-v4-mixed.json"
+  ],
+  "base": "tools/spikes/2026-09-23/temporal-recovery-scale",
+  "files": {
+    "adapter.py": {
+      "base_sha256": "84358d6f9644d6592b6eea4ed4c5ef70e53ed743b52f2042d6a3a4c2e44981dd",
+      "changed": false,
+      "owned_sha256": "84358d6f9644d6592b6eea4ed4c5ef70e53ed743b52f2042d6a3a4c2e44981dd"
+    },
+    "author.py": {
+      "base_sha256": "8367537c1a118e653e5dab983b594a89af1ce92eee7df9c6bb6aa932aaae3c23",
+      "changed": true,
+      "owned_sha256": "b9af14abd6a0b3ea4f36de42d831adcb17a7a3df9d0ddb02d8dea7b1c0ff7486"
+    },
+    "definition.py": {
+      "base_sha256": "8e1aa2c4fd77ab971dfdcfabe3e39391e4f62acdfe45918c02fba01ada812d7c",
+      "changed": true,
+      "owned_sha256": "12b595494adf36184665489b54f70c5edd3a8c8b851fc8e1681b57dbb0ba81ec"
+    },
+    "definitions/withheld-a2c-v4-mixed.json": {
+      "changed": true,
+      "owned_sha256": "c0625708d60e9891aad4ce33c2e52ded5117880d03de1ed89c8f514759dd9e22",
+      "source": "tools/spikes/2026-09-23/temporal-fresh-composition/definitions/withheld-a2c-v4-mixed.json",
+      "source_sha256": "bffcfa7298658b25e93e3faa4785cd07d84a348c7a64ecf0a1b2bcd37e9c03f9"
+    },
+    "director_server.py": {
+      "base_sha256": "011926c8bbd31fb154da1d79612aca127c7d21d3adf4fe8784715c154be98586",
+      "changed": true,
+      "owned_sha256": "815687f0ecf6cfe76e06524b10084cc0802b0aa8c09193f0e40d744782fed37e"
+    },
+    "director_trial.py": {
+      "changed": true,
+      "owned_sha256": "2ff72b3e400b3b2a163e5a67b64240fddeffb7f54a1a83b9c951e8ab16045b22"
+    },
+    "factory.py": {
+      "base_sha256": "4e78e21c8eb631c86e0c4e039dcbb40868e9e5f69bc43f053335090366012cc4",
+      "changed": true,
+      "owned_sha256": "80169fff8c45cb0b43317088f3186fe5f4b9adf1a8b73aea03f2e439d27d35b4"
+    },
+    "failure_projection.py": {
+      "changed": true,
+      "owned_sha256": "6ba87f9cc6e44d95b174fb59400d0bc5adc4e23b4f65312f7c26f219f478f695"
+    },
+    "long_client.py": {
+      "base_sha256": "34f318ee7c69c00b6b542bae1cdcc41309c4520dd5119d0da11cd7133ea8ebc4",
+      "changed": false,
+      "owned_sha256": "34f318ee7c69c00b6b542bae1cdcc41309c4520dd5119d0da11cd7133ea8ebc4"
+    },
+    "normalize.py": {
+      "base_sha256": "5c24d133484dec80d6ae246eb9de883d4e9930c1b50f6bc40990cfc5c376cabc",
+      "changed": false,
+      "owned_sha256": "5c24d133484dec80d6ae246eb9de883d4e9930c1b50f6bc40990cfc5c376cabc"
+    },
+    "probe.py": {
+      "base_sha256": "47950245c1d258ef3686dc445fb3d78ef8fb3dc324de952bec66edeeb1d9c7b9",
+      "changed": true,
+      "owned_sha256": "0f179f4f67cd5736038853c7994a9f3bcf7a1037c9fb4c16b788a90b7056219d"
+    },
+    "replay_trial.py": {
+      "changed": true,
+      "owned_sha256": "eece1f0b2041554707cf37705f7b560784e1ca40307ce6310373c31c7ca6c48b"
+    },
+    "runtime.py": {
+      "base_sha256": "5059f05d9d849229ec57a0c468c31cb3108137e08b833e001dad2dd2afefc7a9",
+      "changed": true,
+      "owned_sha256": "9d72bdd46bff932f5be19525e85e444b1192c09149cdbf17361c0f7d03fb252d"
+    },
+    "server.template.yaml": {
+      "base_sha256": "558b6971f207369f7315fc0f21ed0b2adca5bc09ab34f8fc8e37ffc3b102d770",
+      "changed": false,
+      "owned_sha256": "558b6971f207369f7315fc0f21ed0b2adca5bc09ab34f8fc8e37ffc3b102d770"
+    },
+    "slow_harness_server.py": {
+      "base_sha256": "5160098dda639ab9a46a0fe5b3edbca3e5542644b0e5917646e329e8971caf51",
+      "changed": false,
+      "owned_sha256": "5160098dda639ab9a46a0fe5b3edbca3e5542644b0e5917646e329e8971caf51"
+    },
+    "supervisor.py": {
+      "base_sha256": "256ad7a60015bc4ca5c3fc1858be56fb0236ef99cddabe582b1fbb607a0b82ac",
+      "changed": false,
+      "owned_sha256": "256ad7a60015bc4ca5c3fc1858be56fb0236ef99cddabe582b1fbb607a0b82ac"
+    },
+    "test_contract.py": {
+      "changed": true,
+      "owned_sha256": "cd6ccee06f0720a5b1985f0ce80a4034e4ac4d61cf6c564e347c5307fb0e739a"
+    },
+    "worker.py": {
+      "base_sha256": "cecd4a16b281db0ed18c51452fc22907a313b6f37864372a8ecbd7ea4da3df3b",
+      "changed": true,
+      "owned_sha256": "bcd7cb57221b4e939b2a4c1084357d956fc0bf461c607e8d4d4e4c6ffecaa2c4"
+    }
+  },
+  "owned": "tools/spikes/2026-09-23/temporal-director-contract"
+}

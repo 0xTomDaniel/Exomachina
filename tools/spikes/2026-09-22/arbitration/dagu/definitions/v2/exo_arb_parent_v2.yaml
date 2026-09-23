@@ -1,0 +1,18 @@
+steps:
+  - id: old_wait
+    action: human.task
+    with:
+      prompt: Hold the old pinned factory during v3 publication
+      form:
+        type: object
+        additionalProperties: false
+        properties:
+          accepted:
+            type: boolean
+            enum: [true]
+        required: [accepted]
+  - id: old_child
+    depends: old_wait
+    action: dag.run
+    with:
+      dag: exo_arb_leaf_v2

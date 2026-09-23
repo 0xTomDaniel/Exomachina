@@ -1,0 +1,19 @@
+id: s3_parent_pinned
+namespace: exomachina.s3
+tasks:
+  - id: publication_wait
+    type: io.kestra.plugin.core.flow.Pause
+  - id: child
+    type: io.kestra.plugin.core.flow.Subflow
+    namespace: exomachina.s3
+    flowId: s3_child
+    revision: 1
+    wait: true
+    transmitFailed: true
+  - id: observed
+    type: io.kestra.plugin.core.debug.Return
+    format: "{{ outputs.child.outputs.marker }}"
+outputs:
+  - id: observed
+    type: STRING
+    value: "{{ outputs.observed.value }}"

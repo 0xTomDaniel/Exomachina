@@ -1,0 +1,44 @@
+{
+  "status": 200,
+  "body": {
+    "id": "parity_parent",
+    "namespace": "exomachina.kestra_parity",
+    "revision": 2,
+    "inputs": [
+      {
+        "id": "outcome",
+        "type": "STRING",
+        "required": true,
+        "defaults": "repair_success"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "public_result",
+        "value": "{{ outputs.observed.value }}",
+        "type": "STRING"
+      }
+    ],
+    "disabled": false,
+    "deleted": false,
+    "draft": false,
+    "tasks": [
+      {
+        "id": "child",
+        "type": "io.kestra.plugin.core.flow.Subflow",
+        "namespace": "exomachina.kestra_parity",
+        "flowId": "parity_child",
+        "revision": 2,
+        "inputs": {
+          "outcome": "{{ inputs.outcome }}"
+        }
+      },
+      {
+        "id": "observed",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "format": "{{ outputs.child.outputs.public_result }}"
+      }
+    ],
+    "source": "id: parity_parent\nnamespace: exomachina.kestra_parity\ninputs:\n  - id: outcome\n    type: STRING\n    defaults: repair_success\ntasks:\n  - id: child\n    type: io.kestra.plugin.core.flow.Subflow\n    namespace: exomachina.kestra_parity\n    flowId: parity_child\n    revision: 2\n    inputs:\n      outcome: \"{{ inputs.outcome }}\"\n    wait: true\n    transmitFailed: true\n  - id: observed\n    type: io.kestra.plugin.core.debug.Return\n    format: \"{{ outputs.child.outputs.public_result }}\"\noutputs:\n  - id: public_result\n    type: STRING\n    value: \"{{ outputs.observed.value }}\"\n"
+  }
+}

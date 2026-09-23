@@ -1,0 +1,989 @@
+{
+  "checks": {
+    "acceptance_before_continuation": {
+      "before": {
+        "authoritative_acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "5cc39d20-e430-49fc-b4bc-6d84cea3f81a",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r2",
+          "run": "fault-acceptance-gap:child:755d525ac2ef",
+          "sha256": "eebd26a06034ed382d24b3b83d3aa94c54a06faf399052cdf7d1261f4566919d"
+        },
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2"
+        ],
+        "current_revision": "r2",
+        "current_sha256": "eebd26a06034ed382d24b3b83d3aa94c54a06faf399052cdf7d1261f4566919d",
+        "deadline": null,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "node": "independent_quality",
+        "owner_epoch": 1,
+        "package_digest": "fa2a1dbb047b3d17fd27ab970c8d409a25f01a73842e5b168ee493c0a88e3a39",
+        "phase": "accepted-before-release",
+        "quality_verdict": {
+          "accepted": true,
+          "reason": "counterevidence addressed for exact revision",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r2",
+          "sha256": "eebd26a06034ed382d24b3b83d3aa94c54a06faf399052cdf7d1261f4566919d"
+        },
+        "release_receipt": null,
+        "repair_count": 1,
+        "run": "fault-acceptance-gap:child:755d525ac2ef",
+        "unresolved": null
+      },
+      "result": {
+        "acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "5cc39d20-e430-49fc-b4bc-6d84cea3f81a",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r2",
+          "run": "fault-acceptance-gap:child:755d525ac2ef",
+          "sha256": "eebd26a06034ed382d24b3b83d3aa94c54a06faf399052cdf7d1261f4566919d"
+        },
+        "child": {
+          "acceptance": {
+            "attempt": 2,
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "quality_task_id": "5cc39d20-e430-49fc-b4bc-6d84cea3f81a",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r2",
+            "run": "fault-acceptance-gap:child:755d525ac2ef",
+            "sha256": "eebd26a06034ed382d24b3b83d3aa94c54a06faf399052cdf7d1261f4566919d"
+          },
+          "child": null,
+          "completed": [
+            "gather",
+            "join_evidence",
+            "draft:r1",
+            "independent_quality:r1",
+            "route_verdict:false",
+            "repair:1",
+            "draft:r2",
+            "independent_quality:r2",
+            "route_verdict:true",
+            "publish"
+          ],
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "receipt": {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "release_id": "fault-acceptance-gap:child:755d525ac2ef:release:r2",
+            "revision": "r2",
+            "run_id": "fault-acceptance-gap:child:755d525ac2ef",
+            "sha256": "eebd26a06034ed382d24b3b83d3aa94c54a06faf399052cdf7d1261f4566919d"
+          },
+          "released": true,
+          "run": "fault-acceptance-gap:child:755d525ac2ef",
+          "status": "accepted"
+        },
+        "completed": [
+          "invoke_child"
+        ],
+        "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "release_id": "fault-acceptance-gap:child:755d525ac2ef:release:r2",
+          "revision": "r2",
+          "run_id": "fault-acceptance-gap:child:755d525ac2ef",
+          "sha256": "eebd26a06034ed382d24b3b83d3aa94c54a06faf399052cdf7d1261f4566919d"
+        },
+        "released": true,
+        "run": "fault-acceptance-gap",
+        "status": "accepted"
+      },
+      "stopped": {
+        "postgres_pid": 25721,
+        "postgres_port_closed": true,
+        "temporal_pid": 25728,
+        "temporal_port_closed": true
+      }
+    },
+    "mid_assignment_engine_pg_kill": {
+      "result": {
+        "acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "32b588d9-108d-477b-bf81-39d4a0c7ef81",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r2",
+          "run": "fault-mid-assignment:child:755d525ac2ef",
+          "sha256": "707f496aaecfcbcff01f11df571f1d3846b2a9782bff5c9be8d1fdfcc437106b"
+        },
+        "child": {
+          "acceptance": {
+            "attempt": 2,
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "quality_task_id": "32b588d9-108d-477b-bf81-39d4a0c7ef81",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r2",
+            "run": "fault-mid-assignment:child:755d525ac2ef",
+            "sha256": "707f496aaecfcbcff01f11df571f1d3846b2a9782bff5c9be8d1fdfcc437106b"
+          },
+          "child": null,
+          "completed": [
+            "gather",
+            "join_evidence",
+            "draft:r1",
+            "independent_quality:r1",
+            "route_verdict:false",
+            "repair:1",
+            "draft:r2",
+            "independent_quality:r2",
+            "route_verdict:true",
+            "publish"
+          ],
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "receipt": {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "release_id": "fault-mid-assignment:child:755d525ac2ef:release:r2",
+            "revision": "r2",
+            "run_id": "fault-mid-assignment:child:755d525ac2ef",
+            "sha256": "707f496aaecfcbcff01f11df571f1d3846b2a9782bff5c9be8d1fdfcc437106b"
+          },
+          "released": true,
+          "run": "fault-mid-assignment:child:755d525ac2ef",
+          "status": "accepted"
+        },
+        "completed": [
+          "invoke_child"
+        ],
+        "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "release_id": "fault-mid-assignment:child:755d525ac2ef:release:r2",
+          "revision": "r2",
+          "run_id": "fault-mid-assignment:child:755d525ac2ef",
+          "sha256": "707f496aaecfcbcff01f11df571f1d3846b2a9782bff5c9be8d1fdfcc437106b"
+        },
+        "released": true,
+        "run": "fault-mid-assignment",
+        "status": "accepted"
+      },
+      "stopped": {
+        "postgres_pid": 25570,
+        "postgres_port_closed": true,
+        "temporal_pid": 25598,
+        "temporal_port_closed": true
+      }
+    },
+    "opaque_durable_unknown": {
+      "after": {
+        "authoritative_acceptance": {
+          "attempt": 2,
+          "definition_digest": "c4b55bcf2ab3be91deb83c5effa4a3d886b44b4d79c6c1165440bedf0a8eabed",
+          "quality_task_id": "8558864e-48ee-41b8-9873-3ff641ebd67c",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r2",
+          "run": "fault-opaque:child:c4b55bcf2ab3",
+          "sha256": "bc1d00a4aefd4e7643e1588ad0a36e6a46c8dbdaf53bfc717eda90a4a16b7eb2"
+        },
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2",
+          "independent_quality:r2",
+          "route_verdict:true"
+        ],
+        "current_revision": "r2",
+        "current_sha256": "bc1d00a4aefd4e7643e1588ad0a36e6a46c8dbdaf53bfc717eda90a4a16b7eb2",
+        "deadline": null,
+        "definition_digest": "c4b55bcf2ab3be91deb83c5effa4a3d886b44b4d79c6c1165440bedf0a8eabed",
+        "node": "publish",
+        "owner_epoch": 1,
+        "package_digest": "ff02b370f72d8bee8f4772a310f80a2f7596b4b66a307dd13c457c99ce8bf909",
+        "phase": "unresolved-release",
+        "quality_verdict": {
+          "accepted": true,
+          "reason": "counterevidence addressed for exact revision",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r2",
+          "sha256": "bc1d00a4aefd4e7643e1588ad0a36e6a46c8dbdaf53bfc717eda90a4a16b7eb2"
+        },
+        "release_receipt": null,
+        "repair_count": 1,
+        "run": "fault-opaque:child:c4b55bcf2ab3",
+        "unresolved": {
+          "error_type": "UncertainDelivery",
+          "release_id": "fault-opaque:child:c4b55bcf2ab3:release:r2",
+          "unresolved": "opaque receiver acknowledgement unknown"
+        }
+      },
+      "before": {
+        "authoritative_acceptance": {
+          "attempt": 2,
+          "definition_digest": "c4b55bcf2ab3be91deb83c5effa4a3d886b44b4d79c6c1165440bedf0a8eabed",
+          "quality_task_id": "8558864e-48ee-41b8-9873-3ff641ebd67c",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r2",
+          "run": "fault-opaque:child:c4b55bcf2ab3",
+          "sha256": "bc1d00a4aefd4e7643e1588ad0a36e6a46c8dbdaf53bfc717eda90a4a16b7eb2"
+        },
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2",
+          "independent_quality:r2",
+          "route_verdict:true"
+        ],
+        "current_revision": "r2",
+        "current_sha256": "bc1d00a4aefd4e7643e1588ad0a36e6a46c8dbdaf53bfc717eda90a4a16b7eb2",
+        "deadline": null,
+        "definition_digest": "c4b55bcf2ab3be91deb83c5effa4a3d886b44b4d79c6c1165440bedf0a8eabed",
+        "node": "publish",
+        "owner_epoch": 1,
+        "package_digest": "ff02b370f72d8bee8f4772a310f80a2f7596b4b66a307dd13c457c99ce8bf909",
+        "phase": "unresolved-release",
+        "quality_verdict": {
+          "accepted": true,
+          "reason": "counterevidence addressed for exact revision",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r2",
+          "sha256": "bc1d00a4aefd4e7643e1588ad0a36e6a46c8dbdaf53bfc717eda90a4a16b7eb2"
+        },
+        "release_receipt": null,
+        "repair_count": 1,
+        "run": "fault-opaque:child:c4b55bcf2ab3",
+        "unresolved": {
+          "error_type": "UncertainDelivery",
+          "release_id": "fault-opaque:child:c4b55bcf2ab3:release:r2",
+          "unresolved": "opaque receiver acknowledgement unknown"
+        }
+      },
+      "effects_after": [
+        {
+          "effects": 1
+        }
+      ],
+      "effects_before": [
+        {
+          "effects": 1
+        }
+      ],
+      "package_digest": "ff02b370f72d8bee8f4772a310f80a2f7596b4b66a307dd13c457c99ce8bf909",
+      "stopped": {
+        "postgres_pid": 25921,
+        "postgres_port_closed": true,
+        "temporal_pid": 25929,
+        "temporal_port_closed": true
+      }
+    },
+    "participating_lost_acks": {
+      "acceptance": {
+        "attempt": 2,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "quality_task_id": "408e50ac-7e35-4c02-af82-c4d089c92c23",
+        "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+        "revision": "r2",
+        "run": "fault-lost-acks:child:755d525ac2ef",
+        "sha256": "b2dbc89e1a4d96689bde0f785fc6b3960aad498e2b6a4f7b6009e07937b2b007"
+      },
+      "child": {
+        "acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "408e50ac-7e35-4c02-af82-c4d089c92c23",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r2",
+          "run": "fault-lost-acks:child:755d525ac2ef",
+          "sha256": "b2dbc89e1a4d96689bde0f785fc6b3960aad498e2b6a4f7b6009e07937b2b007"
+        },
+        "child": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2",
+          "independent_quality:r2",
+          "route_verdict:true",
+          "publish"
+        ],
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "release_id": "fault-lost-acks:child:755d525ac2ef:release:r2",
+          "revision": "r2",
+          "run_id": "fault-lost-acks:child:755d525ac2ef",
+          "sha256": "b2dbc89e1a4d96689bde0f785fc6b3960aad498e2b6a4f7b6009e07937b2b007"
+        },
+        "released": true,
+        "run": "fault-lost-acks:child:755d525ac2ef",
+        "status": "accepted"
+      },
+      "completed": [
+        "invoke_child"
+      ],
+      "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+      "receipt": {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "release_id": "fault-lost-acks:child:755d525ac2ef:release:r2",
+        "revision": "r2",
+        "run_id": "fault-lost-acks:child:755d525ac2ef",
+        "sha256": "b2dbc89e1a4d96689bde0f785fc6b3960aad498e2b6a4f7b6009e07937b2b007"
+      },
+      "released": true,
+      "run": "fault-lost-acks",
+      "status": "accepted"
+    },
+    "quality_remote_commit_gap": {
+      "result": {
+        "acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "857a722d-e237-4450-8e28-5f6406422136",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r2",
+          "run": "fault-quality-gap:child:755d525ac2ef",
+          "sha256": "a04196b64558cf16d18acf1cee22409f9668635f4aed2d40ca26878210c23836"
+        },
+        "child": {
+          "acceptance": {
+            "attempt": 2,
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "quality_task_id": "857a722d-e237-4450-8e28-5f6406422136",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r2",
+            "run": "fault-quality-gap:child:755d525ac2ef",
+            "sha256": "a04196b64558cf16d18acf1cee22409f9668635f4aed2d40ca26878210c23836"
+          },
+          "child": null,
+          "completed": [
+            "gather",
+            "join_evidence",
+            "draft:r1",
+            "independent_quality:r1",
+            "route_verdict:false",
+            "repair:1",
+            "draft:r2",
+            "independent_quality:r2",
+            "route_verdict:true",
+            "publish"
+          ],
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "receipt": {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "release_id": "fault-quality-gap:child:755d525ac2ef:release:r2",
+            "revision": "r2",
+            "run_id": "fault-quality-gap:child:755d525ac2ef",
+            "sha256": "a04196b64558cf16d18acf1cee22409f9668635f4aed2d40ca26878210c23836"
+          },
+          "released": true,
+          "run": "fault-quality-gap:child:755d525ac2ef",
+          "status": "accepted"
+        },
+        "completed": [
+          "invoke_child"
+        ],
+        "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "release_id": "fault-quality-gap:child:755d525ac2ef:release:r2",
+          "revision": "r2",
+          "run_id": "fault-quality-gap:child:755d525ac2ef",
+          "sha256": "a04196b64558cf16d18acf1cee22409f9668635f4aed2d40ca26878210c23836"
+        },
+        "released": true,
+        "run": "fault-quality-gap",
+        "status": "accepted"
+      },
+      "stopped": {
+        "postgres_pid": 25655,
+        "postgres_port_closed": true,
+        "temporal_pid": 25664,
+        "temporal_port_closed": true
+      }
+    },
+    "wait_restart_stale_owner": {
+      "after": {
+        "authoritative_acceptance": null,
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2",
+          "independent_quality:r2",
+          "route_verdict:false",
+          "repair:2",
+          "draft:r3",
+          "independent_quality:r3",
+          "route_verdict:false",
+          "repair:exhausted"
+        ],
+        "current_revision": "r3",
+        "current_sha256": "06055bdc1bb58e0c797b375d8b791139654f9ed50e10747c5606fe0ccec2ff3f",
+        "deadline": 1790134804.321078,
+        "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+        "node": "director",
+        "owner_epoch": 1,
+        "package_digest": "8c676ef9ca865397c41871507b2f9e24e55fdea5263ce2eb886eb4c096545696",
+        "phase": "awaiting-director",
+        "quality_verdict": {
+          "accepted": false,
+          "reason": "counterevidence remains unresolved",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r3",
+          "sha256": "06055bdc1bb58e0c797b375d8b791139654f9ed50e10747c5606fe0ccec2ff3f"
+        },
+        "release_receipt": null,
+        "repair_count": 2,
+        "run": "fault-wait-owner:child:8c3598fc2147",
+        "unresolved": null
+      },
+      "before": {
+        "authoritative_acceptance": null,
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2",
+          "independent_quality:r2",
+          "route_verdict:false",
+          "repair:2",
+          "draft:r3",
+          "independent_quality:r3",
+          "route_verdict:false",
+          "repair:exhausted"
+        ],
+        "current_revision": "r3",
+        "current_sha256": "06055bdc1bb58e0c797b375d8b791139654f9ed50e10747c5606fe0ccec2ff3f",
+        "deadline": 1790134804.321078,
+        "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+        "node": "director",
+        "owner_epoch": 1,
+        "package_digest": "8c676ef9ca865397c41871507b2f9e24e55fdea5263ce2eb886eb4c096545696",
+        "phase": "awaiting-director",
+        "quality_verdict": {
+          "accepted": false,
+          "reason": "counterevidence remains unresolved",
+          "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+          "revision": "r3",
+          "sha256": "06055bdc1bb58e0c797b375d8b791139654f9ed50e10747c5606fe0ccec2ff3f"
+        },
+        "release_receipt": null,
+        "repair_count": 2,
+        "run": "fault-wait-owner:child:8c3598fc2147",
+        "unresolved": null
+      },
+      "new_response": {
+        "artifacts": [
+          {
+            "artifactId": "c0ca0298db383aeba3bf77696f286446e76aef479c4085e07b42b7b3cbf246e4",
+            "parts": [
+              {
+                "data": {
+                  "package_digest": "8c676ef9ca865397c41871507b2f9e24e55fdea5263ce2eb886eb4c096545696",
+                  "public_result": {
+                    "child": {
+                      "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+                      "released": false,
+                      "revision": "r3",
+                      "run": "fault-wait-owner:child:8c3598fc2147",
+                      "status": "aborted"
+                    },
+                    "definition_digest": "5b37a0486a3efeebeb8274517e5819474a2929aa52e079ceac13e44060ccecd0",
+                    "released": false,
+                    "run": "fault-wait-owner",
+                    "status": "aborted"
+                  },
+                  "run_id": "fault-wait-owner",
+                  "status": "aborted"
+                },
+                "kind": "data"
+              }
+            ]
+          }
+        ],
+        "contextId": "767633cb-1e7f-44d7-bad7-0a10cd6d408d",
+        "id": "a64453dd-a89b-4b00-9078-f745a80a9c3a",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "a2dffce6-86f0-4de0-9853-01611654a662",
+          "harness_incarnation": 2,
+          "package_digest": "8c676ef9ca865397c41871507b2f9e24e55fdea5263ce2eb886eb4c096545696",
+          "run_id": "fault-wait-owner"
+        },
+        "status": {
+          "state": "completed"
+        }
+      },
+      "old_response": {
+        "kind": "message",
+        "messageId": "78aaa1a1-9e42-4fc8-b5e1-ca6708e351eb",
+        "parts": [
+          {
+            "data": {
+              "error": "stale Director owner incarnation"
+            },
+            "kind": "data"
+          }
+        ],
+        "role": "agent"
+      },
+      "original_task_after": {
+        "artifacts": [
+          {
+            "artifactId": "c0ca0298db383aeba3bf77696f286446e76aef479c4085e07b42b7b3cbf246e4",
+            "parts": [
+              {
+                "data": {
+                  "package_digest": "8c676ef9ca865397c41871507b2f9e24e55fdea5263ce2eb886eb4c096545696",
+                  "public_result": {
+                    "child": {
+                      "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+                      "released": false,
+                      "revision": "r3",
+                      "run": "fault-wait-owner:child:8c3598fc2147",
+                      "status": "aborted"
+                    },
+                    "definition_digest": "5b37a0486a3efeebeb8274517e5819474a2929aa52e079ceac13e44060ccecd0",
+                    "released": false,
+                    "run": "fault-wait-owner",
+                    "status": "aborted"
+                  },
+                  "run_id": "fault-wait-owner",
+                  "status": "aborted"
+                },
+                "kind": "data"
+              }
+            ]
+          }
+        ],
+        "contextId": "bba21aef-21ef-4b1a-a583-a36b1540f481",
+        "id": "264e5ccb-5140-4fd3-a094-22966f22cd14",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "a2dffce6-86f0-4de0-9853-01611654a662",
+          "harness_incarnation": 2,
+          "package_digest": "8c676ef9ca865397c41871507b2f9e24e55fdea5263ce2eb886eb4c096545696",
+          "run_id": "fault-wait-owner"
+        },
+        "status": {
+          "state": "completed"
+        }
+      },
+      "original_task_id": "264e5ccb-5140-4fd3-a094-22966f22cd14",
+      "parent_result": {
+        "child": {
+          "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+          "released": false,
+          "revision": "r3",
+          "run": "fault-wait-owner:child:8c3598fc2147",
+          "status": "aborted"
+        },
+        "definition_digest": "5b37a0486a3efeebeb8274517e5819474a2929aa52e079ceac13e44060ccecd0",
+        "released": false,
+        "run": "fault-wait-owner",
+        "status": "aborted"
+      },
+      "replacement": {
+        "a2a_protocol": "0.3.0",
+        "identity": "a2dffce6-86f0-4de0-9853-01611654a662",
+        "incarnation": 2,
+        "role": "director"
+      },
+      "stopped": {
+        "postgres_pid": 25829,
+        "postgres_port_closed": true,
+        "temporal_pid": 25836,
+        "temporal_port_closed": true
+      }
+    }
+  },
+  "definitions": {
+    "exhausted_child": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+    "exhausted_digest": "8c676ef9ca865397c41871507b2f9e24e55fdea5263ce2eb886eb4c096545696",
+    "visible_child": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+    "visible_digest": "fa2a1dbb047b3d17fd27ab970c8d409a25f01a73842e5b168ee493c0a88e3a39"
+  },
+  "receiver_rows": {
+    "counter": [
+      {
+        "accepted_count": 1,
+        "action_id": "fault-mid-assignment:child:755d525ac2ef:counter_evidence",
+        "artifact": "{\"author\":\"c6060461-a8e5-40c6-8ac5-dd76610870e4\",\"content\":\"fixture-result:{\\\"instance\\\":\\\"counter_evidence\\\",\\\"kind\\\":\\\"counter_evidence@1\\\",\\\"objections\\\":[{\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"question\\\":\\\"What limits the same customer use?\\\",\\\"scope_status\\\":\\\"requires_scope\\\"}\",\"revision\":\"r2\",\"sha256\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\"}",
+        "attempts": 1,
+        "run_id": "fault-mid-assignment:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-quality-gap:child:755d525ac2ef:counter_evidence",
+        "artifact": "{\"author\":\"c6060461-a8e5-40c6-8ac5-dd76610870e4\",\"content\":\"fixture-result:{\\\"instance\\\":\\\"counter_evidence\\\",\\\"kind\\\":\\\"counter_evidence@1\\\",\\\"objections\\\":[{\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"question\\\":\\\"What limits the same customer use?\\\",\\\"scope_status\\\":\\\"requires_scope\\\"}\",\"revision\":\"r2\",\"sha256\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\"}",
+        "attempts": 1,
+        "run_id": "fault-quality-gap:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-acceptance-gap:child:755d525ac2ef:counter_evidence",
+        "artifact": "{\"author\":\"c6060461-a8e5-40c6-8ac5-dd76610870e4\",\"content\":\"fixture-result:{\\\"instance\\\":\\\"counter_evidence\\\",\\\"kind\\\":\\\"counter_evidence@1\\\",\\\"objections\\\":[{\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"question\\\":\\\"What limits the same customer use?\\\",\\\"scope_status\\\":\\\"requires_scope\\\"}\",\"revision\":\"r2\",\"sha256\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\"}",
+        "attempts": 1,
+        "run_id": "fault-acceptance-gap:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-wait-owner:child:8c3598fc2147:counter_evidence",
+        "artifact": "{\"author\":\"c6060461-a8e5-40c6-8ac5-dd76610870e4\",\"content\":\"fixture-result:{\\\"instance\\\":\\\"counter_evidence\\\",\\\"kind\\\":\\\"counter_evidence@1\\\",\\\"objections\\\":[{\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"question\\\":\\\"What limits the same customer use?\\\",\\\"scope_status\\\":\\\"requires_scope\\\"}\",\"revision\":\"r2\",\"sha256\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\"}",
+        "attempts": 1,
+        "run_id": "fault-wait-owner:child:8c3598fc2147"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-lost-acks:child:755d525ac2ef:counter_evidence",
+        "artifact": "{\"author\":\"c6060461-a8e5-40c6-8ac5-dd76610870e4\",\"content\":\"fixture-result:{\\\"instance\\\":\\\"counter_evidence\\\",\\\"kind\\\":\\\"counter_evidence@1\\\",\\\"objections\\\":[{\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"question\\\":\\\"What limits the same customer use?\\\",\\\"scope_status\\\":\\\"requires_scope\\\"}\",\"revision\":\"r2\",\"sha256\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\"}",
+        "attempts": 1,
+        "run_id": "fault-lost-acks:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-opaque:child:c4b55bcf2ab3:counter_evidence",
+        "artifact": "{\"author\":\"c6060461-a8e5-40c6-8ac5-dd76610870e4\",\"content\":\"fixture-result:{\\\"instance\\\":\\\"counter_evidence\\\",\\\"kind\\\":\\\"counter_evidence@1\\\",\\\"objections\\\":[{\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"question\\\":\\\"What limits the same customer use?\\\",\\\"scope_status\\\":\\\"requires_scope\\\"}\",\"revision\":\"r2\",\"sha256\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\"}",
+        "attempts": 1,
+        "run_id": "fault-opaque:child:c4b55bcf2ab3"
+      }
+    ],
+    "quality": [
+      {
+        "accepted_count": 1,
+        "action_id": "fault-mid-assignment:child:755d525ac2ef:quality:r1:6ec26de550a7",
+        "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r1\",\"sha256\":\"6ec26de550a7045b5c5bb5c97095a207b6991c7429e4fd7e465faba46ad7e91e\"}",
+        "attempts": 1,
+        "run_id": "fault-mid-assignment:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-mid-assignment:child:755d525ac2ef:quality:r2:707f496aaecf",
+        "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r2\",\"sha256\":\"707f496aaecfcbcff01f11df571f1d3846b2a9782bff5c9be8d1fdfcc437106b\"}",
+        "attempts": 1,
+        "run_id": "fault-mid-assignment:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-quality-gap:child:755d525ac2ef:quality:r1:130a36cc281e",
+        "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r1\",\"sha256\":\"130a36cc281ec9f4e19a7a5ac32e2e6fda96e80c7a90b3e85d08bcc93cc0ff2c\"}",
+        "attempts": 1,
+        "run_id": "fault-quality-gap:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-quality-gap:child:755d525ac2ef:quality:r2:a04196b64558",
+        "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r2\",\"sha256\":\"a04196b64558cf16d18acf1cee22409f9668635f4aed2d40ca26878210c23836\"}",
+        "attempts": 1,
+        "run_id": "fault-quality-gap:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-acceptance-gap:child:755d525ac2ef:quality:r1:44239b6419e9",
+        "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r1\",\"sha256\":\"44239b6419e90ed1490adb3bdbbb82fef336eaaa65f74424e94bdccb603664f1\"}",
+        "attempts": 1,
+        "run_id": "fault-acceptance-gap:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-acceptance-gap:child:755d525ac2ef:quality:r2:eebd26a06034",
+        "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r2\",\"sha256\":\"eebd26a06034ed382d24b3b83d3aa94c54a06faf399052cdf7d1261f4566919d\"}",
+        "attempts": 1,
+        "run_id": "fault-acceptance-gap:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-wait-owner:child:8c3598fc2147:quality:r1:fad41dc0affd",
+        "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r1\",\"sha256\":\"fad41dc0affdfcea60c4c9496cfe50a93696df546cd634bd515db4af5edc9901\"}",
+        "attempts": 1,
+        "run_id": "fault-wait-owner:child:8c3598fc2147"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-wait-owner:child:8c3598fc2147:quality:r2:d65ce40e5376",
+        "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r2\",\"sha256\":\"d65ce40e537682e059cc220085232bc07f4e9f6b89cb58b7a2f338db1fc4ab04\"}",
+        "attempts": 1,
+        "run_id": "fault-wait-owner:child:8c3598fc2147"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-wait-owner:child:8c3598fc2147:quality:r3:06055bdc1bb5",
+        "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r3\",\"sha256\":\"06055bdc1bb58e0c797b375d8b791139654f9ed50e10747c5606fe0ccec2ff3f\"}",
+        "attempts": 1,
+        "run_id": "fault-wait-owner:child:8c3598fc2147"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-lost-acks:child:755d525ac2ef:quality:r1:af60bdad3845",
+        "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r1\",\"sha256\":\"af60bdad3845e656d0ed4dc805198fbee1859f047fc8a7669b71cd7c13f96b0a\"}",
+        "attempts": 1,
+        "run_id": "fault-lost-acks:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-lost-acks:child:755d525ac2ef:quality:r2:b2dbc89e1a4d",
+        "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r2\",\"sha256\":\"b2dbc89e1a4d96689bde0f785fc6b3960aad498e2b6a4f7b6009e07937b2b007\"}",
+        "attempts": 1,
+        "run_id": "fault-lost-acks:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-opaque:child:c4b55bcf2ab3:quality:r1:6f7326a3b0b6",
+        "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r1\",\"sha256\":\"6f7326a3b0b61aac9ce16cd690d34f517f3c6deadbb8ebfffe1a8dcc15d0df25\"}",
+        "attempts": 1,
+        "run_id": "fault-opaque:child:c4b55bcf2ab3"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-opaque:child:c4b55bcf2ab3:quality:r2:bc1d00a4aefd",
+        "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"a1c96c54-80c5-4c26-9d05-1b9b2ec4f513\",\"revision\":\"r2\",\"sha256\":\"bc1d00a4aefd4e7643e1588ad0a36e6a46c8dbdaf53bfc717eda90a4a16b7eb2\"}",
+        "attempts": 1,
+        "run_id": "fault-opaque:child:c4b55bcf2ab3"
+      }
+    ],
+    "release": [
+      {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "fingerprint": "9c5e3647a0e46c68103c5dfde0d94865a2f3640d327b301f46b755b5393115d9",
+        "release_id": "fault-mid-assignment:child:755d525ac2ef:release:r2",
+        "revision": "r2",
+        "run_id": "fault-mid-assignment:child:755d525ac2ef",
+        "sha256": "707f496aaecfcbcff01f11df571f1d3846b2a9782bff5c9be8d1fdfcc437106b"
+      },
+      {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "fingerprint": "1217bb60ff310e8e136249fc2b8409d26ead261a8e7314b7c29290ffb01257cf",
+        "release_id": "fault-quality-gap:child:755d525ac2ef:release:r2",
+        "revision": "r2",
+        "run_id": "fault-quality-gap:child:755d525ac2ef",
+        "sha256": "a04196b64558cf16d18acf1cee22409f9668635f4aed2d40ca26878210c23836"
+      },
+      {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "fingerprint": "9fe3e7e42e88e4d0b5063a420c57aaf83b4168744be05a167e2f3e0b1a23cdae",
+        "release_id": "fault-acceptance-gap:child:755d525ac2ef:release:r2",
+        "revision": "r2",
+        "run_id": "fault-acceptance-gap:child:755d525ac2ef",
+        "sha256": "eebd26a06034ed382d24b3b83d3aa94c54a06faf399052cdf7d1261f4566919d"
+      },
+      {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "fingerprint": "9e7c41a8f3552b1b027699c57118c572440e8e0668678c902ce0bcf55a956e5a",
+        "release_id": "fault-lost-acks:child:755d525ac2ef:release:r2",
+        "revision": "r2",
+        "run_id": "fault-lost-acks:child:755d525ac2ef",
+        "sha256": "b2dbc89e1a4d96689bde0f785fc6b3960aad498e2b6a4f7b6009e07937b2b007"
+      }
+    ],
+    "source": [
+      {
+        "accepted_count": 1,
+        "action_id": "fault-mid-assignment:child:755d525ac2ef:source_evidence",
+        "artifact": "{\"author\":\"8e7b93d1-28af-4c3c-9123-947b4474f333\",\"content\":\"fixture-result:{\\\"availability\\\":\\\"documented\\\",\\\"claims\\\":[{\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"instance\\\":\\\"source_evidence\\\",\\\"kind\\\":\\\"source_evidence@1\\\",\\\"question\\\":\\\"Can the customer use the documented capability?\\\"}\",\"revision\":\"r2\",\"sha256\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"}",
+        "attempts": 1,
+        "run_id": "fault-mid-assignment:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-quality-gap:child:755d525ac2ef:source_evidence",
+        "artifact": "{\"author\":\"8e7b93d1-28af-4c3c-9123-947b4474f333\",\"content\":\"fixture-result:{\\\"availability\\\":\\\"documented\\\",\\\"claims\\\":[{\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"instance\\\":\\\"source_evidence\\\",\\\"kind\\\":\\\"source_evidence@1\\\",\\\"question\\\":\\\"Can the customer use the documented capability?\\\"}\",\"revision\":\"r2\",\"sha256\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"}",
+        "attempts": 1,
+        "run_id": "fault-quality-gap:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-acceptance-gap:child:755d525ac2ef:source_evidence",
+        "artifact": "{\"author\":\"8e7b93d1-28af-4c3c-9123-947b4474f333\",\"content\":\"fixture-result:{\\\"availability\\\":\\\"documented\\\",\\\"claims\\\":[{\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"instance\\\":\\\"source_evidence\\\",\\\"kind\\\":\\\"source_evidence@1\\\",\\\"question\\\":\\\"Can the customer use the documented capability?\\\"}\",\"revision\":\"r2\",\"sha256\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"}",
+        "attempts": 1,
+        "run_id": "fault-acceptance-gap:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-wait-owner:child:8c3598fc2147:source_evidence",
+        "artifact": "{\"author\":\"8e7b93d1-28af-4c3c-9123-947b4474f333\",\"content\":\"fixture-result:{\\\"availability\\\":\\\"documented\\\",\\\"claims\\\":[{\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"instance\\\":\\\"source_evidence\\\",\\\"kind\\\":\\\"source_evidence@1\\\",\\\"question\\\":\\\"Can the customer use the documented capability?\\\"}\",\"revision\":\"r2\",\"sha256\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"}",
+        "attempts": 1,
+        "run_id": "fault-wait-owner:child:8c3598fc2147"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-lost-acks:child:755d525ac2ef:source_evidence",
+        "artifact": "{\"author\":\"8e7b93d1-28af-4c3c-9123-947b4474f333\",\"content\":\"fixture-result:{\\\"availability\\\":\\\"documented\\\",\\\"claims\\\":[{\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"instance\\\":\\\"source_evidence\\\",\\\"kind\\\":\\\"source_evidence@1\\\",\\\"question\\\":\\\"Can the customer use the documented capability?\\\"}\",\"revision\":\"r2\",\"sha256\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"}",
+        "attempts": 1,
+        "run_id": "fault-lost-acks:child:755d525ac2ef"
+      },
+      {
+        "accepted_count": 1,
+        "action_id": "fault-opaque:child:c4b55bcf2ab3:source_evidence",
+        "artifact": "{\"author\":\"8e7b93d1-28af-4c3c-9123-947b4474f333\",\"content\":\"fixture-result:{\\\"availability\\\":\\\"documented\\\",\\\"claims\\\":[{\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"instance\\\":\\\"source_evidence\\\",\\\"kind\\\":\\\"source_evidence@1\\\",\\\"question\\\":\\\"Can the customer use the documented capability?\\\"}\",\"revision\":\"r2\",\"sha256\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"}",
+        "attempts": 1,
+        "run_id": "fault-opaque:child:c4b55bcf2ab3"
+      }
+    ]
+  },
+  "state": "/tmp/exo-temporal-faults-8vodr80j",
+  "status": "passed",
+  "supervisor_events": [
+    {
+      "first": true,
+      "kind": "postgres-start",
+      "time": 1790134597.4762251
+    },
+    {
+      "kind": "temporal-start",
+      "pid": 25598,
+      "time": 1790134597.742028
+    },
+    {
+      "kind": "worker-start",
+      "pid": 25624,
+      "time": 1790134597.80152
+    },
+    {
+      "kind": "service-start",
+      "name": "source",
+      "pid": 25625,
+      "time": 1790134599.0981739
+    },
+    {
+      "kind": "service-start",
+      "name": "counter",
+      "pid": 25645,
+      "time": 1790134600.374188
+    },
+    {
+      "kind": "service-start",
+      "name": "quality",
+      "pid": 25646,
+      "time": 1790134601.657514
+    },
+    {
+      "kind": "service-start",
+      "name": "release",
+      "pid": 25647,
+      "time": 1790134601.919631
+    },
+    {
+      "kind": "service-start",
+      "name": "opaque",
+      "pid": 25648,
+      "time": 1790134602.178783
+    },
+    {
+      "kind": "service-start",
+      "name": "director",
+      "pid": 25649,
+      "time": 1790134603.20948
+    },
+    {
+      "kind": "postgres-restart",
+      "time": 1790134605.422185
+    },
+    {
+      "kind": "temporal-restart",
+      "pid": 25664,
+      "time": 1790134605.681797
+    },
+    {
+      "kind": "postgres-restart",
+      "time": 1790134609.7981892
+    },
+    {
+      "kind": "temporal-restart",
+      "pid": 25728,
+      "time": 1790134610.057476
+    },
+    {
+      "kind": "postgres-restart",
+      "time": 1790134620.028508
+    },
+    {
+      "kind": "temporal-restart",
+      "pid": 25836,
+      "time": 1790134620.28888
+    },
+    {
+      "kind": "postgres-restart",
+      "time": 1790134625.228682
+    },
+    {
+      "kind": "temporal-restart",
+      "pid": 25929,
+      "time": 1790134625.496233
+    },
+    {
+      "kind": "service-restart",
+      "name": "source",
+      "pid": 26000,
+      "time": 1790134627.155911
+    },
+    {
+      "kind": "service-restart",
+      "name": "release",
+      "pid": 26026,
+      "time": 1790134630.276213
+    },
+    {
+      "kind": "service-restart",
+      "name": "opaque",
+      "pid": 26054,
+      "time": 1790134631.517791
+    },
+    {
+      "kind": "postgres-restart",
+      "time": 1790134632.328956
+    },
+    {
+      "kind": "temporal-restart",
+      "pid": 26067,
+      "time": 1790134632.5864892
+    }
+  ]
+}

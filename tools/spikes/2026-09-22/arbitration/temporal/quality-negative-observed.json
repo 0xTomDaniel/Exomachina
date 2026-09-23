@@ -1,0 +1,244 @@
+{
+  "after_injection": {
+    "authoritative_acceptance": null,
+    "child_id": null,
+    "completed": [
+      "gather",
+      "join_evidence",
+      "route_scope:requires_scope",
+      "draft_unresolved:r1",
+      "independent_quality:r1",
+      "route_verdict:false",
+      "repair:1",
+      "draft_repair:r2"
+    ],
+    "current_revision": "r2",
+    "current_sha256": "b5596480b709d123da47ec687b7e5949a7d8b03081e83690fc54c77a1fc3cd45",
+    "deadline": null,
+    "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+    "node": "independent_quality",
+    "owner_epoch": 1,
+    "package_digest": "62da44096de531773080450094b57cbb44d1cda6da64da7a5849ad044556d560",
+    "phase": "quality",
+    "quality_verdict": null,
+    "release_receipt": null,
+    "repair_count": 1,
+    "run": "quality-negative-live-r2:child:c7542e19df6c",
+    "unresolved": null
+  },
+  "before": {
+    "authoritative_acceptance": null,
+    "child_id": null,
+    "completed": [
+      "gather",
+      "join_evidence",
+      "route_scope:requires_scope",
+      "draft_unresolved:r1",
+      "independent_quality:r1",
+      "route_verdict:false",
+      "repair:1",
+      "draft_repair:r2"
+    ],
+    "current_revision": "r2",
+    "current_sha256": "b5596480b709d123da47ec687b7e5949a7d8b03081e83690fc54c77a1fc3cd45",
+    "deadline": null,
+    "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+    "node": "independent_quality",
+    "owner_epoch": 1,
+    "package_digest": "62da44096de531773080450094b57cbb44d1cda6da64da7a5849ad044556d560",
+    "phase": "quality",
+    "quality_verdict": null,
+    "release_receipt": null,
+    "repair_count": 1,
+    "run": "quality-negative-live-r2:child:c7542e19df6c",
+    "unresolved": null
+  },
+  "final": {
+    "acceptance": {
+      "attempt": 2,
+      "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+      "quality_task_id": "ae898965-3d07-4f67-8817-a99c17cd7fe9",
+      "reviewer": "8e8d4086-0b78-4a77-8613-9471a86f96a1",
+      "revision": "r2",
+      "run": "quality-negative-live-r2:child:c7542e19df6c",
+      "sha256": "b5596480b709d123da47ec687b7e5949a7d8b03081e83690fc54c77a1fc3cd45"
+    },
+    "child": {
+      "acceptance": {
+        "attempt": 2,
+        "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+        "quality_task_id": "ae898965-3d07-4f67-8817-a99c17cd7fe9",
+        "reviewer": "8e8d4086-0b78-4a77-8613-9471a86f96a1",
+        "revision": "r2",
+        "run": "quality-negative-live-r2:child:c7542e19df6c",
+        "sha256": "b5596480b709d123da47ec687b7e5949a7d8b03081e83690fc54c77a1fc3cd45"
+      },
+      "child": null,
+      "completed": [
+        "gather",
+        "join_evidence",
+        "route_scope:requires_scope",
+        "draft_unresolved:r1",
+        "independent_quality:r1",
+        "route_verdict:false",
+        "repair:1",
+        "draft_repair:r2",
+        "independent_quality:r2",
+        "route_verdict:true",
+        "publish"
+      ],
+      "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+      "receipt": {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+        "release_id": "quality-negative-live-r2:child:c7542e19df6c:release:r2",
+        "revision": "r2",
+        "run_id": "quality-negative-live-r2:child:c7542e19df6c",
+        "sha256": "b5596480b709d123da47ec687b7e5949a7d8b03081e83690fc54c77a1fc3cd45"
+      },
+      "released": true,
+      "run": "quality-negative-live-r2:child:c7542e19df6c",
+      "status": "accepted"
+    },
+    "completed": [
+      "invoke_child"
+    ],
+    "definition_digest": "4c8d2d344d0741b728382635257674ba9693132e50475fefe257a30ad8817b8f",
+    "receipt": {
+      "accepted_effect_count": 1,
+      "attempts": 1,
+      "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+      "release_id": "quality-negative-live-r2:child:c7542e19df6c:release:r2",
+      "revision": "r2",
+      "run_id": "quality-negative-live-r2:child:c7542e19df6c",
+      "sha256": "b5596480b709d123da47ec687b7e5949a7d8b03081e83690fc54c77a1fc3cd45"
+    },
+    "released": true,
+    "run": "quality-negative-live-r2",
+    "status": "accepted"
+  },
+  "forged_health": {
+    "a2a_protocol": "0.3.0",
+    "identity": "dd6eb77c-d260-427c-a069-7edf63ff32f2",
+    "incarnation": 1,
+    "role": "quality"
+  },
+  "forged_positive": {
+    "a2a_protocol": "0.3.0",
+    "action_id": "quality-negative-live-r2:child:c7542e19df6c:injected-forged-quality-r1-positive",
+    "artifact": {
+      "accepted": true,
+      "reason": "counterevidence addressed for exact revision",
+      "reviewer": "dd6eb77c-d260-427c-a069-7edf63ff32f2",
+      "revision": "r1",
+      "sha256": "d8344d7c5ba02581bf594c0068a1e9fbf73637c03b819abd8b9d38c71a0efb1c"
+    },
+    "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+    "harness_identity": "dd6eb77c-d260-427c-a069-7edf63ff32f2",
+    "harness_role": "quality",
+    "run_id": "quality-negative-live-r2:child:c7542e19df6c",
+    "task_id": "cca66bad-0299-474e-9c62-55761551060f"
+  },
+  "forged_receiver_rows": [
+    {
+      "accepted_count": 1,
+      "action_id": "quality-negative-live-r2:child:c7542e19df6c:injected-forged-quality-r1-positive",
+      "artifact": {
+        "accepted": true,
+        "reason": "counterevidence addressed for exact revision",
+        "reviewer": "dd6eb77c-d260-427c-a069-7edf63ff32f2",
+        "revision": "r1",
+        "sha256": "d8344d7c5ba02581bf594c0068a1e9fbf73637c03b819abd8b9d38c71a0efb1c"
+      },
+      "attempts": 1,
+      "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+      "run_id": "quality-negative-live-r2:child:c7542e19df6c",
+      "task_id": "cca66bad-0299-474e-9c62-55761551060f"
+    }
+  ],
+  "freeze_after": {
+    "files": 18,
+    "inventory_sha256": "aaf68094e8ecbc958e3727f1ef6f1278a913b249b3a527210475e51ee72b3099",
+    "verified": true
+  },
+  "freeze_before": {
+    "files": 18,
+    "inventory_sha256": "aaf68094e8ecbc958e3727f1ef6f1278a913b249b3a527210475e51ee72b3099",
+    "verified": true
+  },
+  "identity_guard": "remote service identity/role changed",
+  "limit": "Extra Quality A2A reviews are out-of-band: the frozen Workflow has no Quality verdict ingress; direct adapter identity guard is separate from the active Activity.",
+  "package_digest": "62da44096de531773080450094b57cbb44d1cda6da64da7a5849ad044556d560",
+  "quality_identity": {
+    "a2a_protocol": "0.3.0",
+    "identity": "8e8d4086-0b78-4a77-8613-9471a86f96a1",
+    "incarnation": 1,
+    "role": "quality"
+  },
+  "quality_receiver_rows": [
+    {
+      "accepted_count": 1,
+      "action_id": "quality-negative-live-r2:child:c7542e19df6c:quality:r1:6a36290b97f5",
+      "artifact": {
+        "accepted": false,
+        "reason": "counterevidence remains unresolved",
+        "reviewer": "8e8d4086-0b78-4a77-8613-9471a86f96a1",
+        "revision": "r1",
+        "sha256": "6a36290b97f592dfe19b91ed361763ef50abdde2fcd049ec46b308de78d9a238"
+      },
+      "attempts": 1,
+      "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+      "run_id": "quality-negative-live-r2:child:c7542e19df6c",
+      "task_id": "96ba0873-2d92-45d7-aa4e-874ff1ab3e23"
+    },
+    {
+      "accepted_count": 1,
+      "action_id": "quality-negative-live-r2:child:c7542e19df6c:quality:r2:b5596480b709",
+      "artifact": {
+        "accepted": true,
+        "reason": "counterevidence addressed for exact revision",
+        "reviewer": "8e8d4086-0b78-4a77-8613-9471a86f96a1",
+        "revision": "r2",
+        "sha256": "b5596480b709d123da47ec687b7e5949a7d8b03081e83690fc54c77a1fc3cd45"
+      },
+      "attempts": 1,
+      "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+      "run_id": "quality-negative-live-r2:child:c7542e19df6c",
+      "task_id": "ae898965-3d07-4f67-8817-a99c17cd7fe9"
+    },
+    {
+      "accepted_count": 1,
+      "action_id": "quality-negative-live-r2:child:c7542e19df6c:injected-stale-r1-positive",
+      "artifact": {
+        "accepted": true,
+        "reason": "counterevidence addressed for exact revision",
+        "reviewer": "8e8d4086-0b78-4a77-8613-9471a86f96a1",
+        "revision": "r1",
+        "sha256": "d8344d7c5ba02581bf594c0068a1e9fbf73637c03b819abd8b9d38c71a0efb1c"
+      },
+      "attempts": 1,
+      "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+      "run_id": "quality-negative-live-r2:child:c7542e19df6c",
+      "task_id": "a08be15f-4ce9-4b62-86b4-e064f135c99b"
+    }
+  ],
+  "stale_positive": {
+    "a2a_protocol": "0.3.0",
+    "action_id": "quality-negative-live-r2:child:c7542e19df6c:injected-stale-r1-positive",
+    "artifact": {
+      "accepted": true,
+      "reason": "counterevidence addressed for exact revision",
+      "reviewer": "8e8d4086-0b78-4a77-8613-9471a86f96a1",
+      "revision": "r1",
+      "sha256": "d8344d7c5ba02581bf594c0068a1e9fbf73637c03b819abd8b9d38c71a0efb1c"
+    },
+    "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+    "harness_identity": "8e8d4086-0b78-4a77-8613-9471a86f96a1",
+    "harness_role": "quality",
+    "run_id": "quality-negative-live-r2:child:c7542e19df6c",
+    "task_id": "a08be15f-4ce9-4b62-86b4-e064f135c99b"
+  },
+  "state": "/tmp/exo-temporal-quality-neg-tv6m50ae",
+  "status": "partial"
+}

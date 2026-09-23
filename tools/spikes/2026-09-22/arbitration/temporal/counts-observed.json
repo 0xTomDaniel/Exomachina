@@ -1,0 +1,301 @@
+{
+  "counter_semantics": "Quality receiver accepted_count records an action even for a negative verdict; product acceptance comes from Temporal Workflow history.",
+  "runs": {
+    "fault-acceptance-gap:child:755d525ac2ef": {
+      "a2a_tasks": [
+        {
+          "action_id": "fault-acceptance-gap:child:755d525ac2ef:source_evidence",
+          "service": "source",
+          "task_id": "1f67038b-b66b-43cb-b9d2-5842ab87ef22"
+        },
+        {
+          "action_id": "fault-acceptance-gap:child:755d525ac2ef:counter_evidence",
+          "service": "counter",
+          "task_id": "2628410f-a637-4f8c-9e5f-b6b7a451c503"
+        },
+        {
+          "action_id": "fault-acceptance-gap:child:755d525ac2ef:quality:r1:44239b6419e9",
+          "service": "quality",
+          "task_id": "c9057171-88d6-4f5f-ade2-dddf34c0217c",
+          "verdict": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r1",
+            "sha256": "44239b6419e90ed1490adb3bdbbb82fef336eaaa65f74424e94bdccb603664f1"
+          }
+        },
+        {
+          "action_id": "fault-acceptance-gap:child:755d525ac2ef:quality:r2:eebd26a06034",
+          "service": "quality",
+          "task_id": "5cc39d20-e430-49fc-b4bc-6d84cea3f81a",
+          "verdict": {
+            "accepted": true,
+            "reason": "counterevidence addressed for exact revision",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r2",
+            "sha256": "eebd26a06034ed382d24b3b83d3aa94c54a06faf399052cdf7d1261f4566919d"
+          }
+        }
+      ],
+      "authoritative_product_acceptances": 1,
+      "quality_negative_verdicts": 1,
+      "quality_positive_verdicts": 1,
+      "quality_receiver_effects": 2,
+      "receiver_assignment_effects": 2,
+      "release_effects": 1,
+      "release_receipts": 1,
+      "release_submission_attempts": 1,
+      "remote_submission_attempts": 2
+    },
+    "fault-lost-acks:child:755d525ac2ef": {
+      "a2a_tasks": [
+        {
+          "action_id": "fault-lost-acks:child:755d525ac2ef:source_evidence",
+          "service": "source",
+          "task_id": "7af27353-e305-48a4-8537-1459ec2a4ff3"
+        },
+        {
+          "action_id": "fault-lost-acks:child:755d525ac2ef:counter_evidence",
+          "service": "counter",
+          "task_id": "f090846f-d5ec-433d-9b8e-603fbffa8e38"
+        },
+        {
+          "action_id": "fault-lost-acks:child:755d525ac2ef:quality:r1:af60bdad3845",
+          "service": "quality",
+          "task_id": "7ec1e7ea-09f5-4752-a191-b8e63657ede6",
+          "verdict": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r1",
+            "sha256": "af60bdad3845e656d0ed4dc805198fbee1859f047fc8a7669b71cd7c13f96b0a"
+          }
+        },
+        {
+          "action_id": "fault-lost-acks:child:755d525ac2ef:quality:r2:b2dbc89e1a4d",
+          "service": "quality",
+          "task_id": "408e50ac-7e35-4c02-af82-c4d089c92c23",
+          "verdict": {
+            "accepted": true,
+            "reason": "counterevidence addressed for exact revision",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r2",
+            "sha256": "b2dbc89e1a4d96689bde0f785fc6b3960aad498e2b6a4f7b6009e07937b2b007"
+          }
+        }
+      ],
+      "authoritative_product_acceptances": 1,
+      "quality_negative_verdicts": 1,
+      "quality_positive_verdicts": 1,
+      "quality_receiver_effects": 2,
+      "receiver_assignment_effects": 2,
+      "release_effects": 1,
+      "release_receipts": 1,
+      "release_submission_attempts": 1,
+      "remote_submission_attempts": 2
+    },
+    "fault-mid-assignment:child:755d525ac2ef": {
+      "a2a_tasks": [
+        {
+          "action_id": "fault-mid-assignment:child:755d525ac2ef:source_evidence",
+          "service": "source",
+          "task_id": "2519f838-1742-4ce3-82e1-2efc32d5c59a"
+        },
+        {
+          "action_id": "fault-mid-assignment:child:755d525ac2ef:counter_evidence",
+          "service": "counter",
+          "task_id": "96780d93-9b08-4716-b251-146fa68c2744"
+        },
+        {
+          "action_id": "fault-mid-assignment:child:755d525ac2ef:quality:r1:6ec26de550a7",
+          "service": "quality",
+          "task_id": "e1313e4d-5267-4b14-96e8-6395be9fe77f",
+          "verdict": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r1",
+            "sha256": "6ec26de550a7045b5c5bb5c97095a207b6991c7429e4fd7e465faba46ad7e91e"
+          }
+        },
+        {
+          "action_id": "fault-mid-assignment:child:755d525ac2ef:quality:r2:707f496aaecf",
+          "service": "quality",
+          "task_id": "32b588d9-108d-477b-bf81-39d4a0c7ef81",
+          "verdict": {
+            "accepted": true,
+            "reason": "counterevidence addressed for exact revision",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r2",
+            "sha256": "707f496aaecfcbcff01f11df571f1d3846b2a9782bff5c9be8d1fdfcc437106b"
+          }
+        }
+      ],
+      "authoritative_product_acceptances": 1,
+      "quality_negative_verdicts": 1,
+      "quality_positive_verdicts": 1,
+      "quality_receiver_effects": 2,
+      "receiver_assignment_effects": 2,
+      "release_effects": 1,
+      "release_receipts": 1,
+      "release_submission_attempts": 1,
+      "remote_submission_attempts": 2
+    },
+    "fault-opaque:child:c4b55bcf2ab3": {
+      "a2a_tasks": [
+        {
+          "action_id": "fault-opaque:child:c4b55bcf2ab3:source_evidence",
+          "service": "source",
+          "task_id": "796db621-9fc6-47f6-ae5f-6f08de0c2764"
+        },
+        {
+          "action_id": "fault-opaque:child:c4b55bcf2ab3:counter_evidence",
+          "service": "counter",
+          "task_id": "44b0d9ac-97bd-474f-9269-50f7d9cca4eb"
+        },
+        {
+          "action_id": "fault-opaque:child:c4b55bcf2ab3:quality:r1:6f7326a3b0b6",
+          "service": "quality",
+          "task_id": "cd9ea88c-333b-4db6-9e38-d267eb95d031",
+          "verdict": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r1",
+            "sha256": "6f7326a3b0b61aac9ce16cd690d34f517f3c6deadbb8ebfffe1a8dcc15d0df25"
+          }
+        },
+        {
+          "action_id": "fault-opaque:child:c4b55bcf2ab3:quality:r2:bc1d00a4aefd",
+          "service": "quality",
+          "task_id": "8558864e-48ee-41b8-9873-3ff641ebd67c",
+          "verdict": {
+            "accepted": true,
+            "reason": "counterevidence addressed for exact revision",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r2",
+            "sha256": "bc1d00a4aefd4e7643e1588ad0a36e6a46c8dbdaf53bfc717eda90a4a16b7eb2"
+          }
+        }
+      ],
+      "authoritative_product_acceptances": 1,
+      "opaque_receiver_effects_without_receipt": 1,
+      "quality_negative_verdicts": 1,
+      "quality_positive_verdicts": 1,
+      "quality_receiver_effects": 2,
+      "receiver_assignment_effects": 2,
+      "release_effects": 0,
+      "release_receipts": 0,
+      "release_submission_attempts": 1,
+      "remote_submission_attempts": 2
+    },
+    "fault-quality-gap:child:755d525ac2ef": {
+      "a2a_tasks": [
+        {
+          "action_id": "fault-quality-gap:child:755d525ac2ef:source_evidence",
+          "service": "source",
+          "task_id": "ffed8967-93a5-4d6a-a909-9975e5209afa"
+        },
+        {
+          "action_id": "fault-quality-gap:child:755d525ac2ef:counter_evidence",
+          "service": "counter",
+          "task_id": "5b4b1e81-5e3a-478b-9d4f-044948d36fe2"
+        },
+        {
+          "action_id": "fault-quality-gap:child:755d525ac2ef:quality:r1:130a36cc281e",
+          "service": "quality",
+          "task_id": "f212e0ae-16fe-4750-b2be-8c860452a0ea",
+          "verdict": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r1",
+            "sha256": "130a36cc281ec9f4e19a7a5ac32e2e6fda96e80c7a90b3e85d08bcc93cc0ff2c"
+          }
+        },
+        {
+          "action_id": "fault-quality-gap:child:755d525ac2ef:quality:r2:a04196b64558",
+          "service": "quality",
+          "task_id": "857a722d-e237-4450-8e28-5f6406422136",
+          "verdict": {
+            "accepted": true,
+            "reason": "counterevidence addressed for exact revision",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r2",
+            "sha256": "a04196b64558cf16d18acf1cee22409f9668635f4aed2d40ca26878210c23836"
+          }
+        }
+      ],
+      "authoritative_product_acceptances": 1,
+      "quality_negative_verdicts": 1,
+      "quality_positive_verdicts": 1,
+      "quality_receiver_effects": 2,
+      "receiver_assignment_effects": 2,
+      "release_effects": 1,
+      "release_receipts": 1,
+      "release_submission_attempts": 1,
+      "remote_submission_attempts": 2
+    },
+    "fault-wait-owner:child:8c3598fc2147": {
+      "a2a_tasks": [
+        {
+          "action_id": "fault-wait-owner:child:8c3598fc2147:source_evidence",
+          "service": "source",
+          "task_id": "27e47473-e758-42d7-b6db-7d08d4d5c077"
+        },
+        {
+          "action_id": "fault-wait-owner:child:8c3598fc2147:counter_evidence",
+          "service": "counter",
+          "task_id": "826a7bef-b917-4a56-8677-f65a3022392c"
+        },
+        {
+          "action_id": "fault-wait-owner:child:8c3598fc2147:quality:r1:fad41dc0affd",
+          "service": "quality",
+          "task_id": "ffb81096-7be6-4e42-96c0-f00fb98aacdd",
+          "verdict": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r1",
+            "sha256": "fad41dc0affdfcea60c4c9496cfe50a93696df546cd634bd515db4af5edc9901"
+          }
+        },
+        {
+          "action_id": "fault-wait-owner:child:8c3598fc2147:quality:r2:d65ce40e5376",
+          "service": "quality",
+          "task_id": "c98d367f-94f4-4b55-be2f-89eaa4d49407",
+          "verdict": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r2",
+            "sha256": "d65ce40e537682e059cc220085232bc07f4e9f6b89cb58b7a2f338db1fc4ab04"
+          }
+        },
+        {
+          "action_id": "fault-wait-owner:child:8c3598fc2147:quality:r3:06055bdc1bb5",
+          "service": "quality",
+          "task_id": "7b3a264e-0e89-4194-a7f9-316d611e15ff",
+          "verdict": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "a1c96c54-80c5-4c26-9d05-1b9b2ec4f513",
+            "revision": "r3",
+            "sha256": "06055bdc1bb58e0c797b375d8b791139654f9ed50e10747c5606fe0ccec2ff3f"
+          }
+        }
+      ],
+      "authoritative_product_acceptances": 0,
+      "quality_negative_verdicts": 3,
+      "quality_positive_verdicts": 0,
+      "quality_receiver_effects": 3,
+      "receiver_assignment_effects": 2,
+      "release_effects": 0,
+      "release_receipts": 0,
+      "release_submission_attempts": 0,
+      "remote_submission_attempts": 2
+    }
+  },
+  "state": "/tmp/exo-temporal-faults-8vodr80j"
+}

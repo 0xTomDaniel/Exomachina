@@ -1,0 +1,168 @@
+{
+  "approvals": [
+    {
+      "body": "{\"code\":409,\"message\":\"promise was already completed\",\"source\":\"invocation\"}",
+      "status": 409
+    },
+    {
+      "body": "recorded",
+      "status": 200
+    },
+    {
+      "body": "recorded",
+      "status": 200
+    }
+  ],
+  "digest_v1": "9c6ac7868138c1ffc51b7fac7525eeb312a633197eca211e3da9de574f54f1cf",
+  "digest_v2": "6e4f26010b553c015a3be71bf83f9eaef6754f4ac4c7ff100cb0dba65d1ca2fc",
+  "event_counts": {
+    "harness-1-v1:deliver": 1,
+    "harness-1-v1:director_wait": 1,
+    "harness-1-v1:join": 1,
+    "harness-1-v1:research_a": 1,
+    "harness-1-v1:research_b": 1,
+    "harness-1-v1:review": 1,
+    "harness-2-v2:deliver": 1,
+    "harness-2-v2:director_wait": 1,
+    "harness-2-v2:join": 1,
+    "harness-2-v2:research_a": 1,
+    "harness-2-v2:research_b": 1,
+    "harness-2-v2:review": 1,
+    "harness-2-v2:verify": 1
+  },
+  "handler_unchanged_at_v2_publish": true,
+  "initial_pids": {
+    "handler": 2173,
+    "server": 2172
+  },
+  "passed": true,
+  "paused_rss_kib": {
+    "handler": 35264,
+    "server": 249248
+  },
+  "registration": {
+    "body": {
+      "id": "dp_101sFLUew9yaS9MLgPUDBkJ",
+      "max_protocol_version": 7,
+      "min_protocol_version": 5,
+      "sdk_version": "restate-sdk-python/1.0.5",
+      "services": [
+        {
+          "abort_timeout": "10m",
+          "deployment_id": "dp_101sFLUew9yaS9MLgPUDBkJ",
+          "enable_lazy_state": false,
+          "handlers": [
+            {
+              "input_description": "JSON object",
+              "input_json_schema": {
+                "type": "object"
+              },
+              "name": "approve",
+              "output_description": "JSON string",
+              "output_json_schema": {
+                "type": "string"
+              },
+              "public": true,
+              "retry_policy": {
+                "max_attempts": null
+              },
+              "ty": "Shared"
+            },
+            {
+              "input_description": "JSON object",
+              "input_json_schema": {
+                "type": "object"
+              },
+              "name": "run",
+              "output_description": "JSON object",
+              "output_json_schema": {
+                "type": "object"
+              },
+              "public": true,
+              "retry_policy": {
+                "max_attempts": null
+              },
+              "ty": "Workflow"
+            }
+          ],
+          "idempotency_retention": "1d",
+          "inactivity_timeout": "1m",
+          "journal_retention": "1d",
+          "name": "FactoryRun",
+          "public": true,
+          "retry_policy": {
+            "exponentiation_factor": 2.0,
+            "initial_interval": "500ms",
+            "max_attempts": 70,
+            "max_interval": "1m",
+            "on_max_attempts": "Pause"
+          },
+          "revision": 1,
+          "ty": "Workflow",
+          "workflow_completion_retention": "1d"
+        }
+      ]
+    },
+    "status": 201
+  },
+  "restart_pids": {
+    "handler": 2181,
+    "server": 2180
+  },
+  "result_v1": {
+    "body": {
+      "accepted": true,
+      "definition_digest": "9c6ac7868138c1ffc51b7fac7525eeb312a633197eca211e3da9de574f54f1cf",
+      "run_id": "harness-1-v1",
+      "steps": [
+        "research_a",
+        "research_b",
+        "join",
+        "review",
+        "director_wait",
+        "deliver"
+      ],
+      "version": 1
+    },
+    "status": 200
+  },
+  "result_v2": {
+    "body": {
+      "accepted": true,
+      "definition_digest": "6e4f26010b553c015a3be71bf83f9eaef6754f4ac4c7ff100cb0dba65d1ca2fc",
+      "run_id": "harness-2-v2",
+      "steps": [
+        "research_a",
+        "research_b",
+        "join",
+        "verify",
+        "review",
+        "director_wait",
+        "deliver"
+      ],
+      "version": 2
+    },
+    "status": 200
+  },
+  "root": "/var/folders/x5/cz0z1rpn17v_y33px31rqw5r0000gn/T/exomachina-round2-restate-ti6frv6j",
+  "server_binary": "/tmp/exomachina-round2-restate-server/node_modules/@restatedev/restate-server-darwin-arm64/bin/restate-server",
+  "start_v1": {
+    "body": {
+      "invocationId": "inv_1b4AKhw2k8pL7p2wZxj2f8O9ziNSfb5yOq",
+      "status": "Accepted"
+    },
+    "status": 202
+  },
+  "start_v2": {
+    "body": {
+      "invocationId": "inv_1kvNEwjLiLeT4Rp2gkf60owXLzCpGFx9PI",
+      "status": "Accepted"
+    },
+    "status": 202
+  },
+  "state_disk_kib": 692,
+  "warm_rss_kib": {
+    "handler": 35264,
+    "server": 114912
+  }
+}

@@ -1,0 +1,17 @@
+steps:
+  - id: submit
+    run: python3 /tmp/exomachina-round-two-dagu/remote_client.py
+  - id: director
+    depends: submit
+    action: human.task
+    with:
+      prompt: Approve recorded remote work
+      form:
+        type: object
+        properties:
+          accepted:
+            type: boolean
+        required: [accepted]
+  - id: deliver
+    depends: director
+    run: /bin/sh -c "printf 'remote:deliver\n' >> /tmp/exomachina-round-two-dagu/events.log"

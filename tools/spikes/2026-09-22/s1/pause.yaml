@@ -1,0 +1,12 @@
+id: exomachina_s1_pause
+namespace: exomachina.spikes
+description: Bounded engine restart and duplicate-resume litmus; no external effects.
+tasks:
+  - id: before
+    type: io.kestra.plugin.core.log.Log
+    message: before
+  - id: gate
+    type: io.kestra.plugin.core.flow.Pause
+  - id: after
+    type: io.kestra.plugin.core.log.Log
+    message: after

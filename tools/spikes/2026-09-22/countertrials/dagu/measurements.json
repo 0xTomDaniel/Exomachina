@@ -1,0 +1,99 @@
+{
+  "date": "2026-09-22",
+  "candidate": "Dagu Community v2.17.0",
+  "platform": "Darwin arm64, local operator Mac",
+  "artifact": {
+    "url": "https://github.com/dagucloud/dagu/releases/download/v2.17.0/dagu_2.17.0_darwin_arm64.tar.gz",
+    "sha256": "da86f2a7278afcadfe8202b9af2b9613a5fc997ffc47daf1799b64d7fc5afeb1",
+    "sha256_matches_release_checksums": true,
+    "compressed_archive_kib": 46952,
+    "unpacked_binary_kib": 151400,
+    "license": "GPL-3.0-or-later, as stated in v2.17.0 LICENSING.md"
+  },
+  "topology": {
+    "command": "DAGU_HOME=<isolated-home> DAGU_COORDINATOR_ENABLED=false DAGU_AUTH_MODE=none dagu start-all --host 127.0.0.1 --port <loopback-port>",
+    "idle_process_count": 1,
+    "components_in_process": ["web/API server", "scheduler"],
+    "external_database": false,
+    "coordinator": "disabled; optional in tested local execution mode",
+    "authentication": "disabled for loopback-only probe; product boundary not tested",
+    "included_in_memory": ["Dagu server", "active Dagu CLI runners", "active command and watcher subprocesses"],
+    "excluded_from_memory": ["Strands harness", "A2A service", "external model/provider"]
+  },
+  "measurements": [
+    {
+      "stage": "fresh_idle",
+      "server_rss_kib": 108128,
+      "process_count": 1,
+      "note": "After first-time home setup generated five example DAGs; one instantaneous ps sample."
+    },
+    {
+      "stage": "two_nested_review_runs_waiting",
+      "server_rss_kib": 121072,
+      "home_disk_kib": 224,
+      "process_count": 1,
+      "note": "Both parent runs had executed a child sub-DAG and were waiting at native approval; no active CLI runner remained."
+    },
+    {
+      "stage": "warm_after_restart_and_small_flows",
+      "server_rss_kib": 123728,
+      "server_phys_footprint_mb": 77,
+      "home_disk_kib": 576,
+      "process_count": 1,
+      "note": "Mac footprint physical memory is not the same metric as RSS."
+    },
+    {
+      "stage": "two_overlapping_active_runs",
+      "process_count": 7,
+      "processes": [
+        {"role": "server+scheduler", "rss_kib": 122464},
+        {"role": "Dagu CLI runner A", "rss_kib": 73856},
+        {"role": "Dagu CLI runner B", "rss_kib": 74208},
+        {"role": "sleep command A", "rss_kib": 1152},
+        {"role": "watcher shell A", "rss_kib": 1920},
+        {"role": "sleep command B", "rss_kib": 1152},
+        {"role": "watcher shell B", "rss_kib": 1920}
+      ],
+      "rss_sum_kib": 276672,
+      "summary_phys_footprint_mb": 149,
+      "note": "One instantaneous process-tree sample during two sleep-6 command runs. Summed RSS double-counts shared pages; macOS footprint summary covers all seven processes."
+    },
+    {
+      "stage": "two_overlapping_active_runs_started_by_http_api",
+      "process_count": 7,
+      "processes": [
+        {"role": "server+scheduler", "rss_kib": 129616},
+        {"role": "server-spawned Dagu runner A", "rss_kib": 74368},
+        {"role": "server-spawned Dagu runner B", "rss_kib": 74000},
+        {"role": "sleep command A", "rss_kib": 1152},
+        {"role": "watcher shell A", "rss_kib": 1920},
+        {"role": "sleep command B", "rss_kib": 1152},
+        {"role": "watcher shell B", "rss_kib": 1920}
+      ],
+      "rss_sum_kib": 284128,
+      "summary_phys_footprint_mb": 156,
+      "note": "Two POST /api/v1/dags/exo_active.yaml/start calls with distinct run IDs; both runner processes were children of the one server. Instantaneous sample at about one second of the six-second sleeps."
+    },
+    {
+      "stage": "restart_readiness",
+      "openapi_http_200_seconds_after_spawn": 0.21936595812439919,
+      "server_rss_kib_at_readiness": 122272,
+      "server_phys_footprint_mb_at_readiness": 78,
+      "note": "One restart with initialized state, measured by measure_startup.py. Other countertrials ran concurrently on the host; timing is not an isolated candidate comparison."
+    }
+  ],
+  "behavior": {
+    "nested_review_wait": "Observed: parent dag.run child completed, parent approval entered Waiting and released CLI runner.",
+    "restart": "Observed: two waiting parent runs remained Waiting after server+scheduler stop/restart; one later resumed to Succeeded.",
+    "concurrent_approval": "Observed in one two-request race: HTTP 200 and 400; child and delivery each had durable doneCount=1.",
+    "same_input_human_completion_retry": "Observed: repeated identical human.task completion returned HTTP 200, alreadyCompleted=true after run succeeded.",
+    "parent_snapshot": "Observed: waiting v1 parent retained its original child target and downstream command after parent YAML was changed to v2; a newly started parent used v2.",
+    "transitive_child_binding": "Observed: a parent paused before a child invocation loaded the changed child YAML v2 on resume, despite the parent's v1 snapshot. Immutable child definition names or equivalent publication closure remain product work."
+  },
+  "comparison_limits": [
+    "The Kestra ~650 MiB RSS number was measured in a different probe; host load, process composition and workload were not controlled here.",
+    "Other Exomachina countertrials ran concurrently on this host, so whole-machine pressure and startup timing are not isolated comparisons.",
+    "No complete Strands+A2A installation was measured; the two CLI clients model distinct run identities only.",
+    "CPU, load peaks, backup, upgrade, clean-machine installation, product authorization, GPL redistribution clearance and complete D01-D08 proofs were not measured."
+  ]
+}

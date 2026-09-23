@@ -1,0 +1,586 @@
+{
+  "admissions": [
+    {
+      "director_task_id": "2e15d6ed-04a9-431f-93ed-35c5a36c5b2b",
+      "run_id": "effect-inflight-1",
+      "start_task_status": "working"
+    },
+    {
+      "director_task_id": "d8eda912-33f5-4ac8-9788-77bf43b06faf",
+      "run_id": "effect-inflight-2",
+      "start_task_status": "working"
+    },
+    {
+      "director_task_id": "37d0a58a-3a4b-4940-bb34-756fad3b4a90",
+      "run_id": "effect-inflight-3",
+      "start_task_status": "working"
+    },
+    {
+      "director_task_id": "dfb3384f-7554-4481-9e57-8fb9ffe64f3d",
+      "run_id": "effect-inflight-4",
+      "start_task_status": "working"
+    },
+    {
+      "director_task_id": "558dd16f-0ccc-41cc-9526-1b8f1480972f",
+      "run_id": "effect-inflight-5",
+      "start_task_status": "working"
+    },
+    {
+      "director_task_id": "47d6cb15-af17-44c8-a102-9b699d88058c",
+      "run_id": "effect-inflight-6",
+      "start_task_status": "working"
+    },
+    {
+      "director_task_id": "a6a9d80f-6618-4a3f-bd75-db4dd493ae0e",
+      "run_id": "effect-inflight-7",
+      "start_task_status": "working"
+    },
+    {
+      "director_task_id": "0bf6a18a-a726-4e84-8b17-16310b284315",
+      "run_id": "effect-inflight-8",
+      "start_task_status": "working"
+    },
+    {
+      "director_task_id": "1e6b1da5-2031-4afa-95aa-137ecfa03d92",
+      "run_id": "effect-inflight-9",
+      "start_task_status": "working"
+    },
+    {
+      "director_task_id": "2c2f5139-ba7c-48cf-ad6a-371f52b39c58",
+      "run_id": "effect-inflight-10",
+      "start_task_status": "working"
+    }
+  ],
+  "exit_codes": {
+    "counter": -15,
+    "director": -15,
+    "effect": -15,
+    "quality": -15,
+    "release": -15,
+    "source": -9
+  },
+  "levels": {
+    "0": {
+      "in_flight": [],
+      "snapshot": {
+        "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+        "footprint_exit_code": 0,
+        "physical_footprint_bytes_deduplicated": 596648464,
+        "pid_count": 6,
+        "processes": [
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-inflight-scale/slow_harness_server.py --state /tmp/exo-effect-inflight-im2sa3y0/source --port 5",
+            "pid": 75720,
+            "ppid": 75712,
+            "role": "source"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exo-effect-inflight-im2sa3y0/counter --port 52329",
+            "pid": 75732,
+            "ppid": 75712,
+            "role": "counter"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /tmp/exo-effect-inflight-im2sa3y0/quality --port 52358",
+            "pid": 75736,
+            "ppid": 75712,
+            "role": "quality"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exo-effect-inflight-im2sa3y0/release --port 52401 --",
+            "pid": 75749,
+            "ppid": 75712,
+            "role": "release"
+          },
+          {
+            "command": "node /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/helper.mjs",
+            "pid": 75752,
+            "ppid": 75712,
+            "role": "effect"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/director_server.py --state /tmp/exo-effect-inflight-im2sa3y0/director --effect http://12",
+            "pid": 75758,
+            "ppid": 75712,
+            "role": "director"
+          }
+        ],
+        "sampled_unix_seconds": 1790173427.3388748,
+        "sampling_retries": [],
+        "selection": "all six bundle process roots, their descendants, and state-bound processes"
+      }
+    },
+    "10": {
+      "after_sample": [
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-1:child:755d525ac2ef",
+          "director_task_id": "2e15d6ed-04a9-431f-93ed-35c5a36c5b2b",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-1",
+          "source_a2a_task_id": "da2ea6b9-1633-4aab-8e5d-1e8a973d4735",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-1:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-2:child:755d525ac2ef",
+          "director_task_id": "d8eda912-33f5-4ac8-9788-77bf43b06faf",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-2",
+          "source_a2a_task_id": "01999782-1ef1-4a63-9da4-c467140fd5c3",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-2:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-3:child:755d525ac2ef",
+          "director_task_id": "37d0a58a-3a4b-4940-bb34-756fad3b4a90",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-3",
+          "source_a2a_task_id": "d160df42-9ab0-4048-b208-9b6d50d18032",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-3:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-4:child:755d525ac2ef",
+          "director_task_id": "dfb3384f-7554-4481-9e57-8fb9ffe64f3d",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-4",
+          "source_a2a_task_id": "d1dbe6f4-25eb-4a42-8e16-e9d282c45f96",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-4:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-5:child:755d525ac2ef",
+          "director_task_id": "558dd16f-0ccc-41cc-9526-1b8f1480972f",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-5",
+          "source_a2a_task_id": "d8d29724-4fb0-4b10-92cb-f233a8cc9e50",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-5:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-6:child:755d525ac2ef",
+          "director_task_id": "47d6cb15-af17-44c8-a102-9b699d88058c",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-6",
+          "source_a2a_task_id": "00eb85cb-bf77-4bb8-9134-b40a4d7a7af1",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-6:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-7:child:755d525ac2ef",
+          "director_task_id": "a6a9d80f-6618-4a3f-bd75-db4dd493ae0e",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-7",
+          "source_a2a_task_id": "b35f4879-bd16-434f-8a5c-9e18b70711ca",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-7:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-8:child:755d525ac2ef",
+          "director_task_id": "0bf6a18a-a726-4e84-8b17-16310b284315",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-8",
+          "source_a2a_task_id": "fd5fa16d-1e67-4eb4-892a-ff477e8596dd",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-8:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-9:child:755d525ac2ef",
+          "director_task_id": "1e6b1da5-2031-4afa-95aa-137ecfa03d92",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-9",
+          "source_a2a_task_id": "25b80db0-1220-426a-98e8-4354707f5ad6",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-9:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-10:child:755d525ac2ef",
+          "director_task_id": "2c2f5139-ba7c-48cf-ad6a-371f52b39c58",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-10",
+          "source_a2a_task_id": "1a9aa9bd-9697-406f-9033-4d50256e73a6",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-10:child:755d525ac2ef:source_evidence"
+        }
+      ],
+      "in_flight": [
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-1:child:755d525ac2ef",
+          "director_task_id": "2e15d6ed-04a9-431f-93ed-35c5a36c5b2b",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-1",
+          "source_a2a_task_id": "da2ea6b9-1633-4aab-8e5d-1e8a973d4735",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-1:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-2:child:755d525ac2ef",
+          "director_task_id": "d8eda912-33f5-4ac8-9788-77bf43b06faf",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-2",
+          "source_a2a_task_id": "01999782-1ef1-4a63-9da4-c467140fd5c3",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-2:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-3:child:755d525ac2ef",
+          "director_task_id": "37d0a58a-3a4b-4940-bb34-756fad3b4a90",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-3",
+          "source_a2a_task_id": "d160df42-9ab0-4048-b208-9b6d50d18032",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-3:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-4:child:755d525ac2ef",
+          "director_task_id": "dfb3384f-7554-4481-9e57-8fb9ffe64f3d",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-4",
+          "source_a2a_task_id": "d1dbe6f4-25eb-4a42-8e16-e9d282c45f96",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-4:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-5:child:755d525ac2ef",
+          "director_task_id": "558dd16f-0ccc-41cc-9526-1b8f1480972f",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-5",
+          "source_a2a_task_id": "d8d29724-4fb0-4b10-92cb-f233a8cc9e50",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-5:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-6:child:755d525ac2ef",
+          "director_task_id": "47d6cb15-af17-44c8-a102-9b699d88058c",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-6",
+          "source_a2a_task_id": "00eb85cb-bf77-4bb8-9134-b40a4d7a7af1",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-6:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-7:child:755d525ac2ef",
+          "director_task_id": "a6a9d80f-6618-4a3f-bd75-db4dd493ae0e",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-7",
+          "source_a2a_task_id": "b35f4879-bd16-434f-8a5c-9e18b70711ca",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-7:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-8:child:755d525ac2ef",
+          "director_task_id": "0bf6a18a-a726-4e84-8b17-16310b284315",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-8",
+          "source_a2a_task_id": "fd5fa16d-1e67-4eb4-892a-ff477e8596dd",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-8:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-9:child:755d525ac2ef",
+          "director_task_id": "1e6b1da5-2031-4afa-95aa-137ecfa03d92",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-9",
+          "source_a2a_task_id": "25b80db0-1220-426a-98e8-4354707f5ad6",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-9:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-10:child:755d525ac2ef",
+          "director_task_id": "2c2f5139-ba7c-48cf-ad6a-371f52b39c58",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-10",
+          "source_a2a_task_id": "1a9aa9bd-9697-406f-9033-4d50256e73a6",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-10:child:755d525ac2ef:source_evidence"
+        }
+      ],
+      "snapshot": {
+        "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+        "footprint_exit_code": 0,
+        "physical_footprint_bytes_deduplicated": 803632960,
+        "pid_count": 16,
+        "processes": [
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-inflight-scale/slow_harness_server.py --state /tmp/exo-effect-inflight-im2sa3y0/source --port 5",
+            "pid": 75720,
+            "ppid": 75712,
+            "role": "source"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exo-effect-inflight-im2sa3y0/counter --port 52329",
+            "pid": 75732,
+            "ppid": 75712,
+            "role": "counter"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /tmp/exo-effect-inflight-im2sa3y0/quality --port 52358",
+            "pid": 75736,
+            "ppid": 75712,
+            "role": "quality"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exo-effect-inflight-im2sa3y0/release --port 52401 --",
+            "pid": 75749,
+            "ppid": 75712,
+            "role": "release"
+          },
+          {
+            "command": "node /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/helper.mjs",
+            "pid": 75752,
+            "ppid": 75712,
+            "role": "effect"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/director_server.py --state /tmp/exo-effect-inflight-im2sa3y0/director --effect http://12",
+            "pid": 75758,
+            "ppid": 75712,
+            "role": "director"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75767,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75769,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75773,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75775,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75777,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75779,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75781,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75783,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75785,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75787,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          }
+        ],
+        "sampled_unix_seconds": 1790173429.125418,
+        "sampling_retries": [],
+        "selection": "all six bundle process roots, their descendants, and state-bound processes"
+      },
+      "stage_elapsed_seconds": 1.2205270412378013
+    },
+    "2": {
+      "after_sample": [
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-1:child:755d525ac2ef",
+          "director_task_id": "2e15d6ed-04a9-431f-93ed-35c5a36c5b2b",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-1",
+          "source_a2a_task_id": "da2ea6b9-1633-4aab-8e5d-1e8a973d4735",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-1:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-2:child:755d525ac2ef",
+          "director_task_id": "d8eda912-33f5-4ac8-9788-77bf43b06faf",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-2",
+          "source_a2a_task_id": "01999782-1ef1-4a63-9da4-c467140fd5c3",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-2:child:755d525ac2ef:source_evidence"
+        }
+      ],
+      "in_flight": [
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-1:child:755d525ac2ef",
+          "director_task_id": "2e15d6ed-04a9-431f-93ed-35c5a36c5b2b",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-1",
+          "source_a2a_task_id": "da2ea6b9-1633-4aab-8e5d-1e8a973d4735",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-1:child:755d525ac2ef:source_evidence"
+        },
+        {
+          "child_engine_state": "Pending",
+          "child_phase": "parallel",
+          "child_run_id": "effect-inflight-2:child:755d525ac2ef",
+          "director_task_id": "d8eda912-33f5-4ac8-9788-77bf43b06faf",
+          "director_task_status": "working",
+          "parent_engine_state": "Pending",
+          "parent_run_id": "effect-inflight-2",
+          "source_a2a_task_id": "01999782-1ef1-4a63-9da4-c467140fd5c3",
+          "source_a2a_task_status": "working",
+          "source_action_id": "effect-inflight-2:child:755d525ac2ef:source_evidence"
+        }
+      ],
+      "snapshot": {
+        "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+        "footprint_exit_code": 0,
+        "physical_footprint_bytes_deduplicated": 641427160,
+        "pid_count": 8,
+        "processes": [
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-inflight-scale/slow_harness_server.py --state /tmp/exo-effect-inflight-im2sa3y0/source --port 5",
+            "pid": 75720,
+            "ppid": 75712,
+            "role": "source"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exo-effect-inflight-im2sa3y0/counter --port 52329",
+            "pid": 75732,
+            "ppid": 75712,
+            "role": "counter"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /tmp/exo-effect-inflight-im2sa3y0/quality --port 52358",
+            "pid": 75736,
+            "ppid": 75712,
+            "role": "quality"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exo-effect-inflight-im2sa3y0/release --port 52401 --",
+            "pid": 75749,
+            "ppid": 75712,
+            "role": "release"
+          },
+          {
+            "command": "node /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/helper.mjs",
+            "pid": 75752,
+            "ppid": 75712,
+            "role": "effect"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/director_server.py --state /tmp/exo-effect-inflight-im2sa3y0/director --effect http://12",
+            "pid": 75758,
+            "ppid": 75712,
+            "role": "director"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75767,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/effect-parity/bridge.py assign",
+            "pid": 75769,
+            "ppid": 75752,
+            "role": "python_a2a_bridge"
+          }
+        ],
+        "sampled_unix_seconds": 1790173427.865696,
+        "sampling_retries": [],
+        "selection": "all six bundle process roots, their descendants, and state-bound processes"
+      },
+      "stage_elapsed_seconds": 0.5268769999966025
+    }
+  },
+  "package_digest": "0409b9e601f98a18faf6639cfc21b4c413a03d79267c7ffe10a8c138e6730e35",
+  "runtime": "/tmp/exo-effect-inflight-im2sa3y0",
+  "schema": "exomachina.effect.inflight-scale/1",
+  "status": "passed"
+}

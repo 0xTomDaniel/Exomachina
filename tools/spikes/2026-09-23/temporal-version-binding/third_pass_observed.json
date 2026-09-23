@@ -1,0 +1,517 @@
+{
+  "activation": {
+    "active": "8091b8323072b510261da7922e9a5361519f9f0b6c6c3f966853f021b77d63c9",
+    "b1_set_current": {},
+    "b1_worker_registered": {
+      "BuildID": "b1",
+      "createTime": "2026-09-23T16:29:10.611596Z",
+      "currentSinceTime": "1970-01-01T00:00:00Z",
+      "deploymentName": "exo-tq-version-factory",
+      "drainageInfo": {
+        "drainageStatus": "",
+        "lastChangedTime": "0001-01-01T00:00:00Z",
+        "lastCheckedTime": "0001-01-01T00:00:00Z"
+      },
+      "metadata": null,
+      "rampPercentage": 0,
+      "rampingSinceTime": "1970-01-01T00:00:00Z",
+      "routingChangedTime": "1970-01-01T00:00:00Z",
+      "taskQueuesInfos": [
+        {
+          "name": "exo-tq-version-factory",
+          "type": "workflow"
+        },
+        {
+          "name": "exo-tq-version-factory",
+          "type": "activity"
+        }
+      ]
+    },
+    "b2_set_current": {},
+    "b2_worker_registered": {
+      "BuildID": "b2",
+      "createTime": "2026-09-23T16:29:15.314692Z",
+      "currentSinceTime": "1970-01-01T00:00:00Z",
+      "deploymentName": "exo-tq-version-factory",
+      "drainageInfo": {
+        "drainageStatus": "",
+        "lastChangedTime": "0001-01-01T00:00:00Z",
+        "lastCheckedTime": "0001-01-01T00:00:00Z"
+      },
+      "metadata": null,
+      "rampPercentage": 0,
+      "rampingSinceTime": "1970-01-01T00:00:00Z",
+      "routingChangedTime": "1970-01-01T00:00:00Z",
+      "taskQueuesInfos": [
+        {
+          "name": "exo-tq-version-factory",
+          "type": "activity"
+        },
+        {
+          "name": "exo-tq-version-factory",
+          "type": "workflow"
+        }
+      ]
+    },
+    "deployment_after_activation": {
+      "createTime": "2026-09-23T16:29:10.572303Z",
+      "lastModifierIdentity": "temporal-cli:tomdaniel@MacBookPro.lan",
+      "managerIdentity": "",
+      "name": "exo-tq-version-factory",
+      "routingConfig": {
+        "currentVersionBuildID": "b2",
+        "currentVersionChangedTime": "2026-09-23T16:29:16.615233Z",
+        "currentVersionDeploymentName": "exo-tq-version-factory",
+        "rampingVersionBuildID": "",
+        "rampingVersionChangedTime": "0001-01-01T00:00:00Z",
+        "rampingVersionDeploymentName": "",
+        "rampingVersionPercentage": 0,
+        "rampingVersionPercentageChangedTime": "0001-01-01T00:00:00Z"
+      },
+      "versionSummaries": [
+        {
+          "BuildID": "b2",
+          "createTime": "2026-09-23T16:29:15.309418Z",
+          "deploymentName": "exo-tq-version-factory",
+          "drainageStatus": "unspecified"
+        },
+        {
+          "BuildID": "b1",
+          "createTime": "2026-09-23T16:29:10.572303Z",
+          "deploymentName": "exo-tq-version-factory",
+          "drainageStatus": "draining"
+        }
+      ]
+    }
+  },
+  "cleanup": {
+    "all_started_processes_stopped": true,
+    "owned_ports_closed": true,
+    "state_removed": true
+  },
+  "independent_services_after": {
+    "counter": {
+      "identity": "ae95e164-d4ed-4a9b-ad03-d21dd8bf857e",
+      "pid": 98016
+    },
+    "quality": {
+      "identity": "47154e79-1f12-4f24-88bc-3c9d7f0c7740",
+      "pid": 98017
+    },
+    "release": {
+      "identity": "dedb238c-55d2-4ccd-8a85-bcd3154a4eee",
+      "pid": 98018
+    },
+    "source": {
+      "identity": "3550cf38-4240-41c5-af21-4fd3a04ba354",
+      "pid": 98015
+    }
+  },
+  "independent_services_before": {
+    "counter": {
+      "identity": "ae95e164-d4ed-4a9b-ad03-d21dd8bf857e",
+      "pid": 98016
+    },
+    "quality": {
+      "identity": "47154e79-1f12-4f24-88bc-3c9d7f0c7740",
+      "pid": 98017
+    },
+    "release": {
+      "identity": "dedb238c-55d2-4ccd-8a85-bcd3154a4eee",
+      "pid": 98018
+    },
+    "source": {
+      "identity": "3550cf38-4240-41c5-af21-4fd3a04ba354",
+      "pid": 98015
+    }
+  },
+  "ports": {
+    "counter": 42162,
+    "director": 42166,
+    "front_member": 31253,
+    "frontend": 42033,
+    "history": 42034,
+    "history_member": 31254,
+    "http": 42043,
+    "match_member": 31255,
+    "matching": 42035,
+    "metrics": 42020,
+    "opaque": 42165,
+    "postgres": 31265,
+    "pprof": 42056,
+    "quality": 42163,
+    "release": 42164,
+    "source": 42161,
+    "worker": 42039,
+    "worker_member": 31259
+  },
+  "publications": {
+    "b1": {
+      "build_id": "b1",
+      "manifest_digest": "d2d0ab9015796f981164dc35feba19ae0247f74f4110061b272849e29f8e20fb",
+      "package_digest": "d4ee671be8c9369d3e99203308d67a3cd6bb74faa728b5d6ecb045037fe1a1b7",
+      "source_digest": "2d316e49559a761f9b78cfefdadbf8e588e78c58562ab41e27402a41c1c97784"
+    },
+    "b2": {
+      "build_id": "b2",
+      "manifest_digest": "8091b8323072b510261da7922e9a5361519f9f0b6c6c3f966853f021b77d63c9",
+      "package_digest": "99d0f1a9d617f38ce6341d43e55c6b0de0f8ad0851a1be0b49a94c3097344dbb",
+      "source_digest": "d870fb3afde001f5fefb50cd1560303e3186009e1b214fb6c3e789e11aa2fe4c"
+    }
+  },
+  "replay": {
+    "b1": {
+      "exit_code": 0,
+      "stderr": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/workflow_sandbox/_importer.py:238: UserWarning: Module definition was imported after initial workflow load.\n  warnings.warn(\n",
+      "stdout": "{\"build\": \"b1\", \"replay\": \"pass\"}\n"
+    },
+    "b2": {
+      "exit_code": 1,
+      "stderr": "execute_workflow(input)\\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\\n  File \\\"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/_workflow_instance.py\\\", line 3144, in execute_workflow\\n    return await input.run_fn(*args)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\\n\\n  File \\\"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/temporal-version-binding/build_b2/factory.py\\\", line 326, in run\\n    self.manifest_digest = verify_closure(input[\\\"closure\\\"], input[\\\"package\\\"],\\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\\n  File \\\"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/temporal-version-binding/build_b2/binding.py\\\", line 88, in verify_closure\\n    raise ValueError(\\\"wrong interpreter build\\\")\\n\", encoded_attributes: None, cause: None, failure_info: Some(ApplicationFailureInfo(ApplicationFailureInfo { r#type: \"ValueError\", non_retryable: false, details: None, next_retry_delay: None, category: Unspecified })) }), force_cause: Unspecified }\n",
+      "stdout": "fy_closure(input[\\\"closure\\\"], input[\\\"package\\\"],\\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\\n  File \\\"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/temporal-version-binding/build_b2/binding.py\\\", line 88, in verify_closure\\n    raise ValueError(\\\"wrong interpreter build\\\")\\n\", encoded_attributes: None, cause: None, failure_info: Some(ApplicationFailureInfo(ApplicationFailureInfo { r#type: \"ValueError\", non_retryable: false, details: None, next_retry_delay: None, category: Unspecified })) }), force_cause: Unspecified }\n{\"build\": \"b2\", \"replay\": \"fail\", \"error_type\": \"RuntimeError\", \"error\": \"4: Workflow activation completion failed: Failure { failure: Some(Failure { message: \\\"wrong interpreter build\\\", source: \\\"\\\", stack_trace: \\\"  File \\\\\\\"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/temporalio/worker/_workflow_instance.py\\\\\\\", line 526, in activate\\\\n    self._run_once(check_conditions=index == 1 or index == 2)\\\\n\\\\n  File \\\\\\\"/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina\"}\n"
+    }
+  },
+  "retained_build_rss_kib": {
+    "b1_alone": 69952,
+    "b1_with_b2": 69952,
+    "b2": 69808,
+    "worker_process_count": 2
+  },
+  "retirement": {
+    "b1_open_run_closed": true,
+    "b1_retained_while_open": true,
+    "b1_retirement_gate_open": false,
+    "deployment_after_close": {
+      "BuildID": "b1",
+      "createTime": "2026-09-23T16:29:10.611596Z",
+      "currentSinceTime": "1970-01-01T00:00:00Z",
+      "deploymentName": "exo-tq-version-factory",
+      "drainageInfo": {
+        "drainageStatus": "draining",
+        "lastChangedTime": "2026-09-23T16:29:16.647487Z",
+        "lastCheckedTime": "2026-09-23T16:29:16.647487Z"
+      },
+      "metadata": null,
+      "rampPercentage": 0,
+      "rampingSinceTime": "1970-01-01T00:00:00Z",
+      "routingChangedTime": "2026-09-23T16:29:16.615233Z",
+      "taskQueuesInfos": [
+        {
+          "name": "exo-tq-version-factory",
+          "type": "workflow"
+        },
+        {
+          "name": "exo-tq-version-factory",
+          "type": "activity"
+        }
+      ]
+    }
+  },
+  "runs": {
+    "r1_done": {
+      "original_task": {
+        "artifacts": [
+          {
+            "artifactId": "16b5d05ae669487cb571b1d6e8abf6b1d22931136e4d062f1147dacee9100938",
+            "parts": [
+              {
+                "data": {
+                  "interpreter_build": "b1",
+                  "manifest_digest": "d2d0ab9015796f981164dc35feba19ae0247f74f4110061b272849e29f8e20fb",
+                  "package_digest": "d4ee671be8c9369d3e99203308d67a3cd6bb74faa728b5d6ecb045037fe1a1b7",
+                  "public_result": {
+                    "child": {
+                      "definition_digest": "1923ee9afeb96d9abfb03efe0b6bb0d07e6dfac00bb63a44b9d54b5f0461335e",
+                      "released": false,
+                      "revision": "r3",
+                      "run": "tq-version-r1:child:1923ee9afeb9",
+                      "status": "aborted"
+                    },
+                    "definition_digest": "d90963c352d320664de54db4e4d38bdb57cde9ee9a21ad1f306b42c8f4f88e06",
+                    "released": false,
+                    "run": "tq-version-r1",
+                    "status": "aborted"
+                  },
+                  "run_id": "tq-version-r1",
+                  "status": "aborted"
+                },
+                "kind": "data"
+              }
+            ]
+          }
+        ],
+        "contextId": "be3f632b-412c-4114-aec6-d26c1cb8b7de",
+        "id": "198dcfb1-7ece-4aa3-a902-8e555f569bc9",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "01d6e13c-b5ff-4729-b657-a53c62f0633b",
+          "harness_incarnation": 1,
+          "interpreter_build": "b1",
+          "manifest_digest": "d2d0ab9015796f981164dc35feba19ae0247f74f4110061b272849e29f8e20fb",
+          "package_digest": "d4ee671be8c9369d3e99203308d67a3cd6bb74faa728b5d6ecb045037fe1a1b7",
+          "run_id": "tq-version-r1"
+        },
+        "status": {
+          "state": "completed"
+        }
+      },
+      "pinned_version": "exo-tq-version-factory.b1",
+      "result": {
+        "child": {
+          "definition_digest": "1923ee9afeb96d9abfb03efe0b6bb0d07e6dfac00bb63a44b9d54b5f0461335e",
+          "released": false,
+          "revision": "r3",
+          "run": "tq-version-r1:child:1923ee9afeb9",
+          "status": "aborted"
+        },
+        "definition_digest": "d90963c352d320664de54db4e4d38bdb57cde9ee9a21ad1f306b42c8f4f88e06",
+        "released": false,
+        "run": "tq-version-r1",
+        "status": "aborted"
+      }
+    },
+    "r1_wait": {
+      "child": {
+        "authoritative_acceptance": null,
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2",
+          "independent_quality:r2",
+          "route_verdict:false",
+          "repair:2",
+          "draft:r3",
+          "independent_quality:r3",
+          "route_verdict:false",
+          "repair:exhausted"
+        ],
+        "current_revision": "r3",
+        "current_sha256": "25b6fc96efb67869b0d97e1fca6d4c10571da2d0da25f03e4067391cc991c9d2",
+        "deadline": 1790181134.751496,
+        "definition_digest": "1923ee9afeb96d9abfb03efe0b6bb0d07e6dfac00bb63a44b9d54b5f0461335e",
+        "interpreter_build": "b1",
+        "manifest_digest": "d2d0ab9015796f981164dc35feba19ae0247f74f4110061b272849e29f8e20fb",
+        "node": "director",
+        "owner_epoch": 1,
+        "package_digest": "d4ee671be8c9369d3e99203308d67a3cd6bb74faa728b5d6ecb045037fe1a1b7",
+        "phase": "awaiting-director",
+        "quality_verdict": {
+          "accepted": false,
+          "reason": "counterevidence remains unresolved",
+          "reviewer": "47154e79-1f12-4f24-88bc-3c9d7f0c7740",
+          "revision": "r3",
+          "sha256": "25b6fc96efb67869b0d97e1fca6d4c10571da2d0da25f03e4067391cc991c9d2"
+        },
+        "release_receipt": null,
+        "repair_count": 2,
+        "run": "tq-version-r1:child:1923ee9afeb9",
+        "unresolved": null
+      },
+      "child_pinned_version": "exo-tq-version-factory.b1",
+      "original_task": {
+        "contextId": "be3f632b-412c-4114-aec6-d26c1cb8b7de",
+        "id": "198dcfb1-7ece-4aa3-a902-8e555f569bc9",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "01d6e13c-b5ff-4729-b657-a53c62f0633b",
+          "harness_incarnation": 1,
+          "interpreter_build": "b1",
+          "manifest_digest": "d2d0ab9015796f981164dc35feba19ae0247f74f4110061b272849e29f8e20fb",
+          "package_digest": "d4ee671be8c9369d3e99203308d67a3cd6bb74faa728b5d6ecb045037fe1a1b7",
+          "run_id": "tq-version-r1"
+        },
+        "status": {
+          "state": "input-required"
+        }
+      },
+      "parent": {
+        "authoritative_acceptance": null,
+        "child_id": "tq-version-r1:child:1923ee9afeb9",
+        "completed": [],
+        "current_revision": null,
+        "current_sha256": null,
+        "deadline": null,
+        "definition_digest": "d90963c352d320664de54db4e4d38bdb57cde9ee9a21ad1f306b42c8f4f88e06",
+        "interpreter_build": "b1",
+        "manifest_digest": "d2d0ab9015796f981164dc35feba19ae0247f74f4110061b272849e29f8e20fb",
+        "node": "invoke_child",
+        "owner_epoch": 1,
+        "package_digest": "d4ee671be8c9369d3e99203308d67a3cd6bb74faa728b5d6ecb045037fe1a1b7",
+        "phase": "awaiting-child",
+        "quality_verdict": null,
+        "release_receipt": null,
+        "repair_count": 0,
+        "run": "tq-version-r1",
+        "unresolved": null
+      },
+      "pinned_version": "exo-tq-version-factory.b1",
+      "task_id": "198dcfb1-7ece-4aa3-a902-8e555f569bc9"
+    },
+    "r2_done": {
+      "original_task": {
+        "artifacts": [
+          {
+            "artifactId": "8d0180197581419a2d332a0732785d51042d49ddf1cd58b989ea7cdaf941eaa3",
+            "parts": [
+              {
+                "data": {
+                  "interpreter_build": "b2",
+                  "manifest_digest": "8091b8323072b510261da7922e9a5361519f9f0b6c6c3f966853f021b77d63c9",
+                  "package_digest": "99d0f1a9d617f38ce6341d43e55c6b0de0f8ad0851a1be0b49a94c3097344dbb",
+                  "public_result": {
+                    "child": {
+                      "definition_digest": "db09ef8474c8bea5fe4df8569dabe102aca54b42d70a07f54e878288b46417ef",
+                      "output_shape": 2,
+                      "released": false,
+                      "revision": "r3",
+                      "run": "tq-version-r2:child:db09ef8474c8",
+                      "status": "aborted"
+                    },
+                    "definition_digest": "9e4ab0e3d627315bd8594b4ec392bfa7ccbbaf8d517c0d872cab42af52809442",
+                    "output_shape": 2,
+                    "released": false,
+                    "run": "tq-version-r2",
+                    "status": "aborted"
+                  },
+                  "run_id": "tq-version-r2",
+                  "status": "aborted"
+                },
+                "kind": "data"
+              }
+            ]
+          }
+        ],
+        "contextId": "b3ac1da9-2a57-4b90-a006-8b331ab56086",
+        "id": "ddc05d99-31ff-4b66-8e84-575204a3b5b9",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "01d6e13c-b5ff-4729-b657-a53c62f0633b",
+          "harness_incarnation": 1,
+          "interpreter_build": "b2",
+          "manifest_digest": "8091b8323072b510261da7922e9a5361519f9f0b6c6c3f966853f021b77d63c9",
+          "package_digest": "99d0f1a9d617f38ce6341d43e55c6b0de0f8ad0851a1be0b49a94c3097344dbb",
+          "run_id": "tq-version-r2"
+        },
+        "status": {
+          "state": "completed"
+        }
+      },
+      "pinned_version": "exo-tq-version-factory.b2",
+      "result": {
+        "child": {
+          "definition_digest": "db09ef8474c8bea5fe4df8569dabe102aca54b42d70a07f54e878288b46417ef",
+          "output_shape": 2,
+          "released": false,
+          "revision": "r3",
+          "run": "tq-version-r2:child:db09ef8474c8",
+          "status": "aborted"
+        },
+        "definition_digest": "9e4ab0e3d627315bd8594b4ec392bfa7ccbbaf8d517c0d872cab42af52809442",
+        "output_shape": 2,
+        "released": false,
+        "run": "tq-version-r2",
+        "status": "aborted"
+      }
+    },
+    "r2_wait": {
+      "child": {
+        "authoritative_acceptance": null,
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2",
+          "independent_quality:r2",
+          "route_verdict:false",
+          "repair:2",
+          "draft:r3",
+          "independent_quality:r3",
+          "route_verdict:false",
+          "repair:exhausted"
+        ],
+        "current_revision": "r3",
+        "current_sha256": "4a395faf0422587471a6b401178c323543cd7ca1bcf1601ed7b488b9528f5d1e",
+        "deadline": 1790181137.110202,
+        "definition_digest": "db09ef8474c8bea5fe4df8569dabe102aca54b42d70a07f54e878288b46417ef",
+        "interpreter_build": "b2",
+        "manifest_digest": "8091b8323072b510261da7922e9a5361519f9f0b6c6c3f966853f021b77d63c9",
+        "node": "director",
+        "output_shape": 2,
+        "owner_epoch": 1,
+        "package_digest": "99d0f1a9d617f38ce6341d43e55c6b0de0f8ad0851a1be0b49a94c3097344dbb",
+        "phase": "awaiting-director",
+        "quality_verdict": {
+          "accepted": false,
+          "reason": "counterevidence remains unresolved",
+          "reviewer": "47154e79-1f12-4f24-88bc-3c9d7f0c7740",
+          "revision": "r3",
+          "sha256": "4a395faf0422587471a6b401178c323543cd7ca1bcf1601ed7b488b9528f5d1e"
+        },
+        "release_receipt": null,
+        "repair_count": 2,
+        "run": "tq-version-r2:child:db09ef8474c8",
+        "unresolved": null
+      },
+      "child_pinned_version": "exo-tq-version-factory.b2",
+      "original_task": {
+        "contextId": "b3ac1da9-2a57-4b90-a006-8b331ab56086",
+        "id": "ddc05d99-31ff-4b66-8e84-575204a3b5b9",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "01d6e13c-b5ff-4729-b657-a53c62f0633b",
+          "harness_incarnation": 1,
+          "interpreter_build": "b2",
+          "manifest_digest": "8091b8323072b510261da7922e9a5361519f9f0b6c6c3f966853f021b77d63c9",
+          "package_digest": "99d0f1a9d617f38ce6341d43e55c6b0de0f8ad0851a1be0b49a94c3097344dbb",
+          "run_id": "tq-version-r2"
+        },
+        "status": {
+          "state": "input-required"
+        }
+      },
+      "parent": {
+        "authoritative_acceptance": null,
+        "child_id": "tq-version-r2:child:db09ef8474c8",
+        "completed": [],
+        "current_revision": null,
+        "current_sha256": null,
+        "deadline": null,
+        "definition_digest": "9e4ab0e3d627315bd8594b4ec392bfa7ccbbaf8d517c0d872cab42af52809442",
+        "interpreter_build": "b2",
+        "manifest_digest": "8091b8323072b510261da7922e9a5361519f9f0b6c6c3f966853f021b77d63c9",
+        "node": "invoke_child",
+        "output_shape": 2,
+        "owner_epoch": 1,
+        "package_digest": "99d0f1a9d617f38ce6341d43e55c6b0de0f8ad0851a1be0b49a94c3097344dbb",
+        "phase": "awaiting-child",
+        "quality_verdict": null,
+        "release_receipt": null,
+        "repair_count": 0,
+        "run": "tq-version-r2",
+        "unresolved": null
+      },
+      "pinned_version": "exo-tq-version-factory.b2",
+      "task_id": "ddc05d99-31ff-4b66-8e84-575204a3b5b9"
+    }
+  },
+  "status": "passed",
+  "versions": {
+    "postgres": "postgres (PostgreSQL) 16.15 (Homebrew)",
+    "python": "3.12.9",
+    "server": "temporal version 1.32.0",
+    "temporalio": "1.33.0"
+  }
+}

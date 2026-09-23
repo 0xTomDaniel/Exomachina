@@ -1,0 +1,149 @@
+{
+  "factory-v1-001": {
+    "status": "succeeded",
+    "nodes": [
+      {
+        "id": "publication_gate",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      },
+      {
+        "id": "capability_a",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": "exo_capability_a_v1",
+        "subRuns": [
+          {
+            "dagName": "exo_capability_a_v1",
+            "dagRunId": "4xMgPx5L7Ee4xbPhbwf7y7wBaddNtXkhhvkYBkNncoSN"
+          }
+        ]
+      },
+      {
+        "id": "capability_b",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": "exo_capability_b_v1",
+        "subRuns": [
+          {
+            "dagName": "exo_capability_b_v1",
+            "dagRunId": "7ocC6jXVFeZrHYDtTa4v3YExW19hvnNHm7zLLJaL36Yc"
+          }
+        ]
+      },
+      {
+        "id": "review",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      },
+      {
+        "id": "director",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      },
+      {
+        "id": "deliver",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      }
+    ]
+  },
+  "factory-v2-001": {
+    "status": "succeeded",
+    "nodes": [
+      {
+        "id": "publication_gate",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      },
+      {
+        "id": "capability_a",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": "exo_capability_a_v2",
+        "subRuns": [
+          {
+            "dagName": "exo_capability_a_v2",
+            "dagRunId": "3y13x21Dzqyc21r742PoW49LxfUm8e3bKyd3AhfmEjsF"
+          }
+        ]
+      },
+      {
+        "id": "capability_b",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": "exo_capability_b_v2",
+        "subRuns": [
+          {
+            "dagName": "exo_capability_b_v2",
+            "dagRunId": "G4mddFtECTiaH8kQLUWeNkTBpn3hJiNwUtUVPWompqNP"
+          }
+        ]
+      },
+      {
+        "id": "verify",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      },
+      {
+        "id": "review",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      },
+      {
+        "id": "director",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      },
+      {
+        "id": "deliver",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      }
+    ]
+  },
+  "remote-root-001": {
+    "status": "succeeded",
+    "nodes": [
+      {
+        "id": "submit",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      },
+      {
+        "id": "director",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      },
+      {
+        "id": "deliver",
+        "status": "succeeded",
+        "doneCount": 1,
+        "call": null,
+        "subRuns": []
+      }
+    ]
+  }
+}

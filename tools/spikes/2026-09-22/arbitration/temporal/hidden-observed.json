@@ -1,0 +1,1617 @@
+{
+  "definitions": {
+    "clear": {
+      "catalog_file": "/tmp/exo-temporal-hidden-a2-hzapj_pv/catalog/df9a736a23205f22eb53ea0fc80bce3a9d1cc48c5ebd141cf494603d6e0b6ae1.json",
+      "child_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+      "native_file": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/definitions/hidden-v5-clear.json",
+      "package_digest": "df9a736a23205f22eb53ea0fc80bce3a9d1cc48c5ebd141cf494603d6e0b6ae1"
+    },
+    "old_v3": {
+      "child_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+      "package_digest": "32520f4e205547f7ef855a432d0d94a8c9b554e29bccdb8e2d725cded3a13357"
+    },
+    "requires_exhaust_separate": {
+      "catalog_file": "/tmp/exo-temporal-hidden-a2-hzapj_pv/catalog/5c99dc3b107f00a77fd95628861b684be463137ff3f5e84c78e117bed0ac60e3.json",
+      "child_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+      "native_file": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/definitions/hidden-v4-exhausted-separate-digest.json",
+      "package_digest": "5c99dc3b107f00a77fd95628861b684be463137ff3f5e84c78e117bed0ac60e3"
+    },
+    "requires_success": {
+      "catalog_file": "/tmp/exo-temporal-hidden-a2-hzapj_pv/catalog/d2050b77cc3d7e22bc21ddd5e765aa1a02279a537255c12eacf1a5c014c17594.json",
+      "child_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+      "native_file": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/definitions/hidden-v4-requires-scope.json",
+      "package_digest": "d2050b77cc3d7e22bc21ddd5e765aa1a02279a537255c12eacf1a5c014c17594"
+    }
+  },
+  "freeze_after": {
+    "files": 18,
+    "inventory_sha256": "aaf68094e8ecbc958e3727f1ef6f1278a913b249b3a527210475e51ee72b3099",
+    "verified": true
+  },
+  "freeze_before": {
+    "files": 18,
+    "inventory_sha256": "aaf68094e8ecbc958e3727f1ef6f1278a913b249b3a527210475e51ee72b3099",
+    "verified": true
+  },
+  "runs": {
+    "clear": {
+      "activity_times": [
+        {
+          "instance": "counter_scope",
+          "kind": "assign-start",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "wall_time": 1790135675.2613068
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-start",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "wall_time": 1790135675.264194
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-start",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "wall_time": 1790135675.265936
+        },
+        {
+          "instance": "counter_scope",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "task_id": "3f97dcc5-2fac-4523-b924-c4856048d36f",
+          "wall_time": 1790135675.272178
+        },
+        {
+          "instance": "counter_scope",
+          "kind": "assign-complete",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "wall_time": 1790135675.273324
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "task_id": "6c220f64-f929-4d89-be81-6121889bcd40",
+          "wall_time": 1790135675.279522
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-complete",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "wall_time": 1790135675.281136
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "task_id": "44954ac2-f533-4e60-aa1e-232e2f198de0",
+          "wall_time": 1790135675.283088
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-complete",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "wall_time": 1790135675.284255
+        },
+        {
+          "instances": [
+            "counter_scope",
+            "source_crosscheck",
+            "source_primary"
+          ],
+          "kind": "join-start",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "wall_time": 1790135675.293921
+        },
+        {
+          "accepted": true,
+          "kind": "quality-verdict",
+          "revision": "r1",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "task_id": "7910a2d4-52c8-4395-b09f-7a2a97d3de75",
+          "wall_time": 1790135675.327703
+        },
+        {
+          "kind": "release-observed",
+          "receipt": "hidden-v5-clear:child:0d118aa5be51:release:r1",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "unresolved": null,
+          "wall_time": 1790135675.343561
+        }
+      ],
+      "branch_receipts": {
+        "counter_scope": {
+          "accepted_count": 1,
+          "action_id": "hidden-v5-clear:child:0d118aa5be51:counter_scope",
+          "artifact": {
+            "author": "eb78564f-c59c-48be-aa83-b5ac480c9f60",
+            "content": "fixture-result:{\"instance\":\"counter_scope\",\"kind\":\"counter_evidence@1\",\"objections\":[{\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"question\":\"What limits the same customer use?\",\"scope_status\":\"clear\"}",
+            "revision": "r2",
+            "sha256": "cb1effef5eba45bb7b1cb7b32019a674af7810ac02e5cefa09fd71d1fa040b71"
+          },
+          "attempts": 1,
+          "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+          "run_id": "hidden-v5-clear:child:0d118aa5be51",
+          "task_id": "3f97dcc5-2fac-4523-b924-c4856048d36f"
+        },
+        "source_crosscheck": {
+          "accepted_count": 1,
+          "action_id": "hidden-v5-clear:child:0d118aa5be51:source_crosscheck",
+          "artifact": {
+            "author": "812d0445-00ed-4fd7-8d36-733cf365a894",
+            "content": "fixture-result:{\"availability\":\"documented\",\"claims\":[{\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"instance\":\"source_crosscheck\",\"kind\":\"source_evidence@1\",\"question\":\"Can the customer use the documented capability?\"}",
+            "revision": "r2",
+            "sha256": "d6d8eb6bef01dbfd0e8503f6992433d74490b2450e001a20d09c295edbe41fa2"
+          },
+          "attempts": 1,
+          "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+          "run_id": "hidden-v5-clear:child:0d118aa5be51",
+          "task_id": "6c220f64-f929-4d89-be81-6121889bcd40"
+        },
+        "source_primary": {
+          "accepted_count": 1,
+          "action_id": "hidden-v5-clear:child:0d118aa5be51:source_primary",
+          "artifact": {
+            "author": "812d0445-00ed-4fd7-8d36-733cf365a894",
+            "content": "fixture-result:{\"availability\":\"documented\",\"claims\":[{\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"instance\":\"source_primary\",\"kind\":\"source_evidence@1\",\"question\":\"Can the customer use the documented capability?\"}",
+            "revision": "r2",
+            "sha256": "4042ee0a4e14cb3e095238838588406d66f6fa3e0cbd2903a1aefa60eb5966bd"
+          },
+          "attempts": 1,
+          "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+          "run_id": "hidden-v5-clear:child:0d118aa5be51",
+          "task_id": "44954ac2-f533-4e60-aa1e-232e2f198de0"
+        }
+      },
+      "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+      "director_task": {
+        "artifacts": [
+          {
+            "artifactId": "7fd50ca2f23c2729fff7474f63ecd64623407bc66e2cd0e98be2e12378694efc",
+            "parts": [
+              {
+                "data": {
+                  "package_digest": "df9a736a23205f22eb53ea0fc80bce3a9d1cc48c5ebd141cf494603d6e0b6ae1",
+                  "public_result": {
+                    "acceptance": {
+                      "attempt": 1,
+                      "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+                      "quality_task_id": "7910a2d4-52c8-4395-b09f-7a2a97d3de75",
+                      "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+                      "revision": "r1",
+                      "run": "hidden-v5-clear:child:0d118aa5be51",
+                      "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+                    },
+                    "child": {
+                      "acceptance": {
+                        "attempt": 1,
+                        "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+                        "quality_task_id": "7910a2d4-52c8-4395-b09f-7a2a97d3de75",
+                        "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+                        "revision": "r1",
+                        "run": "hidden-v5-clear:child:0d118aa5be51",
+                        "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+                      },
+                      "child": null,
+                      "completed": [
+                        "gather",
+                        "join_evidence",
+                        "route_scope:clear",
+                        "draft_clear:r1",
+                        "independent_quality:r1",
+                        "route_verdict:true",
+                        "publish"
+                      ],
+                      "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+                      "receipt": {
+                        "accepted_effect_count": 1,
+                        "attempts": 1,
+                        "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+                        "release_id": "hidden-v5-clear:child:0d118aa5be51:release:r1",
+                        "revision": "r1",
+                        "run_id": "hidden-v5-clear:child:0d118aa5be51",
+                        "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+                      },
+                      "released": true,
+                      "run": "hidden-v5-clear:child:0d118aa5be51",
+                      "status": "accepted"
+                    },
+                    "completed": [
+                      "invoke_child"
+                    ],
+                    "definition_digest": "5318b393ead63ccb22b4af012891cbbdaeed51b36b6856d9a5ced2577aefcac8",
+                    "receipt": {
+                      "accepted_effect_count": 1,
+                      "attempts": 1,
+                      "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+                      "release_id": "hidden-v5-clear:child:0d118aa5be51:release:r1",
+                      "revision": "r1",
+                      "run_id": "hidden-v5-clear:child:0d118aa5be51",
+                      "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+                    },
+                    "released": true,
+                    "run": "hidden-v5-clear",
+                    "status": "accepted"
+                  },
+                  "run_id": "hidden-v5-clear",
+                  "status": "accepted"
+                },
+                "kind": "data"
+              }
+            ]
+          }
+        ],
+        "contextId": "cd7d1410-26fa-41cc-9aa9-bf2d107801f8",
+        "id": "62de7ca3-a28c-4e14-a33f-cdc0c368b510",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "cfb1d1ab-4fad-4b7e-bf8d-558d5de2bfc9",
+          "harness_incarnation": 2,
+          "package_digest": "df9a736a23205f22eb53ea0fc80bce3a9d1cc48c5ebd141cf494603d6e0b6ae1",
+          "run_id": "hidden-v5-clear"
+        },
+        "status": {
+          "state": "completed"
+        }
+      },
+      "join": {
+        "branch_artifact_sha256": {
+          "counter_scope": "cb1effef5eba45bb7b1cb7b32019a674af7810ac02e5cefa09fd71d1fa040b71",
+          "source_crosscheck": "d6d8eb6bef01dbfd0e8503f6992433d74490b2450e001a20d09c295edbe41fa2",
+          "source_primary": "4042ee0a4e14cb3e095238838588406d66f6fa3e0cbd2903a1aefa60eb5966bd"
+        },
+        "claims": [
+          {
+            "branch_instance": "source_crosscheck",
+            "claim": "The capability is documented",
+            "source": "source:A"
+          },
+          {
+            "branch_instance": "source_crosscheck",
+            "claim": "The local contract is versioned",
+            "source": "source:B"
+          },
+          {
+            "branch_instance": "source_primary",
+            "claim": "The capability is documented",
+            "source": "source:A"
+          },
+          {
+            "branch_instance": "source_primary",
+            "claim": "The local contract is versioned",
+            "source": "source:B"
+          }
+        ],
+        "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+        "kind": "evidence_join@1",
+        "objections": [
+          {
+            "branch_instance": "counter_scope",
+            "objection": "A documented limit requires explicit scope",
+            "source": "source:C"
+          },
+          {
+            "branch_instance": "counter_scope",
+            "objection": "A missing receipt must be reconciled",
+            "source": "source:D"
+          }
+        ],
+        "requires_scope": false,
+        "route_status": "clear",
+        "run_id": "hidden-v5-clear:child:0d118aa5be51"
+      },
+      "public_child_result": {
+        "acceptance": {
+          "attempt": 1,
+          "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+          "quality_task_id": "7910a2d4-52c8-4395-b09f-7a2a97d3de75",
+          "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+          "revision": "r1",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+        },
+        "child": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "route_scope:clear",
+          "draft_clear:r1",
+          "independent_quality:r1",
+          "route_verdict:true",
+          "publish"
+        ],
+        "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+          "release_id": "hidden-v5-clear:child:0d118aa5be51:release:r1",
+          "revision": "r1",
+          "run_id": "hidden-v5-clear:child:0d118aa5be51",
+          "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+        },
+        "released": true,
+        "run": "hidden-v5-clear:child:0d118aa5be51",
+        "status": "accepted"
+      },
+      "public_parent_result": {
+        "acceptance": {
+          "attempt": 1,
+          "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+          "quality_task_id": "7910a2d4-52c8-4395-b09f-7a2a97d3de75",
+          "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+          "revision": "r1",
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+        },
+        "child": {
+          "acceptance": {
+            "attempt": 1,
+            "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+            "quality_task_id": "7910a2d4-52c8-4395-b09f-7a2a97d3de75",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r1",
+            "run": "hidden-v5-clear:child:0d118aa5be51",
+            "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+          },
+          "child": null,
+          "completed": [
+            "gather",
+            "join_evidence",
+            "route_scope:clear",
+            "draft_clear:r1",
+            "independent_quality:r1",
+            "route_verdict:true",
+            "publish"
+          ],
+          "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+          "receipt": {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+            "release_id": "hidden-v5-clear:child:0d118aa5be51:release:r1",
+            "revision": "r1",
+            "run_id": "hidden-v5-clear:child:0d118aa5be51",
+            "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+          },
+          "released": true,
+          "run": "hidden-v5-clear:child:0d118aa5be51",
+          "status": "accepted"
+        },
+        "completed": [
+          "invoke_child"
+        ],
+        "definition_digest": "5318b393ead63ccb22b4af012891cbbdaeed51b36b6856d9a5ced2577aefcac8",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+          "release_id": "hidden-v5-clear:child:0d118aa5be51:release:r1",
+          "revision": "r1",
+          "run_id": "hidden-v5-clear:child:0d118aa5be51",
+          "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+        },
+        "released": true,
+        "run": "hidden-v5-clear",
+        "status": "accepted"
+      },
+      "quality_actions": [
+        {
+          "accepted_count": 1,
+          "action_id": "hidden-v5-clear:child:0d118aa5be51:quality:r1:ae58311f20b1",
+          "artifact": {
+            "accepted": true,
+            "reason": "counterevidence addressed for exact revision",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r1",
+            "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+          },
+          "attempts": 1,
+          "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+          "run_id": "hidden-v5-clear:child:0d118aa5be51",
+          "task_id": "7910a2d4-52c8-4395-b09f-7a2a97d3de75"
+        }
+      ],
+      "release_rows": [
+        {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "0d118aa5be510ffe4048c20f2cd8b8aa38f0f5c79b815f99b3e86fa2dd0a915f",
+          "fingerprint": "35e377123208753d54f9870fbd6132be906a0a5dc3b939e1dc53574c1aaa8f2d",
+          "release_id": "hidden-v5-clear:child:0d118aa5be51:release:r1",
+          "revision": "r1",
+          "run_id": "hidden-v5-clear:child:0d118aa5be51",
+          "sha256": "ae58311f20b1d9f433d4846a948cfd008a83162bb31f47b0585408594a01aaf1"
+        }
+      ],
+      "run": "hidden-v5-clear:child:0d118aa5be51"
+    },
+    "old_result": {
+      "child": {
+        "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+        "released": false,
+        "revision": "r3",
+        "run": "hidden-old-v3-wait:child:8c3598fc2147",
+        "status": "aborted"
+      },
+      "definition_digest": "5b37a0486a3efeebeb8274517e5819474a2929aa52e079ceac13e44060ccecd0",
+      "released": false,
+      "run": "hidden-old-v3-wait",
+      "status": "aborted"
+    },
+    "old_wait_after_publication": {
+      "authoritative_acceptance": null,
+      "child_id": null,
+      "completed": [
+        "gather",
+        "join_evidence",
+        "draft:r1",
+        "independent_quality:r1",
+        "route_verdict:false",
+        "repair:1",
+        "draft:r2",
+        "independent_quality:r2",
+        "route_verdict:false",
+        "repair:2",
+        "draft:r3",
+        "independent_quality:r3",
+        "route_verdict:false",
+        "repair:exhausted"
+      ],
+      "current_revision": "r3",
+      "current_sha256": "81691494a31b9b24362eff605adecc70e448b6fa64d631665039a09ea22bc019",
+      "deadline": 1790135843.240015,
+      "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+      "node": "director",
+      "owner_epoch": 1,
+      "package_digest": "32520f4e205547f7ef855a432d0d94a8c9b554e29bccdb8e2d725cded3a13357",
+      "phase": "awaiting-director",
+      "quality_verdict": {
+        "accepted": false,
+        "reason": "counterevidence remains unresolved",
+        "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+        "revision": "r3",
+        "sha256": "81691494a31b9b24362eff605adecc70e448b6fa64d631665039a09ea22bc019"
+      },
+      "release_receipt": null,
+      "repair_count": 2,
+      "run": "hidden-old-v3-wait:child:8c3598fc2147",
+      "unresolved": null
+    },
+    "old_wait_after_restart": {
+      "authoritative_acceptance": null,
+      "child_id": null,
+      "completed": [
+        "gather",
+        "join_evidence",
+        "draft:r1",
+        "independent_quality:r1",
+        "route_verdict:false",
+        "repair:1",
+        "draft:r2",
+        "independent_quality:r2",
+        "route_verdict:false",
+        "repair:2",
+        "draft:r3",
+        "independent_quality:r3",
+        "route_verdict:false",
+        "repair:exhausted"
+      ],
+      "current_revision": "r3",
+      "current_sha256": "81691494a31b9b24362eff605adecc70e448b6fa64d631665039a09ea22bc019",
+      "deadline": 1790135843.240015,
+      "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+      "node": "director",
+      "owner_epoch": 1,
+      "package_digest": "32520f4e205547f7ef855a432d0d94a8c9b554e29bccdb8e2d725cded3a13357",
+      "phase": "awaiting-director",
+      "quality_verdict": {
+        "accepted": false,
+        "reason": "counterevidence remains unresolved",
+        "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+        "revision": "r3",
+        "sha256": "81691494a31b9b24362eff605adecc70e448b6fa64d631665039a09ea22bc019"
+      },
+      "release_receipt": null,
+      "repair_count": 2,
+      "run": "hidden-old-v3-wait:child:8c3598fc2147",
+      "unresolved": null
+    },
+    "old_wait_before": {
+      "authoritative_acceptance": null,
+      "child_id": null,
+      "completed": [
+        "gather",
+        "join_evidence",
+        "draft:r1",
+        "independent_quality:r1",
+        "route_verdict:false",
+        "repair:1",
+        "draft:r2",
+        "independent_quality:r2",
+        "route_verdict:false",
+        "repair:2",
+        "draft:r3",
+        "independent_quality:r3",
+        "route_verdict:false",
+        "repair:exhausted"
+      ],
+      "current_revision": "r3",
+      "current_sha256": "81691494a31b9b24362eff605adecc70e448b6fa64d631665039a09ea22bc019",
+      "deadline": 1790135843.240015,
+      "definition_digest": "8c3598fc2147e6ab9af881fe6e5dcd6a3ffd6a04c06690bfbc3f56adff6f728b",
+      "node": "director",
+      "owner_epoch": 1,
+      "package_digest": "32520f4e205547f7ef855a432d0d94a8c9b554e29bccdb8e2d725cded3a13357",
+      "phase": "awaiting-director",
+      "quality_verdict": {
+        "accepted": false,
+        "reason": "counterevidence remains unresolved",
+        "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+        "revision": "r3",
+        "sha256": "81691494a31b9b24362eff605adecc70e448b6fa64d631665039a09ea22bc019"
+      },
+      "release_receipt": null,
+      "repair_count": 2,
+      "run": "hidden-old-v3-wait:child:8c3598fc2147",
+      "unresolved": null
+    },
+    "requires_exhaust_separate": {
+      "activity_times": [
+        {
+          "instance": "counter_scope",
+          "kind": "assign-start",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "wall_time": 1790135674.874832
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-start",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "wall_time": 1790135674.879252
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-start",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "wall_time": 1790135674.882228
+        },
+        {
+          "instance": "counter_scope",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "316e518f-7b08-4051-a711-cdb02e221c79",
+          "wall_time": 1790135674.887201
+        },
+        {
+          "instance": "counter_scope",
+          "kind": "assign-complete",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "wall_time": 1790135674.889364
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "8936b527-40bf-40d8-b74d-d1e802cdb5b0",
+          "wall_time": 1790135674.892096
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-complete",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "wall_time": 1790135674.894219
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "be583a59-f678-45ff-8a10-4bbe15a75507",
+          "wall_time": 1790135674.899883
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-complete",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "wall_time": 1790135674.9017322
+        },
+        {
+          "instances": [
+            "counter_scope",
+            "source_crosscheck",
+            "source_primary"
+          ],
+          "kind": "join-start",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "wall_time": 1790135674.913537
+        },
+        {
+          "accepted": false,
+          "kind": "quality-verdict",
+          "revision": "r1",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "8a44cf88-2d37-45f5-8a52-fa191b77227d",
+          "wall_time": 1790135674.946507
+        },
+        {
+          "accepted": false,
+          "kind": "quality-verdict",
+          "revision": "r2",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "307e04ed-b0f4-4697-9286-b4cd140b0bd0",
+          "wall_time": 1790135674.9787781
+        },
+        {
+          "accepted": false,
+          "kind": "quality-verdict",
+          "revision": "r3",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "070c52dd-4a63-45e3-a390-6b346929627b",
+          "wall_time": 1790135675.011858
+        }
+      ],
+      "branch_receipts": {
+        "counter_scope": {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-exhaust-separate:child:a6311625cd7f:counter_scope",
+          "artifact": {
+            "author": "eb78564f-c59c-48be-aa83-b5ac480c9f60",
+            "content": "fixture-result:{\"instance\":\"counter_scope\",\"kind\":\"counter_evidence@1\",\"objections\":[{\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"question\":\"What limits the same customer use?\",\"scope_status\":\"requires_scope\"}",
+            "revision": "r2",
+            "sha256": "a90a42bcb4e64ecb3bd5c36dd2dbbdc249af26f4699607bc59dce44722ec595b"
+          },
+          "attempts": 1,
+          "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+          "run_id": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "316e518f-7b08-4051-a711-cdb02e221c79"
+        },
+        "source_crosscheck": {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-exhaust-separate:child:a6311625cd7f:source_crosscheck",
+          "artifact": {
+            "author": "812d0445-00ed-4fd7-8d36-733cf365a894",
+            "content": "fixture-result:{\"availability\":\"documented\",\"claims\":[{\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"instance\":\"source_crosscheck\",\"kind\":\"source_evidence@1\",\"question\":\"Can the customer use the documented capability?\"}",
+            "revision": "r2",
+            "sha256": "d6d8eb6bef01dbfd0e8503f6992433d74490b2450e001a20d09c295edbe41fa2"
+          },
+          "attempts": 1,
+          "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+          "run_id": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "8936b527-40bf-40d8-b74d-d1e802cdb5b0"
+        },
+        "source_primary": {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-exhaust-separate:child:a6311625cd7f:source_primary",
+          "artifact": {
+            "author": "812d0445-00ed-4fd7-8d36-733cf365a894",
+            "content": "fixture-result:{\"availability\":\"documented\",\"claims\":[{\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"instance\":\"source_primary\",\"kind\":\"source_evidence@1\",\"question\":\"Can the customer use the documented capability?\"}",
+            "revision": "r2",
+            "sha256": "4042ee0a4e14cb3e095238838588406d66f6fa3e0cbd2903a1aefa60eb5966bd"
+          },
+          "attempts": 1,
+          "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+          "run_id": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "be583a59-f678-45ff-8a10-4bbe15a75507"
+        }
+      },
+      "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+      "director": {
+        "abort_task": {
+          "artifacts": [
+            {
+              "artifactId": "44d35fc7a27534ca19df54ebac28e9d0d8812c5aa2ab9dd717539682ba32f203",
+              "parts": [
+                {
+                  "data": {
+                    "package_digest": "5c99dc3b107f00a77fd95628861b684be463137ff3f5e84c78e117bed0ac60e3",
+                    "public_result": {
+                      "child": {
+                        "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+                        "released": false,
+                        "revision": "r3",
+                        "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+                        "status": "aborted"
+                      },
+                      "definition_digest": "5513230882a4ce09c37a83c6680b50a97a02bab82ffc9918298acf265a014b34",
+                      "released": false,
+                      "run": "hidden-v4-exhaust-separate",
+                      "status": "aborted"
+                    },
+                    "run_id": "hidden-v4-exhaust-separate",
+                    "status": "aborted"
+                  },
+                  "kind": "data"
+                }
+              ]
+            }
+          ],
+          "contextId": "77787b75-6c77-4cb5-acc5-03cce4c202d0",
+          "id": "67a1bef7-a39f-4f29-8363-432e82c515ac",
+          "kind": "task",
+          "metadata": {
+            "engine": "temporal",
+            "harness_identity": "cfb1d1ab-4fad-4b7e-bf8d-558d5de2bfc9",
+            "harness_incarnation": 2,
+            "package_digest": "5c99dc3b107f00a77fd95628861b684be463137ff3f5e84c78e117bed0ac60e3",
+            "run_id": "hidden-v4-exhaust-separate"
+          },
+          "status": {
+            "state": "completed"
+          }
+        },
+        "original_task_after": {
+          "artifacts": [
+            {
+              "artifactId": "44d35fc7a27534ca19df54ebac28e9d0d8812c5aa2ab9dd717539682ba32f203",
+              "parts": [
+                {
+                  "data": {
+                    "package_digest": "5c99dc3b107f00a77fd95628861b684be463137ff3f5e84c78e117bed0ac60e3",
+                    "public_result": {
+                      "child": {
+                        "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+                        "released": false,
+                        "revision": "r3",
+                        "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+                        "status": "aborted"
+                      },
+                      "definition_digest": "5513230882a4ce09c37a83c6680b50a97a02bab82ffc9918298acf265a014b34",
+                      "released": false,
+                      "run": "hidden-v4-exhaust-separate",
+                      "status": "aborted"
+                    },
+                    "run_id": "hidden-v4-exhaust-separate",
+                    "status": "aborted"
+                  },
+                  "kind": "data"
+                }
+              ]
+            }
+          ],
+          "contextId": "0b210522-39c3-4e3b-a193-11d164673c0d",
+          "id": "5d52c5bd-74ad-4a1f-a916-b89502e44d1e",
+          "kind": "task",
+          "metadata": {
+            "engine": "temporal",
+            "harness_identity": "cfb1d1ab-4fad-4b7e-bf8d-558d5de2bfc9",
+            "harness_incarnation": 2,
+            "package_digest": "5c99dc3b107f00a77fd95628861b684be463137ff3f5e84c78e117bed0ac60e3",
+            "run_id": "hidden-v4-exhaust-separate"
+          },
+          "status": {
+            "state": "completed"
+          }
+        },
+        "original_task_id": "5d52c5bd-74ad-4a1f-a916-b89502e44d1e",
+        "wait": {
+          "authoritative_acceptance": null,
+          "child_id": null,
+          "completed": [
+            "gather",
+            "join_evidence",
+            "route_scope:requires_scope",
+            "draft_unresolved:r1",
+            "independent_quality:r1",
+            "route_verdict:false",
+            "repair:1",
+            "draft_repair:r2",
+            "independent_quality:r2",
+            "route_verdict:false",
+            "repair:2",
+            "draft_repair:r3",
+            "independent_quality:r3",
+            "route_verdict:false",
+            "repair:exhausted"
+          ],
+          "current_revision": "r3",
+          "current_sha256": "4866d00bcad81cb0e757683e91e2634bd8caba2897262a66999e12c1aa15f06d",
+          "deadline": 1790135855.016246,
+          "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+          "node": "director",
+          "owner_epoch": 2,
+          "package_digest": "5c99dc3b107f00a77fd95628861b684be463137ff3f5e84c78e117bed0ac60e3",
+          "phase": "awaiting-director",
+          "quality_verdict": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r3",
+            "sha256": "4866d00bcad81cb0e757683e91e2634bd8caba2897262a66999e12c1aa15f06d"
+          },
+          "release_receipt": null,
+          "repair_count": 2,
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "unresolved": null
+        }
+      },
+      "join": {
+        "branch_artifact_sha256": {
+          "counter_scope": "a90a42bcb4e64ecb3bd5c36dd2dbbdc249af26f4699607bc59dce44722ec595b",
+          "source_crosscheck": "d6d8eb6bef01dbfd0e8503f6992433d74490b2450e001a20d09c295edbe41fa2",
+          "source_primary": "4042ee0a4e14cb3e095238838588406d66f6fa3e0cbd2903a1aefa60eb5966bd"
+        },
+        "claims": [
+          {
+            "branch_instance": "source_crosscheck",
+            "claim": "The capability is documented",
+            "source": "source:A"
+          },
+          {
+            "branch_instance": "source_crosscheck",
+            "claim": "The local contract is versioned",
+            "source": "source:B"
+          },
+          {
+            "branch_instance": "source_primary",
+            "claim": "The capability is documented",
+            "source": "source:A"
+          },
+          {
+            "branch_instance": "source_primary",
+            "claim": "The local contract is versioned",
+            "source": "source:B"
+          }
+        ],
+        "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+        "kind": "evidence_join@1",
+        "objections": [
+          {
+            "branch_instance": "counter_scope",
+            "objection": "A documented limit requires explicit scope",
+            "source": "source:C"
+          },
+          {
+            "branch_instance": "counter_scope",
+            "objection": "A missing receipt must be reconciled",
+            "source": "source:D"
+          }
+        ],
+        "requires_scope": true,
+        "route_status": "requires_scope",
+        "run_id": "hidden-v4-exhaust-separate:child:a6311625cd7f"
+      },
+      "public_child_result": {
+        "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+        "released": false,
+        "revision": "r3",
+        "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+        "status": "aborted"
+      },
+      "public_parent_result": {
+        "child": {
+          "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+          "released": false,
+          "revision": "r3",
+          "run": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "status": "aborted"
+        },
+        "definition_digest": "5513230882a4ce09c37a83c6680b50a97a02bab82ffc9918298acf265a014b34",
+        "released": false,
+        "run": "hidden-v4-exhaust-separate",
+        "status": "aborted"
+      },
+      "quality_actions": [
+        {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-exhaust-separate:child:a6311625cd7f:quality:r1:ca68e7080cbd",
+          "artifact": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r1",
+            "sha256": "ca68e7080cbd4f04c8a5ecfcb88a0f58fa3db137fb1945789a34800954f0d4a2"
+          },
+          "attempts": 1,
+          "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+          "run_id": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "8a44cf88-2d37-45f5-8a52-fa191b77227d"
+        },
+        {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-exhaust-separate:child:a6311625cd7f:quality:r2:534652f3c20c",
+          "artifact": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r2",
+            "sha256": "534652f3c20c3f518e9b582501a4b3f1f8466c4318c802e79798ecc0aab0f692"
+          },
+          "attempts": 1,
+          "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+          "run_id": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "307e04ed-b0f4-4697-9286-b4cd140b0bd0"
+        },
+        {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-exhaust-separate:child:a6311625cd7f:quality:r3:4866d00bcad8",
+          "artifact": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r3",
+            "sha256": "4866d00bcad81cb0e757683e91e2634bd8caba2897262a66999e12c1aa15f06d"
+          },
+          "attempts": 1,
+          "definition_digest": "a6311625cd7f66403b4f151e1210b781a34cd168cc8bc37a5733be2ff2ce279c",
+          "run_id": "hidden-v4-exhaust-separate:child:a6311625cd7f",
+          "task_id": "070c52dd-4a63-45e3-a390-6b346929627b"
+        }
+      ],
+      "release_rows": [],
+      "run": "hidden-v4-exhaust-separate:child:a6311625cd7f"
+    },
+    "requires_success": {
+      "activity_times": [
+        {
+          "instance": "counter_scope",
+          "kind": "assign-start",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "wall_time": 1790135673.147249
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-start",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "wall_time": 1790135673.149864
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-start",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "wall_time": 1790135673.151595
+        },
+        {
+          "instance": "counter_scope",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "task_id": "80cdde31-0310-484f-aa82-461e75ece345",
+          "wall_time": 1790135673.235382
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "task_id": "4d7360ee-0371-4aa2-a1ff-c784ee43ccfd",
+          "wall_time": 1790135673.237099
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-complete",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "wall_time": 1790135673.239872
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "task_id": "9186965c-baf6-45b2-8cf8-91cdc4fbf686",
+          "wall_time": 1790135673.242364
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-complete",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "wall_time": 1790135673.24752
+        },
+        {
+          "instance": "counter_scope",
+          "kind": "assign-complete",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "wall_time": 1790135674.487186
+        },
+        {
+          "instances": [
+            "counter_scope",
+            "source_crosscheck",
+            "source_primary"
+          ],
+          "kind": "join-start",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "wall_time": 1790135674.51187
+        },
+        {
+          "accepted": false,
+          "kind": "quality-verdict",
+          "revision": "r1",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "task_id": "0f69ab2c-0c35-41a9-916e-7e44e9709118",
+          "wall_time": 1790135674.560143
+        },
+        {
+          "accepted": true,
+          "kind": "quality-verdict",
+          "revision": "r2",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "task_id": "22bc3dfd-ad2e-4b7b-a6f0-d441e7babe53",
+          "wall_time": 1790135674.594269
+        },
+        {
+          "kind": "release-observed",
+          "receipt": "hidden-v4-one-repair:child:c7542e19df6c:release:r2",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "unresolved": null,
+          "wall_time": 1790135674.61441
+        }
+      ],
+      "branch_receipts": {
+        "counter_scope": {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-one-repair:child:c7542e19df6c:counter_scope",
+          "artifact": {
+            "author": "eb78564f-c59c-48be-aa83-b5ac480c9f60",
+            "content": "fixture-result:{\"instance\":\"counter_scope\",\"kind\":\"counter_evidence@1\",\"objections\":[{\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"question\":\"What limits the same customer use?\",\"scope_status\":\"requires_scope\"}",
+            "revision": "r2",
+            "sha256": "a90a42bcb4e64ecb3bd5c36dd2dbbdc249af26f4699607bc59dce44722ec595b"
+          },
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "run_id": "hidden-v4-one-repair:child:c7542e19df6c",
+          "task_id": "80cdde31-0310-484f-aa82-461e75ece345"
+        },
+        "source_crosscheck": {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-one-repair:child:c7542e19df6c:source_crosscheck",
+          "artifact": {
+            "author": "812d0445-00ed-4fd7-8d36-733cf365a894",
+            "content": "fixture-result:{\"availability\":\"documented\",\"claims\":[{\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"instance\":\"source_crosscheck\",\"kind\":\"source_evidence@1\",\"question\":\"Can the customer use the documented capability?\"}",
+            "revision": "r2",
+            "sha256": "d6d8eb6bef01dbfd0e8503f6992433d74490b2450e001a20d09c295edbe41fa2"
+          },
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "run_id": "hidden-v4-one-repair:child:c7542e19df6c",
+          "task_id": "4d7360ee-0371-4aa2-a1ff-c784ee43ccfd"
+        },
+        "source_primary": {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-one-repair:child:c7542e19df6c:source_primary",
+          "artifact": {
+            "author": "812d0445-00ed-4fd7-8d36-733cf365a894",
+            "content": "fixture-result:{\"availability\":\"documented\",\"claims\":[{\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"instance\":\"source_primary\",\"kind\":\"source_evidence@1\",\"question\":\"Can the customer use the documented capability?\"}",
+            "revision": "r2",
+            "sha256": "4042ee0a4e14cb3e095238838588406d66f6fa3e0cbd2903a1aefa60eb5966bd"
+          },
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "run_id": "hidden-v4-one-repair:child:c7542e19df6c",
+          "task_id": "9186965c-baf6-45b2-8cf8-91cdc4fbf686"
+        }
+      },
+      "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+      "join": {
+        "branch_artifact_sha256": {
+          "counter_scope": "a90a42bcb4e64ecb3bd5c36dd2dbbdc249af26f4699607bc59dce44722ec595b",
+          "source_crosscheck": "d6d8eb6bef01dbfd0e8503f6992433d74490b2450e001a20d09c295edbe41fa2",
+          "source_primary": "4042ee0a4e14cb3e095238838588406d66f6fa3e0cbd2903a1aefa60eb5966bd"
+        },
+        "claims": [
+          {
+            "branch_instance": "source_crosscheck",
+            "claim": "The capability is documented",
+            "source": "source:A"
+          },
+          {
+            "branch_instance": "source_crosscheck",
+            "claim": "The local contract is versioned",
+            "source": "source:B"
+          },
+          {
+            "branch_instance": "source_primary",
+            "claim": "The capability is documented",
+            "source": "source:A"
+          },
+          {
+            "branch_instance": "source_primary",
+            "claim": "The local contract is versioned",
+            "source": "source:B"
+          }
+        ],
+        "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+        "kind": "evidence_join@1",
+        "objections": [
+          {
+            "branch_instance": "counter_scope",
+            "objection": "A documented limit requires explicit scope",
+            "source": "source:C"
+          },
+          {
+            "branch_instance": "counter_scope",
+            "objection": "A missing receipt must be reconciled",
+            "source": "source:D"
+          }
+        ],
+        "requires_scope": true,
+        "route_status": "requires_scope",
+        "run_id": "hidden-v4-one-repair:child:c7542e19df6c"
+      },
+      "public_child_result": {
+        "acceptance": {
+          "attempt": 2,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "quality_task_id": "22bc3dfd-ad2e-4b7b-a6f0-d441e7babe53",
+          "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+          "revision": "r2",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "sha256": "d828411bcc8be1e0ab2f72014578f67864670e208a8877312676099d185e24f4"
+        },
+        "child": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "route_scope:requires_scope",
+          "draft_unresolved:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft_repair:r2",
+          "independent_quality:r2",
+          "route_verdict:true",
+          "publish"
+        ],
+        "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "release_id": "hidden-v4-one-repair:child:c7542e19df6c:release:r2",
+          "revision": "r2",
+          "run_id": "hidden-v4-one-repair:child:c7542e19df6c",
+          "sha256": "d828411bcc8be1e0ab2f72014578f67864670e208a8877312676099d185e24f4"
+        },
+        "released": true,
+        "run": "hidden-v4-one-repair:child:c7542e19df6c",
+        "status": "accepted"
+      },
+      "public_parent_result": {
+        "acceptance": {
+          "attempt": 2,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "quality_task_id": "22bc3dfd-ad2e-4b7b-a6f0-d441e7babe53",
+          "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+          "revision": "r2",
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "sha256": "d828411bcc8be1e0ab2f72014578f67864670e208a8877312676099d185e24f4"
+        },
+        "child": {
+          "acceptance": {
+            "attempt": 2,
+            "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+            "quality_task_id": "22bc3dfd-ad2e-4b7b-a6f0-d441e7babe53",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r2",
+            "run": "hidden-v4-one-repair:child:c7542e19df6c",
+            "sha256": "d828411bcc8be1e0ab2f72014578f67864670e208a8877312676099d185e24f4"
+          },
+          "child": null,
+          "completed": [
+            "gather",
+            "join_evidence",
+            "route_scope:requires_scope",
+            "draft_unresolved:r1",
+            "independent_quality:r1",
+            "route_verdict:false",
+            "repair:1",
+            "draft_repair:r2",
+            "independent_quality:r2",
+            "route_verdict:true",
+            "publish"
+          ],
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "receipt": {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+            "release_id": "hidden-v4-one-repair:child:c7542e19df6c:release:r2",
+            "revision": "r2",
+            "run_id": "hidden-v4-one-repair:child:c7542e19df6c",
+            "sha256": "d828411bcc8be1e0ab2f72014578f67864670e208a8877312676099d185e24f4"
+          },
+          "released": true,
+          "run": "hidden-v4-one-repair:child:c7542e19df6c",
+          "status": "accepted"
+        },
+        "completed": [
+          "invoke_child"
+        ],
+        "definition_digest": "4c8d2d344d0741b728382635257674ba9693132e50475fefe257a30ad8817b8f",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "release_id": "hidden-v4-one-repair:child:c7542e19df6c:release:r2",
+          "revision": "r2",
+          "run_id": "hidden-v4-one-repair:child:c7542e19df6c",
+          "sha256": "d828411bcc8be1e0ab2f72014578f67864670e208a8877312676099d185e24f4"
+        },
+        "released": true,
+        "run": "hidden-v4-one-repair",
+        "status": "accepted"
+      },
+      "quality_actions": [
+        {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-one-repair:child:c7542e19df6c:quality:r1:527d895310de",
+          "artifact": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r1",
+            "sha256": "527d895310de68c9f9039cbcddedecf546a39aca8bbc78b40a09f107a08e52bb"
+          },
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "run_id": "hidden-v4-one-repair:child:c7542e19df6c",
+          "task_id": "0f69ab2c-0c35-41a9-916e-7e44e9709118"
+        },
+        {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-one-repair:child:c7542e19df6c:quality:r2:d828411bcc8b",
+          "artifact": {
+            "accepted": true,
+            "reason": "counterevidence addressed for exact revision",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r2",
+            "sha256": "d828411bcc8be1e0ab2f72014578f67864670e208a8877312676099d185e24f4"
+          },
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "run_id": "hidden-v4-one-repair:child:c7542e19df6c",
+          "task_id": "22bc3dfd-ad2e-4b7b-a6f0-d441e7babe53"
+        }
+      ],
+      "release_rows": [
+        {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "fingerprint": "0d910f12d06c0d023ed057b9887d6360721b26af8bcb27c40593c9887634b78b",
+          "release_id": "hidden-v4-one-repair:child:c7542e19df6c:release:r2",
+          "revision": "r2",
+          "run_id": "hidden-v4-one-repair:child:c7542e19df6c",
+          "sha256": "d828411bcc8be1e0ab2f72014578f67864670e208a8877312676099d185e24f4"
+        }
+      ],
+      "run": "hidden-v4-one-repair:child:c7542e19df6c"
+    },
+    "same_digest_expected_exhaustion": {
+      "activity_times": [
+        {
+          "instance": "counter_scope",
+          "kind": "assign-start",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "wall_time": 1790135674.6799161
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-start",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "wall_time": 1790135674.683041
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-start",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "wall_time": 1790135674.687645
+        },
+        {
+          "instance": "counter_scope",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "task_id": "44454ea9-a8a6-4bc9-a644-3e965115c0bb",
+          "wall_time": 1790135674.693634
+        },
+        {
+          "instance": "counter_scope",
+          "kind": "assign-complete",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "wall_time": 1790135674.694525
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "task_id": "61c49828-f2fa-4843-a6af-9992b9417cd2",
+          "wall_time": 1790135674.696214
+        },
+        {
+          "instance": "source_crosscheck",
+          "kind": "assign-complete",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "wall_time": 1790135674.6986282
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-remote-receipt",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "task_id": "86b858d8-325c-4755-b161-d56068c11ea7",
+          "wall_time": 1790135674.703103
+        },
+        {
+          "instance": "source_primary",
+          "kind": "assign-complete",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "wall_time": 1790135674.704337
+        },
+        {
+          "instances": [
+            "counter_scope",
+            "source_crosscheck",
+            "source_primary"
+          ],
+          "kind": "join-start",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "wall_time": 1790135674.7194
+        },
+        {
+          "accepted": false,
+          "kind": "quality-verdict",
+          "revision": "r1",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "task_id": "749ed3e5-d87f-47eb-afe4-3f0b767ddc3d",
+          "wall_time": 1790135674.753331
+        },
+        {
+          "accepted": true,
+          "kind": "quality-verdict",
+          "revision": "r2",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "task_id": "67cc1dc1-f40f-4e2c-bbd0-f2ee8304c111",
+          "wall_time": 1790135674.785559
+        },
+        {
+          "kind": "release-observed",
+          "receipt": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c:release:r2",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "unresolved": null,
+          "wall_time": 1790135674.8025541
+        }
+      ],
+      "branch_receipts": {
+        "counter_scope": {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c:counter_scope",
+          "artifact": {
+            "author": "eb78564f-c59c-48be-aa83-b5ac480c9f60",
+            "content": "fixture-result:{\"instance\":\"counter_scope\",\"kind\":\"counter_evidence@1\",\"objections\":[{\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"question\":\"What limits the same customer use?\",\"scope_status\":\"requires_scope\"}",
+            "revision": "r2",
+            "sha256": "a90a42bcb4e64ecb3bd5c36dd2dbbdc249af26f4699607bc59dce44722ec595b"
+          },
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "run_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "task_id": "44454ea9-a8a6-4bc9-a644-3e965115c0bb"
+        },
+        "source_crosscheck": {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c:source_crosscheck",
+          "artifact": {
+            "author": "812d0445-00ed-4fd7-8d36-733cf365a894",
+            "content": "fixture-result:{\"availability\":\"documented\",\"claims\":[{\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"instance\":\"source_crosscheck\",\"kind\":\"source_evidence@1\",\"question\":\"Can the customer use the documented capability?\"}",
+            "revision": "r2",
+            "sha256": "d6d8eb6bef01dbfd0e8503f6992433d74490b2450e001a20d09c295edbe41fa2"
+          },
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "run_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "task_id": "61c49828-f2fa-4843-a6af-9992b9417cd2"
+        },
+        "source_primary": {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c:source_primary",
+          "artifact": {
+            "author": "812d0445-00ed-4fd7-8d36-733cf365a894",
+            "content": "fixture-result:{\"availability\":\"documented\",\"claims\":[{\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"instance\":\"source_primary\",\"kind\":\"source_evidence@1\",\"question\":\"Can the customer use the documented capability?\"}",
+            "revision": "r2",
+            "sha256": "4042ee0a4e14cb3e095238838588406d66f6fa3e0cbd2903a1aefa60eb5966bd"
+          },
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "run_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "task_id": "86b858d8-325c-4755-b161-d56068c11ea7"
+        }
+      },
+      "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+      "join": {
+        "branch_artifact_sha256": {
+          "counter_scope": "a90a42bcb4e64ecb3bd5c36dd2dbbdc249af26f4699607bc59dce44722ec595b",
+          "source_crosscheck": "d6d8eb6bef01dbfd0e8503f6992433d74490b2450e001a20d09c295edbe41fa2",
+          "source_primary": "4042ee0a4e14cb3e095238838588406d66f6fa3e0cbd2903a1aefa60eb5966bd"
+        },
+        "claims": [
+          {
+            "branch_instance": "source_crosscheck",
+            "claim": "The capability is documented",
+            "source": "source:A"
+          },
+          {
+            "branch_instance": "source_crosscheck",
+            "claim": "The local contract is versioned",
+            "source": "source:B"
+          },
+          {
+            "branch_instance": "source_primary",
+            "claim": "The capability is documented",
+            "source": "source:A"
+          },
+          {
+            "branch_instance": "source_primary",
+            "claim": "The local contract is versioned",
+            "source": "source:B"
+          }
+        ],
+        "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+        "kind": "evidence_join@1",
+        "objections": [
+          {
+            "branch_instance": "counter_scope",
+            "objection": "A documented limit requires explicit scope",
+            "source": "source:C"
+          },
+          {
+            "branch_instance": "counter_scope",
+            "objection": "A missing receipt must be reconciled",
+            "source": "source:D"
+          }
+        ],
+        "requires_scope": true,
+        "route_status": "requires_scope",
+        "run_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c"
+      },
+      "public_child_result": {
+        "acceptance": {
+          "attempt": 2,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "quality_task_id": "67cc1dc1-f40f-4e2c-bbd0-f2ee8304c111",
+          "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+          "revision": "r2",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "sha256": "74097c9ac1bab263d516e6a762f41cce485d512bcae8d5c58f37bbf792801ce2"
+        },
+        "child": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "route_scope:requires_scope",
+          "draft_unresolved:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft_repair:r2",
+          "independent_quality:r2",
+          "route_verdict:true",
+          "publish"
+        ],
+        "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "release_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c:release:r2",
+          "revision": "r2",
+          "run_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "sha256": "74097c9ac1bab263d516e6a762f41cce485d512bcae8d5c58f37bbf792801ce2"
+        },
+        "released": true,
+        "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+        "status": "accepted"
+      },
+      "public_parent_result": {
+        "acceptance": {
+          "attempt": 2,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "quality_task_id": "67cc1dc1-f40f-4e2c-bbd0-f2ee8304c111",
+          "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+          "revision": "r2",
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "sha256": "74097c9ac1bab263d516e6a762f41cce485d512bcae8d5c58f37bbf792801ce2"
+        },
+        "child": {
+          "acceptance": {
+            "attempt": 2,
+            "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+            "quality_task_id": "67cc1dc1-f40f-4e2c-bbd0-f2ee8304c111",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r2",
+            "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+            "sha256": "74097c9ac1bab263d516e6a762f41cce485d512bcae8d5c58f37bbf792801ce2"
+          },
+          "child": null,
+          "completed": [
+            "gather",
+            "join_evidence",
+            "route_scope:requires_scope",
+            "draft_unresolved:r1",
+            "independent_quality:r1",
+            "route_verdict:false",
+            "repair:1",
+            "draft_repair:r2",
+            "independent_quality:r2",
+            "route_verdict:true",
+            "publish"
+          ],
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "receipt": {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+            "release_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c:release:r2",
+            "revision": "r2",
+            "run_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+            "sha256": "74097c9ac1bab263d516e6a762f41cce485d512bcae8d5c58f37bbf792801ce2"
+          },
+          "released": true,
+          "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "status": "accepted"
+        },
+        "completed": [
+          "invoke_child"
+        ],
+        "definition_digest": "4c8d2d344d0741b728382635257674ba9693132e50475fefe257a30ad8817b8f",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "release_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c:release:r2",
+          "revision": "r2",
+          "run_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "sha256": "74097c9ac1bab263d516e6a762f41cce485d512bcae8d5c58f37bbf792801ce2"
+        },
+        "released": true,
+        "run": "hidden-v4-same-digest-attempt-exhaust",
+        "status": "accepted"
+      },
+      "quality_actions": [
+        {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c:quality:r1:08bec34c6015",
+          "artifact": {
+            "accepted": false,
+            "reason": "counterevidence remains unresolved",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r1",
+            "sha256": "08bec34c601594c86fb33fec350d5af486a6226e753ca6fee9d43f9adb593b59"
+          },
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "run_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "task_id": "749ed3e5-d87f-47eb-afe4-3f0b767ddc3d"
+        },
+        {
+          "accepted_count": 1,
+          "action_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c:quality:r2:74097c9ac1ba",
+          "artifact": {
+            "accepted": true,
+            "reason": "counterevidence addressed for exact revision",
+            "reviewer": "5afc03e6-afee-48d9-ae88-abca78c50305",
+            "revision": "r2",
+            "sha256": "74097c9ac1bab263d516e6a762f41cce485d512bcae8d5c58f37bbf792801ce2"
+          },
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "run_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "task_id": "67cc1dc1-f40f-4e2c-bbd0-f2ee8304c111"
+        }
+      ],
+      "release_rows": [
+        {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "c7542e19df6cbdaec432fb6d621d3346cd974bee174e27ac5ded9591fff8460d",
+          "fingerprint": "1c6271d76ce6e500ac1476435a818834dd368f6f5fe8b1afc15bab4ba49ea7e4",
+          "release_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c:release:r2",
+          "revision": "r2",
+          "run_id": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c",
+          "sha256": "74097c9ac1bab263d516e6a762f41cce485d512bcae8d5c58f37bbf792801ce2"
+        }
+      ],
+      "run": "hidden-v4-same-digest-attempt-exhaust:child:c7542e19df6c"
+    }
+  },
+  "same_digest_divergent_outcomes_met": false,
+  "state": "/tmp/exo-temporal-hidden-a2-hzapj_pv",
+  "status": "partial",
+  "worker_pid_after_normal_restart": 29959,
+  "worker_pid_during_publication": 29824,
+  "worker_unchanged_during_publication": true
+}

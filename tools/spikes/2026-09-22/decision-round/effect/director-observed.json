@@ -1,0 +1,278 @@
+{
+  "completed": {
+    "artifacts": [
+      {
+        "artifactId": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d",
+        "parts": [
+          {
+            "data": {
+              "content": "fixture-result:verified research 1",
+              "definition": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+              "reviewer": "bdc260f0-c5d3-4bcb-8c4f-2b033cf64eed",
+              "revision": "r2",
+              "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+            },
+            "kind": "data"
+          }
+        ]
+      }
+    ],
+    "contextId": "0fef0a2e-1763-4d47-a4ab-c244a9506aa9",
+    "id": "eddfe4dc-60fd-485f-b136-e53c8e693cd4",
+    "kind": "task",
+    "metadata": {
+      "acceptance_sha256": null,
+      "child": null,
+      "definition": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+      "engine": {
+        "execution_id": null,
+        "kind": "effect",
+        "native_state": "Complete",
+        "resume_requests": null
+      },
+      "organization": "org-fixture",
+      "owner": "66e5d918-63a3-44b8-aea4-c75a24461ae0",
+      "run_id": "director-run"
+    },
+    "status": {
+      "state": "completed"
+    }
+  },
+  "decision_response": {
+    "artifacts": [
+      {
+        "artifactId": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d",
+        "parts": [
+          {
+            "data": {
+              "content": "fixture-result:verified research 1",
+              "definition": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+              "reviewer": "bdc260f0-c5d3-4bcb-8c4f-2b033cf64eed",
+              "revision": "r2",
+              "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+            },
+            "kind": "data"
+          }
+        ]
+      }
+    ],
+    "contextId": "0fef0a2e-1763-4d47-a4ab-c244a9506aa9",
+    "id": "eddfe4dc-60fd-485f-b136-e53c8e693cd4",
+    "kind": "task",
+    "metadata": {
+      "acceptance_sha256": null,
+      "child": null,
+      "definition": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+      "engine": {
+        "execution_id": null,
+        "kind": "effect",
+        "native_state": "Complete",
+        "resume_requests": null
+      },
+      "organization": "org-fixture",
+      "owner": "66e5d918-63a3-44b8-aea4-c75a24461ae0",
+      "run_id": "director-run"
+    },
+    "status": {
+      "state": "completed"
+    }
+  },
+  "director_killed_pid": 11474,
+  "director_restart": {
+    "engine": "effect",
+    "identity": "66e5d918-63a3-44b8-aea4-c75a24461ae0",
+    "incarnation": 2,
+    "role": "factory"
+  },
+  "duplicate_start": {
+    "contextId": "f26c1bb1-9952-4262-8a19-fbbba95762c5",
+    "id": "92cebe51-35a7-4526-ac9f-88e88cc22ca8",
+    "kind": "task",
+    "metadata": {
+      "acceptance_sha256": null,
+      "child": null,
+      "definition": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+      "engine": {
+        "execution_id": null,
+        "kind": "effect",
+        "native_state": "Suspended",
+        "resume_requests": null
+      },
+      "organization": "org-fixture",
+      "owner": "66e5d918-63a3-44b8-aea4-c75a24461ae0",
+      "run_id": "director-run"
+    },
+    "status": {
+      "state": "input-required"
+    }
+  },
+  "final_ledger": {
+    "delivery": {
+      "run_id": "director-run",
+      "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+    },
+    "outbox": {
+      "command_id": "director-run-continue",
+      "run_id": "director-run",
+      "state": "signaled"
+    },
+    "run": {
+      "accepted_by": "bdc260f0-c5d3-4bcb-8c4f-2b033cf64eed",
+      "accepted_revision": "r2",
+      "accepted_sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d",
+      "artifact": "{\"author\":\"0129b34d-62b8-45dd-b728-412b673845fc\",\"content\":\"fixture-result:verified research 1\",\"revision\":\"r2\",\"sha256\":\"d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d\"}",
+      "assignment_task": "903e4725-9184-4f40-9a43-f04cd4f32155",
+      "author": "0129b34d-62b8-45dd-b728-412b673845fc",
+      "body": "{\"name\":\"verified-research\",\"version\":1,\"capabilities\":{\"worker\":{\"identity\":\"0129b34d-62b8-45dd-b728-412b673845fc\",\"url\":\"http://127.0.0.1:62959\",\"version\":\"v1\"},\"quality\":{\"identity\":\"bdc260f0-c5d3-4bcb-8c4f-2b033cf64eed\",\"url\":\"http://127.0.0.1:62960\",\"version\":\"v1\"}},\"steps\":[\"assign\",\"review\",\"director_wait\",\"deliver\"]}",
+      "digest": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+      "id": "director-run",
+      "quality_accepted": 1,
+      "review_task": "b4481494-ae88-4f86-bc7a-5d7fe25a6c40",
+      "reviewer": "bdc260f0-c5d3-4bcb-8c4f-2b033cf64eed",
+      "revision": "r2",
+      "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+    }
+  },
+  "initial": {
+    "director": {
+      "engine": "effect",
+      "identity": "66e5d918-63a3-44b8-aea4-c75a24461ae0",
+      "incarnation": 1,
+      "role": "factory"
+    },
+    "effect": {
+      "pid": 11473,
+      "ready": true
+    },
+    "quality": {
+      "a2a_protocol": "0.3.0",
+      "identity": "bdc260f0-c5d3-4bcb-8c4f-2b033cf64eed",
+      "incarnation": 1,
+      "role": "quality"
+    },
+    "worker": {
+      "a2a_protocol": "0.3.0",
+      "identity": "0129b34d-62b8-45dd-b728-412b673845fc",
+      "incarnation": 1,
+      "role": "capability"
+    }
+  },
+  "passed": true,
+  "ports": {
+    "director": 62962,
+    "effect": 62961,
+    "quality": 62960,
+    "worker": 62959
+  },
+  "published": {
+    "digest": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+    "version": 1
+  },
+  "python": "Python 3.14.3",
+  "receiver_actions": {
+    "quality": {
+      "accepted_count": 1,
+      "action_id": "director-run-review",
+      "artifact": {
+        "accepted": true,
+        "reason": "fixture digest and independent identity",
+        "reviewer": "bdc260f0-c5d3-4bcb-8c4f-2b033cf64eed",
+        "revision": "r2",
+        "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+      },
+      "attempts": 1,
+      "definition_digest": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+      "role": "quality",
+      "run_id": "director-run",
+      "task_id": "b4481494-ae88-4f86-bc7a-5d7fe25a6c40"
+    },
+    "worker": {
+      "accepted_count": 1,
+      "action_id": "director-run-assign",
+      "artifact": {
+        "author": "0129b34d-62b8-45dd-b728-412b673845fc",
+        "content": "fixture-result:verified research 1",
+        "revision": "r2",
+        "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+      },
+      "attempts": 1,
+      "definition_digest": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+      "role": "capability",
+      "run_id": "director-run",
+      "task_id": "903e4725-9184-4f40-9a43-f04cd4f32155"
+    }
+  },
+  "restored": {
+    "contextId": "0fef0a2e-1763-4d47-a4ab-c244a9506aa9",
+    "id": "eddfe4dc-60fd-485f-b136-e53c8e693cd4",
+    "kind": "task",
+    "metadata": {
+      "acceptance_sha256": null,
+      "child": null,
+      "definition": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+      "engine": {
+        "execution_id": null,
+        "kind": "effect",
+        "native_state": "Suspended",
+        "resume_requests": null
+      },
+      "organization": "org-fixture",
+      "owner": "66e5d918-63a3-44b8-aea4-c75a24461ae0",
+      "run_id": "director-run"
+    },
+    "status": {
+      "state": "input-required"
+    }
+  },
+  "rss_kib_waiting": {
+    "director": 119056,
+    "effect": 210640,
+    "quality": 117680,
+    "worker": 117680
+  },
+  "runtime_root": "/var/folders/x5/cz0z1rpn17v_y33px31rqw5r0000gn/T/exomachina-effect-director-yvazbk5z",
+  "started": {
+    "contextId": "0fef0a2e-1763-4d47-a4ab-c244a9506aa9",
+    "id": "eddfe4dc-60fd-485f-b136-e53c8e693cd4",
+    "kind": "task",
+    "metadata": {
+      "acceptance_sha256": null,
+      "child": null,
+      "definition": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+      "engine": {
+        "execution_id": null,
+        "kind": "effect",
+        "native_state": "Pending",
+        "resume_requests": null
+      },
+      "organization": "org-fixture",
+      "owner": "66e5d918-63a3-44b8-aea4-c75a24461ae0",
+      "run_id": "director-run"
+    },
+    "status": {
+      "state": "working"
+    }
+  },
+  "waiting": {
+    "contextId": "0fef0a2e-1763-4d47-a4ab-c244a9506aa9",
+    "id": "eddfe4dc-60fd-485f-b136-e53c8e693cd4",
+    "kind": "task",
+    "metadata": {
+      "acceptance_sha256": null,
+      "child": null,
+      "definition": "6b8a64d55a4fcb3d44ba442ecc0bb2c689c9a6d3b3a0825cca8aab4011edb1ad",
+      "engine": {
+        "execution_id": null,
+        "kind": "effect",
+        "native_state": "Suspended",
+        "resume_requests": null
+      },
+      "organization": "org-fixture",
+      "owner": "66e5d918-63a3-44b8-aea4-c75a24461ae0",
+      "run_id": "director-run"
+    },
+    "status": {
+      "state": "input-required"
+    }
+  }
+}

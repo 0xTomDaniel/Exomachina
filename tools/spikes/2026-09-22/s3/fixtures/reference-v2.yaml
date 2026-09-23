@@ -1,0 +1,77 @@
+id: s3_reference
+namespace: exomachina.s3
+description: Native S3 shape; deterministic placeholders, no real Quality authority or delivery effect
+inputs:
+  - id: verdict
+    type: STRING
+    defaults: REPAIR
+tasks:
+  - id: publication_wait
+    type: io.kestra.plugin.core.flow.Pause
+  - id: research_parallel
+    type: io.kestra.plugin.core.flow.Parallel
+    concurrent: 2
+    tasks:
+      - id: research_a
+        type: io.kestra.plugin.core.flow.Subflow
+        namespace: exomachina.s3
+        flowId: s3_child
+        revision: 2
+        wait: true
+        transmitFailed: true
+      - id: research_b
+        type: io.kestra.plugin.core.flow.Subflow
+        namespace: exomachina.s3
+        flowId: s3_child
+        revision: 2
+        wait: true
+        transmitFailed: true
+  - id: synthesis
+    type: io.kestra.plugin.core.debug.Return
+    format: "artifact-r1:{{ outputs.research_a.outputs.marker }}:{{ outputs.research_b.outputs.marker }}"
+  - id: independent_review
+    type: io.kestra.plugin.core.debug.Return
+    description: Placeholder for separately authorized Quality capability, policy-r1
+    format: "{{ inputs.verdict }}"
+  - id: review_gate
+    type: io.kestra.plugin.core.flow.Switch
+    value: "{{ outputs.independent_review.value }}"
+    cases:
+      ACCEPT:
+        - id: accepted_initial
+          type: io.kestra.plugin.core.debug.Return
+          format: acceptance-r1
+      REPAIR:
+        - id: repair
+          type: io.kestra.plugin.core.debug.Return
+          format: artifact-r2
+        - id: independent_rereview
+          type: io.kestra.plugin.core.debug.Return
+          description: Placeholder for separately authorized Quality capability, policy-r1
+          format: ACCEPT
+        - id: repair_gate
+          type: io.kestra.plugin.core.flow.If
+          condition: "{{ outputs.independent_rereview.value != 'ACCEPT' }}"
+          then:
+            - id: repair_failed
+              type: io.kestra.plugin.core.execution.Fail
+    defaults:
+      - id: review_failed
+        type: io.kestra.plugin.core.execution.Fail
+  - id: director_wait
+    type: io.kestra.plugin.core.flow.Pause
+    onResume:
+      - id: approved
+        type: BOOL
+        defaults: false
+  - id: delivery_gate
+    type: io.kestra.plugin.core.flow.If
+    condition: "{{ outputs.director_wait.onResume.approved }}"
+    then:
+      - id: delivery
+        type: io.kestra.plugin.core.debug.Return
+        description: Placeholder for acceptance-checking controlled delivery Adapter; no external effect
+        format: synthetic-delivery-receipt
+    else:
+      - id: director_declined
+        type: io.kestra.plugin.core.execution.Fail

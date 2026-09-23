@@ -1,0 +1,16 @@
+steps:
+  - id: director
+    action: human.task
+    with:
+      prompt: Continue factory?
+      form:
+        type: object
+        properties:
+          accepted:
+            type: boolean
+        required: [accepted]
+  - id: child
+    depends: director
+    action: dag.run
+    with:
+      dag: exo_child_mutable

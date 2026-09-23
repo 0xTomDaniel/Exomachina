@@ -1,0 +1,263 @@
+{
+  "child_before_parent": {
+    "authorized_child": {
+      "child_id": "exo-wait-child-001",
+      "dagu_response": {
+        "alreadyCompleted": false,
+        "dagName": "exo_wait_child_v1",
+        "dagRunId": "exo-wait-child-001",
+        "queued": true,
+        "remainingWaitingSteps": 0,
+        "stepId": "director_wait"
+      },
+      "decision": "accept"
+    },
+    "child_start": {
+      "dagRunId": "exo-wait-child-001"
+    },
+    "child_terminal_before_parent_start": {
+      "dag_name": "exo_wait_child_v1",
+      "nodes": {
+        "child_outcome": "succeeded",
+        "director_wait": "succeeded"
+      },
+      "run_id": "exo-wait-child-001",
+      "status": "succeeded"
+    },
+    "definition_sha256": {
+      "exo_wait_child_v1.yaml": "1ae6afdd4da4be860e319d82a52d68eaad1cf0ffce4bb0beaf471f324967455d",
+      "exo_wait_parent_v1.yaml": "4c952aef7aa41010fe75b763183474166532e128b3bceeec2916465d26e4d462"
+    },
+    "final": {
+      "child": {
+        "dag_name": "exo_wait_child_v1",
+        "nodes": {
+          "child_outcome": "succeeded",
+          "director_wait": "succeeded"
+        },
+        "run_id": "exo-wait-child-001",
+        "status": "succeeded"
+      },
+      "events": [
+        {
+          "kind": "dagu_start",
+          "pid": 35285
+        },
+        {
+          "already_completed": false,
+          "child_id": "exo-wait-child-001",
+          "kind": "parent_gate_posted",
+          "parent_id": "exo-wait-parent-001"
+        },
+        {
+          "child_id": "exo-wait-child-001",
+          "kind": "bridge_completed",
+          "parent_id": "exo-wait-parent-001"
+        }
+      ],
+      "parent": {
+        "dag_name": "exo_wait_parent_v1",
+        "nodes": {
+          "child_gate": "succeeded",
+          "parent_continuation": "succeeded"
+        },
+        "run_id": "exo-wait-parent-001",
+        "status": "succeeded"
+      },
+      "state": {
+        "auto": {
+          "authorized_decision": "accept",
+          "child_outcome": "accepted",
+          "parent_id": "exo-wait-parent-001",
+          "public_result_json": "{\"child_outcome\": \"accepted\", \"child_run_id\": \"exo-wait-child-001\", \"parent_run_id\": \"exo-wait-parent-001\"}"
+        },
+        "bridge": {
+          "child_id": "exo-wait-child-001",
+          "child_name": "exo_wait_child_v1",
+          "child_sha256": "1ae6afdd4da4be860e319d82a52d68eaad1cf0ffce4bb0beaf471f324967455d",
+          "owner_epoch": 1,
+          "parent_id": "exo-wait-parent-001",
+          "parent_name": "exo_wait_parent_v1",
+          "parent_sha256": "4c952aef7aa41010fe75b763183474166532e128b3bceeec2916465d26e4d462",
+          "state": "completed"
+        }
+      }
+    },
+    "outcome": "passed",
+    "parent_start": {
+      "dagRunId": "exo-wait-parent-001"
+    },
+    "registered": {
+      "child_id": "exo-wait-child-001",
+      "owner_epoch": 1,
+      "parent_id": "exo-wait-parent-001"
+    }
+  },
+  "dagu_binary_sha256": "fd855996bab956835043ae8cbb00ac3ea5211a6be6992374727b7908d393aac3",
+  "fault_recovery": {
+    "authorized_child": {
+      "child_id": "exo-wait-child-001",
+      "dagu_response": {
+        "alreadyCompleted": false,
+        "dagName": "exo_wait_child_v1",
+        "dagRunId": "exo-wait-child-001",
+        "queued": true,
+        "remainingWaitingSteps": 0,
+        "stepId": "director_wait"
+      },
+      "decision": "accept"
+    },
+    "before_kill": {
+      "child": {
+        "dag_name": "exo_wait_child_v1",
+        "nodes": {
+          "child_outcome": "succeeded",
+          "director_wait": "succeeded"
+        },
+        "run_id": "exo-wait-child-001",
+        "status": "succeeded"
+      },
+      "parent": {
+        "dag_name": "exo_wait_parent_v1",
+        "nodes": {
+          "child_gate": "waiting",
+          "parent_continuation": "not_started"
+        },
+        "run_id": "exo-wait-parent-001",
+        "status": "waiting"
+      }
+    },
+    "both_waiting": {
+      "child": {
+        "dag_name": "exo_wait_child_v1",
+        "nodes": {
+          "child_outcome": "not_started",
+          "director_wait": "waiting"
+        },
+        "run_id": "exo-wait-child-001",
+        "status": "waiting"
+      },
+      "parent": {
+        "dag_name": "exo_wait_parent_v1",
+        "nodes": {
+          "child_gate": "waiting",
+          "parent_continuation": "not_started"
+        },
+        "run_id": "exo-wait-parent-001",
+        "status": "waiting"
+      },
+      "processes": {
+        "bridge_process_count": 0,
+        "dagu_process_count": 1,
+        "matched_processes": [
+          {
+            "command": "/tmp/exomachina-countertrials/dagu/dagu start-all --host 127.0.0.1 --port 64154",
+            "pid": 35244,
+            "ppid": 35243,
+            "rss_kib": 107120
+          }
+        ]
+      }
+    },
+    "child_start": {
+      "dagRunId": "exo-wait-child-001"
+    },
+    "definition_sha256": {
+      "exo_wait_child_v1.yaml": "122cd99e93691e074b57af0b221c3b36998c0b863a64a5c88e62ec35eb99bd14",
+      "exo_wait_parent_v1.yaml": "2032ef17bc7b39f0673ae9c4ffa439c2845f47901b351e9660ede0e7012e3517"
+    },
+    "final": {
+      "child": {
+        "dag_name": "exo_wait_child_v1",
+        "nodes": {
+          "child_outcome": "succeeded",
+          "director_wait": "succeeded"
+        },
+        "run_id": "exo-wait-child-001",
+        "status": "succeeded"
+      },
+      "events": [
+        {
+          "kind": "dagu_start",
+          "pid": 35244
+        },
+        {
+          "kind": "dagu_start",
+          "pid": 35254
+        },
+        {
+          "already_completed": false,
+          "child_id": "exo-wait-child-001",
+          "kind": "parent_gate_posted",
+          "parent_id": "exo-wait-parent-001"
+        },
+        {
+          "error": "RuntimeError('synthetic lost scanner continuation after parent gate ack')",
+          "kind": "scan_error"
+        },
+        {
+          "child_id": "exo-wait-child-001",
+          "kind": "bridge_completed",
+          "parent_id": "exo-wait-parent-001"
+        }
+      ],
+      "parent": {
+        "dag_name": "exo_wait_parent_v1",
+        "nodes": {
+          "child_gate": "succeeded",
+          "parent_continuation": "succeeded"
+        },
+        "run_id": "exo-wait-parent-001",
+        "status": "succeeded"
+      },
+      "parent_continuation_done_count": 1,
+      "state": {
+        "auto": {
+          "authorized_decision": "accept",
+          "child_outcome": "accepted",
+          "parent_id": "exo-wait-parent-001",
+          "public_result_json": "{\"child_outcome\": \"accepted\", \"child_run_id\": \"exo-wait-child-001\", \"parent_run_id\": \"exo-wait-parent-001\"}"
+        },
+        "bridge": {
+          "child_id": "exo-wait-child-001",
+          "child_name": "exo_wait_child_v1",
+          "child_sha256": "122cd99e93691e074b57af0b221c3b36998c0b863a64a5c88e62ec35eb99bd14",
+          "owner_epoch": 1,
+          "parent_id": "exo-wait-parent-001",
+          "parent_name": "exo_wait_parent_v1",
+          "parent_sha256": "2032ef17bc7b39f0673ae9c4ffa439c2845f47901b351e9660ede0e7012e3517",
+          "state": "completed"
+        }
+      }
+    },
+    "first_supervisor_pid": 35243,
+    "killed": {
+      "dagu_pid": 35244,
+      "supervisor_pid": 35243
+    },
+    "outcome": "passed",
+    "parent_start": {
+      "dagRunId": "exo-wait-parent-001"
+    },
+    "registered": {
+      "child_id": "exo-wait-child-001",
+      "owner_epoch": 1,
+      "parent_id": "exo-wait-parent-001"
+    },
+    "replacement_dagu_pid": 35254,
+    "replacement_supervisor_pid": 35253
+  },
+  "outcome": "passed",
+  "source_sha256_after": {
+    "auto_bridge.py": "3b0e78c20d57e2c6d3400132eb1b1faeffb1d74246aa73a3886feae13b10af56",
+    "bridge.py": "c501b14fed63ef9534fb1e988924a02b2bc5a42259ab5058c85613865c1fa2e7",
+    "shared_supervisor.py": "a17cd1210b1f2b6e5f4756561efe889a6639afdb6755ac0a96e60fec19a8df8b",
+    "shared_trial.py": "470e171eac8d06b1d99f164d1bf2703eef7efcf03187c9e9ddd0b7621a26674f"
+  },
+  "source_sha256_before": {
+    "auto_bridge.py": "3b0e78c20d57e2c6d3400132eb1b1faeffb1d74246aa73a3886feae13b10af56",
+    "bridge.py": "c501b14fed63ef9534fb1e988924a02b2bc5a42259ab5058c85613865c1fa2e7",
+    "shared_supervisor.py": "a17cd1210b1f2b6e5f4756561efe889a6639afdb6755ac0a96e60fec19a8df8b",
+    "shared_trial.py": "470e171eac8d06b1d99f164d1bf2703eef7efcf03187c9e9ddd0b7621a26674f"
+  }
+}

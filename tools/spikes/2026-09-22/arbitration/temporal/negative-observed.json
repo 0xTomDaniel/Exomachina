@@ -1,0 +1,145 @@
+{
+  "cases": {
+    "arbitrary_code": {
+      "catalog_after": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_before": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_unchanged": true,
+      "child_digest_recomputed": true,
+      "diagnostic": "draft: expected fields ['next', 'resolved', 'type']",
+      "rejected": true,
+      "submitted_digest": "0e4f7654763ab658ac758727c9dbca4d5d2aedbde557e2b258d4cddf6f0d52e0"
+    },
+    "bad_repair_bound_-1": {
+      "catalog_after": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_before": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_unchanged": true,
+      "child_digest_recomputed": true,
+      "diagnostic": "repair bound must be one or two",
+      "rejected": true,
+      "submitted_digest": "5a3662b144aa89f83f46ea8af92820747dca0fd93aa018bff489b0374782df3d"
+    },
+    "bad_repair_bound_0": {
+      "catalog_after": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_before": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_unchanged": true,
+      "child_digest_recomputed": true,
+      "diagnostic": "repair bound must be one or two",
+      "rejected": true,
+      "submitted_digest": "e95f81ed50e1a7bfca3ca10506381c964b25547f577ecddd761d8e3ca9a5ffb6"
+    },
+    "bad_repair_bound_2": {
+      "catalog_after": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_before": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_unchanged": true,
+      "child_digest_recomputed": true,
+      "diagnostic": "repair bound must be one or two",
+      "rejected": true,
+      "submitted_digest": "e5362ceef0dc040c1576aef36c491442d862c1a0dc10e74d3d6af5ba95e0d7f1"
+    },
+    "bad_repair_bound_3": {
+      "catalog_after": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_before": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_unchanged": true,
+      "child_digest_recomputed": true,
+      "diagnostic": "repair bound must be one or two",
+      "rejected": true,
+      "submitted_digest": "450ce0fcfd829c8567eec7e96fdcd42dd0404abd24c61cf27f23aa1996429b32"
+    },
+    "immutable_overwrite": {
+      "catalog_after": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_before": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_unchanged": true,
+      "diagnostic": "[Errno 17] File exists: '/tmp/exo-temporal-negative-f660gcgy/2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json'",
+      "rejected": true
+    },
+    "mutable_active_closure": {
+      "catalog_after": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_before": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_unchanged": true,
+      "child_digest_recomputed": false,
+      "diagnostic": "missing or mutated pinned child closure",
+      "rejected": true,
+      "submitted_digest": "4ec20c07c568ce041b03200dba59c9a213cd6a1ba8b036fec4b09e817a8d144f"
+    },
+    "review_bypass": {
+      "catalog_after": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_before": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_unchanged": true,
+      "child_digest_recomputed": true,
+      "diagnostic": "release bypasses current independent Quality acceptance",
+      "rejected": true,
+      "submitted_digest": "8f051c4ab1e194773432497c257b4a7f88abe11c9e5e3e1c26a5dd8b723413b6"
+    },
+    "unapproved_capability": {
+      "catalog_after": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_before": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_unchanged": true,
+      "child_digest_recomputed": false,
+      "diagnostic": "unapproved service identity, contract, or endpoint",
+      "rejected": true,
+      "submitted_digest": "0e155ad33d64a3b9a1fc6351c27ac669bf975d1fe090a98fb087140901ab63b0"
+    },
+    "wrong_join_type": {
+      "catalog_after": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_before": {
+        "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151.json": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151"
+      },
+      "catalog_unchanged": true,
+      "child_digest_recomputed": true,
+      "diagnostic": "typed join mismatch or missing predecessor",
+      "rejected": true,
+      "submitted_digest": "f96a157323216c69dafe5c7d45087a8cfcdfe34c08afdb08e2ddc440295ba6fa"
+    }
+  },
+  "catalog": "/tmp/exo-temporal-negative-f660gcgy",
+  "freeze_after": {
+    "files": 18,
+    "inventory_sha256": "aaf68094e8ecbc958e3727f1ef6f1278a913b249b3a527210475e51ee72b3099",
+    "verified": true
+  },
+  "freeze_before": {
+    "files": 18,
+    "inventory_sha256": "aaf68094e8ecbc958e3727f1ef6f1278a913b249b3a527210475e51ee72b3099",
+    "verified": true
+  },
+  "good_digest": "2daff6b301928af761e13f60d635d6840dbf018241af84fb00ada31c57406151",
+  "status": "passed"
+}

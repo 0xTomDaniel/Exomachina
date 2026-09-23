@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": {
+    "id": "s3_review_bypass",
+    "namespace": "exomachina.s3",
+    "revision": 1,
+    "description": "Deliberate policy-invalid candidate; no external delivery effect",
+    "disabled": false,
+    "deleted": false,
+    "draft": false,
+    "tasks": [
+      {
+        "id": "delivery",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "format": "synthetic-unreviewed-delivery"
+      }
+    ],
+    "source": "id: s3_review_bypass\nnamespace: exomachina.s3\ndescription: Deliberate policy-invalid candidate; no external delivery effect\ntasks:\n  - id: delivery\n    type: io.kestra.plugin.core.debug.Return\n    format: synthetic-unreviewed-delivery\n"
+  }
+}

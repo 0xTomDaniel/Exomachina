@@ -1,0 +1,77 @@
+{
+  "after_owner_a": {
+    "deliver": 1,
+    "join": 1,
+    "research_a": 1,
+    "research_b": 1,
+    "review": 1
+  },
+  "after_owner_b": {
+    "deliver": 2,
+    "join": 1,
+    "research_a": 1,
+    "research_b": 1,
+    "review": 1
+  },
+  "before_release": {
+    "join": 1,
+    "research_a": 1,
+    "research_b": 1,
+    "review": 1
+  },
+  "both_owners_reached_restored_interrupt_before_release": true,
+  "duplicate_deliveries": true,
+  "owner_a": {
+    "exit_code": 0,
+    "result": {
+      "digest": "13006bf806f984afc400f33b717fda748f7e1bfac03ae8321276585d6c8e1e56",
+      "execution_order": [
+        "research_b",
+        "research_a",
+        "join",
+        "review",
+        "deliver"
+      ],
+      "interrupts": [],
+      "node_statuses": {
+        "deliver": "completed",
+        "join": "completed",
+        "research_a": "completed",
+        "research_b": "completed",
+        "review": "completed"
+      },
+      "revision": 1,
+      "run_id": "run-v1",
+      "status": "completed"
+    },
+    "stderr": ""
+  },
+  "owner_b": {
+    "exit_code": 0,
+    "result": {
+      "digest": "13006bf806f984afc400f33b717fda748f7e1bfac03ae8321276585d6c8e1e56",
+      "execution_order": [
+        "research_b",
+        "research_a",
+        "join",
+        "review",
+        "deliver"
+      ],
+      "interrupts": [],
+      "node_statuses": {
+        "deliver": "completed",
+        "join": "completed",
+        "research_a": "completed",
+        "research_b": "completed",
+        "review": "completed"
+      },
+      "revision": 1,
+      "run_id": "run-v1",
+      "status": "completed"
+    },
+    "stderr": ""
+  },
+  "owner_b_released_after_owner_a_completed": true,
+  "same_logical_run": "run-v1",
+  "sdk": "strands-agents==1.57.0"
+}

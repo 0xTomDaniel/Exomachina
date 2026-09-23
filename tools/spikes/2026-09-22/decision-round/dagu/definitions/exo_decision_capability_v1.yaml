@@ -1,0 +1,5 @@
+steps:
+  - id: worker
+    action: dag.run
+    with:
+      dag: exo_decision_leaf_v1

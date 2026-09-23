@@ -1,0 +1,118 @@
+{
+  "child": {
+    "name": "verified_research",
+    "nodes": {
+      "abort": {
+        "type": "abort"
+      },
+      "director": {
+        "next": "abort",
+        "reason": "repair_exhausted",
+        "type": "director_wait"
+      },
+      "done": {
+        "type": "complete"
+      },
+      "draft_clear": {
+        "next": "independent_quality",
+        "resolved": true,
+        "type": "synthesize"
+      },
+      "draft_scope": {
+        "next": "independent_quality",
+        "resolved": "after_repair",
+        "type": "synthesize"
+      },
+      "gather": {
+        "branches": {
+          "counter_crosscheck": {
+            "capability": "counter_evidence@1",
+            "result_type": "counter_evidence",
+            "scope_status": "clear",
+            "service": "counter_crosscheck"
+          },
+          "counter_primary": {
+            "capability": "counter_evidence@1",
+            "result_type": "counter_evidence",
+            "scope_status": "clear",
+            "service": "counter_primary"
+          },
+          "source_alpha": {
+            "capability": "source_evidence@1",
+            "result_type": "source_evidence",
+            "scope_status": null,
+            "service": "source_alpha"
+          },
+          "source_beta": {
+            "capability": "source_evidence@1",
+            "result_type": "source_evidence",
+            "scope_status": null,
+            "service": "source_beta"
+          }
+        },
+        "next": "join_evidence",
+        "type": "parallel"
+      },
+      "independent_quality": {
+        "next": "route_verdict",
+        "type": "quality"
+      },
+      "join_evidence": {
+        "branches": [
+          "source_alpha",
+          "source_beta",
+          "counter_primary",
+          "counter_crosscheck"
+        ],
+        "next": "route_scope",
+        "type": "join"
+      },
+      "publish": {
+        "next": "done",
+        "service": "release",
+        "type": "release"
+      },
+      "repair": {
+        "exhausted": "director",
+        "max_repairs": 2,
+        "next": "draft_scope",
+        "type": "repair"
+      },
+      "route_scope": {
+        "cases": {
+          "false": "draft_clear",
+          "true": "draft_scope"
+        },
+        "field": "join.requires_scope",
+        "type": "route"
+      },
+      "route_verdict": {
+        "cases": {
+          "false": "repair",
+          "true": "publish"
+        },
+        "field": "verdict.accepted",
+        "type": "route"
+      }
+    },
+    "revision": "v4b",
+    "start": "gather"
+  },
+  "root": {
+    "name": "parent_verified_research",
+    "nodes": {
+      "done": {
+        "type": "complete"
+      },
+      "invoke_child": {
+        "child": "verified_research",
+        "child_digest": "@child",
+        "next": "done",
+        "type": "nested_factory"
+      }
+    },
+    "revision": "v4b",
+    "start": "invoke_child"
+  },
+  "schema": 1
+}

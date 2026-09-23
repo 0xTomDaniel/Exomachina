@@ -1,0 +1,427 @@
+{
+  "state_dir": "/var/folders/x5/cz0z1rpn17v_y33px31rqw5r0000gn/T/exomachina-hatchet-r2-_eebcgh5",
+  "sidecar_version": "v0.107.0",
+  "sdk_version": "1.41.0",
+  "digests": {
+    "v1": "3a331c101b294179ff4d1e34c2627e5ed2a13d951518a6058aee46bfa57ea329",
+    "v2": "72c53db851e34ae269267af97b293d9bc0135f6a48db22679c20699e8d90f2d6"
+  },
+  "unchanged_source_sha256": "cc9b520cfa4f8cb3b192717dc783fd6f3edc3bb0b64810a0c8102e84d7a70eb6",
+  "markers": [
+    {
+      "kind": "ready",
+      "pid": 4687,
+      "source_sha256": "cc9b520cfa4f8cb3b192717dc783fd6f3edc3bb0b64810a0c8102e84d7a70eb6"
+    },
+    {
+      "kind": "started",
+      "run_id": "a-v1",
+      "workflow_run_id": "a5501de9-7b36-47bb-9c7e-d811016427f5"
+    },
+    {
+      "accepted": true,
+      "harness_id": "harness-a",
+      "kind": "step",
+      "run_id": "a-v1",
+      "step": "research_a"
+    },
+    {
+      "accepted": true,
+      "harness_id": "harness-a",
+      "kind": "step",
+      "run_id": "a-v1",
+      "step": "research_b"
+    },
+    {
+      "accepted": true,
+      "harness_id": "harness-a",
+      "kind": "step",
+      "run_id": "a-v1",
+      "step": "join"
+    },
+    {
+      "accepted": true,
+      "harness_id": "harness-a",
+      "kind": "step",
+      "run_id": "a-v1",
+      "step": "review"
+    },
+    {
+      "kind": "started",
+      "run_id": "b-v2",
+      "workflow_run_id": "ccc08822-a7f5-4753-9ba5-4161e538031c"
+    },
+    {
+      "accepted": true,
+      "harness_id": "harness-b",
+      "kind": "step",
+      "run_id": "b-v2",
+      "step": "research_a"
+    },
+    {
+      "accepted": true,
+      "harness_id": "harness-b",
+      "kind": "step",
+      "run_id": "b-v2",
+      "step": "research_b"
+    },
+    {
+      "accepted": true,
+      "harness_id": "harness-b",
+      "kind": "step",
+      "run_id": "b-v2",
+      "step": "join"
+    },
+    {
+      "accepted": true,
+      "harness_id": "harness-b",
+      "kind": "step",
+      "run_id": "b-v2",
+      "step": "verify"
+    },
+    {
+      "accepted": true,
+      "harness_id": "harness-b",
+      "kind": "step",
+      "run_id": "b-v2",
+      "step": "review"
+    },
+    {
+      "kind": "ready",
+      "pid": 4749,
+      "source_sha256": "cc9b520cfa4f8cb3b192717dc783fd6f3edc3bb0b64810a0c8102e84d7a70eb6"
+    },
+    {
+      "event_id": "9a3c9163-a47a-45bc-9e56-43cbe9b77921",
+      "kind": "decision_sent",
+      "run_id": "a-v1"
+    },
+    {
+      "event_id": "782a2061-ebd2-4895-80ae-bb7fb3e2969b",
+      "kind": "decision_sent",
+      "run_id": "a-v1"
+    },
+    {
+      "event_id": "ff4a47c1-7d06-4e91-816c-db6f3c92cad4",
+      "kind": "decision_sent",
+      "run_id": "b-v2"
+    },
+    {
+      "accepted": true,
+      "harness_id": "harness-a",
+      "kind": "step",
+      "run_id": "a-v1",
+      "step": "delivery"
+    },
+    {
+      "accepted": true,
+      "harness_id": "harness-b",
+      "kind": "step",
+      "run_id": "b-v2",
+      "step": "delivery"
+    }
+  ],
+  "step_rows": [
+    {
+      "harness_id": "harness-a",
+      "run_id": "a-v1",
+      "step": "delivery"
+    },
+    {
+      "harness_id": "harness-a",
+      "run_id": "a-v1",
+      "step": "join"
+    },
+    {
+      "harness_id": "harness-a",
+      "run_id": "a-v1",
+      "step": "research_a"
+    },
+    {
+      "harness_id": "harness-a",
+      "run_id": "a-v1",
+      "step": "research_b"
+    },
+    {
+      "harness_id": "harness-a",
+      "run_id": "a-v1",
+      "step": "review"
+    },
+    {
+      "harness_id": "harness-b",
+      "run_id": "b-v2",
+      "step": "delivery"
+    },
+    {
+      "harness_id": "harness-b",
+      "run_id": "b-v2",
+      "step": "join"
+    },
+    {
+      "harness_id": "harness-b",
+      "run_id": "b-v2",
+      "step": "research_a"
+    },
+    {
+      "harness_id": "harness-b",
+      "run_id": "b-v2",
+      "step": "research_b"
+    },
+    {
+      "harness_id": "harness-b",
+      "run_id": "b-v2",
+      "step": "review"
+    },
+    {
+      "harness_id": "harness-b",
+      "run_id": "b-v2",
+      "step": "verify"
+    },
+    {
+      "harness_id": "probe",
+      "run_id": "schema",
+      "step": "init"
+    }
+  ],
+  "paused_processes": [
+    {
+      "pid": 4687,
+      "ppid": 4686,
+      "pgid": 4687,
+      "rss_kib": 101072,
+      "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/round-two/hatchet/.venv/bin/python3"
+    },
+    {
+      "pid": 4688,
+      "ppid": 4687,
+      "pgid": 4687,
+      "rss_kib": 81408,
+      "command": "/Users/tomdaniel/.hatchet/embedded/v0.107.0/hatchet-embedded-sidecar_darwin_arm64"
+    },
+    {
+      "pid": 4701,
+      "ppid": 1,
+      "pgid": 4701,
+      "rss_kib": 26688,
+      "command": "/private/var/folders/x5/cz0z1rpn17v_y33px31rqw5r0000gn/T/exomachina-hatchet-r2-_eebcgh5/postgres/runtime/bin/postgres"
+    },
+    {
+      "pid": 4702,
+      "ppid": 4701,
+      "pgid": 4702,
+      "rss_kib": 13728,
+      "command": "postgres: io worker 0"
+    },
+    {
+      "pid": 4703,
+      "ppid": 4701,
+      "pgid": 4703,
+      "rss_kib": 3904,
+      "command": "postgres: io worker 1"
+    },
+    {
+      "pid": 4704,
+      "ppid": 4701,
+      "pgid": 4704,
+      "rss_kib": 3712,
+      "command": "postgres: io worker 2"
+    },
+    {
+      "pid": 4705,
+      "ppid": 4701,
+      "pgid": 4705,
+      "rss_kib": 3280,
+      "command": "postgres: checkpointer "
+    },
+    {
+      "pid": 4706,
+      "ppid": 4701,
+      "pgid": 4706,
+      "rss_kib": 4320,
+      "command": "postgres: background writer "
+    },
+    {
+      "pid": 4708,
+      "ppid": 4701,
+      "pgid": 4708,
+      "rss_kib": 7568,
+      "command": "postgres: walwriter "
+    },
+    {
+      "pid": 4709,
+      "ppid": 4701,
+      "pgid": 4709,
+      "rss_kib": 5072,
+      "command": "postgres: autovacuum launcher "
+    },
+    {
+      "pid": 4710,
+      "ppid": 4701,
+      "pgid": 4710,
+      "rss_kib": 4784,
+      "command": "postgres: logical replication launcher "
+    },
+    {
+      "pid": 4721,
+      "ppid": 4701,
+      "pgid": 4721,
+      "rss_kib": 17440,
+      "command": "postgres: postgres hatchet ::1(58483) idle"
+    },
+    {
+      "pid": 4722,
+      "ppid": 4701,
+      "pgid": 4722,
+      "rss_kib": 11856,
+      "command": "postgres: postgres hatchet ::1(58482) idle"
+    },
+    {
+      "pid": 4724,
+      "ppid": 4701,
+      "pgid": 4724,
+      "rss_kib": 14272,
+      "command": "postgres: postgres hatchet ::1(58485) idle"
+    },
+    {
+      "pid": 4725,
+      "ppid": 4701,
+      "pgid": 4725,
+      "rss_kib": 11840,
+      "command": "postgres: postgres hatchet ::1(58486) idle"
+    },
+    {
+      "pid": 4726,
+      "ppid": 4701,
+      "pgid": 4726,
+      "rss_kib": 15008,
+      "command": "postgres: postgres hatchet ::1(58487) idle"
+    },
+    {
+      "pid": 4729,
+      "ppid": 4701,
+      "pgid": 4729,
+      "rss_kib": 17440,
+      "command": "postgres: postgres hatchet ::1(58491) idle"
+    },
+    {
+      "pid": 4730,
+      "ppid": 4701,
+      "pgid": 4730,
+      "rss_kib": 26192,
+      "command": "postgres: postgres hatchet ::1(58492) idle"
+    },
+    {
+      "pid": 4731,
+      "ppid": 4701,
+      "pgid": 4731,
+      "rss_kib": 34208,
+      "command": "postgres: postgres hatchet ::1(58493) idle"
+    },
+    {
+      "pid": 4732,
+      "ppid": 4701,
+      "pgid": 4732,
+      "rss_kib": 11824,
+      "command": "postgres: postgres hatchet ::1(58494) idle"
+    },
+    {
+      "pid": 4733,
+      "ppid": 4687,
+      "pgid": 4687,
+      "rss_kib": 21248,
+      "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/round-two/hatchet/.venv/bin/python3"
+    },
+    {
+      "pid": 4734,
+      "ppid": 4701,
+      "pgid": 4734,
+      "rss_kib": 38944,
+      "command": "postgres: postgres hatchet ::1(58499) idle"
+    },
+    {
+      "pid": 4735,
+      "ppid": 4701,
+      "pgid": 4735,
+      "rss_kib": 15088,
+      "command": "postgres: postgres hatchet ::1(58500) idle"
+    },
+    {
+      "pid": 4736,
+      "ppid": 4687,
+      "pgid": 4687,
+      "rss_kib": 97040,
+      "command": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/round-two/hatchet/.venv/bin/python3"
+    },
+    {
+      "pid": 4737,
+      "ppid": 4701,
+      "pgid": 4737,
+      "rss_kib": 36592,
+      "command": "postgres: postgres hatchet ::1(58503) idle"
+    },
+    {
+      "pid": 4738,
+      "ppid": 4701,
+      "pgid": 4738,
+      "rss_kib": 29232,
+      "command": "postgres: postgres hatchet ::1(58504) idle"
+    },
+    {
+      "pid": 4739,
+      "ppid": 4701,
+      "pgid": 4739,
+      "rss_kib": 37712,
+      "command": "postgres: postgres hatchet ::1(58505) idle"
+    },
+    {
+      "pid": 4740,
+      "ppid": 4701,
+      "pgid": 4740,
+      "rss_kib": 26128,
+      "command": "postgres: postgres hatchet ::1(58509) idle"
+    },
+    {
+      "pid": 4741,
+      "ppid": 4701,
+      "pgid": 4741,
+      "rss_kib": 37248,
+      "command": "postgres: postgres hatchet ::1(58508) idle"
+    },
+    {
+      "pid": 4742,
+      "ppid": 4701,
+      "pgid": 4742,
+      "rss_kib": 37824,
+      "command": "postgres: postgres hatchet ::1(58512) idle"
+    },
+    {
+      "pid": 4743,
+      "ppid": 4701,
+      "pgid": 4743,
+      "rss_kib": 30336,
+      "command": "postgres: postgres hatchet ::1(58511) idle"
+    },
+    {
+      "pid": 4744,
+      "ppid": 4701,
+      "pgid": 4744,
+      "rss_kib": 37616,
+      "command": "postgres: postgres hatchet ::1(58510) idle"
+    },
+    {
+      "pid": 4745,
+      "ppid": 4701,
+      "pgid": 4745,
+      "rss_kib": 31088,
+      "command": "postgres: postgres hatchet ::1(58513) idle"
+    },
+    {
+      "pid": 4746,
+      "ppid": 4701,
+      "pgid": 4746,
+      "rss_kib": 31056,
+      "command": "postgres: postgres hatchet ::1(58514) idle"
+    }
+  ],
+  "paused_total_rss_kib": 922768
+}

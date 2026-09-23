@@ -1,0 +1,26 @@
+{
+  "document": {
+    "dsl": "1.0.0",
+    "taskQueue": "exomachina-countertrial",
+    "workflowType": "countertrial-slow",
+    "version": "1.0.0"
+  },
+  "do": [
+    {
+      "hold": {
+        "call": "http",
+        "with": {
+          "method": "get",
+          "endpoint": "http://127.0.0.1:27310/hold"
+        }
+      }
+    },
+    {
+      "result": {
+        "set": {
+          "done": true
+        }
+      }
+    }
+  ]
+}

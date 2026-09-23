@@ -1,0 +1,260 @@
+{
+  "concurrent_decisions": [
+    {
+      "body": {
+        "approved": true,
+        "id": "harness-v1"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "approved": true,
+        "id": "harness-v1"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "approved": true,
+        "id": "harness-v2"
+      },
+      "status": 200
+    }
+  ],
+  "event_counts": {
+    "harness-v1:deliver": 1,
+    "harness-v1:director_wait": 1,
+    "harness-v1:join": 1,
+    "harness-v1:research_a": 1,
+    "harness-v1:research_b": 1,
+    "harness-v1:review": 1,
+    "harness-v2:deliver": 1,
+    "harness-v2:director_wait": 1,
+    "harness-v2:join": 1,
+    "harness-v2:research_a": 1,
+    "harness-v2:research_b": 1,
+    "harness-v2:review": 1,
+    "harness-v2:verify": 1
+  },
+  "events": [
+    {
+      "digest": "d0d9478cb1524df4f3dce974d087736a78bd11df2a98183e77a81dbed579102b",
+      "id": "harness-v1",
+      "node": "research_a",
+      "pid": 3618,
+      "ref": "capability-a@v1",
+      "value": "harness-v1:capability-a@v1"
+    },
+    {
+      "digest": "d0d9478cb1524df4f3dce974d087736a78bd11df2a98183e77a81dbed579102b",
+      "id": "harness-v1",
+      "node": "research_b",
+      "pid": 3618,
+      "ref": "capability-b@v1",
+      "value": "harness-v1:capability-b@v1"
+    },
+    {
+      "digest": "d0d9478cb1524df4f3dce974d087736a78bd11df2a98183e77a81dbed579102b",
+      "id": "harness-v1",
+      "node": "join",
+      "pid": 3618,
+      "value": "harness-v1:capability-a@v1|harness-v1:capability-b@v1"
+    },
+    {
+      "digest": "d0d9478cb1524df4f3dce974d087736a78bd11df2a98183e77a81dbed579102b",
+      "id": "harness-v1",
+      "node": "review",
+      "pid": 3618,
+      "value": "reviewed:harness-v1:capability-a@v1|harness-v1:capability-b@v1"
+    },
+    {
+      "digest": "d0d9478cb1524df4f3dce974d087736a78bd11df2a98183e77a81dbed579102b",
+      "id": "harness-v1",
+      "node": "director_wait",
+      "pid": 3618,
+      "value": "waiting"
+    },
+    {
+      "digest": "f3e72ee14e1efbb7804bc9eaae3d7bb52d5b5eac77b4b73945cfee20f9747e17",
+      "id": "harness-v2",
+      "node": "research_a",
+      "pid": 3618,
+      "ref": "capability-a@v2",
+      "value": "harness-v2:capability-a@v2"
+    },
+    {
+      "digest": "f3e72ee14e1efbb7804bc9eaae3d7bb52d5b5eac77b4b73945cfee20f9747e17",
+      "id": "harness-v2",
+      "node": "research_b",
+      "pid": 3618,
+      "ref": "capability-b@v2",
+      "value": "harness-v2:capability-b@v2"
+    },
+    {
+      "digest": "f3e72ee14e1efbb7804bc9eaae3d7bb52d5b5eac77b4b73945cfee20f9747e17",
+      "id": "harness-v2",
+      "node": "join",
+      "pid": 3618,
+      "value": "harness-v2:capability-a@v2|harness-v2:capability-b@v2"
+    },
+    {
+      "digest": "f3e72ee14e1efbb7804bc9eaae3d7bb52d5b5eac77b4b73945cfee20f9747e17",
+      "id": "harness-v2",
+      "node": "verify",
+      "pid": 3618,
+      "value": "verified:harness-v2:capability-a@v2|harness-v2:capability-b@v2"
+    },
+    {
+      "digest": "f3e72ee14e1efbb7804bc9eaae3d7bb52d5b5eac77b4b73945cfee20f9747e17",
+      "id": "harness-v2",
+      "node": "review",
+      "pid": 3618,
+      "value": "reviewed:harness-v2:capability-a@v2|harness-v2:capability-b@v2"
+    },
+    {
+      "digest": "f3e72ee14e1efbb7804bc9eaae3d7bb52d5b5eac77b4b73945cfee20f9747e17",
+      "id": "harness-v2",
+      "node": "director_wait",
+      "pid": 3618,
+      "value": "waiting"
+    },
+    {
+      "digest": "d0d9478cb1524df4f3dce974d087736a78bd11df2a98183e77a81dbed579102b",
+      "id": "harness-v1",
+      "node": "deliver",
+      "pid": 3621,
+      "value": "accepted:harness-v1:capability-a@v1|harness-v1:capability-b@v1"
+    },
+    {
+      "digest": "f3e72ee14e1efbb7804bc9eaae3d7bb52d5b5eac77b4b73945cfee20f9747e17",
+      "id": "harness-v2",
+      "node": "deliver",
+      "pid": 3621,
+      "value": "accepted:harness-v2:capability-a@v2|harness-v2:capability-b@v2"
+    }
+  ],
+  "initial_pid": 3618,
+  "installed_node_modules_kib": 85052,
+  "killed_exit_code": -9,
+  "killed_pid": 3618,
+  "node": "v26.0.0",
+  "owned_code_lines": {
+    "helper.mjs": 189,
+    "probe.py": 181
+  },
+  "package_lock_sha256": "9000394befc5974c7a491ec930d4af5667e9de69a2758e3fdcbada6810bca187",
+  "passed": true,
+  "paused_two_rss_kib": 197088,
+  "port": 57785,
+  "publish_v1": {
+    "body": {
+      "digest": "d0d9478cb1524df4f3dce974d087736a78bd11df2a98183e77a81dbed579102b",
+      "version": 1
+    },
+    "status": 200
+  },
+  "publish_v2": {
+    "body": {
+      "digest": "f3e72ee14e1efbb7804bc9eaae3d7bb52d5b5eac77b4b73945cfee20f9747e17",
+      "version": 2
+    },
+    "status": 200
+  },
+  "restart_pid": 3621,
+  "restart_rss_kib": 193776,
+  "result_v1": {
+    "exit": "Success",
+    "state": "Complete",
+    "value": {
+      "capabilities": {
+        "research_a": "capability-a@v1",
+        "research_b": "capability-b@v1"
+      },
+      "digest": "d0d9478cb1524df4f3dce974d087736a78bd11df2a98183e77a81dbed579102b",
+      "id": "harness-v1",
+      "steps": [
+        "research_a",
+        "research_b",
+        "join",
+        "review",
+        "director_wait",
+        "deliver"
+      ],
+      "version": 1
+    }
+  },
+  "result_v2": {
+    "exit": "Success",
+    "state": "Complete",
+    "value": {
+      "capabilities": {
+        "research_a": "capability-a@v2",
+        "research_b": "capability-b@v2"
+      },
+      "digest": "f3e72ee14e1efbb7804bc9eaae3d7bb52d5b5eac77b4b73945cfee20f9747e17",
+      "id": "harness-v2",
+      "steps": [
+        "research_a",
+        "research_b",
+        "join",
+        "verify",
+        "review",
+        "director_wait",
+        "deliver"
+      ],
+      "version": 2
+    }
+  },
+  "review_bypass": {
+    "body": {
+      "error": "unsupported steps or review bypass"
+    },
+    "status": 400
+  },
+  "runtime_root": "/var/folders/x5/cz0z1rpn17v_y33px31rqw5r0000gn/T/exomachina-round2-effect-qgteu0zh",
+  "runtime_state_kib": 1140,
+  "same_helper_at_v2_publish": true,
+  "sqlite_files_bytes_live": {
+    "state.sqlite": 4096,
+    "state.sqlite-shm": 32768,
+    "state.sqlite-wal": 1104192
+  },
+  "start_v1": {
+    "body": {
+      "digest": "d0d9478cb1524df4f3dce974d087736a78bd11df2a98183e77a81dbed579102b",
+      "executionId": "b008321bc43725fa480c9ef84a2a0b8a",
+      "id": "harness-v1",
+      "started": true
+    },
+    "status": 200
+  },
+  "start_v2": {
+    "body": {
+      "digest": "f3e72ee14e1efbb7804bc9eaae3d7bb52d5b5eac77b4b73945cfee20f9747e17",
+      "executionId": "7fea977924bce7de4991b259b065b9cc",
+      "id": "harness-v2",
+      "started": true
+    },
+    "status": 200
+  },
+  "wait_v1": {
+    "state": "Suspended"
+  },
+  "wait_v2": {
+    "state": "Suspended"
+  },
+  "warm_rss_kib": 194208,
+  "wrong_binding_decision": {
+    "body": {
+      "error": "run digest mismatch"
+    },
+    "status": 409
+  },
+  "wrong_binding_start": {
+    "body": {
+      "error": "run already bound to another definition"
+    },
+    "status": 409
+  }
+}

@@ -1,0 +1,652 @@
+{
+  "state_dir": "/tmp/exo-zig-reassess-oh_lrlxa",
+  "topology": "Temporal 1.32.0 + PostgreSQL 16.15 + Zigflow 0.15.2; prepared host",
+  "trial_security": "loopback trust/no-auth only",
+  "samples": [
+    {
+      "label": "one waiting version",
+      "groups": {
+        "postgres": {
+          "pids": [
+            68435,
+            68436,
+            68437,
+            68439,
+            68440,
+            68441,
+            68476,
+            68477,
+            68478,
+            68479,
+            68480,
+            68481,
+            68482,
+            68483,
+            68485,
+            68486,
+            68487,
+            68488,
+            68489,
+            68490,
+            68491,
+            68492,
+            68493,
+            68494,
+            68495,
+            68496,
+            68497,
+            68498,
+            68499,
+            68501,
+            68504,
+            68505,
+            68506,
+            68507,
+            68508,
+            68509,
+            68510,
+            68511,
+            68512,
+            68513,
+            68514,
+            68515,
+            68516,
+            68517,
+            68518,
+            68519,
+            68520,
+            68521,
+            68526
+          ],
+          "rss_kib": 554352
+        },
+        "temporal": {
+          "pids": [
+            68472
+          ],
+          "rss_kib": 175056
+        },
+        "zigflow-v1": {
+          "pids": [
+            68524
+          ],
+          "rss_kib": 63328
+        },
+        "a2a-agent-excluded": {
+          "pids": [
+            68503
+          ],
+          "rss_kib": 117200
+        }
+      },
+      "engine_process_count": 51,
+      "engine_summed_rss_kib": 792736,
+      "engine_macos_group_footprint_bytes": 317523584
+    },
+    {
+      "label": "two waiting versions",
+      "groups": {
+        "postgres": {
+          "pids": [
+            68435,
+            68436,
+            68437,
+            68439,
+            68440,
+            68441,
+            68476,
+            68477,
+            68478,
+            68479,
+            68480,
+            68481,
+            68482,
+            68483,
+            68485,
+            68486,
+            68487,
+            68488,
+            68489,
+            68490,
+            68491,
+            68492,
+            68493,
+            68494,
+            68495,
+            68496,
+            68497,
+            68498,
+            68499,
+            68501,
+            68504,
+            68505,
+            68506,
+            68507,
+            68508,
+            68509,
+            68510,
+            68511,
+            68512,
+            68513,
+            68514,
+            68515,
+            68516,
+            68517,
+            68518,
+            68519,
+            68520,
+            68521,
+            68526
+          ],
+          "rss_kib": 563568
+        },
+        "temporal": {
+          "pids": [
+            68472
+          ],
+          "rss_kib": 201264
+        },
+        "zigflow-v1": {
+          "pids": [
+            68524
+          ],
+          "rss_kib": 63328
+        },
+        "zigflow-v2": {
+          "pids": [
+            68540
+          ],
+          "rss_kib": 62384
+        },
+        "a2a-agent-excluded": {
+          "pids": [
+            68503
+          ],
+          "rss_kib": 117200
+        }
+      },
+      "engine_process_count": 52,
+      "engine_summed_rss_kib": 890544,
+      "engine_macos_group_footprint_bytes": 377129392
+    },
+    {
+      "label": "three waiting versions",
+      "groups": {
+        "postgres": {
+          "pids": [
+            68435,
+            68436,
+            68437,
+            68439,
+            68440,
+            68441,
+            68476,
+            68477,
+            68478,
+            68479,
+            68480,
+            68481,
+            68482,
+            68483,
+            68485,
+            68486,
+            68487,
+            68488,
+            68489,
+            68490,
+            68491,
+            68492,
+            68493,
+            68494,
+            68495,
+            68496,
+            68497,
+            68498,
+            68499,
+            68501,
+            68504,
+            68505,
+            68506,
+            68507,
+            68508,
+            68509,
+            68510,
+            68511,
+            68512,
+            68513,
+            68514,
+            68515,
+            68516,
+            68517,
+            68518,
+            68519,
+            68520,
+            68521,
+            68526
+          ],
+          "rss_kib": 571776
+        },
+        "temporal": {
+          "pids": [
+            68472
+          ],
+          "rss_kib": 212736
+        },
+        "zigflow-v1": {
+          "pids": [
+            68524
+          ],
+          "rss_kib": 63328
+        },
+        "zigflow-v2": {
+          "pids": [
+            68540
+          ],
+          "rss_kib": 62384
+        },
+        "zigflow-v3": {
+          "pids": [
+            68590
+          ],
+          "rss_kib": 61872
+        },
+        "a2a-agent-excluded": {
+          "pids": [
+            68503
+          ],
+          "rss_kib": 117200
+        }
+      },
+      "engine_process_count": 53,
+      "engine_summed_rss_kib": 972096,
+      "engine_macos_group_footprint_bytes": 424873136
+    },
+    {
+      "label": "old worker replaced; three waiting versions",
+      "groups": {
+        "postgres": {
+          "pids": [
+            68435,
+            68436,
+            68437,
+            68439,
+            68440,
+            68441,
+            68476,
+            68477,
+            68478,
+            68479,
+            68480,
+            68481,
+            68482,
+            68483,
+            68485,
+            68486,
+            68487,
+            68488,
+            68489,
+            68490,
+            68491,
+            68492,
+            68493,
+            68494,
+            68495,
+            68496,
+            68497,
+            68498,
+            68499,
+            68501,
+            68504,
+            68505,
+            68506,
+            68507,
+            68508,
+            68509,
+            68510,
+            68511,
+            68512,
+            68513,
+            68514,
+            68515,
+            68516,
+            68517,
+            68518,
+            68519,
+            68520,
+            68521,
+            68526
+          ],
+          "rss_kib": 571968
+        },
+        "temporal": {
+          "pids": [
+            68472
+          ],
+          "rss_kib": 215088
+        },
+        "zigflow-v2": {
+          "pids": [
+            68540
+          ],
+          "rss_kib": 62384
+        },
+        "zigflow-v3": {
+          "pids": [
+            68590
+          ],
+          "rss_kib": 61872
+        },
+        "zigflow-v1": {
+          "pids": [
+            68688
+          ],
+          "rss_kib": 58144
+        },
+        "a2a-agent-excluded": {
+          "pids": [
+            68503
+          ],
+          "rss_kib": 117200
+        }
+      },
+      "engine_process_count": 53,
+      "engine_summed_rss_kib": 969456,
+      "engine_macos_group_footprint_bytes": 422186160
+    }
+  ],
+  "publications": [
+    {
+      "revision": 1,
+      "digest": "919064436294e9d698e515fb50e8667d993f8b1ccab5c9be81cd2bcf97bdae3b",
+      "build_id": "factory-v1-919064436294",
+      "pid": 68524,
+      "validation": {
+        "valid": true,
+        "file": "/tmp/exo-zig-reassess-oh_lrlxa/bundles/919064436294e9d698e515fb50e8667d993f8b1ccab5c9be81cd2bcf97bdae3b/factory.json"
+      },
+      "health": {
+        "healthy": true,
+        "temporalOk": true,
+        "taskQueues": [
+          {
+            "taskQueue": "exo-zigflow-reassessment",
+            "healthy": true,
+            "checks": [
+              {
+                "type": "workflow",
+                "healthy": true
+              },
+              {
+                "type": "activity",
+                "healthy": true
+              }
+            ]
+          }
+        ]
+      },
+      "activation_probes": [
+        {
+          "workflow_id": "zig-reassess-v1-canary-1",
+          "pinned_version": "exo-zigflow-reassessment.factory-v1-919064436294"
+        },
+        {
+          "workflow_id": "zig-reassess-v1-canary-2",
+          "pinned_version": "exo-zigflow-reassessment.factory-v1-919064436294"
+        }
+      ],
+      "routing": {
+        "name": "exo-zigflow-reassessment",
+        "createTime": "2026-09-23T13:45:39.740446Z",
+        "lastModifierIdentity": "temporal-cli:tomdaniel@MacBookPro.lan",
+        "routingConfig": {
+          "currentVersionDeploymentName": "exo-zigflow-reassessment",
+          "currentVersionBuildID": "factory-v1-919064436294",
+          "rampingVersionDeploymentName": "",
+          "rampingVersionBuildID": "",
+          "rampingVersionPercentage": 0,
+          "currentVersionChangedTime": "2026-09-23T13:45:39.803232Z",
+          "rampingVersionChangedTime": "0001-01-01T00:00:00Z",
+          "rampingVersionPercentageChangedTime": "0001-01-01T00:00:00Z"
+        },
+        "versionSummaries": [
+          {
+            "deploymentName": "exo-zigflow-reassessment",
+            "BuildID": "factory-v1-919064436294",
+            "drainageStatus": "unspecified",
+            "createTime": "2026-09-23T13:45:39.740446Z"
+          }
+        ],
+        "managerIdentity": ""
+      }
+    },
+    {
+      "revision": 2,
+      "digest": "12ce0476298e87d3b9c140360b2091201755b647deaf8b4ac44dfe7f293faeff",
+      "build_id": "factory-v2-12ce0476298e",
+      "pid": 68540,
+      "validation": {
+        "valid": true,
+        "file": "/tmp/exo-zig-reassess-oh_lrlxa/bundles/12ce0476298e87d3b9c140360b2091201755b647deaf8b4ac44dfe7f293faeff/factory.json"
+      },
+      "health": {
+        "healthy": true,
+        "temporalOk": true,
+        "taskQueues": [
+          {
+            "taskQueue": "exo-zigflow-reassessment",
+            "healthy": true,
+            "checks": [
+              {
+                "type": "workflow",
+                "healthy": true
+              },
+              {
+                "type": "activity",
+                "healthy": true
+              }
+            ]
+          }
+        ]
+      },
+      "activation_probes": [
+        {
+          "workflow_id": "zig-reassess-v2-canary-1",
+          "pinned_version": "exo-zigflow-reassessment.factory-v2-12ce0476298e"
+        },
+        {
+          "workflow_id": "zig-reassess-v2-canary-2",
+          "pinned_version": "exo-zigflow-reassessment.factory-v2-12ce0476298e"
+        }
+      ],
+      "routing": {
+        "name": "exo-zigflow-reassessment",
+        "createTime": "2026-09-23T13:45:39.740446Z",
+        "lastModifierIdentity": "temporal-cli:tomdaniel@MacBookPro.lan",
+        "routingConfig": {
+          "currentVersionDeploymentName": "exo-zigflow-reassessment",
+          "currentVersionBuildID": "factory-v2-12ce0476298e",
+          "rampingVersionDeploymentName": "",
+          "rampingVersionBuildID": "",
+          "rampingVersionPercentage": 0,
+          "currentVersionChangedTime": "2026-09-23T13:45:42.564727Z",
+          "rampingVersionChangedTime": "0001-01-01T00:00:00Z",
+          "rampingVersionPercentageChangedTime": "0001-01-01T00:00:00Z"
+        },
+        "versionSummaries": [
+          {
+            "deploymentName": "exo-zigflow-reassessment",
+            "BuildID": "factory-v2-12ce0476298e",
+            "drainageStatus": "unspecified",
+            "createTime": "2026-09-23T13:45:41.504435Z"
+          },
+          {
+            "deploymentName": "exo-zigflow-reassessment",
+            "BuildID": "factory-v1-919064436294",
+            "drainageStatus": "draining",
+            "createTime": "2026-09-23T13:45:39.740446Z"
+          }
+        ],
+        "managerIdentity": ""
+      }
+    },
+    {
+      "revision": 3,
+      "digest": "9efe172a16f0aa78574115ae6338c44dfca91bd4234f0cb552ea5b94d4ac669d",
+      "build_id": "factory-v3-9efe172a16f0",
+      "pid": 68590,
+      "validation": {
+        "valid": true,
+        "file": "/tmp/exo-zig-reassess-oh_lrlxa/bundles/9efe172a16f0aa78574115ae6338c44dfca91bd4234f0cb552ea5b94d4ac669d/factory.json"
+      },
+      "health": {
+        "healthy": true,
+        "temporalOk": true,
+        "taskQueues": [
+          {
+            "taskQueue": "exo-zigflow-reassessment",
+            "healthy": true,
+            "checks": [
+              {
+                "type": "workflow",
+                "healthy": true
+              },
+              {
+                "type": "activity",
+                "healthy": true
+              }
+            ]
+          }
+        ]
+      },
+      "activation_probes": [
+        {
+          "workflow_id": "zig-reassess-v3-canary-1",
+          "pinned_version": "exo-zigflow-reassessment.factory-v3-9efe172a16f0"
+        },
+        {
+          "workflow_id": "zig-reassess-v3-canary-2",
+          "pinned_version": "exo-zigflow-reassessment.factory-v3-9efe172a16f0"
+        }
+      ],
+      "routing": {
+        "name": "exo-zigflow-reassessment",
+        "createTime": "2026-09-23T13:45:39.740446Z",
+        "lastModifierIdentity": "temporal-cli:tomdaniel@MacBookPro.lan",
+        "routingConfig": {
+          "currentVersionDeploymentName": "exo-zigflow-reassessment",
+          "currentVersionBuildID": "factory-v3-9efe172a16f0",
+          "rampingVersionDeploymentName": "",
+          "rampingVersionBuildID": "",
+          "rampingVersionPercentage": 0,
+          "currentVersionChangedTime": "2026-09-23T13:45:45.572133Z",
+          "rampingVersionChangedTime": "0001-01-01T00:00:00Z",
+          "rampingVersionPercentageChangedTime": "0001-01-01T00:00:00Z"
+        },
+        "versionSummaries": [
+          {
+            "deploymentName": "exo-zigflow-reassessment",
+            "BuildID": "factory-v3-9efe172a16f0",
+            "drainageStatus": "unspecified",
+            "createTime": "2026-09-23T13:45:44.514781Z"
+          },
+          {
+            "deploymentName": "exo-zigflow-reassessment",
+            "BuildID": "factory-v2-12ce0476298e",
+            "drainageStatus": "draining",
+            "createTime": "2026-09-23T13:45:41.504435Z"
+          },
+          {
+            "deploymentName": "exo-zigflow-reassessment",
+            "BuildID": "factory-v1-919064436294",
+            "drainageStatus": "draining",
+            "createTime": "2026-09-23T13:45:39.740446Z"
+          }
+        ],
+        "managerIdentity": ""
+      }
+    }
+  ],
+  "runs": [
+    {
+      "workflow_id": "zig-reassess-v1",
+      "run_id": "01a0ce83-d32b-7c40-a20f-ce4a53191dbf",
+      "status_before_signal": "WORKFLOW_EXECUTION_STATUS_RUNNING",
+      "pinned_version": "exo-zigflow-reassessment.factory-v1-919064436294",
+      "result": {
+        "revision": "1.0.0"
+      },
+      "version_after": "exo-zigflow-reassessment.factory-v1-919064436294"
+    },
+    {
+      "workflow_id": "zig-reassess-v2",
+      "run_id": "01a0ce83-dec3-74be-af39-1b3e6ffa17ca",
+      "status_before_signal": "WORKFLOW_EXECUTION_STATUS_RUNNING",
+      "pinned_version": "exo-zigflow-reassessment.factory-v2-12ce0476298e",
+      "result": {
+        "path": "expanded",
+        "revision": "2.0.0"
+      },
+      "version_after": "exo-zigflow-reassessment.factory-v2-12ce0476298e"
+    },
+    {
+      "workflow_id": "zig-reassess-v3",
+      "run_id": "01a0ce83-ea7c-710d-8070-555fb93951ac",
+      "status_before_signal": "WORKFLOW_EXECUTION_STATUS_RUNNING",
+      "pinned_version": "exo-zigflow-reassessment.factory-v3-9efe172a16f0",
+      "result": {
+        "marker": "third-graph",
+        "path": "expanded",
+        "revision": "3.0.0"
+      },
+      "version_after": "exo-zigflow-reassessment.factory-v3-9efe172a16f0"
+    }
+  ],
+  "a2a_before": {
+    "identity": "d3535783-172c-4c6c-855b-3b540ba71c56",
+    "incarnation": 1,
+    "role": "capability",
+    "a2a_protocol": "0.3.0",
+    "pid": 68503
+  },
+  "a2a_before_call": {
+    "a2a_protocol": "0.3.0",
+    "action_id": "reassess:before",
+    "artifact": {
+      "author": "d3535783-172c-4c6c-855b-3b540ba71c56",
+      "content": "fixture-result:before",
+      "revision": "r2",
+      "sha256": "e0f49c18717dbca90e58971d0ca63f4be346f357ba1506878c3d572ed996e306"
+    },
+    "definition_digest": "fixture-before",
+    "harness_identity": "d3535783-172c-4c6c-855b-3b540ba71c56",
+    "harness_role": "capability",
+    "run_id": "reassess",
+    "task_id": "fea46af9-7ef2-4c05-a4a1-ba5182f020dc"
+  },
+  "old_worker_killed_while_waiting": true,
+  "old_worker_replacement_pid": 68688,
+  "a2a_after": {
+    "identity": "d3535783-172c-4c6c-855b-3b540ba71c56",
+    "incarnation": 1,
+    "role": "capability",
+    "a2a_protocol": "0.3.0",
+    "pid": 68503
+  },
+  "a2a_after_call": {
+    "a2a_protocol": "0.3.0",
+    "action_id": "reassess:after",
+    "artifact": {
+      "author": "d3535783-172c-4c6c-855b-3b540ba71c56",
+      "content": "fixture-result:after",
+      "revision": "r2",
+      "sha256": "53ecec67da8c0ac8d609828cba78233fbd0bfd184e80f971c499501b66eec541"
+    },
+    "definition_digest": "fixture-after",
+    "harness_identity": "d3535783-172c-4c6c-855b-3b540ba71c56",
+    "harness_role": "capability",
+    "run_id": "reassess",
+    "task_id": "defed103-0d09-42b9-a5e9-466144aa8db2"
+  },
+  "status": "passed",
+  "owned_ports_closed": true
+}

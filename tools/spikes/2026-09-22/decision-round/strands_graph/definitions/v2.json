@@ -1,0 +1,17 @@
+{
+  "factory": "verified-research-fixture",
+  "revision": 2,
+  "capabilities": {
+    "research_a": "a2a:capability@r2",
+    "research_b": "a2a:capability@r2",
+    "review": "a2a:quality@r2"
+  },
+  "nodes": ["research_a", "research_b", "join", "verify", "review", "deliver"],
+  "edges": [
+    {"from": "research_a", "to": "join", "condition": "both_research_complete"},
+    {"from": "research_b", "to": "join", "condition": "both_research_complete"},
+    {"from": "join", "to": "verify"},
+    {"from": "verify", "to": "review"},
+    {"from": "review", "to": "deliver"}
+  ]
+}

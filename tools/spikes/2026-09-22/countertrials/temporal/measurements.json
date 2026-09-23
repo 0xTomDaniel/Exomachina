@@ -1,0 +1,1793 @@
+{
+  "host": "macOS 26.5.2 arm64; other countertrials active concurrently",
+  "temporal": "v1.32.0 non-development temporal-server binary",
+  "postgres": "16.15 copied host-local bundle; no Docker",
+  "zigflow": "v0.15.2",
+  "caution": "Concurrent host activity prevents controlled whole-machine or exact cross-candidate ranking. RSS sums can double-count shared pages.",
+  "samples": [
+    {
+      "phase": "idle",
+      "timeUtc": "2026-09-22T23:33:54.922891+00:00",
+      "processCount": 48,
+      "rssSumKiB": 805088,
+      "macOSFootprintGroupBytes": 336773080,
+      "macOSFootprintMethod": "footprint --noCategories -f bytes with all listed PIDs; a separate kernel footprint metric, not RSS/PSS",
+      "processes": [
+        {
+          "pid": 88394,
+          "ppid": 1,
+          "rssKiB": 23616,
+          "cpuPercentSample": 0.0,
+          "name": "/private/tmp/exomachina-countertrials/temporal/runtime/pg/bin/postgres"
+        },
+        {
+          "pid": 88395,
+          "ppid": 88394,
+          "rssKiB": 3072,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: checkpointer"
+        },
+        {
+          "pid": 88397,
+          "ppid": 88394,
+          "rssKiB": 4656,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: background writer"
+        },
+        {
+          "pid": 88401,
+          "ppid": 88394,
+          "rssKiB": 7264,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: walwriter"
+        },
+        {
+          "pid": 88402,
+          "ppid": 88394,
+          "rssKiB": 4736,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: autovacuum launcher"
+        },
+        {
+          "pid": 88403,
+          "ppid": 88394,
+          "rssKiB": 4432,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: logical replication launcher"
+        },
+        {
+          "pid": 88599,
+          "ppid": 17670,
+          "rssKiB": 203408,
+          "cpuPercentSample": 0.4,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/temporal-server"
+        },
+        {
+          "pid": 88610,
+          "ppid": 88394,
+          "rssKiB": 14272,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57139) idle"
+        },
+        {
+          "pid": 88611,
+          "ppid": 88394,
+          "rssKiB": 16192,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57140) idle"
+        },
+        {
+          "pid": 88612,
+          "ppid": 88394,
+          "rssKiB": 13104,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57141) idle"
+        },
+        {
+          "pid": 88613,
+          "ppid": 88394,
+          "rssKiB": 14608,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57142) idle"
+        },
+        {
+          "pid": 88614,
+          "ppid": 88394,
+          "rssKiB": 12144,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57143) idle"
+        },
+        {
+          "pid": 88615,
+          "ppid": 88394,
+          "rssKiB": 14976,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57144) idle"
+        },
+        {
+          "pid": 88616,
+          "ppid": 88394,
+          "rssKiB": 11776,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57145) idle"
+        },
+        {
+          "pid": 88617,
+          "ppid": 88394,
+          "rssKiB": 7568,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57146) idle"
+        },
+        {
+          "pid": 88619,
+          "ppid": 88394,
+          "rssKiB": 12592,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57148) idle"
+        },
+        {
+          "pid": 88620,
+          "ppid": 88394,
+          "rssKiB": 11312,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57149) idle"
+        },
+        {
+          "pid": 88621,
+          "ppid": 88394,
+          "rssKiB": 11072,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57150) idle"
+        },
+        {
+          "pid": 88622,
+          "ppid": 88394,
+          "rssKiB": 11040,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57153) idle"
+        },
+        {
+          "pid": 88623,
+          "ppid": 88394,
+          "rssKiB": 13200,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57152) idle"
+        },
+        {
+          "pid": 88624,
+          "ppid": 88394,
+          "rssKiB": 11040,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57154) idle"
+        },
+        {
+          "pid": 88625,
+          "ppid": 88394,
+          "rssKiB": 11728,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57155) idle"
+        },
+        {
+          "pid": 88626,
+          "ppid": 88394,
+          "rssKiB": 10416,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57163) idle"
+        },
+        {
+          "pid": 88627,
+          "ppid": 88394,
+          "rssKiB": 11216,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57162) idle"
+        },
+        {
+          "pid": 88628,
+          "ppid": 88394,
+          "rssKiB": 10576,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57164) idle"
+        },
+        {
+          "pid": 88629,
+          "ppid": 88394,
+          "rssKiB": 13568,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57167) idle"
+        },
+        {
+          "pid": 88630,
+          "ppid": 88394,
+          "rssKiB": 14576,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57168) idle"
+        },
+        {
+          "pid": 88631,
+          "ppid": 88394,
+          "rssKiB": 16656,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57169) idle"
+        },
+        {
+          "pid": 88632,
+          "ppid": 88394,
+          "rssKiB": 12640,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57172) idle"
+        },
+        {
+          "pid": 88633,
+          "ppid": 88394,
+          "rssKiB": 12048,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57173) idle"
+        },
+        {
+          "pid": 88634,
+          "ppid": 88394,
+          "rssKiB": 11920,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57174) idle"
+        },
+        {
+          "pid": 88635,
+          "ppid": 88394,
+          "rssKiB": 12800,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57175) idle"
+        },
+        {
+          "pid": 88636,
+          "ppid": 88394,
+          "rssKiB": 12080,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57176) idle"
+        },
+        {
+          "pid": 88637,
+          "ppid": 88394,
+          "rssKiB": 13104,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57177) idle"
+        },
+        {
+          "pid": 88638,
+          "ppid": 88394,
+          "rssKiB": 12192,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57178) idle"
+        },
+        {
+          "pid": 88639,
+          "ppid": 88394,
+          "rssKiB": 12784,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57179) idle"
+        },
+        {
+          "pid": 88640,
+          "ppid": 88394,
+          "rssKiB": 11712,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57180) idle"
+        },
+        {
+          "pid": 88641,
+          "ppid": 88394,
+          "rssKiB": 11312,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57181) idle"
+        },
+        {
+          "pid": 88642,
+          "ppid": 88394,
+          "rssKiB": 11584,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57182) idle"
+        },
+        {
+          "pid": 88643,
+          "ppid": 88394,
+          "rssKiB": 11504,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57183) idle"
+        },
+        {
+          "pid": 88644,
+          "ppid": 88394,
+          "rssKiB": 11616,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57184) idle"
+        },
+        {
+          "pid": 88645,
+          "ppid": 88394,
+          "rssKiB": 11408,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57185) idle"
+        },
+        {
+          "pid": 88646,
+          "ppid": 88394,
+          "rssKiB": 12320,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57186) idle"
+        },
+        {
+          "pid": 88647,
+          "ppid": 88394,
+          "rssKiB": 11312,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57187) idle"
+        },
+        {
+          "pid": 88648,
+          "ppid": 88394,
+          "rssKiB": 11680,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57188) idle"
+        },
+        {
+          "pid": 88649,
+          "ppid": 88394,
+          "rssKiB": 11280,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57189) idle"
+        },
+        {
+          "pid": 89096,
+          "ppid": 17670,
+          "rssKiB": 60528,
+          "cpuPercentSample": 0.0,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/zigflow"
+        },
+        {
+          "pid": 89105,
+          "ppid": 88394,
+          "rssKiB": 14448,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57218) idle"
+        }
+      ],
+      "diskKiB": {
+        "serverBinary": 140008,
+        "sqlTool": 38864,
+        "zigflowWorkerBinary": 77368,
+        "postgresBundle": 127984,
+        "postgresState": 76276,
+        "completeExtractedTemporalRelease": 523076
+      }
+    },
+    {
+      "phase": "paused-v1",
+      "timeUtc": "2026-09-22T23:34:19.196952+00:00",
+      "processCount": 48,
+      "rssSumKiB": 816480,
+      "macOSFootprintGroupBytes": 342933464,
+      "macOSFootprintMethod": "footprint --noCategories -f bytes with all listed PIDs; a separate kernel footprint metric, not RSS/PSS",
+      "processes": [
+        {
+          "pid": 88394,
+          "ppid": 1,
+          "rssKiB": 23616,
+          "cpuPercentSample": 0.0,
+          "name": "/private/tmp/exomachina-countertrials/temporal/runtime/pg/bin/postgres"
+        },
+        {
+          "pid": 88395,
+          "ppid": 88394,
+          "rssKiB": 3104,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: checkpointer"
+        },
+        {
+          "pid": 88397,
+          "ppid": 88394,
+          "rssKiB": 4704,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: background writer"
+        },
+        {
+          "pid": 88401,
+          "ppid": 88394,
+          "rssKiB": 7296,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: walwriter"
+        },
+        {
+          "pid": 88402,
+          "ppid": 88394,
+          "rssKiB": 4768,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: autovacuum launcher"
+        },
+        {
+          "pid": 88403,
+          "ppid": 88394,
+          "rssKiB": 4464,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: logical replication launcher"
+        },
+        {
+          "pid": 88599,
+          "ppid": 17670,
+          "rssKiB": 209296,
+          "cpuPercentSample": 0.3,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/temporal-server"
+        },
+        {
+          "pid": 88610,
+          "ppid": 88394,
+          "rssKiB": 14736,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57139) idle"
+        },
+        {
+          "pid": 88611,
+          "ppid": 88394,
+          "rssKiB": 16240,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57140) idle"
+        },
+        {
+          "pid": 88612,
+          "ppid": 88394,
+          "rssKiB": 13216,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57141) idle"
+        },
+        {
+          "pid": 88613,
+          "ppid": 88394,
+          "rssKiB": 14608,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57142) idle"
+        },
+        {
+          "pid": 88614,
+          "ppid": 88394,
+          "rssKiB": 12192,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57143) idle"
+        },
+        {
+          "pid": 88615,
+          "ppid": 88394,
+          "rssKiB": 14976,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57144) idle"
+        },
+        {
+          "pid": 88616,
+          "ppid": 88394,
+          "rssKiB": 11808,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57145) idle"
+        },
+        {
+          "pid": 88617,
+          "ppid": 88394,
+          "rssKiB": 7600,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57146) idle"
+        },
+        {
+          "pid": 88619,
+          "ppid": 88394,
+          "rssKiB": 12656,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57148) idle"
+        },
+        {
+          "pid": 88620,
+          "ppid": 88394,
+          "rssKiB": 11344,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57149) idle"
+        },
+        {
+          "pid": 88621,
+          "ppid": 88394,
+          "rssKiB": 11104,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57150) idle"
+        },
+        {
+          "pid": 88622,
+          "ppid": 88394,
+          "rssKiB": 11072,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57153) idle"
+        },
+        {
+          "pid": 88623,
+          "ppid": 88394,
+          "rssKiB": 13232,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57152) idle"
+        },
+        {
+          "pid": 88624,
+          "ppid": 88394,
+          "rssKiB": 11072,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57154) idle"
+        },
+        {
+          "pid": 88625,
+          "ppid": 88394,
+          "rssKiB": 11792,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57155) idle"
+        },
+        {
+          "pid": 88626,
+          "ppid": 88394,
+          "rssKiB": 10448,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57163) idle"
+        },
+        {
+          "pid": 88627,
+          "ppid": 88394,
+          "rssKiB": 11248,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57162) idle"
+        },
+        {
+          "pid": 88628,
+          "ppid": 88394,
+          "rssKiB": 10608,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57164) idle"
+        },
+        {
+          "pid": 88629,
+          "ppid": 88394,
+          "rssKiB": 13600,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57167) idle"
+        },
+        {
+          "pid": 88630,
+          "ppid": 88394,
+          "rssKiB": 14784,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57168) idle"
+        },
+        {
+          "pid": 88631,
+          "ppid": 88394,
+          "rssKiB": 16656,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57169) idle"
+        },
+        {
+          "pid": 88632,
+          "ppid": 88394,
+          "rssKiB": 12800,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57172) idle"
+        },
+        {
+          "pid": 88633,
+          "ppid": 88394,
+          "rssKiB": 12736,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57173) idle"
+        },
+        {
+          "pid": 88634,
+          "ppid": 88394,
+          "rssKiB": 11968,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57174) idle"
+        },
+        {
+          "pid": 88635,
+          "ppid": 88394,
+          "rssKiB": 12864,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57175) idle"
+        },
+        {
+          "pid": 88636,
+          "ppid": 88394,
+          "rssKiB": 12144,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57176) idle"
+        },
+        {
+          "pid": 88637,
+          "ppid": 88394,
+          "rssKiB": 13168,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57177) idle"
+        },
+        {
+          "pid": 88638,
+          "ppid": 88394,
+          "rssKiB": 12272,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57178) idle"
+        },
+        {
+          "pid": 88639,
+          "ppid": 88394,
+          "rssKiB": 12832,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57179) idle"
+        },
+        {
+          "pid": 88640,
+          "ppid": 88394,
+          "rssKiB": 11840,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57180) idle"
+        },
+        {
+          "pid": 88641,
+          "ppid": 88394,
+          "rssKiB": 11472,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57181) idle"
+        },
+        {
+          "pid": 88642,
+          "ppid": 88394,
+          "rssKiB": 11696,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57182) idle"
+        },
+        {
+          "pid": 88643,
+          "ppid": 88394,
+          "rssKiB": 11696,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57183) idle"
+        },
+        {
+          "pid": 88644,
+          "ppid": 88394,
+          "rssKiB": 11760,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57184) idle"
+        },
+        {
+          "pid": 88645,
+          "ppid": 88394,
+          "rssKiB": 11552,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57185) idle"
+        },
+        {
+          "pid": 88646,
+          "ppid": 88394,
+          "rssKiB": 12384,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57186) idle"
+        },
+        {
+          "pid": 88647,
+          "ppid": 88394,
+          "rssKiB": 11488,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57187) idle"
+        },
+        {
+          "pid": 88648,
+          "ppid": 88394,
+          "rssKiB": 11840,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57188) idle"
+        },
+        {
+          "pid": 88649,
+          "ppid": 88394,
+          "rssKiB": 11440,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57189) idle"
+        },
+        {
+          "pid": 89096,
+          "ppid": 17670,
+          "rssKiB": 61840,
+          "cpuPercentSample": 0.0,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/zigflow"
+        },
+        {
+          "pid": 89105,
+          "ppid": 88394,
+          "rssKiB": 14448,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57218) idle"
+        }
+      ],
+      "diskKiB": {
+        "serverBinary": 140008,
+        "sqlTool": 38864,
+        "zigflowWorkerBinary": 77368,
+        "postgresBundle": 127984,
+        "postgresState": 76452,
+        "completeExtractedTemporalRelease": 523076
+      }
+    },
+    {
+      "phase": "two-pinned-workers-paused",
+      "timeUtc": "2026-09-22T23:35:01.373717+00:00",
+      "processCount": 49,
+      "rssSumKiB": 892368,
+      "macOSFootprintGroupBytes": 381043416,
+      "macOSFootprintMethod": "footprint --noCategories -f bytes with all listed PIDs; a separate kernel footprint metric, not RSS/PSS",
+      "processes": [
+        {
+          "pid": 88394,
+          "ppid": 1,
+          "rssKiB": 23616,
+          "cpuPercentSample": 0.0,
+          "name": "/private/tmp/exomachina-countertrials/temporal/runtime/pg/bin/postgres"
+        },
+        {
+          "pid": 88395,
+          "ppid": 88394,
+          "rssKiB": 3104,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: checkpointer"
+        },
+        {
+          "pid": 88397,
+          "ppid": 88394,
+          "rssKiB": 4784,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: background writer"
+        },
+        {
+          "pid": 88401,
+          "ppid": 88394,
+          "rssKiB": 7296,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: walwriter"
+        },
+        {
+          "pid": 88402,
+          "ppid": 88394,
+          "rssKiB": 4768,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: autovacuum launcher"
+        },
+        {
+          "pid": 88403,
+          "ppid": 88394,
+          "rssKiB": 4464,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: logical replication launcher"
+        },
+        {
+          "pid": 88599,
+          "ppid": 17670,
+          "rssKiB": 212256,
+          "cpuPercentSample": 2.6,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/temporal-server"
+        },
+        {
+          "pid": 88610,
+          "ppid": 88394,
+          "rssKiB": 15424,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57139) idle"
+        },
+        {
+          "pid": 88611,
+          "ppid": 88394,
+          "rssKiB": 17216,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57140) idle"
+        },
+        {
+          "pid": 88612,
+          "ppid": 88394,
+          "rssKiB": 13280,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57141) idle"
+        },
+        {
+          "pid": 88613,
+          "ppid": 88394,
+          "rssKiB": 14608,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57142) idle"
+        },
+        {
+          "pid": 88614,
+          "ppid": 88394,
+          "rssKiB": 12288,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57143) idle"
+        },
+        {
+          "pid": 88615,
+          "ppid": 88394,
+          "rssKiB": 15024,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57144) idle"
+        },
+        {
+          "pid": 88616,
+          "ppid": 88394,
+          "rssKiB": 11808,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57145) idle"
+        },
+        {
+          "pid": 88617,
+          "ppid": 88394,
+          "rssKiB": 7600,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57146) idle"
+        },
+        {
+          "pid": 88619,
+          "ppid": 88394,
+          "rssKiB": 12656,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57148) idle"
+        },
+        {
+          "pid": 88620,
+          "ppid": 88394,
+          "rssKiB": 11344,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57149) idle"
+        },
+        {
+          "pid": 88621,
+          "ppid": 88394,
+          "rssKiB": 11104,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57150) idle"
+        },
+        {
+          "pid": 88622,
+          "ppid": 88394,
+          "rssKiB": 11072,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57153) idle"
+        },
+        {
+          "pid": 88623,
+          "ppid": 88394,
+          "rssKiB": 13232,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57152) idle"
+        },
+        {
+          "pid": 88624,
+          "ppid": 88394,
+          "rssKiB": 11072,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57154) idle"
+        },
+        {
+          "pid": 88625,
+          "ppid": 88394,
+          "rssKiB": 11872,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57155) idle"
+        },
+        {
+          "pid": 88626,
+          "ppid": 88394,
+          "rssKiB": 10448,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57163) idle"
+        },
+        {
+          "pid": 88627,
+          "ppid": 88394,
+          "rssKiB": 14880,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57162) idle"
+        },
+        {
+          "pid": 88628,
+          "ppid": 88394,
+          "rssKiB": 10608,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57164) idle"
+        },
+        {
+          "pid": 88629,
+          "ppid": 88394,
+          "rssKiB": 14640,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57167) idle"
+        },
+        {
+          "pid": 88630,
+          "ppid": 88394,
+          "rssKiB": 15152,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57168) idle"
+        },
+        {
+          "pid": 88631,
+          "ppid": 88394,
+          "rssKiB": 16656,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57169) idle"
+        },
+        {
+          "pid": 88632,
+          "ppid": 88394,
+          "rssKiB": 12800,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57172) idle"
+        },
+        {
+          "pid": 88633,
+          "ppid": 88394,
+          "rssKiB": 12848,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57173) idle"
+        },
+        {
+          "pid": 88634,
+          "ppid": 88394,
+          "rssKiB": 11968,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57174) idle"
+        },
+        {
+          "pid": 88635,
+          "ppid": 88394,
+          "rssKiB": 12864,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57175) idle"
+        },
+        {
+          "pid": 88636,
+          "ppid": 88394,
+          "rssKiB": 12144,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57176) idle"
+        },
+        {
+          "pid": 88637,
+          "ppid": 88394,
+          "rssKiB": 13168,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57177) idle"
+        },
+        {
+          "pid": 88638,
+          "ppid": 88394,
+          "rssKiB": 12272,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57178) idle"
+        },
+        {
+          "pid": 88639,
+          "ppid": 88394,
+          "rssKiB": 12832,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57179) idle"
+        },
+        {
+          "pid": 88640,
+          "ppid": 88394,
+          "rssKiB": 11840,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57180) idle"
+        },
+        {
+          "pid": 88641,
+          "ppid": 88394,
+          "rssKiB": 11616,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57181) idle"
+        },
+        {
+          "pid": 88642,
+          "ppid": 88394,
+          "rssKiB": 11808,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57182) idle"
+        },
+        {
+          "pid": 88643,
+          "ppid": 88394,
+          "rssKiB": 11696,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57183) idle"
+        },
+        {
+          "pid": 88644,
+          "ppid": 88394,
+          "rssKiB": 11760,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57184) idle"
+        },
+        {
+          "pid": 88645,
+          "ppid": 88394,
+          "rssKiB": 11552,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57185) idle"
+        },
+        {
+          "pid": 88646,
+          "ppid": 88394,
+          "rssKiB": 12976,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57186) idle"
+        },
+        {
+          "pid": 88647,
+          "ppid": 88394,
+          "rssKiB": 11600,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57187) idle"
+        },
+        {
+          "pid": 88648,
+          "ppid": 88394,
+          "rssKiB": 11840,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57188) idle"
+        },
+        {
+          "pid": 88649,
+          "ppid": 88394,
+          "rssKiB": 13280,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57189) idle"
+        },
+        {
+          "pid": 89096,
+          "ppid": 17670,
+          "rssKiB": 61840,
+          "cpuPercentSample": 0.0,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/zigflow"
+        },
+        {
+          "pid": 89105,
+          "ppid": 88394,
+          "rssKiB": 14448,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57218) idle"
+        },
+        {
+          "pid": 89382,
+          "ppid": 17670,
+          "rssKiB": 62944,
+          "cpuPercentSample": 0.0,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/zigflow"
+        }
+      ],
+      "diskKiB": {
+        "serverBinary": 140008,
+        "sqlTool": 38864,
+        "zigflowWorkerBinary": 77368,
+        "postgresBundle": 127984,
+        "postgresState": 76956,
+        "completeExtractedTemporalRelease": 523076
+      }
+    },
+    {
+      "phase": "six-overlapping-http-activities",
+      "timeUtc": "2026-09-22T23:35:18.021248+00:00",
+      "processCount": 49,
+      "rssSumKiB": 910336,
+      "macOSFootprintGroupBytes": 390890248,
+      "macOSFootprintMethod": "footprint --noCategories -f bytes with all listed PIDs; a separate kernel footprint metric, not RSS/PSS",
+      "processes": [
+        {
+          "pid": 88394,
+          "ppid": 1,
+          "rssKiB": 23616,
+          "cpuPercentSample": 0.0,
+          "name": "/private/tmp/exomachina-countertrials/temporal/runtime/pg/bin/postgres"
+        },
+        {
+          "pid": 88395,
+          "ppid": 88394,
+          "rssKiB": 5424,
+          "cpuPercentSample": 0.4,
+          "name": "postgres: checkpointer"
+        },
+        {
+          "pid": 88397,
+          "ppid": 88394,
+          "rssKiB": 4800,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: background writer"
+        },
+        {
+          "pid": 88401,
+          "ppid": 88394,
+          "rssKiB": 7296,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: walwriter"
+        },
+        {
+          "pid": 88402,
+          "ppid": 88394,
+          "rssKiB": 4768,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: autovacuum launcher"
+        },
+        {
+          "pid": 88403,
+          "ppid": 88394,
+          "rssKiB": 4464,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: logical replication launcher"
+        },
+        {
+          "pid": 88599,
+          "ppid": 17670,
+          "rssKiB": 218752,
+          "cpuPercentSample": 8.3,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/temporal-server"
+        },
+        {
+          "pid": 88610,
+          "ppid": 88394,
+          "rssKiB": 15488,
+          "cpuPercentSample": 0.7,
+          "name": "postgres: temporal temporal 127.0.0.1(57139) idle"
+        },
+        {
+          "pid": 88611,
+          "ppid": 88394,
+          "rssKiB": 17600,
+          "cpuPercentSample": 0.7,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57140) idle"
+        },
+        {
+          "pid": 88612,
+          "ppid": 88394,
+          "rssKiB": 13520,
+          "cpuPercentSample": 0.1,
+          "name": "postgres: temporal temporal 127.0.0.1(57141) idle"
+        },
+        {
+          "pid": 88613,
+          "ppid": 88394,
+          "rssKiB": 14608,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57142) idle"
+        },
+        {
+          "pid": 88614,
+          "ppid": 88394,
+          "rssKiB": 12288,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57143) idle"
+        },
+        {
+          "pid": 88615,
+          "ppid": 88394,
+          "rssKiB": 15024,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57144) idle"
+        },
+        {
+          "pid": 88616,
+          "ppid": 88394,
+          "rssKiB": 11808,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57145) idle"
+        },
+        {
+          "pid": 88617,
+          "ppid": 88394,
+          "rssKiB": 7600,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57146) idle"
+        },
+        {
+          "pid": 88619,
+          "ppid": 88394,
+          "rssKiB": 12656,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57148) idle"
+        },
+        {
+          "pid": 88620,
+          "ppid": 88394,
+          "rssKiB": 11344,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57149) idle"
+        },
+        {
+          "pid": 88621,
+          "ppid": 88394,
+          "rssKiB": 11104,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57150) idle"
+        },
+        {
+          "pid": 88622,
+          "ppid": 88394,
+          "rssKiB": 11072,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57153) idle"
+        },
+        {
+          "pid": 88623,
+          "ppid": 88394,
+          "rssKiB": 14048,
+          "cpuPercentSample": 0.7,
+          "name": "postgres: temporal temporal 127.0.0.1(57152) idle"
+        },
+        {
+          "pid": 88624,
+          "ppid": 88394,
+          "rssKiB": 12624,
+          "cpuPercentSample": 0.4,
+          "name": "postgres: temporal temporal 127.0.0.1(57154) idle"
+        },
+        {
+          "pid": 88625,
+          "ppid": 88394,
+          "rssKiB": 11872,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57155) idle"
+        },
+        {
+          "pid": 88626,
+          "ppid": 88394,
+          "rssKiB": 13296,
+          "cpuPercentSample": 1.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57163) idle"
+        },
+        {
+          "pid": 88627,
+          "ppid": 88394,
+          "rssKiB": 15072,
+          "cpuPercentSample": 0.1,
+          "name": "postgres: temporal temporal 127.0.0.1(57162) idle"
+        },
+        {
+          "pid": 88628,
+          "ppid": 88394,
+          "rssKiB": 10608,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57164) idle"
+        },
+        {
+          "pid": 88629,
+          "ppid": 88394,
+          "rssKiB": 15040,
+          "cpuPercentSample": 1.2,
+          "name": "postgres: temporal temporal 127.0.0.1(57167) idle"
+        },
+        {
+          "pid": 88630,
+          "ppid": 88394,
+          "rssKiB": 15264,
+          "cpuPercentSample": 0.3,
+          "name": "postgres: temporal temporal 127.0.0.1(57168) idle"
+        },
+        {
+          "pid": 88631,
+          "ppid": 88394,
+          "rssKiB": 17024,
+          "cpuPercentSample": 0.4,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57169) idle"
+        },
+        {
+          "pid": 88632,
+          "ppid": 88394,
+          "rssKiB": 12800,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57172) idle"
+        },
+        {
+          "pid": 88633,
+          "ppid": 88394,
+          "rssKiB": 12848,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57173) idle"
+        },
+        {
+          "pid": 88634,
+          "ppid": 88394,
+          "rssKiB": 11968,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57174) idle"
+        },
+        {
+          "pid": 88635,
+          "ppid": 88394,
+          "rssKiB": 12864,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57175) idle"
+        },
+        {
+          "pid": 88636,
+          "ppid": 88394,
+          "rssKiB": 12144,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57176) idle"
+        },
+        {
+          "pid": 88637,
+          "ppid": 88394,
+          "rssKiB": 13168,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57177) idle"
+        },
+        {
+          "pid": 88638,
+          "ppid": 88394,
+          "rssKiB": 12272,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57178) idle"
+        },
+        {
+          "pid": 88639,
+          "ppid": 88394,
+          "rssKiB": 12832,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57179) idle"
+        },
+        {
+          "pid": 88640,
+          "ppid": 88394,
+          "rssKiB": 11840,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57180) idle"
+        },
+        {
+          "pid": 88641,
+          "ppid": 88394,
+          "rssKiB": 11616,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57181) idle"
+        },
+        {
+          "pid": 88642,
+          "ppid": 88394,
+          "rssKiB": 11808,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57182) idle"
+        },
+        {
+          "pid": 88643,
+          "ppid": 88394,
+          "rssKiB": 11696,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57183) idle"
+        },
+        {
+          "pid": 88644,
+          "ppid": 88394,
+          "rssKiB": 11760,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57184) idle"
+        },
+        {
+          "pid": 88645,
+          "ppid": 88394,
+          "rssKiB": 11552,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57185) idle"
+        },
+        {
+          "pid": 88646,
+          "ppid": 88394,
+          "rssKiB": 12976,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57186) idle"
+        },
+        {
+          "pid": 88647,
+          "ppid": 88394,
+          "rssKiB": 11600,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57187) idle"
+        },
+        {
+          "pid": 88648,
+          "ppid": 88394,
+          "rssKiB": 11840,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57188) idle"
+        },
+        {
+          "pid": 88649,
+          "ppid": 88394,
+          "rssKiB": 13328,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57189) idle"
+        },
+        {
+          "pid": 89096,
+          "ppid": 17670,
+          "rssKiB": 61856,
+          "cpuPercentSample": 0.0,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/zigflow"
+        },
+        {
+          "pid": 89105,
+          "ppid": 88394,
+          "rssKiB": 14448,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57218) idle"
+        },
+        {
+          "pid": 89382,
+          "ppid": 17670,
+          "rssKiB": 65040,
+          "cpuPercentSample": 1.2,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/zigflow"
+        }
+      ],
+      "diskKiB": {
+        "serverBinary": 140008,
+        "sqlTool": 38864,
+        "zigflowWorkerBinary": 77368,
+        "postgresBundle": 127984,
+        "postgresState": 77164,
+        "completeExtractedTemporalRelease": 523076
+      }
+    },
+    {
+      "phase": "after-helper-crash-restart",
+      "timeUtc": "2026-09-22T23:37:19.409468+00:00",
+      "processCount": 48,
+      "rssSumKiB": 775904,
+      "macOSFootprintGroupBytes": 334529456,
+      "macOSFootprintMethod": "footprint --noCategories -f bytes with all listed PIDs; a separate kernel footprint metric, not RSS/PSS",
+      "processes": [
+        {
+          "pid": 89096,
+          "ppid": 17670,
+          "rssKiB": 62240,
+          "cpuPercentSample": 0.0,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/zigflow"
+        },
+        {
+          "pid": 89382,
+          "ppid": 17670,
+          "rssKiB": 67168,
+          "cpuPercentSample": 0.5,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/zigflow"
+        },
+        {
+          "pid": 89782,
+          "ppid": 1,
+          "rssKiB": 23584,
+          "cpuPercentSample": 0.0,
+          "name": "/private/tmp/exomachina-countertrials/temporal/runtime/pg/bin/postgres"
+        },
+        {
+          "pid": 89783,
+          "ppid": 89782,
+          "rssKiB": 26912,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: checkpointer"
+        },
+        {
+          "pid": 89784,
+          "ppid": 89782,
+          "rssKiB": 4064,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: background writer"
+        },
+        {
+          "pid": 89786,
+          "ppid": 89782,
+          "rssKiB": 7280,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: walwriter"
+        },
+        {
+          "pid": 89787,
+          "ppid": 89782,
+          "rssKiB": 4736,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: autovacuum launcher"
+        },
+        {
+          "pid": 89788,
+          "ppid": 89782,
+          "rssKiB": 4480,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: logical replication launcher"
+        },
+        {
+          "pid": 89789,
+          "ppid": 89766,
+          "rssKiB": 155904,
+          "cpuPercentSample": 7.1,
+          "name": "/tmp/exomachina-countertrials/temporal/runtime/temporal-server"
+        },
+        {
+          "pid": 89793,
+          "ppid": 89782,
+          "rssKiB": 11376,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57323) idle"
+        },
+        {
+          "pid": 89794,
+          "ppid": 89782,
+          "rssKiB": 16480,
+          "cpuPercentSample": 1.6,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57324) idle"
+        },
+        {
+          "pid": 89795,
+          "ppid": 89782,
+          "rssKiB": 11936,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57325) idle"
+        },
+        {
+          "pid": 89796,
+          "ppid": 89782,
+          "rssKiB": 7424,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57326) idle"
+        },
+        {
+          "pid": 89797,
+          "ppid": 89782,
+          "rssKiB": 10928,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57327) idle"
+        },
+        {
+          "pid": 89798,
+          "ppid": 89782,
+          "rssKiB": 7392,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57328) idle"
+        },
+        {
+          "pid": 89799,
+          "ppid": 89782,
+          "rssKiB": 11248,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57329) idle"
+        },
+        {
+          "pid": 89800,
+          "ppid": 89782,
+          "rssKiB": 7488,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal_visibility 127.0.0.1(57330) idle"
+        },
+        {
+          "pid": 89802,
+          "ppid": 89782,
+          "rssKiB": 11456,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57332) idle"
+        },
+        {
+          "pid": 89803,
+          "ppid": 89782,
+          "rssKiB": 11184,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57333) idle"
+        },
+        {
+          "pid": 89804,
+          "ppid": 89782,
+          "rssKiB": 11024,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57337) idle"
+        },
+        {
+          "pid": 89805,
+          "ppid": 89782,
+          "rssKiB": 10528,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57340) idle"
+        },
+        {
+          "pid": 89806,
+          "ppid": 89782,
+          "rssKiB": 10256,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57341) idle"
+        },
+        {
+          "pid": 89807,
+          "ppid": 89782,
+          "rssKiB": 10256,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57342) idle"
+        },
+        {
+          "pid": 89808,
+          "ppid": 89782,
+          "rssKiB": 10592,
+          "cpuPercentSample": 0.1,
+          "name": "postgres: temporal temporal 127.0.0.1(57343) idle"
+        },
+        {
+          "pid": 89809,
+          "ppid": 89782,
+          "rssKiB": 9968,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57346) idle"
+        },
+        {
+          "pid": 89810,
+          "ppid": 89782,
+          "rssKiB": 9936,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57347) idle"
+        },
+        {
+          "pid": 89811,
+          "ppid": 89782,
+          "rssKiB": 12800,
+          "cpuPercentSample": 1.2,
+          "name": "postgres: temporal temporal 127.0.0.1(57348) idle"
+        },
+        {
+          "pid": 89812,
+          "ppid": 89782,
+          "rssKiB": 12080,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57349) idle"
+        },
+        {
+          "pid": 89814,
+          "ppid": 89782,
+          "rssKiB": 10976,
+          "cpuPercentSample": 0.4,
+          "name": "postgres: temporal temporal 127.0.0.1(57350) idle"
+        },
+        {
+          "pid": 89815,
+          "ppid": 89782,
+          "rssKiB": 10128,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57351) idle"
+        },
+        {
+          "pid": 89821,
+          "ppid": 89782,
+          "rssKiB": 11008,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57360) idle"
+        },
+        {
+          "pid": 89822,
+          "ppid": 89782,
+          "rssKiB": 10864,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57362) idle"
+        },
+        {
+          "pid": 89823,
+          "ppid": 89782,
+          "rssKiB": 11072,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57363) idle"
+        },
+        {
+          "pid": 89824,
+          "ppid": 89782,
+          "rssKiB": 10928,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57361) idle"
+        },
+        {
+          "pid": 89825,
+          "ppid": 89782,
+          "rssKiB": 10864,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57364) idle"
+        },
+        {
+          "pid": 89826,
+          "ppid": 89782,
+          "rssKiB": 10976,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57365) idle"
+        },
+        {
+          "pid": 89827,
+          "ppid": 89782,
+          "rssKiB": 10896,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57366) idle"
+        },
+        {
+          "pid": 89828,
+          "ppid": 89782,
+          "rssKiB": 10448,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57368) idle"
+        },
+        {
+          "pid": 89829,
+          "ppid": 89782,
+          "rssKiB": 10544,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57367) idle"
+        },
+        {
+          "pid": 89830,
+          "ppid": 89782,
+          "rssKiB": 10496,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57370) idle"
+        },
+        {
+          "pid": 89831,
+          "ppid": 89782,
+          "rssKiB": 10640,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57369) idle"
+        },
+        {
+          "pid": 89832,
+          "ppid": 89782,
+          "rssKiB": 10416,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57371) idle"
+        },
+        {
+          "pid": 89833,
+          "ppid": 89782,
+          "rssKiB": 10512,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57372) idle"
+        },
+        {
+          "pid": 89834,
+          "ppid": 89782,
+          "rssKiB": 11648,
+          "cpuPercentSample": 1.1,
+          "name": "postgres: temporal temporal 127.0.0.1(57373) idle"
+        },
+        {
+          "pid": 89835,
+          "ppid": 89782,
+          "rssKiB": 11120,
+          "cpuPercentSample": 0.1,
+          "name": "postgres: temporal temporal 127.0.0.1(57374) idle"
+        },
+        {
+          "pid": 89836,
+          "ppid": 89782,
+          "rssKiB": 10688,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57375) idle"
+        },
+        {
+          "pid": 89837,
+          "ppid": 89782,
+          "rssKiB": 10496,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57376) idle"
+        },
+        {
+          "pid": 89838,
+          "ppid": 89782,
+          "rssKiB": 10464,
+          "cpuPercentSample": 0.0,
+          "name": "postgres: temporal temporal 127.0.0.1(57377) idle"
+        }
+      ],
+      "diskKiB": {
+        "serverBinary": 140008,
+        "sqlTool": 38864,
+        "zigflowWorkerBinary": 77368,
+        "postgresBundle": 127984,
+        "postgresState": 78684,
+        "completeExtractedTemporalRelease": 523076
+      }
+    }
+  ]
+}

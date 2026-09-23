@@ -1,0 +1,113 @@
+{
+  "status": 200,
+  "body": {
+    "tenantId": "main",
+    "id": "2Yfy8X59FkuGUFcGbZgVVb",
+    "namespace": "exomachina.s3",
+    "flowId": "s3_child",
+    "flowRevision": 1,
+    "taskRunList": [
+      {
+        "id": "VxaJ3oZoh0x8TqDVpWv8s",
+        "taskId": "research",
+        "attempts": [
+          {
+            "state": {
+              "current": "SUCCESS",
+              "histories": [
+                {
+                  "state": "CREATED",
+                  "date": "2026-09-22T20:17:49.299468Z"
+                },
+                {
+                  "state": "RUNNING",
+                  "date": "2026-09-22T20:17:49.299469Z"
+                },
+                {
+                  "state": "SUCCESS",
+                  "date": "2026-09-22T20:17:49.299995Z"
+                }
+              ],
+              "startDate": "2026-09-22T20:17:49.299468Z",
+              "endDate": "2026-09-22T20:17:49.299995Z",
+              "duration": "PT0.000527S"
+            },
+            "workerId": "391CgLBCmtGPhhAogCRALN"
+          }
+        ],
+        "state": {
+          "current": "SUCCESS",
+          "histories": [
+            {
+              "state": "CREATED",
+              "date": "2026-09-22T20:17:49.268938Z"
+            },
+            {
+              "state": "SUBMITTED",
+              "date": "2026-09-22T20:17:49.269914Z"
+            },
+            {
+              "state": "RUNNING",
+              "date": "2026-09-22T20:17:49.299233Z"
+            },
+            {
+              "state": "SUCCESS",
+              "date": "2026-09-22T20:17:49.300094Z"
+            }
+          ],
+          "startDate": "2026-09-22T20:17:49.268938Z",
+          "endDate": "2026-09-22T20:17:49.300094Z",
+          "duration": "PT0.031156S"
+        }
+      }
+    ],
+    "labels": [
+      {
+        "key": "system.from",
+        "value": "api"
+      },
+      {
+        "key": "system.correlationId",
+        "value": "5BbIHC82algtciX3rMJKmK"
+      }
+    ],
+    "state": {
+      "current": "SUCCESS",
+      "histories": [
+        {
+          "state": "CREATED",
+          "date": "2026-09-22T20:17:49.255927Z"
+        },
+        {
+          "state": "RUNNING",
+          "date": "2026-09-22T20:17:49.269872Z"
+        },
+        {
+          "state": "SUCCESS",
+          "date": "2026-09-22T20:17:49.329850Z"
+        }
+      ],
+      "startDate": "2026-09-22T20:17:49.255927Z",
+      "endDate": "2026-09-22T20:17:49.329850Z",
+      "duration": "PT0.073923S"
+    },
+    "originalId": "2Yfy8X59FkuGUFcGbZgVVb",
+    "trigger": {
+      "id": "research_a",
+      "type": "io.kestra.plugin.core.flow.Subflow",
+      "variables": {
+        "flowId": "s3_reference",
+        "taskId": "research_a",
+        "namespace": "exomachina.s3",
+        "taskRunId": "5LW2qAFGkX6XFvEXrx9T3W",
+        "executionId": "5BbIHC82algtciX3rMJKmK",
+        "flowRevision": 1
+      }
+    },
+    "metadata": {
+      "attemptNumber": 1,
+      "originalCreatedDate": "2026-09-22T20:17:49.255929Z",
+      "executionDepth": 1
+    }
+  }
+}

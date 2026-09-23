@@ -1,0 +1,703 @@
+{
+  "0": {
+    "sampled_unix_seconds": 1790170668.978627,
+    "physical_footprint_bytes_deduplicated": 1284601704,
+    "pid_count": 35,
+    "processes": [
+      {
+        "pid": 65196,
+        "ppid": 17670,
+        "role": "kestra_launcher",
+        "command": "/bin/sh tools/spikes/2026-09-23/kestra-parity/start.sh"
+      },
+      {
+        "pid": 65210,
+        "ppid": 1,
+        "role": "postgres_main",
+        "command": "/private/tmp/exomachina-spikes/s0/kestra/package/pg/bin/postgres -D /tmp/exomachina-kestra-parity-state/postgres -p 25543 -c listen_addresses=127.0.0.1 -c unix_socket_directories=/tmp/exomachina-kestra-parity-state/socket"
+      },
+      {
+        "pid": 65211,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: checkpointer"
+      },
+      {
+        "pid": 65212,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: background writer"
+      },
+      {
+        "pid": 65214,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: walwriter"
+      },
+      {
+        "pid": 65215,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: autovacuum launcher"
+      },
+      {
+        "pid": 65216,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: logical replication launcher"
+      },
+      {
+        "pid": 65223,
+        "ppid": 65196,
+        "role": "kestra_jvm",
+        "command": "/tmp/exomachina-spikes/s0/kestra/package/runtime/Contents/Home/bin/java -Xms256m -Xmx1g -jar /tmp/exomachina-spikes/s0/kestra/package/runtime/kestra-2.0.3 server standalone -c /tmp/exomachina-kestra-parity-state/config.yml --port=28643 --worker-thread=4 --no-tutorials"
+      },
+      {
+        "pid": 65224,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54887) idle in transaction"
+      },
+      {
+        "pid": 65225,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54888) idle"
+      },
+      {
+        "pid": 65226,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54889) idle"
+      },
+      {
+        "pid": 65227,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54890) idle"
+      },
+      {
+        "pid": 65228,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54891) idle"
+      },
+      {
+        "pid": 65229,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54892) idle"
+      },
+      {
+        "pid": 65230,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54893) idle"
+      },
+      {
+        "pid": 65231,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54894) idle"
+      },
+      {
+        "pid": 65232,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54895) idle"
+      },
+      {
+        "pid": 65234,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54896) idle"
+      },
+      {
+        "pid": 65236,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54898) idle"
+      },
+      {
+        "pid": 65250,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54900) idle"
+      },
+      {
+        "pid": 65251,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54901) idle"
+      },
+      {
+        "pid": 65252,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54902) idle"
+      },
+      {
+        "pid": 65253,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54903) idle"
+      },
+      {
+        "pid": 65256,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54904) idle"
+      },
+      {
+        "pid": 65268,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54905) idle"
+      },
+      {
+        "pid": 65579,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(55241) idle"
+      },
+      {
+        "pid": 65580,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(55250) idle"
+      },
+      {
+        "pid": 66234,
+        "ppid": 17670,
+        "role": "measurement_driver",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python tools/spikes/2026-09-23/kestra-parity/measure.py"
+      },
+      {
+        "pid": 66243,
+        "ppid": 66234,
+        "role": "capability_a",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exomachina-kestra-parity-state/fixture-capability"
+      },
+      {
+        "pid": 66244,
+        "ppid": 66234,
+        "role": "capability_b",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exomachina-kestra-parity-state/fixture-capability"
+      },
+      {
+        "pid": 66245,
+        "ppid": 66234,
+        "role": "quality",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /tmp/exomachina-kestra-parity-state/fixture-quality --por"
+      },
+      {
+        "pid": 66246,
+        "ppid": 66234,
+        "role": "release_participating",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exomachina-kestra-parity-state/fixture-release_parti"
+      },
+      {
+        "pid": 66247,
+        "ppid": 66234,
+        "role": "release_opaque",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exomachina-kestra-parity-state/fixture-release_opaqu"
+      },
+      {
+        "pid": 66248,
+        "ppid": 66234,
+        "role": "director",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/s2/server.py --state /tmp/exomachina-kestra-parity-state/fixture-director --port 28649 --role factory"
+      },
+      {
+        "pid": 66250,
+        "ppid": 66234,
+        "role": "bundle_child",
+        "command": "ps -axo pid=,ppid=,command="
+      }
+    ],
+    "selection": "supervisor descendants plus state-bound detached processes plus explicit store descendants",
+    "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+    "footprint_exit_code": 0,
+    "sampling_retries": []
+  },
+  "2": {
+    "sampled_unix_seconds": 1790170674.322031,
+    "physical_footprint_bytes_deduplicated": 1287387008,
+    "pid_count": 35,
+    "processes": [
+      {
+        "pid": 65196,
+        "ppid": 17670,
+        "role": "kestra_launcher",
+        "command": "/bin/sh tools/spikes/2026-09-23/kestra-parity/start.sh"
+      },
+      {
+        "pid": 65210,
+        "ppid": 1,
+        "role": "postgres_main",
+        "command": "/private/tmp/exomachina-spikes/s0/kestra/package/pg/bin/postgres -D /tmp/exomachina-kestra-parity-state/postgres -p 25543 -c listen_addresses=127.0.0.1 -c unix_socket_directories=/tmp/exomachina-kestra-parity-state/socket"
+      },
+      {
+        "pid": 65211,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: checkpointer"
+      },
+      {
+        "pid": 65212,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: background writer"
+      },
+      {
+        "pid": 65214,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: walwriter"
+      },
+      {
+        "pid": 65215,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: autovacuum launcher"
+      },
+      {
+        "pid": 65216,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: logical replication launcher"
+      },
+      {
+        "pid": 65223,
+        "ppid": 65196,
+        "role": "kestra_jvm",
+        "command": "/tmp/exomachina-spikes/s0/kestra/package/runtime/Contents/Home/bin/java -Xms256m -Xmx1g -jar /tmp/exomachina-spikes/s0/kestra/package/runtime/kestra-2.0.3 server standalone -c /tmp/exomachina-kestra-parity-state/config.yml --port=28643 --worker-thread=4 --no-tutorials"
+      },
+      {
+        "pid": 65224,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54887) idle"
+      },
+      {
+        "pid": 65225,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54888) idle"
+      },
+      {
+        "pid": 65226,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54889) idle"
+      },
+      {
+        "pid": 65227,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54890) idle"
+      },
+      {
+        "pid": 65228,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54891) idle"
+      },
+      {
+        "pid": 65229,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54892) idle"
+      },
+      {
+        "pid": 65230,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54893) idle"
+      },
+      {
+        "pid": 65231,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54894) idle"
+      },
+      {
+        "pid": 65232,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54895) idle"
+      },
+      {
+        "pid": 65234,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54896) idle"
+      },
+      {
+        "pid": 65236,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54898) idle"
+      },
+      {
+        "pid": 65250,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54900) idle"
+      },
+      {
+        "pid": 65251,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54901) idle"
+      },
+      {
+        "pid": 65252,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54902) idle"
+      },
+      {
+        "pid": 65253,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54903) idle"
+      },
+      {
+        "pid": 65256,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54904) idle"
+      },
+      {
+        "pid": 65268,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54905) idle"
+      },
+      {
+        "pid": 65579,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(55241) idle"
+      },
+      {
+        "pid": 65580,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(55250) idle"
+      },
+      {
+        "pid": 66234,
+        "ppid": 17670,
+        "role": "measurement_driver",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python tools/spikes/2026-09-23/kestra-parity/measure.py"
+      },
+      {
+        "pid": 66243,
+        "ppid": 66234,
+        "role": "capability_a",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exomachina-kestra-parity-state/fixture-capability"
+      },
+      {
+        "pid": 66244,
+        "ppid": 66234,
+        "role": "capability_b",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exomachina-kestra-parity-state/fixture-capability"
+      },
+      {
+        "pid": 66245,
+        "ppid": 66234,
+        "role": "quality",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /tmp/exomachina-kestra-parity-state/fixture-quality --por"
+      },
+      {
+        "pid": 66246,
+        "ppid": 66234,
+        "role": "release_participating",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exomachina-kestra-parity-state/fixture-release_parti"
+      },
+      {
+        "pid": 66247,
+        "ppid": 66234,
+        "role": "release_opaque",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exomachina-kestra-parity-state/fixture-release_opaqu"
+      },
+      {
+        "pid": 66248,
+        "ppid": 66234,
+        "role": "director",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/s2/server.py --state /tmp/exomachina-kestra-parity-state/fixture-director --port 28649 --role factory"
+      },
+      {
+        "pid": 66298,
+        "ppid": 66234,
+        "role": "bundle_child",
+        "command": "ps -axo pid=,ppid=,command="
+      }
+    ],
+    "selection": "supervisor descendants plus state-bound detached processes plus explicit store descendants",
+    "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+    "footprint_exit_code": 0,
+    "sampling_retries": [],
+    "parent_ids": [
+      "2TIdzFUtD87BpdYTqs5md1",
+      "hoLljkj09iN5XXat0HXJb"
+    ],
+    "child_ids": [
+      "2CAGKFiT4bLiNNVcCBVkrz",
+      "5KKhetwe0e7xCWdH3uCueI"
+    ]
+  },
+  "10": {
+    "sampled_unix_seconds": 1790170681.5105011,
+    "physical_footprint_bytes_deduplicated": 1301002448,
+    "pid_count": 36,
+    "processes": [
+      {
+        "pid": 65196,
+        "ppid": 17670,
+        "role": "kestra_launcher",
+        "command": "/bin/sh tools/spikes/2026-09-23/kestra-parity/start.sh"
+      },
+      {
+        "pid": 65210,
+        "ppid": 1,
+        "role": "postgres_main",
+        "command": "/private/tmp/exomachina-spikes/s0/kestra/package/pg/bin/postgres -D /tmp/exomachina-kestra-parity-state/postgres -p 25543 -c listen_addresses=127.0.0.1 -c unix_socket_directories=/tmp/exomachina-kestra-parity-state/socket"
+      },
+      {
+        "pid": 65211,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: checkpointer"
+      },
+      {
+        "pid": 65212,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: background writer"
+      },
+      {
+        "pid": 65214,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: walwriter"
+      },
+      {
+        "pid": 65215,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: autovacuum launcher"
+      },
+      {
+        "pid": 65216,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: logical replication launcher"
+      },
+      {
+        "pid": 65223,
+        "ppid": 65196,
+        "role": "kestra_jvm",
+        "command": "/tmp/exomachina-spikes/s0/kestra/package/runtime/Contents/Home/bin/java -Xms256m -Xmx1g -jar /tmp/exomachina-spikes/s0/kestra/package/runtime/kestra-2.0.3 server standalone -c /tmp/exomachina-kestra-parity-state/config.yml --port=28643 --worker-thread=4 --no-tutorials"
+      },
+      {
+        "pid": 65224,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54887) idle"
+      },
+      {
+        "pid": 65225,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54888) idle"
+      },
+      {
+        "pid": 65226,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54889) idle"
+      },
+      {
+        "pid": 65227,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54890) idle"
+      },
+      {
+        "pid": 65228,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54891) idle"
+      },
+      {
+        "pid": 65229,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54892) idle"
+      },
+      {
+        "pid": 65230,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54893) idle"
+      },
+      {
+        "pid": 65231,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54894) idle"
+      },
+      {
+        "pid": 65232,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54895) idle"
+      },
+      {
+        "pid": 65234,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54896) idle"
+      },
+      {
+        "pid": 65236,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54898) idle"
+      },
+      {
+        "pid": 65250,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54900) idle"
+      },
+      {
+        "pid": 65251,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54901) idle"
+      },
+      {
+        "pid": 65252,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54902) idle"
+      },
+      {
+        "pid": 65253,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54903) idle"
+      },
+      {
+        "pid": 65256,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54904) idle"
+      },
+      {
+        "pid": 65268,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(54905) idle"
+      },
+      {
+        "pid": 65579,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(55241) idle"
+      },
+      {
+        "pid": 65580,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(55250) idle"
+      },
+      {
+        "pid": 66234,
+        "ppid": 17670,
+        "role": "measurement_driver",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python tools/spikes/2026-09-23/kestra-parity/measure.py"
+      },
+      {
+        "pid": 66243,
+        "ppid": 66234,
+        "role": "capability_a",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exomachina-kestra-parity-state/fixture-capability"
+      },
+      {
+        "pid": 66244,
+        "ppid": 66234,
+        "role": "capability_b",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /tmp/exomachina-kestra-parity-state/fixture-capability"
+      },
+      {
+        "pid": 66245,
+        "ppid": 66234,
+        "role": "quality",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /tmp/exomachina-kestra-parity-state/fixture-quality --por"
+      },
+      {
+        "pid": 66246,
+        "ppid": 66234,
+        "role": "release_participating",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exomachina-kestra-parity-state/fixture-release_parti"
+      },
+      {
+        "pid": 66247,
+        "ppid": 66234,
+        "role": "release_opaque",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /tmp/exomachina-kestra-parity-state/fixture-release_opaqu"
+      },
+      {
+        "pid": 66248,
+        "ppid": 66234,
+        "role": "director",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/s2/server.py --state /tmp/exomachina-kestra-parity-state/fixture-director --port 28649 --role factory"
+      },
+      {
+        "pid": 66308,
+        "ppid": 65210,
+        "role": "postgres_child",
+        "command": "postgres: tomdaniel kestra 127.0.0.1(55523) idle"
+      },
+      {
+        "pid": 66343,
+        "ppid": 66234,
+        "role": "bundle_child",
+        "command": "ps -axo pid=,ppid=,command="
+      }
+    ],
+    "selection": "supervisor descendants plus state-bound detached processes plus explicit store descendants",
+    "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+    "footprint_exit_code": 0,
+    "sampling_retries": [],
+    "parent_ids": [
+      "2TIdzFUtD87BpdYTqs5md1",
+      "hoLljkj09iN5XXat0HXJb",
+      "6Ll5djLQ1AQpW7eO3gkS5j",
+      "xb0VxrrnJXWGHQtfxnRja",
+      "5d3oAwRH0LFYzdpKrUPdDO",
+      "4XXVp2NVjwCkERA1VlKWoj",
+      "5Uijx7LzVgAOpINQfBTqIq",
+      "5pB8b6PzMW2QUDyneV7Oj7",
+      "iEK6YFH0dhnbAKfUjIVfB",
+      "2iN9d7wnRFWzhqVsV7zrPG"
+    ],
+    "child_ids": [
+      "2CAGKFiT4bLiNNVcCBVkrz",
+      "3Mz9tYslNmEF58lO4m08Xa",
+      "3S2PfQZXVC2CStSaq1gxGQ",
+      "42ySKKiVczFX4zi6gG2vvd",
+      "4IiKBvokSVxEQyX9QyrHr8",
+      "4WLw0VTUCJFu0V8mHqoxEc",
+      "4mEQSVOitKnO4yVt3DMwOT",
+      "5KKhetwe0e7xCWdH3uCueI",
+      "6JVr5BkdIzcNykMi5KOlZT",
+      "6N7IYMHnm9eqUOkLqKMCCC"
+    ]
+  }
+}

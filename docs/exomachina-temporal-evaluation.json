@@ -1,0 +1,2679 @@
+{
+  "assessmentDate": "2026-09-22",
+  "title": "Temporal authoring and recovery evaluation",
+  "decision": {
+    "role": "contender",
+    "roleLabel": "Direct candidate; authoring gate",
+    "recommendation": "Evaluate Temporal directly alongside Conductor and Kestra. Keep Argo provisional. No engine selected and no authoring-model relaxation approved.",
+    "reason": "Strong durable execution and interaction primitives warrant direct consideration. Shared A2A/domain work is not a unique Temporal disqualifier. The unresolved extra cost is a maintained, governed factory publication layer.",
+    "scoreBoundary": "All 65 base-engine ratings, weights, totals and section scores remain unchanged. Zigflow and Tracecat are scoped stack screens, not separately scored engines; do not inherit every SDK capability into a DSL."
+  },
+  "runtimeProbe": {
+    "date": "2026-09-22",
+    "repetitions": 1,
+    "platform": "macOS arm64",
+    "temporalCLI": "1.9.1",
+    "embeddedTemporalServer": "1.32.0",
+    "zigflow": "0.15.2",
+    "zigflowCommit": "a18538ba585e580c466ad3f743874af642ccad68",
+    "verifiedSHA256": {
+      "zigflow_darwin_arm64": "3932220f7c56cff5cd71080192b5ffc7e39768a410f814b7bb9e0f0da1830b0a",
+      "temporal_cli_1.9.1_darwin_arm64.tar.gz": "41e0425378fcb4fb5766340b97435e20fe47bbff2d7bf644ec2d51f7662b7c56"
+    },
+    "setup": "Disposable SQLite development server, isolated localhost ports, deterministic local HTTP fixture, telemetry disabled, empty task-specific home and bounded environment; all owned processes stopped.",
+    "limits": "One deterministic run per scenario, not HA/load/production certification. No A2A service, customer isolation, nested version binding, arbitrary-code safety, interpreter upgrade, remote duplicate race, quality or budget proof.",
+    "results": {
+      "environment": "localhost SQLite Temporal development server; deterministic HTTP fixture; no A2A or production certification",
+      "observations": [
+        {
+          "case": "validation",
+          "validExit": 0,
+          "validOutput": "{\n  \"valid\": true,\n  \"file\": \"/private/tmp/exomachina-temporal-evaluation/definitions/recover.json\"\n}\n",
+          "unknownTopLevelPropertyExit": 0,
+          "unknownTopLevelPropertyOutput": "{\n  \"valid\": true,\n  \"file\": \"/private/tmp/exomachina-temporal-evaluation/validation/bad.json\"\n}\n",
+          "interpretation": "An extra top-level surprise property was accepted; this is not evidence that a schema-invalid document passed. Required-field and unsupported-call checks were tested separately."
+        },
+        {
+          "case": "crash-recovery",
+          "result": {
+            "workflowId": "recovery-1",
+            "runId": "01a0c9b9-0d19-7d4a-86ac-435421320d74",
+            "namespace": "default",
+            "status": "COMPLETED",
+            "closeEvent": {
+              "eventId": "25",
+              "eventTime": "2026-09-22T15:25:45.618299Z",
+              "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+              "taskId": "2097187",
+              "workflowExecutionCompletedEventAttributes": {
+                "result": [
+                  {
+                    "revision": "1.0.0"
+                  }
+                ],
+                "workflowTaskCompletedEventId": "24"
+              }
+            },
+            "result": {
+              "revision": "1.0.0"
+            }
+          },
+          "httpCounts": {
+            "/before": 1,
+            "/after": 1
+          },
+          "sameWorkflowId": "recovery-1"
+        },
+        {
+          "case": "publication",
+          "preRefreshTaskFailed": true,
+          "resultAfterWorkerRefresh": {
+            "workflowId": "added-1",
+            "runId": "01a0c9b9-1790-7795-a50b-2b745e3c1288",
+            "namespace": "default",
+            "status": "COMPLETED",
+            "closeEvent": {
+              "eventId": "8",
+              "eventTime": "2026-09-22T15:25:55.772434Z",
+              "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+              "taskId": "2097217",
+              "workflowExecutionCompletedEventAttributes": {
+                "result": [
+                  {
+                    "revision": "1.0.0"
+                  }
+                ],
+                "workflowTaskCompletedEventId": "7"
+              }
+            },
+            "result": {
+              "revision": "1.0.0"
+            }
+          }
+        },
+        {
+          "case": "unversioned-definition-change",
+          "result": {
+            "workflowId": "drift-1",
+            "runId": "01a0c9b9-447f-76ce-9676-0a47df84f759",
+            "namespace": "default",
+            "status": "COMPLETED",
+            "closeEvent": {
+              "eventId": "13",
+              "eventTime": "2026-09-22T15:26:03.781137Z",
+              "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+              "taskId": "2097253",
+              "workflowExecutionCompletedEventAttributes": {
+                "result": [
+                  {
+                    "revision": "2.0.0"
+                  }
+                ],
+                "workflowTaskCompletedEventId": "11"
+              }
+            },
+            "result": {
+              "revision": "2.0.0"
+            }
+          },
+          "originalDocumentVersion": "1.0.0",
+          "replacementDocumentVersion": "2.0.0"
+        },
+        {
+          "case": "pinned-deployments",
+          "oldResult": {
+            "workflowId": "pinned-old",
+            "runId": "01a0c9b9-642a-7a12-bda3-eb49ef712a87",
+            "namespace": "default",
+            "status": "COMPLETED",
+            "closeEvent": {
+              "eventId": "11",
+              "eventTime": "2026-09-22T15:26:07.564262Z",
+              "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+              "taskId": "2098025",
+              "workflowExecutionCompletedEventAttributes": {
+                "result": [
+                  {
+                    "revision": "1.0.0"
+                  }
+                ],
+                "workflowTaskCompletedEventId": "9"
+              }
+            },
+            "result": {
+              "revision": "1.0.0"
+            }
+          },
+          "newResult": {
+            "workflowId": "pinned-new",
+            "runId": "01a0c9b9-6a8f-77b4-a105-405640d0a79f",
+            "namespace": "default",
+            "status": "COMPLETED",
+            "closeEvent": {
+              "eventId": "11",
+              "eventTime": "2026-09-22T15:26:07.620912Z",
+              "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+              "taskId": "2098041",
+              "workflowExecutionCompletedEventAttributes": {
+                "result": [
+                  {
+                    "revision": "2.0.0"
+                  }
+                ],
+                "workflowTaskCompletedEventId": "9"
+              }
+            },
+            "result": {
+              "revision": "2.0.0"
+            }
+          },
+          "oldWorkerRetained": true
+        }
+      ],
+      "cleanup": {
+        "allOwnedProcessesStopped": true,
+        "httpEvents": [
+          {
+            "path": "/before",
+            "time": 1790090743.086389,
+            "count": 1
+          },
+          {
+            "path": "/after",
+            "time": 1790090745.609501,
+            "count": 1
+          }
+        ]
+      }
+    },
+    "additionalValidation": [
+      {
+        "case": "missing-required",
+        "exit": 1,
+        "output": "{\n  \"valid\": false,\n  \"file\": \"/tmp/exomachina-temporal-evaluation/validation/missing-required.json\",\n  \"errors\": [\n    {\n      \"key\": \"schema_validation\",\n      \"message\": \"required: missing properties: [\\\"taskQueue\\\"]\",\n      \"path\": \"$.document\"\n    }\n  ]\n}\n",
+        "stderr": ""
+      },
+      {
+        "case": "unsupported-call",
+        "exit": 1,
+        "output": "{\n  \"valid\": false,\n  \"file\": \"/tmp/exomachina-temporal-evaluation/validation/unsupported-call.json\",\n  \"errors\": [\n    {\n      \"key\": \"schema_validation\",\n      \"message\": \"oneOf: did not validate against any of [\\u003canonymous schema\\u003e \\u003canonymous schema\\u003e \\u003canonymous schema\\u003e \\u003canonymous schema\\u003e \\u003canonymous schema\\u003e \\u003canonymous schema\\u003e \\u003canonymous schema\\u003e \\u003canonymous schema\\u003e \\u003canonymous schema\\u003e \\u003canonymous schema\\u003e \\u003canonymous schema\\u003e]\",\n      \"path\": \"$\"\n    }\n  ]\n}\n",
+        "stderr": ""
+      }
+    ],
+    "commands": [
+      "temporal --disable-config-env --disable-config-file server start-dev --ip 127.0.0.1 --port 18333 --headless --db-filename <temporary-directory>/state.db",
+      "zigflow validate <definition.json> --disable-telemetry --output-json",
+      "zigflow run --dir <definitions> --temporal-address 127.0.0.1:18333 --disable-telemetry --env-prefix EXOMACHINA_PROBE_NO_MATCH_ --health-listen-address 127.0.0.1:18334 --metrics-listen-address 127.0.0.1:18335",
+      "temporal --address 127.0.0.1:18333 workflow start --workflow-id <id> --type <type> --task-queue <queue> --execution-timeout 5m",
+      "temporal --address 127.0.0.1:18333 workflow signal --workflow-id <id> --name approve --input {\"approved\":true}",
+      "Pinned worker additions: --enable-versioning --default-versioning-type pinned --temporal-deployment-name exomachina-probe --temporal-worker-build-id v1 (then v2 on separate health/metrics ports)",
+      "temporal --address 127.0.0.1:18333 worker deployment set-current-version --deployment-name exomachina-probe --build-id <v1-or-v2> --yes"
+    ],
+    "fixtures": {
+      "definitions/new.json": {
+        "document": {
+          "dsl": "1.0.0",
+          "taskQueue": "exomachina-probe",
+          "workflowType": "added-factory",
+          "version": "1.0.0"
+        },
+        "do": [
+          {
+            "result": {
+              "set": {
+                "revision": "1.0.0"
+              }
+            }
+          }
+        ]
+      },
+      "definitions/drift.json": {
+        "document": {
+          "dsl": "1.0.0",
+          "taskQueue": "exomachina-probe",
+          "workflowType": "drift",
+          "version": "2.0.0"
+        },
+        "do": [
+          {
+            "approval": {
+              "metadata": {
+                "timeout": "300s"
+              },
+              "listen": {
+                "to": {
+                  "one": {
+                    "with": {
+                      "id": "approve",
+                      "type": "signal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "result": {
+              "set": {
+                "revision": "2.0.0"
+              }
+            }
+          }
+        ]
+      },
+      "definitions/recover.json": {
+        "document": {
+          "dsl": "1.0.0",
+          "taskQueue": "exomachina-probe",
+          "workflowType": "recovery",
+          "version": "1.0.0"
+        },
+        "do": [
+          {
+            "before": {
+              "call": "http",
+              "with": {
+                "method": "get",
+                "endpoint": "http://127.0.0.1:18336/before"
+              }
+            }
+          },
+          {
+            "approval": {
+              "metadata": {
+                "timeout": "300s"
+              },
+              "listen": {
+                "to": {
+                  "one": {
+                    "with": {
+                      "id": "approve",
+                      "type": "signal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "after": {
+              "call": "http",
+              "with": {
+                "method": "get",
+                "endpoint": "http://127.0.0.1:18336/after"
+              }
+            }
+          },
+          {
+            "result": {
+              "set": {
+                "revision": "1.0.0"
+              }
+            }
+          }
+        ]
+      },
+      "pinned-v1/factory.json": {
+        "document": {
+          "dsl": "1.0.0",
+          "taskQueue": "exomachina-pinned",
+          "workflowType": "pinned-factory",
+          "version": "1.0.0"
+        },
+        "do": [
+          {
+            "approval": {
+              "metadata": {
+                "timeout": "300s"
+              },
+              "listen": {
+                "to": {
+                  "one": {
+                    "with": {
+                      "id": "approve",
+                      "type": "signal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "result": {
+              "set": {
+                "revision": "1.0.0"
+              }
+            }
+          }
+        ]
+      },
+      "pinned-v2/factory.json": {
+        "document": {
+          "dsl": "1.0.0",
+          "taskQueue": "exomachina-pinned",
+          "workflowType": "pinned-factory",
+          "version": "2.0.0"
+        },
+        "do": [
+          {
+            "approval": {
+              "metadata": {
+                "timeout": "300s"
+              },
+              "listen": {
+                "to": {
+                  "one": {
+                    "with": {
+                      "id": "approve",
+                      "type": "signal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "result": {
+              "set": {
+                "revision": "2.0.0"
+              }
+            }
+          }
+        ]
+      },
+      "validation/unsupported-call.json": {
+        "document": {
+          "dsl": "1.0.0",
+          "taskQueue": "exomachina-probe",
+          "workflowType": "recovery",
+          "version": "1.0.0"
+        },
+        "do": [
+          {
+            "bad": {
+              "call": "exomachina-not-a-real-task",
+              "with": {}
+            }
+          }
+        ]
+      },
+      "validation/bad.json": {
+        "document": {
+          "dsl": "1.0.0",
+          "taskQueue": "bad",
+          "workflowType": "bad",
+          "version": "1.0.0"
+        },
+        "do": [
+          {
+            "approval": {
+              "metadata": {
+                "timeout": "300s"
+              },
+              "listen": {
+                "to": {
+                  "one": {
+                    "with": {
+                      "id": "approve",
+                      "type": "signal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "result": {
+              "set": {
+                "revision": "1.0.0"
+              }
+            }
+          }
+        ],
+        "surprise": true
+      },
+      "validation/missing-required.json": {
+        "document": {
+          "dsl": "1.0.0",
+          "workflowType": "recovery",
+          "version": "1.0.0"
+        },
+        "do": [
+          {
+            "before": {
+              "call": "http",
+              "with": {
+                "method": "get",
+                "endpoint": "http://127.0.0.1:18336/before"
+              }
+            }
+          },
+          {
+            "approval": {
+              "metadata": {
+                "timeout": "300s"
+              },
+              "listen": {
+                "to": {
+                  "one": {
+                    "with": {
+                      "id": "approve",
+                      "type": "signal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "after": {
+              "call": "http",
+              "with": {
+                "method": "get",
+                "endpoint": "http://127.0.0.1:18336/after"
+              }
+            }
+          },
+          {
+            "result": {
+              "set": {
+                "revision": "1.0.0"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "fixtureNote": "definitions/drift.json is the final v2 file. Its v1 predecessor differs only in document.version and the result revision, both 1.0.0. Added-factory was created after the directory worker started. Recovery calls /before, waits for approve, then /after."
+  },
+  "numericDiagnostics": {
+    "basis": "Unchanged 65-feature canonical assessment: Most=5, Mid=3, Least=1; full=1, partial=0.5, none=0; maximum=247. The following are explanatory decompositions, not a new ranking or weighting proposal.",
+    "overall": {
+      "temporal": {
+        "points": 139.5,
+        "maximum": 247,
+        "percent": 56.5
+      },
+      "conductor": {
+        "points": 156.5,
+        "maximum": 247,
+        "percent": 63.4
+      },
+      "kestra": {
+        "points": 144.5,
+        "maximum": 247,
+        "percent": 58.5
+      },
+      "argo": {
+        "points": 142.5,
+        "maximum": 247,
+        "percent": 57.7
+      }
+    },
+    "sections": [
+      {
+        "section": "Authoring",
+        "maximumPoints": 27,
+        "scores": {
+          "temporal": {
+            "points": 10.5,
+            "maximum": 27,
+            "percent": 38.9
+          },
+          "conductor": {
+            "points": 26.5,
+            "maximum": 27,
+            "percent": 98.1
+          },
+          "kestra": {
+            "points": 26.5,
+            "maximum": 27,
+            "percent": 98.1
+          },
+          "argo": {
+            "points": 24.0,
+            "maximum": 27,
+            "percent": 88.9
+          }
+        }
+      },
+      {
+        "section": "Graph",
+        "maximumPoints": 34,
+        "scores": {
+          "temporal": {
+            "points": 31.0,
+            "maximum": 34,
+            "percent": 91.2
+          },
+          "conductor": {
+            "points": 28.0,
+            "maximum": 34,
+            "percent": 82.4
+          },
+          "kestra": {
+            "points": 27.0,
+            "maximum": 34,
+            "percent": 79.4
+          },
+          "argo": {
+            "points": 25.5,
+            "maximum": 34,
+            "percent": 75.0
+          }
+        }
+      },
+      {
+        "section": "Remote services",
+        "maximumPoints": 31,
+        "scores": {
+          "temporal": {
+            "points": 8.0,
+            "maximum": 31,
+            "percent": 25.8
+          },
+          "conductor": {
+            "points": 21,
+            "maximum": 31,
+            "percent": 67.7
+          },
+          "kestra": {
+            "points": 10.5,
+            "maximum": 31,
+            "percent": 33.9
+          },
+          "argo": {
+            "points": 10.5,
+            "maximum": 31,
+            "percent": 33.9
+          }
+        }
+      },
+      {
+        "section": "Recovery",
+        "maximumPoints": 35,
+        "scores": {
+          "temporal": {
+            "points": 28.5,
+            "maximum": 35,
+            "percent": 81.4
+          },
+          "conductor": {
+            "points": 27.0,
+            "maximum": 35,
+            "percent": 77.1
+          },
+          "kestra": {
+            "points": 25.5,
+            "maximum": 35,
+            "percent": 72.9
+          },
+          "argo": {
+            "points": 28.5,
+            "maximum": 35,
+            "percent": 81.4
+          }
+        }
+      },
+      {
+        "section": "Operations",
+        "maximumPoints": 28,
+        "scores": {
+          "temporal": {
+            "points": 20,
+            "maximum": 28,
+            "percent": 71.4
+          },
+          "conductor": {
+            "points": 13.0,
+            "maximum": 28,
+            "percent": 46.4
+          },
+          "kestra": {
+            "points": 14.5,
+            "maximum": 28,
+            "percent": 51.8
+          },
+          "argo": {
+            "points": 17.5,
+            "maximum": 28,
+            "percent": 62.5
+          }
+        }
+      },
+      {
+        "section": "Governance",
+        "maximumPoints": 33,
+        "scores": {
+          "temporal": {
+            "points": 11.5,
+            "maximum": 33,
+            "percent": 34.8
+          },
+          "conductor": {
+            "points": 11.5,
+            "maximum": 33,
+            "percent": 34.8
+          },
+          "kestra": {
+            "points": 13.0,
+            "maximum": 33,
+            "percent": 39.4
+          },
+          "argo": {
+            "points": 15.5,
+            "maximum": 33,
+            "percent": 47.0
+          }
+        }
+      },
+      {
+        "section": "Experience",
+        "maximumPoints": 22,
+        "scores": {
+          "temporal": {
+            "points": 16.0,
+            "maximum": 22,
+            "percent": 72.7
+          },
+          "conductor": {
+            "points": 15.5,
+            "maximum": 22,
+            "percent": 70.5
+          },
+          "kestra": {
+            "points": 14.5,
+            "maximum": 22,
+            "percent": 65.9
+          },
+          "argo": {
+            "points": 9.5,
+            "maximum": 22,
+            "percent": 43.2
+          }
+        }
+      },
+      {
+        "section": "Maintenance & Engineering",
+        "maximumPoints": 37,
+        "scores": {
+          "temporal": {
+            "points": 14.0,
+            "maximum": 37,
+            "percent": 37.8
+          },
+          "conductor": {
+            "points": 14.0,
+            "maximum": 37,
+            "percent": 37.8
+          },
+          "kestra": {
+            "points": 13.0,
+            "maximum": 37,
+            "percent": 35.1
+          },
+          "argo": {
+            "points": 11.5,
+            "maximum": 37,
+            "percent": 31.1
+          }
+        }
+      }
+    ],
+    "temporalPointDeltas": {
+      "conductor": {
+        "temporalMinusOtherOverallPoints": -17.0,
+        "authoringPoints": -16.0,
+        "remoteServicesPoints": -13.0,
+        "otherSixSectionsPoints": 12.0
+      },
+      "kestra": {
+        "temporalMinusOtherOverallPoints": -5.0,
+        "authoringPoints": -16.0,
+        "remoteServicesPoints": -2.5,
+        "otherSixSectionsPoints": 13.5
+      },
+      "argo": {
+        "temporalMinusOtherOverallPoints": -3.0,
+        "authoringPoints": -13.5,
+        "remoteServicesPoints": -2.5,
+        "otherSixSectionsPoints": 13.0
+      }
+    },
+    "interpretation": "Temporal leads these four on Graph, Operations and Experience, ties Argo on Recovery, and equals Conductor on Governance and Maintenance & Engineering. Its 17-point deficit against Conductor is -16 in Authoring and -13 in Remote services, offset by +12 across the other six sections.",
+    "correlatedAuthoringPenalty": {
+      "featureIds": [
+        "native_definition",
+        "publish_no_deploy",
+        "agent_authoring"
+      ],
+      "maximumPoints": 15,
+      "temporalPoints": 2.5,
+      "conductorPoints": 15,
+      "kestraPoints": 15,
+      "interpretation": "These distinct user outcomes partly reflect one architecture choice. Their combined 12.5-point difference must not be mistaken for three independent platform failures."
+    },
+    "nativeA2AWeightCaveat": {
+      "featureId": "a2a_client",
+      "weight": 5,
+      "interpretation": "Most importance measures native integration convenience here. It is not a selection gate after accepting a reusable adapter. Keep the existing rating visible; use measured adapter scope and lifecycle behavior to decide architecture instead of treating no native client as inability to coordinate A2A services."
+    }
+  },
+  "responsibilityComparison": [
+    {
+      "responsibility": "Durable process execution",
+      "commonContract": "Branches, joins, retries, waits, task history and recoverable orchestration remain engine responsibilities. Do not introduce another scheduler.",
+      "temporal": "Temporal server plus SDK Workers supply the execution foundation; workflow code maps decisions to durable commands.",
+      "conductorKestra": "Native JSON/YAML definitions map decisions to existing engine primitives.",
+      "assessment": "Different expression and deployment models; Temporal is not missing the durable runtime.",
+      "sources": [
+        "matrix",
+        "t-definition",
+        "c-definitions",
+        "k-flow"
+      ]
+    },
+    {
+      "responsibility": "Remote A2A task lifecycle",
+      "commonContract": "Pin protocol/bindings, track task/context identity, continue input-required tasks, collect artifacts, reconcile restart, and separate cancellation requests from observed terminal outcomes.",
+      "temporal": "Reusable Activity/service integration uses durable correlation and async completion or controlled polling; the adapter still implements the protocol and reconciliation.",
+      "conductorKestra": "Conductor documents more native lifecycle/exposure support; Kestra has narrower assessed A2A integration. Their pinned implementations still need E03–E05 proof.",
+      "assessment": "Accepted shared integration responsibility with unequal supplied functionality. Native support may save work, but does not waive service-side ambiguity.",
+      "featureIds": [
+        "a2a_client",
+        "a2a_expose",
+        "remote_reconcile",
+        "cancel"
+      ],
+      "sources": [
+        "matrix",
+        "evaluation",
+        "t-async",
+        "c-a2a"
+      ]
+    },
+    {
+      "responsibility": "External actions, artifacts and acceptance",
+      "commonContract": "The participating service enforces concurrent side-effect deduplication. Exomachina binds acceptance to an exact artifact revision, policy and authorized attempt, and retains durable artifact references.",
+      "temporal": "History and validators provide useful primitives; domain acceptance and an artifact store remain application integration.",
+      "conductorKestra": "Artifact facilities are more directly supplied; revision-aware acceptance, reviewer independence and participating-service effect guarantees still need product logic.",
+      "assessment": "Shared product/service work. Temporal has an additional storage-integration cost in the assessed baseline, not a unique inability to accept artifacts safely.",
+      "featureIds": [
+        "external_dedupe",
+        "artifact_acceptance",
+        "artifacts",
+        "gates",
+        "stale_decisions",
+        "unknown"
+      ],
+      "sources": [
+        "matrix",
+        "evaluation",
+        "t-activity",
+        "t-message"
+      ]
+    },
+    {
+      "responsibility": "Budgets and authority",
+      "commonContract": "Reserve aggregate capacity/spend across concurrent runs; enforce caller, publisher and repair permissions at every entry path; reconcile unknown usage and ownership revocation.",
+      "temporal": "Configure server authorization and product policy; implement shared reservation/usage semantics.",
+      "conductorKestra": "Configure or externally enforce product authorization; implement the same reservation/usage semantics. Processing concurrency alone is not remote spending control.",
+      "assessment": "Substantial shared work; native authentication or concurrency primitives do not replace the domain contract.",
+      "featureIds": [
+        "budget",
+        "eligibility",
+        "rbac",
+        "isolation",
+        "research_isolation"
+      ],
+      "sources": [
+        "matrix",
+        "evaluation"
+      ]
+    },
+    {
+      "responsibility": "Maintenance and Engineering",
+      "commonContract": "Approved recovery contracts, fenced incident ownership, protected evaluators, candidate evidence, publication and observed rollout remain product responsibilities. Optional autoresearch cannot silently mutate live production.",
+      "temporal": "Durable recovery workflows, messages, replay testing and deployment versioning supply useful primitives. Replay checks orchestration compatibility; it does not judge improved agent output.",
+      "conductorKestra": "Native reusable definitions and available operational facilities supply alternative primitives; the Engineering control loop and acceptance policy remain application work.",
+      "assessment": "Neither side supplies the complete desired self-improving factory. Compare required state and recovery ownership consistently.",
+      "featureIds": [
+        "recovery_playbooks",
+        "learning",
+        "protected_evaluator",
+        "candidate_comparison",
+        "staged_rollout",
+        "incident_cases",
+        "trace_regressions",
+        "scoped_learning_memory",
+        "proactive_research"
+      ],
+      "sources": [
+        "matrix",
+        "evaluation",
+        "maintenance",
+        "t-saga",
+        "t-replay",
+        "t-version"
+      ]
+    },
+    {
+      "responsibility": "Factory authoring, validation and publication",
+      "commonContract": "An author receives actionable feedback; only approved capability/profile combinations and gates publish; each run binds an approved immutable factory version.",
+      "temporal": "SDK code is native. A document publication service must additionally supply schema/semantics, validation, immutable definition storage, interpreter compatibility and definition-to-run inspection, or adopt a separately assessed implementation.",
+      "conductorKestra": "Native formats, interpreters, registration and definition revision facilities already exist. Exomachina still adds capability, authority and acceptance policy checks.",
+      "assessment": "This is the central Temporal-specific architecture cost. It is more than an A2A adapter, but need not recreate Temporal scheduling, persistence or retry machinery.",
+      "featureIds": [
+        "native_definition",
+        "publish_no_deploy",
+        "agent_authoring",
+        "schema_discovery",
+        "validate_only",
+        "policy_validation",
+        "visual_graph"
+      ],
+      "sources": [
+        "matrix",
+        "t-dsl-readme",
+        "t-dsl-code",
+        "c-definitions",
+        "k-flow"
+      ]
+    }
+  ],
+  "remainingProofs": [
+    {
+      "id": "T01",
+      "kind": "Temporal-specific authoring gate",
+      "title": "Publish genuinely new compositions without deploying workers",
+      "scenario": "Use the reference verified-research factory; publish two structurally different definitions using the same bounded primitive set. Submit malformed, unsupported and review-bypassing variants.",
+      "passCriteria": "Existing interpreter executes both approved documents; unsupported semantics fail before admission; useful validation identifies errors; no worker image or arbitrary code changes occur for a definition-only composition.",
+      "mapsTo": [
+        "E01",
+        "native_definition",
+        "publish_no_deploy",
+        "validate_only",
+        "policy_validation"
+      ],
+      "status": "unrun"
+    },
+    {
+      "id": "T02",
+      "kind": "Temporal-specific binding gate",
+      "title": "Pin the document and all execution semantics",
+      "scenario": "Pause v1 for a director decision; publish v2; change catalog aliases, child definitions and execution-profile defaults; restart workers and resume v1.",
+      "passCriteria": "v1 retains its exact definition and explicit policy/capability/profile bindings; v2 receives the new approved bindings; no replay path reads mutable latest definitions. Record behavior across child queues and any Continue-As-New boundary.",
+      "mapsTo": [
+        "E01",
+        "E02",
+        "E09"
+      ],
+      "status": "unrun"
+    },
+    {
+      "id": "T03",
+      "kind": "Temporal-specific interpreter lifecycle gate",
+      "title": "Upgrade and roll back the interpreter safely",
+      "scenario": "Replay retained representative histories against a compatible interpreter change and an intentionally incompatible change; exercise pinned and proposed upgrade policies plus rollback.",
+      "passCriteria": "Incompatible histories fail the deployment check; active versions remain serviceable; new runs route intentionally; child/independent-Activity and Continue-As-New boundaries retain declared semantics. The procedure includes retirement of old workers and retained artifact availability.",
+      "mapsTo": [
+        "E01",
+        "trace_regressions",
+        "staged_rollout"
+      ],
+      "status": "unrun"
+    },
+    {
+      "id": "T04",
+      "kind": "Shared required runtime proof",
+      "title": "Reconcile remote work before creating replacement effects",
+      "scenario": "Lose an accepted A2A submission response, crash before recording its ID, restart, and race duplicate submissions/recovery owners. Repeat while a task is input-required and while cancellation races completion.",
+      "passCriteria": "The participating fixture exposes one logical effect; known work reconnects; uncertain outcomes without discovery/idempotency stop unsafe resubmission; revoked attempts cannot advance acceptance. Temporal Activity retries are not credited as external deduplication.",
+      "mapsTo": [
+        "E03",
+        "E04",
+        "E05",
+        "E09"
+      ],
+      "status": "unrun"
+    },
+    {
+      "id": "T05",
+      "kind": "Shared required domain proof",
+      "title": "Protect acceptance and director authority",
+      "scenario": "Exercise malformed/missing artifacts, r1-to-r2 repair, stale/duplicate approvals and conflicting authorized director responses during restart.",
+      "passCriteria": "Exactly the current artifact revision and authorized attempt cross the required gate once; reviewers remain independent; decisions are checked against current authority/state; delivery recovery preserves accepted upstream evidence.",
+      "mapsTo": [
+        "E06",
+        "E07",
+        "E08",
+        "E09"
+      ],
+      "status": "unrun"
+    },
+    {
+      "id": "T06",
+      "kind": "Shared required self-healing proof",
+      "title": "Recover the recovery owner without expanding authority",
+      "scenario": "Apply required M01–M08 against incident diagnosis and approved playbooks; crash and replace the recovery owner while an older attempt or playbook finishes.",
+      "passCriteria": "One fenced owner reconciles effects, bounded repairs stop/escalate, accepted artifacts remain authoritative, and repair privileges do not grant policy editing or publication. Durable saga primitives alone do not establish safe repair.",
+      "mapsTo": [
+        "M01–M08",
+        "recovery_playbooks",
+        "incident_cases"
+      ],
+      "status": "unrun"
+    },
+    {
+      "id": "T07",
+      "kind": "Shared required improvement proof",
+      "title": "Separate candidate experiments from production promotion",
+      "scenario": "Run baseline/candidate evaluations with protected data/evaluators, propose a new factory version, and race promotion/rollback. Run R01–R05 only if optional autoresearch is enabled.",
+      "passCriteria": "Candidate authors cannot edit their evaluator or publish by winning a trial; evidence and rejection reasons persist; new versions pass the same publication path; rollout is observed; experiments respect production resource priority.",
+      "mapsTo": [
+        "M01–M08",
+        "R01–R05 when enabled",
+        "protected_evaluator",
+        "candidate_comparison",
+        "staged_rollout"
+      ],
+      "status": "unrun"
+    },
+    {
+      "id": "T08",
+      "kind": "Shared feasibility and ownership gate",
+      "title": "Measure the complete production responsibility",
+      "scenario": "Run the agreed concurrency fixture with shared capacity/spend reservations; inventory interpreter/catalog/adapter services, stored state, history growth, artifact retention and long-lived version operation.",
+      "passCriteria": "Shared admission holds under contention, unknown costs remain explicit, and documented deployment units/recovery paths/upgrade effort fit the agreed infrastructure budget. Engine processing limits are not mislabeled strict remote spend caps.",
+      "mapsTo": [
+        "E10",
+        "research_isolation",
+        "budget"
+      ],
+      "status": "unrun"
+    }
+  ],
+  "architectureResearch": {
+    "assessmentDate": "2026-09-22",
+    "assessmentType": "Independent architecture tradeoff review using current canonical matrix and primary documentation/source. No runtime trial or feature rerating.",
+    "scope": "Temporal versus Conductor and Kestra as the outer factory runtime; Argo appears only in unchanged numeric diagnostics.",
+    "currentStatus": "Direct conditional candidate after this assessment; prior fallback role superseded. Production and end-to-end proofs remain open.",
+    "proposedRecommendation": {
+      "status": "conditional-co-evaluation-candidate",
+      "shortLabel": "Strong contender; authoring proof required",
+      "recommendation": "Give Temporal a bounded authoring-and-recovery proof alongside Conductor and Kestra. Its runtime strengths justify this study; retain native-definition engines as the lower-authoring-cost baseline until the additional Temporal layer is demonstrated. This is a proposed assessment role, not a selected engine or cleared architecture.",
+      "reason": "The decisive question is whether owning a restricted publication/interpreter layer costs less than the durability, supervision and deployment capabilities it gains for this product. Native A2A, acceptance policy, spending controls and Engineering cannot be treated as unique Temporal disqualifiers.",
+      "conditionalOutcome": "If an existing maintained layer or small restricted interpreter meets the reference factory, versioning and governance requirements with acceptable ownership, Temporal should compete directly. If it becomes a broad workflow platform, weakens publication guarantees, or requires arbitrary agent code deployment by default, prefer a native-definition candidate.",
+      "notAuthorizedByThisArtifact": [
+        "No feature ratings or weights changed",
+        "No candidate selected",
+        "No exclusion reopened",
+        "No runtime proof claimed"
+      ]
+    },
+    "numericDiagnostics": {
+      "basis": "Unchanged 65-feature canonical assessment: Most=5, Mid=3, Least=1; full=1, partial=0.5, none=0; maximum=247. The following are explanatory decompositions, not a new ranking or weighting proposal.",
+      "overall": {
+        "temporal": {
+          "points": 139.5,
+          "maximum": 247,
+          "percent": 56.5
+        },
+        "conductor": {
+          "points": 156.5,
+          "maximum": 247,
+          "percent": 63.4
+        },
+        "kestra": {
+          "points": 144.5,
+          "maximum": 247,
+          "percent": 58.5
+        },
+        "argo": {
+          "points": 142.5,
+          "maximum": 247,
+          "percent": 57.7
+        }
+      },
+      "sections": [
+        {
+          "section": "Authoring",
+          "maximumPoints": 27,
+          "scores": {
+            "temporal": {
+              "points": 10.5,
+              "maximum": 27,
+              "percent": 38.9
+            },
+            "conductor": {
+              "points": 26.5,
+              "maximum": 27,
+              "percent": 98.1
+            },
+            "kestra": {
+              "points": 26.5,
+              "maximum": 27,
+              "percent": 98.1
+            },
+            "argo": {
+              "points": 24.0,
+              "maximum": 27,
+              "percent": 88.9
+            }
+          }
+        },
+        {
+          "section": "Graph",
+          "maximumPoints": 34,
+          "scores": {
+            "temporal": {
+              "points": 31.0,
+              "maximum": 34,
+              "percent": 91.2
+            },
+            "conductor": {
+              "points": 28.0,
+              "maximum": 34,
+              "percent": 82.4
+            },
+            "kestra": {
+              "points": 27.0,
+              "maximum": 34,
+              "percent": 79.4
+            },
+            "argo": {
+              "points": 25.5,
+              "maximum": 34,
+              "percent": 75.0
+            }
+          }
+        },
+        {
+          "section": "Remote services",
+          "maximumPoints": 31,
+          "scores": {
+            "temporal": {
+              "points": 8.0,
+              "maximum": 31,
+              "percent": 25.8
+            },
+            "conductor": {
+              "points": 21,
+              "maximum": 31,
+              "percent": 67.7
+            },
+            "kestra": {
+              "points": 10.5,
+              "maximum": 31,
+              "percent": 33.9
+            },
+            "argo": {
+              "points": 10.5,
+              "maximum": 31,
+              "percent": 33.9
+            }
+          }
+        },
+        {
+          "section": "Recovery",
+          "maximumPoints": 35,
+          "scores": {
+            "temporal": {
+              "points": 28.5,
+              "maximum": 35,
+              "percent": 81.4
+            },
+            "conductor": {
+              "points": 27.0,
+              "maximum": 35,
+              "percent": 77.1
+            },
+            "kestra": {
+              "points": 25.5,
+              "maximum": 35,
+              "percent": 72.9
+            },
+            "argo": {
+              "points": 28.5,
+              "maximum": 35,
+              "percent": 81.4
+            }
+          }
+        },
+        {
+          "section": "Operations",
+          "maximumPoints": 28,
+          "scores": {
+            "temporal": {
+              "points": 20,
+              "maximum": 28,
+              "percent": 71.4
+            },
+            "conductor": {
+              "points": 13.0,
+              "maximum": 28,
+              "percent": 46.4
+            },
+            "kestra": {
+              "points": 14.5,
+              "maximum": 28,
+              "percent": 51.8
+            },
+            "argo": {
+              "points": 17.5,
+              "maximum": 28,
+              "percent": 62.5
+            }
+          }
+        },
+        {
+          "section": "Governance",
+          "maximumPoints": 33,
+          "scores": {
+            "temporal": {
+              "points": 11.5,
+              "maximum": 33,
+              "percent": 34.8
+            },
+            "conductor": {
+              "points": 11.5,
+              "maximum": 33,
+              "percent": 34.8
+            },
+            "kestra": {
+              "points": 13.0,
+              "maximum": 33,
+              "percent": 39.4
+            },
+            "argo": {
+              "points": 15.5,
+              "maximum": 33,
+              "percent": 47.0
+            }
+          }
+        },
+        {
+          "section": "Experience",
+          "maximumPoints": 22,
+          "scores": {
+            "temporal": {
+              "points": 16.0,
+              "maximum": 22,
+              "percent": 72.7
+            },
+            "conductor": {
+              "points": 15.5,
+              "maximum": 22,
+              "percent": 70.5
+            },
+            "kestra": {
+              "points": 14.5,
+              "maximum": 22,
+              "percent": 65.9
+            },
+            "argo": {
+              "points": 9.5,
+              "maximum": 22,
+              "percent": 43.2
+            }
+          }
+        },
+        {
+          "section": "Maintenance & Engineering",
+          "maximumPoints": 37,
+          "scores": {
+            "temporal": {
+              "points": 14.0,
+              "maximum": 37,
+              "percent": 37.8
+            },
+            "conductor": {
+              "points": 14.0,
+              "maximum": 37,
+              "percent": 37.8
+            },
+            "kestra": {
+              "points": 13.0,
+              "maximum": 37,
+              "percent": 35.1
+            },
+            "argo": {
+              "points": 11.5,
+              "maximum": 37,
+              "percent": 31.1
+            }
+          }
+        }
+      ],
+      "temporalPointDeltas": {
+        "conductor": {
+          "temporalMinusOtherOverallPoints": -17.0,
+          "authoringPoints": -16.0,
+          "remoteServicesPoints": -13.0,
+          "otherSixSectionsPoints": 12.0
+        },
+        "kestra": {
+          "temporalMinusOtherOverallPoints": -5.0,
+          "authoringPoints": -16.0,
+          "remoteServicesPoints": -2.5,
+          "otherSixSectionsPoints": 13.5
+        },
+        "argo": {
+          "temporalMinusOtherOverallPoints": -3.0,
+          "authoringPoints": -13.5,
+          "remoteServicesPoints": -2.5,
+          "otherSixSectionsPoints": 13.0
+        }
+      },
+      "interpretation": "Temporal leads these four on Graph, Operations and Experience, ties Argo on Recovery, and equals Conductor on Governance and Maintenance & Engineering. Its 17-point deficit against Conductor is -16 in Authoring and -13 in Remote services, offset by +12 across the other six sections.",
+      "correlatedAuthoringPenalty": {
+        "featureIds": [
+          "native_definition",
+          "publish_no_deploy",
+          "agent_authoring"
+        ],
+        "maximumPoints": 15,
+        "temporalPoints": 2.5,
+        "conductorPoints": 15,
+        "kestraPoints": 15,
+        "interpretation": "These distinct user outcomes partly reflect one architecture choice. Their combined 12.5-point difference must not be mistaken for three independent platform failures."
+      },
+      "nativeA2AWeightCaveat": {
+        "featureId": "a2a_client",
+        "weight": 5,
+        "interpretation": "Most importance measures native integration convenience here. It is not a selection gate after accepting a reusable adapter. Keep the existing rating visible; use measured adapter scope and lifecycle behavior to decide architecture instead of treating no native client as inability to coordinate A2A services."
+      }
+    },
+    "responsibilityComparison": [
+      {
+        "responsibility": "Durable process execution",
+        "commonContract": "Branches, joins, retries, waits, task history and recoverable orchestration remain engine responsibilities. Do not introduce another scheduler.",
+        "temporal": "Temporal server plus SDK Workers supply the execution foundation; workflow code maps decisions to durable commands.",
+        "conductorKestra": "Native JSON/YAML definitions map decisions to existing engine primitives.",
+        "assessment": "Different expression and deployment models; Temporal is not missing the durable runtime.",
+        "sources": [
+          "matrix",
+          "t-definition",
+          "c-definitions",
+          "k-flow"
+        ]
+      },
+      {
+        "responsibility": "Remote A2A task lifecycle",
+        "commonContract": "Pin protocol/bindings, track task/context identity, continue input-required tasks, collect artifacts, reconcile restart, and separate cancellation requests from observed terminal outcomes.",
+        "temporal": "Reusable Activity/service integration uses durable correlation and async completion or controlled polling; the adapter still implements the protocol and reconciliation.",
+        "conductorKestra": "Conductor documents more native lifecycle/exposure support; Kestra has narrower assessed A2A integration. Their pinned implementations still need E03–E05 proof.",
+        "assessment": "Accepted shared integration responsibility with unequal supplied functionality. Native support may save work, but does not waive service-side ambiguity.",
+        "featureIds": [
+          "a2a_client",
+          "a2a_expose",
+          "remote_reconcile",
+          "cancel"
+        ],
+        "sources": [
+          "matrix",
+          "evaluation",
+          "t-async",
+          "c-a2a"
+        ]
+      },
+      {
+        "responsibility": "External actions, artifacts and acceptance",
+        "commonContract": "The participating service enforces concurrent side-effect deduplication. Exomachina binds acceptance to an exact artifact revision, policy and authorized attempt, and retains durable artifact references.",
+        "temporal": "History and validators provide useful primitives; domain acceptance and an artifact store remain application integration.",
+        "conductorKestra": "Artifact facilities are more directly supplied; revision-aware acceptance, reviewer independence and participating-service effect guarantees still need product logic.",
+        "assessment": "Shared product/service work. Temporal has an additional storage-integration cost in the assessed baseline, not a unique inability to accept artifacts safely.",
+        "featureIds": [
+          "external_dedupe",
+          "artifact_acceptance",
+          "artifacts",
+          "gates",
+          "stale_decisions",
+          "unknown"
+        ],
+        "sources": [
+          "matrix",
+          "evaluation",
+          "t-activity",
+          "t-message"
+        ]
+      },
+      {
+        "responsibility": "Budgets and authority",
+        "commonContract": "Reserve aggregate capacity/spend across concurrent runs; enforce caller, publisher and repair permissions at every entry path; reconcile unknown usage and ownership revocation.",
+        "temporal": "Configure server authorization and product policy; implement shared reservation/usage semantics.",
+        "conductorKestra": "Configure or externally enforce product authorization; implement the same reservation/usage semantics. Processing concurrency alone is not remote spending control.",
+        "assessment": "Substantial shared work; native authentication or concurrency primitives do not replace the domain contract.",
+        "featureIds": [
+          "budget",
+          "eligibility",
+          "rbac",
+          "isolation",
+          "research_isolation"
+        ],
+        "sources": [
+          "matrix",
+          "evaluation"
+        ]
+      },
+      {
+        "responsibility": "Maintenance and Engineering",
+        "commonContract": "Approved recovery contracts, fenced incident ownership, protected evaluators, candidate evidence, publication and observed rollout remain product responsibilities. Optional autoresearch cannot silently mutate live production.",
+        "temporal": "Durable recovery workflows, messages, replay testing and deployment versioning supply useful primitives. Replay checks orchestration compatibility; it does not judge improved agent output.",
+        "conductorKestra": "Native reusable definitions and available operational facilities supply alternative primitives; the Engineering control loop and acceptance policy remain application work.",
+        "assessment": "Neither side supplies the complete desired self-improving factory. Compare required state and recovery ownership consistently.",
+        "featureIds": [
+          "recovery_playbooks",
+          "learning",
+          "protected_evaluator",
+          "candidate_comparison",
+          "staged_rollout",
+          "incident_cases",
+          "trace_regressions",
+          "scoped_learning_memory",
+          "proactive_research"
+        ],
+        "sources": [
+          "matrix",
+          "evaluation",
+          "maintenance",
+          "t-saga",
+          "t-replay",
+          "t-version"
+        ]
+      },
+      {
+        "responsibility": "Factory authoring, validation and publication",
+        "commonContract": "An author receives actionable feedback; only approved capability/profile combinations and gates publish; each run binds an approved immutable factory version.",
+        "temporal": "SDK code is native. A document publication service must additionally supply schema/semantics, validation, immutable definition storage, interpreter compatibility and definition-to-run inspection, or adopt a separately assessed implementation.",
+        "conductorKestra": "Native formats, interpreters, registration and definition revision facilities already exist. Exomachina still adds capability, authority and acceptance policy checks.",
+        "assessment": "This is the central Temporal-specific architecture cost. It is more than an A2A adapter, but need not recreate Temporal scheduling, persistence or retry machinery.",
+        "featureIds": [
+          "native_definition",
+          "publish_no_deploy",
+          "agent_authoring",
+          "schema_discovery",
+          "validate_only",
+          "policy_validation",
+          "visual_graph"
+        ],
+        "sources": [
+          "matrix",
+          "t-dsl-readme",
+          "t-dsl-code",
+          "c-definitions",
+          "k-flow"
+        ]
+      }
+    ],
+    "authoringPaths": [
+      {
+        "path": "Adopt an existing DSL layer",
+        "fit": "Potentially preserves document authoring without owning every interpreter primitive.",
+        "evidence": "The official Go sample proves the interpreter pattern. Current TypeScript samples list YAML DSL/XState projects in an external-project section with a maintenance caveat. These are not evidence that Temporal ships a complete supported factory-publication platform.",
+        "requiredAssessment": [
+          "Exact maintained project, released version and supported Temporal/SDK range",
+          "License and distribution/embedding rights for this product",
+          "Actual branch/join/loop/nesting/wait semantics and deterministic expression evaluation",
+          "Definition immutability, interpreter upgrades, replay tests and dependency binding",
+          "Governed publication, inspection mapping and operational ownership"
+        ],
+        "verdict": "Screen existing implementations before inventing another language, but assess the combined stack separately; no specific external layer is certified here.",
+        "sources": [
+          "t-dsl-readme",
+          "t-dsl-code",
+          "t-external-examples"
+        ]
+      },
+      {
+        "path": "Own a restricted interpreter",
+        "fit": "One stable workflow interpreter consumes approved immutable definitions; new compositions of existing primitives can run without redeploying Workers.",
+        "boundedVocabulary": [
+          "Invoke an approved capability/profile",
+          "Sequence and conditional route",
+          "Parallel branches with explicit join policy",
+          "Bounded repair/retry loop",
+          "Nested factory call with a version binding",
+          "Authorized persisted decision wait"
+        ],
+        "applicationOwnership": [
+          "Schema and deterministic expression semantics",
+          "Semantic/static validation plus Exomachina publication checks",
+          "Versioned definition catalog and run binding",
+          "Interpreter release compatibility and replay fixtures",
+          "Node-to-history inspection mapping and failure diagnostics"
+        ],
+        "scopeBoundary": "Use Temporal for durable commands, timers, child workflows and history. Keep arbitrary generated code, a second scheduler, a second authoritative execution ledger and a general-purpose plugin marketplace outside the initial proof.",
+        "verdict": "Credible architecture hypothesis requiring a bounded proof. New primitive semantics or interpreter changes still require tested code deployment; document-only rearrangements need not.",
+        "sources": [
+          "t-dsl-readme",
+          "t-dsl-code",
+          "t-definition",
+          "t-replay"
+        ]
+      },
+      {
+        "path": "Agent-authored workflow code",
+        "fit": "Uses Temporal directly and allows rich control flow.",
+        "applicationOwnership": [
+          "Review and validate generated code",
+          "Build and deploy compatible Worker versions",
+          "Isolate authoring and execution privileges",
+          "Retain reproducible code/dependency artifacts and safe rollout paths"
+        ],
+        "verdict": "Reasonable only if explicitly accepting code publication as the default product contract. It does not satisfy the current requirement for a new composition to run without a worker deployment.",
+        "sources": [
+          "t-definition",
+          "t-version",
+          "evaluation"
+        ]
+      }
+    ],
+    "bindingModel": {
+      "proposedRunBinding": [
+        "Immutable factory document digest/revision",
+        "Definition schema and interpreter semantic version",
+        "Worker Deployment Version or explicit compatible upgrade policy",
+        "Capability contract, service identity and execution profile revisions",
+        "Artifact acceptance/evaluator policy revision"
+      ],
+      "why": "A document snapshot does not pin interpreter semantics, and a pinned interpreter does not freeze remote services, model settings or external policy. Bind these independently.",
+      "temporalCaveat": "Worker pinning has task-queue and independent-Activity boundaries; child, retry and Continue-As-New inheritance rules differ. Verify the chosen topology rather than assuming a single Worker pin covers every dependency.",
+      "nativeEngineCaveat": "Conductor snapshots and Kestra revisions reduce authoring infrastructure, but remote dependency and acceptance-policy bindings still need explicit product treatment.",
+      "sources": [
+        "t-version",
+        "c-definitions",
+        "k-flow",
+        "evaluation"
+      ]
+    },
+    "proofObligations": [
+      {
+        "id": "T01",
+        "kind": "Temporal-specific authoring gate",
+        "title": "Publish genuinely new compositions without deploying workers",
+        "scenario": "Use the reference verified-research factory; publish two structurally different definitions using the same bounded primitive set. Submit malformed, unsupported and review-bypassing variants.",
+        "passCriteria": "Existing interpreter executes both approved documents; unsupported semantics fail before admission; useful validation identifies errors; no worker image or arbitrary code changes occur for a definition-only composition.",
+        "mapsTo": [
+          "E01",
+          "native_definition",
+          "publish_no_deploy",
+          "validate_only",
+          "policy_validation"
+        ],
+        "status": "unrun"
+      },
+      {
+        "id": "T02",
+        "kind": "Temporal-specific binding gate",
+        "title": "Pin the document and all execution semantics",
+        "scenario": "Pause v1 for a director decision; publish v2; change catalog aliases, child definitions and execution-profile defaults; restart workers and resume v1.",
+        "passCriteria": "v1 retains its exact definition and explicit policy/capability/profile bindings; v2 receives the new approved bindings; no replay path reads mutable latest definitions. Record behavior across child queues and any Continue-As-New boundary.",
+        "mapsTo": [
+          "E01",
+          "E02",
+          "E09"
+        ],
+        "status": "unrun"
+      },
+      {
+        "id": "T03",
+        "kind": "Temporal-specific interpreter lifecycle gate",
+        "title": "Upgrade and roll back the interpreter safely",
+        "scenario": "Replay retained representative histories against a compatible interpreter change and an intentionally incompatible change; exercise pinned and proposed upgrade policies plus rollback.",
+        "passCriteria": "Incompatible histories fail the deployment check; active versions remain serviceable; new runs route intentionally; child/independent-Activity and Continue-As-New boundaries retain declared semantics. The procedure includes retirement of old workers and retained artifact availability.",
+        "mapsTo": [
+          "E01",
+          "trace_regressions",
+          "staged_rollout"
+        ],
+        "status": "unrun"
+      },
+      {
+        "id": "T04",
+        "kind": "Shared required runtime proof",
+        "title": "Reconcile remote work before creating replacement effects",
+        "scenario": "Lose an accepted A2A submission response, crash before recording its ID, restart, and race duplicate submissions/recovery owners. Repeat while a task is input-required and while cancellation races completion.",
+        "passCriteria": "The participating fixture exposes one logical effect; known work reconnects; uncertain outcomes without discovery/idempotency stop unsafe resubmission; revoked attempts cannot advance acceptance. Temporal Activity retries are not credited as external deduplication.",
+        "mapsTo": [
+          "E03",
+          "E04",
+          "E05",
+          "E09"
+        ],
+        "status": "unrun"
+      },
+      {
+        "id": "T05",
+        "kind": "Shared required domain proof",
+        "title": "Protect acceptance and director authority",
+        "scenario": "Exercise malformed/missing artifacts, r1-to-r2 repair, stale/duplicate approvals and conflicting authorized director responses during restart.",
+        "passCriteria": "Exactly the current artifact revision and authorized attempt cross the required gate once; reviewers remain independent; decisions are checked against current authority/state; delivery recovery preserves accepted upstream evidence.",
+        "mapsTo": [
+          "E06",
+          "E07",
+          "E08",
+          "E09"
+        ],
+        "status": "unrun"
+      },
+      {
+        "id": "T06",
+        "kind": "Shared required self-healing proof",
+        "title": "Recover the recovery owner without expanding authority",
+        "scenario": "Apply required M01–M08 against incident diagnosis and approved playbooks; crash and replace the recovery owner while an older attempt or playbook finishes.",
+        "passCriteria": "One fenced owner reconciles effects, bounded repairs stop/escalate, accepted artifacts remain authoritative, and repair privileges do not grant policy editing or publication. Durable saga primitives alone do not establish safe repair.",
+        "mapsTo": [
+          "M01–M08",
+          "recovery_playbooks",
+          "incident_cases"
+        ],
+        "status": "unrun"
+      },
+      {
+        "id": "T07",
+        "kind": "Shared required improvement proof",
+        "title": "Separate candidate experiments from production promotion",
+        "scenario": "Run baseline/candidate evaluations with protected data/evaluators, propose a new factory version, and race promotion/rollback. Run R01–R05 only if optional autoresearch is enabled.",
+        "passCriteria": "Candidate authors cannot edit their evaluator or publish by winning a trial; evidence and rejection reasons persist; new versions pass the same publication path; rollout is observed; experiments respect production resource priority.",
+        "mapsTo": [
+          "M01–M08",
+          "R01–R05 when enabled",
+          "protected_evaluator",
+          "candidate_comparison",
+          "staged_rollout"
+        ],
+        "status": "unrun"
+      },
+      {
+        "id": "T08",
+        "kind": "Shared feasibility and ownership gate",
+        "title": "Measure the complete production responsibility",
+        "scenario": "Run the agreed concurrency fixture with shared capacity/spend reservations; inventory interpreter/catalog/adapter services, stored state, history growth, artifact retention and long-lived version operation.",
+        "passCriteria": "Shared admission holds under contention, unknown costs remain explicit, and documented deployment units/recovery paths/upgrade effort fit the agreed infrastructure budget. Engine processing limits are not mislabeled strict remote spend caps.",
+        "mapsTo": [
+          "E10",
+          "research_isolation",
+          "budget"
+        ],
+        "status": "unrun"
+      }
+    ],
+    "decisionBoundary": {
+      "temporalWinsIf": "The bounded authoring contract remains maintainable and its durable supervision/recovery/versioning strengths demonstrably reduce total product integration or operational risk.",
+      "nativeEngineWinsIf": "Native publication, schema tooling, run inspection and supplied remote integration satisfy the product with substantially less owned semantic infrastructure, while passing the same runtime/domain proofs.",
+      "unacceptableShortcut": "Treating a sample interpreter, workflow replay success, native A2A checkbox, or high section score as proof that the complete factory product is production-ready."
+    },
+    "sources": [
+      {
+        "id": "matrix",
+        "title": "Current canonical Exomachina feature assessment",
+        "path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/docs/exomachina-feature-matrix.json"
+      },
+      {
+        "id": "evaluation",
+        "title": "Current agreed reference factory and E01–E10 proof obligations",
+        "path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/docs/engine-evaluation.md"
+      },
+      {
+        "id": "maintenance",
+        "title": "Required maintenance and optional research proof obligations",
+        "path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/docs/factory-maintenance.md"
+      },
+      {
+        "id": "t-definition",
+        "title": "Temporal workflow determinism and code evolution",
+        "url": "https://docs.temporal.io/workflow-definition"
+      },
+      {
+        "id": "t-dsl-readme",
+        "title": "Official Temporal Go DSL sample usage",
+        "url": "https://github.com/temporalio/samples-go/blob/main/dsl/README.md"
+      },
+      {
+        "id": "t-dsl-code",
+        "title": "Official Temporal Go DSL interpreter implementation",
+        "url": "https://github.com/temporalio/samples-go/blob/main/dsl/workflow.go"
+      },
+      {
+        "id": "t-external-examples",
+        "title": "TypeScript samples: external DSL/XState examples and maintenance caveat",
+        "url": "https://github.com/temporalio/samples-typescript#external-apps--libraries"
+      },
+      {
+        "id": "t-version",
+        "title": "Worker Versioning: pinning, independent Activities, child and run inheritance",
+        "url": "https://docs.temporal.io/worker-versioning"
+      },
+      {
+        "id": "t-replay",
+        "title": "Replay testing against retained histories",
+        "url": "https://docs.temporal.io/develop/python/best-practices/testing-suite"
+      },
+      {
+        "id": "t-activity",
+        "title": "Activities, retries and participating-service idempotency",
+        "url": "https://docs.temporal.io/activity-definition"
+      },
+      {
+        "id": "t-message",
+        "title": "Messages, Update validators and handler concurrency",
+        "url": "https://docs.temporal.io/develop/java/workflows/message-passing"
+      },
+      {
+        "id": "t-async",
+        "title": "Asynchronous Activity completion",
+        "url": "https://docs.temporal.io/develop/python/activities/asynchronous-activity"
+      },
+      {
+        "id": "t-saga",
+        "title": "Compensating recovery as application-authored sagas",
+        "url": "https://docs.temporal.io/design-patterns/saga-pattern"
+      },
+      {
+        "id": "c-definitions",
+        "title": "Conductor native JSON definition storage, snapshots and runtime publication",
+        "url": "https://docs.conductor-oss.org/architecture/json-native.html"
+      },
+      {
+        "id": "c-a2a",
+        "title": "Conductor A2A task and workflow exposure integration",
+        "url": "https://docs.conductor-oss.org/devguide/ai/a2a-integration.html"
+      },
+      {
+        "id": "k-flow",
+        "title": "Kestra YAML flows, stored revisions, drafts and deployment",
+        "url": "https://kestra.io/docs/workflow-components/flow"
+      }
+    ]
+  },
+  "zigflowSourceAudit": {
+    "assessmentDate": "2026-09-22",
+    "subject": "Official Zigflow as a declarative layer over Temporal for Exomachina",
+    "evidenceLevel": "Current primary docs and pinned official release source/license inspected; no runtime execution by this subagent. Parent owns bounded CLI/runtime probes.",
+    "release": {
+      "repository": "https://github.com/zigflow/zigflow",
+      "tag": "v0.15.2",
+      "commit": "a18538ba585e580c466ad3f743874af642ccad68",
+      "publishedAt": "2026-09-17T20:27:15Z",
+      "releaseUrl": "https://github.com/zigflow/zigflow/releases/tag/v0.15.2",
+      "temporalGoSDK": "v1.48.0",
+      "temporalAPI": "v1.63.5",
+      "zigflowSchemaModule": "v0.0.0-20260701135855-e79c2b6217b1",
+      "openWorkflowGoSDK": "v4.0.0",
+      "goDirective": "1.27.1"
+    },
+    "mainComparison": {
+      "inspectedHead": "44d7f1cbaa6de0c4ba7f1fea0758d5bbe776880f",
+      "commitsAheadOfRelease": 2,
+      "materialDifference": "Unreleased fork parent-cancellation fix waits for branch closure; no dynamic inline definition publication feature appears in this exact main diff.",
+      "sources": [
+        "z-main-diff"
+      ]
+    },
+    "conclusion": {
+      "verdict": "Real, reusable declarative authoring/execution layer; stock v0.15.2 fails the present no-worker-deployment/restart publication requirement.",
+      "value": "Removes the need to invent an initial YAML interpreter for its supported primitive set and supplies validation/MCP authoring, Temporal waits/messages and operational versioning hooks.",
+      "primaryBlocker": "Publishing new factory structures requires registering a changed worker implementation; production guidance favors immutable images containing the definitions.",
+      "acceptableOnlyIf": "The owner accepts factory publication as a managed Temporal worker rollout, or explicitly authorizes substantial dynamic-definition/publication engine work.",
+      "notALicenseBlocker": "Inspected Apache 2.0 core supports the stated OSS/commercial product use, with normal obligations and dependency review.",
+      "claimsToAvoid": [
+        "Watch is production no-restart publication.",
+        "document.version selects an immutable definition for every run.",
+        "All Temporal SDK features are exposed through the Zigflow DSL.",
+        "acceptIf rejects stale Updates before state mutation.",
+        "Current-main fork cancellation fixes are in v0.15.2.",
+        "The droidraja fork’s dynamic inline workflow facility is an official released Zigflow feature."
+      ]
+    },
+    "dslCapabilities": [
+      {
+        "capability": "Sequential tasks and conditionals",
+        "support": "native",
+        "note": "Do, task if conditions, switch and same-scope flow directives are implemented.",
+        "sources": [
+          "z-do",
+          "z-builder",
+          "z-tasks-doc"
+        ]
+      },
+      {
+        "capability": "Runtime loops and bounded repair",
+        "support": "native_with_authored_bounds",
+        "note": "For iterates arrays, maps or integer counts sequentially; use explicit counts and while conditions. No automatic shared monetary/depth budget.",
+        "sources": [
+          "z-for",
+          "z-for-doc"
+        ]
+      },
+      {
+        "capability": "Parallel branches and all-required completion",
+        "support": "native",
+        "note": "Fork creates child workflows from declared branches; normal mode awaits completion or error.",
+        "sources": [
+          "z-fork",
+          "z-fork-doc"
+        ]
+      },
+      {
+        "capability": "First-completion race",
+        "support": "native_limited",
+        "note": "Competing fork requests cancellation of non-winners. A domain acceptance predicate/quorum and reversal of already-performed effects are not supplied.",
+        "sources": [
+          "z-fork",
+          "z-fork-doc"
+        ]
+      },
+      {
+        "capability": "Runtime-sized bounded parallel map",
+        "support": "not_native_in_assessed_release",
+        "note": "For waits sequentially, while fork branches are compiled from the definition. Parallel runtime fan-out needs additional implementation.",
+        "sources": [
+          "z-for",
+          "z-fork"
+        ]
+      },
+      {
+        "capability": "Named nested workflows",
+        "support": "native_limited",
+        "note": "run.workflow invokes registered child types, with awaited or abandoned execution; version binding, child input and state boundary limitations are listed separately.",
+        "sources": [
+          "z-run",
+          "z-run-doc"
+        ]
+      },
+      {
+        "capability": "Durable waits",
+        "support": "native",
+        "note": "Literal/expression durations and absolute-until timers use Temporal durable timers; Zigflow extensions reduce cross-runtime portability.",
+        "sources": [
+          "z-wait-doc"
+        ]
+      },
+      {
+        "capability": "Signals, queries and Updates",
+        "support": "native_limited",
+        "note": "Listen registers native Temporal message handlers; signals/Updates wait with a default 60-second timeout. acceptIf controls completion, not Update rejection.",
+        "sources": [
+          "z-listen",
+          "z-listen-doc"
+        ]
+      },
+      {
+        "capability": "Error handling and retries",
+        "support": "native",
+        "note": "Raise and try/catch plus Temporal activity metadata options supply failure handling. External side-effect deduplication remains application-owned.",
+        "sources": [
+          "z-builder",
+          "z-tasks-doc"
+        ]
+      },
+      {
+        "capability": "Schema discovery and validation",
+        "support": "native",
+        "note": "Pinned JSON schema, CLI validation and read-only MCP schema/examples/validation are released. They do not publish factories or enforce domain policy.",
+        "sources": [
+          "z-loader",
+          "z-mcp"
+        ]
+      },
+      {
+        "capability": "Continue-as-New",
+        "support": "native_limited",
+        "note": "Execution carries input/state and task cursor into a new run; handlers are awaited. It does not carry an immutable DSL definition.",
+        "sources": [
+          "z-do",
+          "z-state"
+        ]
+      },
+      {
+        "capability": "Production publication without worker lifecycle changes",
+        "support": "not_native_in_assessed_release",
+        "note": "Stock command loads and registers definitions at startup; watch replaces workers and is development-only.",
+        "sources": [
+          "z-command",
+          "z-watch",
+          "z-test"
+        ]
+      }
+    ],
+    "findings": [
+      {
+        "id": "publication-worker-lifecycle",
+        "status": "confirmed_limitation",
+        "severity": "selection_gate",
+        "features": [
+          "publish_no_deploy",
+          "agent_authoring"
+        ],
+        "claim": "Stock v0.15.2 does not publish arbitrary new factory documents into an already-running generic interpreter without worker deployment, replacement or restart.",
+        "evidence": "runRunCmd calls prepareRegistrations before startInitialWorkers. Definitions are compiled to workflow closures and registered on workers by type. Production docs describe workers plus Temporal, with no separate definition API/database. Testing docs explicitly require restarting after YAML changes.",
+        "implication": "It solves YAML authoring and implementation reuse, but does not satisfy Exomachina’s current publish-new-compositions-without-worker-lifecycle-change requirement.",
+        "workaround": "Either accept managed immutable worker rollouts for factory publications, or build/adopt a production dynamic-definition interpreter and registry. Reusing the Go binary avoids recompiling application code but still changes worker deployment.",
+        "workaroundQuality": "First path changes the publication requirement; second is a substantial new orchestration/publication subsystem, not a small adapter.",
+        "sources": [
+          "z-command",
+          "z-workflows",
+          "z-workers",
+          "z-build",
+          "z-do",
+          "z-deploy",
+          "z-test"
+        ]
+      },
+      {
+        "id": "watch-is-worker-replacement",
+        "status": "confirmed_limitation",
+        "severity": "high",
+        "features": [
+          "publish_no_deploy",
+          "version_binding"
+        ],
+        "claim": "--watch is explicitly for development and replaces workers; it is not production hot publication.",
+        "evidence": "command.go logs that watch is not recommended for production. watch.go handleDebounce launches replacement workers, then stops current workers. It watches resolved files; rediscovery happens after file events, not through a runtime catalog API.",
+        "implication": "It cannot justify a no-worker-restart score or immutable active-run definition guarantee. Changed workers can briefly coexist, and the same configured build ID is reused unless the operator changes it.",
+        "workaround": "Use immutable deployments with safe Temporal version routing, or implement a separate supported publication lifecycle.",
+        "workaroundQuality": "Documented deployment alternative; watch is not accepted production proof.",
+        "sources": [
+          "z-command",
+          "z-watch",
+          "z-workers",
+          "z-flags"
+        ]
+      },
+      {
+        "id": "document-version-not-binding",
+        "status": "confirmed_limitation",
+        "severity": "high",
+        "features": [
+          "version_binding",
+          "nested",
+          "staged_rollout"
+        ],
+        "claim": "document.version is not the worker registration or execution version binding.",
+        "evidence": "workflow_builder.go derives workflowType from doc.Document.Name; DoTaskBuilder registers Name only. Conflict detection rejects duplicate workflowType on the same queue regardless of document.version. The execution state contains no definition document/hash.",
+        "implication": "A semantic version string alone does not make definitions immutable or select older factories. History replays against the implementation registered on the worker receiving the task.",
+        "workaround": "Bind the Zigflow binary, DSL files, dependencies and relevant configuration into an immutable artifact; route to distinct pinned Temporal Worker Deployment versions or explicit versioned workflow identities.",
+        "workaroundQuality": "Supported operational pattern, requiring deployment management and careful retention; not an automatic DSL catalog feature.",
+        "sources": [
+          "z-build",
+          "z-do",
+          "z-workflows",
+          "z-state",
+          "z-k8s"
+        ]
+      },
+      {
+        "id": "worker-pinning-available",
+        "status": "confirmed_capability_with_configuration",
+        "severity": "high",
+        "features": [
+          "version_binding",
+          "staged_rollout"
+        ],
+        "claim": "Released Zigflow supports Temporal Worker Deployment versioning, including pinned behavior; it is disabled by default, and the enabled behavior default is autoupgrade.",
+        "evidence": "flags.go registers enable-versioning, temporal-worker-build-id, temporal-deployment-name and default-versioning-type, whose default is autoupgrade. workers.go sets DeploymentOptions and requires build ID/deployment name when enabled.",
+        "implication": "Properly configured immutable worker versions can bind both interpreter and loaded DSL. This does not eliminate deployments or automatically retain compatible activity services.",
+        "workaround": "Use explicit pinned behavior, unique immutable build IDs covering interpreter plus definitions, keep old workers available for pinned runs, and test child/Continue-as-New routing and external activity compatibility.",
+        "workaroundQuality": "Native supported routing primitive; complete release bundle and long-run compatibility remain an operational contract and untested.",
+        "sources": [
+          "z-flags",
+          "z-workers",
+          "z-k8s",
+          "z-do"
+        ]
+      },
+      {
+        "id": "nested-public-contract",
+        "status": "source_verified_gap",
+        "severity": "high",
+        "features": [
+          "nested",
+          "typed_io",
+          "mapping"
+        ],
+        "claim": "Named child workflows exist, but public input mapping, schema isolation and immutable version selection need verification before treating them as independent catalog factory interfaces.",
+        "evidence": "runWorkflow calls ExecuteChildWorkflow(ctx, t.task.Run.Workflow.Name, input, state), setting only ParentClosePolicy for await:false. It does not select a child task queue/version or evaluate the documented run.workflow.input there. Internal model namespace/version defaults are unused in dispatch and do not establish public DSL version support. DoTaskBuilder validates document input only when state is nil, while child dispatch passes state.",
+        "implication": "Do not equate a named child with version-bound catalog invocation or assume child-specific input mapping/schema checks are enforced. Shared state also includes environment/context.",
+        "workaround": "Use explicit versioned identities and separate tested entry-point adapters, or patch upstream child-contract behavior; verify input projection, schema rejection, version routing and state isolation with runtime tests.",
+        "workaroundQuality": "Likely bounded implementation/proof work for individual gaps, but not established stock-release coverage.",
+        "sources": [
+          "z-run",
+          "z-do",
+          "z-state",
+          "z-run-doc"
+        ]
+      },
+      {
+        "id": "parallel-map-not-native",
+        "status": "confirmed_limitation",
+        "severity": "medium",
+        "features": [
+          "dynamic_map",
+          "parallel_join"
+        ],
+        "claim": "Runtime collection iteration is sequential; parallel fork branches are defined when the document is compiled.",
+        "evidence": "ForTaskBuilder.iterate calls iterator for each item; iterator waits on ExecuteChildWorkflow(...).Get before returning. ForkTaskBuilder creates children from the compiled fork branch list.",
+        "implication": "Finite batch iteration and static fan-out are native. A runtime-sized bounded parallel map is not supplied by these primitives as a single native DSL operation.",
+        "workaround": "For a known batch, generate a finite fork before deploying the definition; for runtime-sized concurrent items, use a dedicated activity/child workflow implementation or add a supported DSL extension.",
+        "workaroundQuality": "Generation retains the deployment limitation; a generic runtime parallel-map implementation is extra engine behavior.",
+        "sources": [
+          "z-for",
+          "z-fork",
+          "z-for-doc"
+        ]
+      },
+      {
+        "id": "update-acceptif-not-validator",
+        "status": "confirmed_limitation",
+        "severity": "high",
+        "features": [
+          "commands",
+          "stale_decisions",
+          "gates"
+        ],
+        "claim": "Update acceptIf controls listener completion, not pre-acceptance validation of the Update.",
+        "evidence": "configureUpdate first writes incoming data to state, evaluates getAcceptIf, then optionally marks completion. SetUpdateHandlerWithOptions installs a Validator that always returns nil (lines 286–316). Signals similarly store data before evaluating the condition.",
+        "implication": "An invalid/stale Update can be accepted and mutate state even when acceptIf is false. Do not credit a native stale-approval rejection or independent gate from this predicate.",
+        "workaround": "Place revision/authority checks in a separate authoritative command service or add a real non-mutating Update validator and tested state-transition contract.",
+        "workaroundQuality": "Feasible domain integration or upstream change; existing acceptIf does not implement the guarantee.",
+        "sources": [
+          "z-listen",
+          "z-listen-doc"
+        ]
+      },
+      {
+        "id": "released-cancellation-gap",
+        "status": "released_vs_main_difference",
+        "severity": "high",
+        "features": [
+          "cancel",
+          "parallel_join",
+          "advanced_join"
+        ],
+        "claim": "The stronger fork-cancellation closure behavior in current main is not in v0.15.2.",
+        "evidence": "The exact release-to-main diff adds ChildWorkflowOptions.WaitForCancellation, catches parent cancellation and awaits every branch future before returning cancellation; docs add the corresponding guarantee. Inspected main is two commits ahead.",
+        "implication": "Released code supports fork cancellation requests, but do not claim all child branches close CANCELED before their parent from main-branch documentation. Main fixes require a separate tested version decision.",
+        "workaround": "Test v0.15.2 cancellation outcomes; adopt a later official release containing the fix when available, or explicitly own and test a patch.",
+        "workaroundQuality": "Known upstream fix exists on main; it is not released runtime proof and does not undo remote effects.",
+        "sources": [
+          "z-fork",
+          "z-main-diff",
+          "z-release"
+        ]
+      },
+      {
+        "id": "schema-mcp-authoring",
+        "status": "confirmed_capability",
+        "severity": "medium",
+        "features": [
+          "native_definition",
+          "schema_discovery",
+          "validate_only",
+          "agent_authoring",
+          "policy_validation"
+        ],
+        "claim": "The release has canonical YAML/JSON loading, JSON Schema validation, task/determinism checks, CLI validation and a read-only MCP authoring surface.",
+        "evidence": "ValidateBytes checks schema then LoadFromBytes performs task preparation and determinism validation. MCP exposes examples, schema, task docs and validate_workflow; it cannot access Temporal or publish/run definitions. --validate=false bypasses schema validation in CLI loading, though central preparation remains.",
+        "implication": "This materially reduces custom DSL/compiler work. Schema validation still does not enforce Exomachina capability allowlists, mutation scope, spend bounds or required acceptance gates.",
+        "workaround": "Use the schema and MCP packaged with the pinned release; retain trusted prepublication policy validation and the chosen deployment/publication controller.",
+        "workaroundQuality": "Native authoring assistance plus bounded domain validation; runtime publication remains separate.",
+        "sources": [
+          "z-loader",
+          "z-workflows",
+          "z-mcp",
+          "z-builder"
+        ]
+      },
+      {
+        "id": "untrusted-run-execution",
+        "status": "confirmed_security_boundary",
+        "severity": "high",
+        "features": [
+          "policy_validation",
+          "isolation",
+          "protected_evaluator",
+          "secrets"
+        ],
+        "claim": "Schema-valid YAML can execute host shell commands and JavaScript/Python scripts as activities; declarative syntax does not provide an untrusted-code sandbox.",
+        "evidence": "RunTaskBuilder permits script and shell variants. Run activities write scripts to temporary files and execute node/python or a supplied command using exec.CommandContext. runExecCommand inherits os.Environ; external script sources accept HTTP(S) and file URLs; Docker tasks allow host-volume mappings.",
+        "implication": "Customer publication authority must not imply arbitrary execution with worker credentials, filesystem, Docker access or protected evaluation data. A prefixed $env view does not restrict inherited subprocess environment.",
+        "workaround": "Reject unapproved run/script/shell/container/source variants at a trusted publication boundary; use approved activity workers with isolated credentials, filesystem and network policy. If arbitrary code is needed, supply actual sandboxing.",
+        "workaroundQuality": "Restricted approved primitives are feasible; arbitrary hostile code hosting is a distinct substantial isolation requirement.",
+        "sources": [
+          "z-run",
+          "z-exec",
+          "z-download",
+          "z-run-doc"
+        ]
+      },
+      {
+        "id": "http-and-activity-authority",
+        "status": "confirmed_security_boundary",
+        "severity": "high",
+        "features": [
+          "rbac",
+          "policy_validation",
+          "isolation",
+          "gates"
+        ],
+        "claim": "The DSL can choose remote HTTP/gRPC endpoints and external Temporal activity names/task queues; native schema checks do not establish an Exomachina capability allowlist.",
+        "evidence": "CallActivityTaskBuilder validates nonempty name/taskQueue then uses those fields in ExecuteActivity and ActivityOptions. Task catalog supports HTTP/gRPC. No factory publication authorization API is supplied by the worker model.",
+        "implication": "Temporal transport authentication and worker identity do not by themselves establish which customer may publish or invoke each capability.",
+        "workaround": "Provide a controlled catalog/publication/invocation boundary, allowlist capabilities and queues, enforce credentials in receiving services and restrict worker egress.",
+        "workaroundQuality": "Feasible product integration; do not expose unrestricted worker definition files or infrastructure credentials.",
+        "sources": [
+          "z-activity",
+          "z-builder",
+          "z-deploy",
+          "z-mcp"
+        ]
+      },
+      {
+        "id": "environment-payload-scope",
+        "status": "source_verified_security_boundary",
+        "severity": "high",
+        "features": [
+          "secrets",
+          "isolation",
+          "history"
+        ],
+        "claim": "Prefixed environment values are loaded into serializable workflow state and can be propagated to activities/children and emitted as configured lifecycle event data.",
+        "evidence": "command.go loads prefix-filtered variables at startup. State.Env is JSON-serializable. DoTaskBuilder initializes it, emits input/state on workflow/task start and passes state to child workflows and Continue-as-New. Run activity dispatch includes state.",
+        "implication": "Treat these values as workflow-visible data, potentially retained in history/events; prefix filtering is not per-assignment authorization or a secret-reference mechanism.",
+        "workaround": "Prefer opaque credential references resolved only by approved service/activity workers; scope process environment, event sinks and codecs, and verify payload/history exposure.",
+        "workaroundQuality": "Feasible credential architecture; encryption alone does not prevent an authorized DSL from reading supplied values.",
+        "sources": [
+          "z-command",
+          "z-env",
+          "z-state",
+          "z-do",
+          "z-run"
+        ]
+      },
+      {
+        "id": "at-least-once-external-effects",
+        "status": "confirmed_limitation",
+        "severity": "high",
+        "features": [
+          "external_dedupe",
+          "unknown",
+          "remote_reconcile"
+        ],
+        "claim": "Temporal durability does not give external HTTP/actions exactly-once execution; Zigflow explicitly delegates idempotency handling to receiving systems.",
+        "evidence": "Released task documentation states activities may run more than once, keys are authored explicitly, and receiving systems must recognize repeated requests.",
+        "implication": "An A2A/service adapter still needs durable remote IDs, idempotency, uncertain-outcome reconciliation and fencing. Nothing in the DSL removes this cross-system contract.",
+        "workaround": "Use stable logical-operation IDs and service-supported lookup/deduplication; preserve unknown outcomes where safe reconciliation is unavailable.",
+        "workaroundQuality": "Feasible only with suitable remote contracts; no universal exactly-once workaround.",
+        "sources": [
+          "z-tasks-doc",
+          "z-activity"
+        ]
+      },
+      {
+        "id": "runtime-schema-scope",
+        "status": "source_verified_capability_and_gap",
+        "severity": "medium",
+        "features": [
+          "typed_io"
+        ],
+        "claim": "Runtime schema checking exists for document input at fresh entry, task input, task output and task export; it should not be generalized to every public factory boundary.",
+        "evidence": "DoTaskBuilder invokes ValidateSchema at those stages. Its root executor ultimately returns state.Output, and document-input validation is inside the state == nil initialization branch.",
+        "implication": "Approved definitions can validate step results. Child state/input semantics and top-level result enforcement require explicit contract placement and tests.",
+        "workaround": "Put explicit result schemas on terminal output tasks and test each externally callable and nested entry point with invalid inputs/results.",
+        "workaroundQuality": "Native validation primitives; whole-contract enforcement requires composition discipline and proof.",
+        "sources": [
+          "z-do",
+          "z-run"
+        ]
+      },
+      {
+        "id": "testing-surface",
+        "status": "confirmed_limitation",
+        "severity": "medium",
+        "features": [
+          "testing",
+          "pinned_debug",
+          "fork"
+        ],
+        "claim": "The documented user test workflow is integration testing against Temporal, not a Zigflow-native public task-result injection or visual test harness.",
+        "evidence": "Testing guide starts Temporal and a Zigflow worker, executes controlled inputs and observes outputs; for long timers it recommends signals or modifying test definitions. The project has internal Go/e2e tests, which are not a supported user-facing testing API.",
+        "implication": "Do not import every Temporal SDK test-harness capability into Zigflow DSL coverage without an actual bridge.",
+        "workaround": "Use isolated Temporal integration environments and controlled services/activities; build a reusable evaluator harness if deterministic task-result substitution is required.",
+        "workaroundQuality": "Feasible testing integration; more work than merely validating YAML.",
+        "sources": [
+          "z-test"
+        ]
+      },
+      {
+        "id": "license-free-production",
+        "status": "confirmed_license_and_documented_path",
+        "severity": "info",
+        "features": [],
+        "claim": "Official v0.15.2 core is Apache 2.0 and documents production deployments with self-hosted or Cloud Temporal; no license-based worker/run cap or vendor production key was identified.",
+        "evidence": "Pinned LICENSE grants no-charge source/object redistribution and derivative-work rights subject to conditions. Deployment docs provide binary, Docker and Kubernetes options and list Temporal plus workers as requirements.",
+        "implication": "A customer-authored OSS/commercial product is not excluded by the inspected core license. Temporal infrastructure, dependencies and distributed images still need their own deployment/license checks.",
+        "workaround": "Retain license/notice obligations and audit shipped dependencies; pin the production bundle. Anonymous telemetry can be disabled with the documented flag/environment setting.",
+        "workaroundQuality": "Documented free production path, not runtime certification or complete dependency-license clearance.",
+        "sources": [
+          "z-license",
+          "z-deploy",
+          "z-go"
+        ]
+      },
+      {
+        "id": "scope-not-entire-spec",
+        "status": "confirmed_scope",
+        "severity": "medium",
+        "features": [
+          "native_definition",
+          "dependency_bundle"
+        ],
+        "claim": "Zigflow is an opinionated supported subset/extensions of Open Workflow Specification, not evidence of complete specification or Temporal SDK coverage.",
+        "evidence": "MCP docs call the DSL a deliberate subset and enumerate 11 task types. NewTaskBuilder rejects unsupported task/call types. Wait supports Zigflow-specific expression/until extensions. Architecture prose elsewhere makes a broader portability assertion that should not override executable validation.",
+        "implication": "Author against the pinned Zigflow schema and tested semantics, not arbitrary upstream DSL or all native Temporal features.",
+        "workaround": "Maintain an approved primitive profile and compatibility tests for each release.",
+        "workaroundQuality": "Ordinary compatibility discipline; new primitives require a supported extension or custom worker implementation.",
+        "sources": [
+          "z-mcp",
+          "z-builder",
+          "z-wait-doc",
+          "z-architecture"
+        ]
+      },
+      {
+        "id": "loop-doc-code-conflict",
+        "status": "source_verified_documentation_mismatch",
+        "severity": "medium",
+        "features": [
+          "bounded_loop"
+        ],
+        "claim": "The release For documentation says while is evaluated after each iteration, while release code checks it before starting the child for that iteration.",
+        "evidence": "task_builder_for.go iterator evaluates checkWhile at lines 422–430 before ExecuteChildWorkflow at line 448. for.md Gotchas says the first iteration cannot be prevented.",
+        "implication": "A generated repair loop must be tested against executable release behavior; relying only on that documentation could mis-specify stop conditions.",
+        "workaround": "Use explicit bounded counts plus precondition tests; pin examples demonstrating first-iteration rejection and later stopping.",
+        "workaroundQuality": "Small conformance-test/documentation correction; not proof of an unsafe engine by itself.",
+        "sources": [
+          "z-for",
+          "z-for-doc"
+        ]
+      },
+      {
+        "id": "signal-target-is-current-execution",
+        "status": "source_verified_scope",
+        "severity": "high",
+        "features": [
+          "commands",
+          "waits",
+          "nested"
+        ],
+        "claim": "Listeners attach to the Temporal workflow execution that runs the Listen task; a root workflow ID is not an automatic routing address for listeners inside child executions.",
+        "evidence": "ListenTaskBuilder configures GetSignalChannel and query/Update handlers on its current workflow.Context. For iterations and Fork branches execute as separate child workflows. The released signal API does not implement root-to-child message forwarding.",
+        "implication": "A top-level public supervision endpoint must know which execution owns the wait or deliberately keep public signal handlers at the root. Moving a wait into a nested factory changes correlation.",
+        "workaround": "Keep authoritative public messaging at a root coordinator or build explicit authorized root-to-child routing/correlation. Set listener timeout explicitly; default is 60 seconds.",
+        "workaroundQuality": "Feasible bounded message-routing design; actual root/child targeting and restart behavior must be tested.",
+        "sources": [
+          "z-listen",
+          "z-for",
+          "z-fork",
+          "z-listen-doc"
+        ]
+      },
+      {
+        "id": "listen-any-completion-source-concern",
+        "status": "source_concern_unrun",
+        "severity": "medium",
+        "features": [
+          "commands",
+          "waits"
+        ],
+        "claim": "The released listen.any completion implementation requires a targeted runtime test before claiming correct any-of semantics.",
+        "evidence": "Build creates areAnyComplete as a bool and a closure that mutates it, then passes the bool by value into t.await. await tests its own areAnyComplete parameter. In contrast, all/one completion uses a shared slice. This appears to separate the awaited bool from handler updates.",
+        "implication": "Source inspection suggests any-of completion may wait until timeout even after a matching event. This is not a reproduced runtime finding, and should not be generalized to one/all listeners.",
+        "workaround": "Use verified one/all forms where appropriate; run a minimal any-of test and resolve upstream or pin a verified corrected release if the source concern reproduces.",
+        "workaroundQuality": "Unresolved source-level concern; runtime confirmation pending.",
+        "sources": [
+          "z-listen"
+        ]
+      }
+    ],
+    "proposedProofCases": [
+      "Validate a newly authored file, add it while a non-watch worker is running, and show whether its new type is executable before worker replacement.",
+      "Start a wait, change the definition and restart/reload an unversioned worker; separately verify pinned immutable deployment behavior across resume and replay.",
+      "Invoke run.workflow with distinct input, input schema and version fields; inspect the exact child inputs, accepted/rejected schemas, target type and routing.",
+      "Send acceptIf-false Update data and inspect Update acceptance, state mutation and later completion; do not conflate false with rejection.",
+      "Measure two runtime loop items with independent waits versus a declared fork; verify sequential versus parallel behavior.",
+      "Cancel parent during a fork and inspect child final statuses and ordering on v0.15.2; keep main-patched results separately labeled.",
+      "Run hostile-author policy tests against script/shell, file sources, outbound endpoints, activity queues and inherited credentials using synthetic data only.",
+      "Test loop while false before the first iteration, explicitly resolving the release docs/source discrepancy.",
+      "Place listen.one at the root and inside a child; signal each execution ID separately. Then exercise listen.any with one matching event to resolve the source-level completion concern."
+    ],
+    "sources": [
+      {
+        "id": "z-release",
+        "title": "Official latest stable release v0.15.2",
+        "url": "https://github.com/zigflow/zigflow/releases/tag/v0.15.2"
+      },
+      {
+        "id": "z-license",
+        "title": "Release Apache 2.0 license",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/LICENSE"
+      },
+      {
+        "id": "z-go",
+        "title": "Pinned runtime and schema dependencies",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/go.mod"
+      },
+      {
+        "id": "z-command",
+        "title": "Load definitions before worker startup; development-only watch warning",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/cmd/run/command.go"
+      },
+      {
+        "id": "z-workflows",
+        "title": "Definition loading and queue/type conflict checks",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/cmd/run/workflows.go"
+      },
+      {
+        "id": "z-workers",
+        "title": "Worker creation and Temporal Worker Deployment options",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/cmd/run/workers.go"
+      },
+      {
+        "id": "z-watch",
+        "title": "Watch mode replaces workers",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/cmd/run/watch.go"
+      },
+      {
+        "id": "z-flags",
+        "title": "Versioning, worker source and environment defaults",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/cmd/run/flags.go"
+      },
+      {
+        "id": "z-build",
+        "title": "Compile and register loaded workflow document",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/zigflow/workflow_builder.go"
+      },
+      {
+        "id": "z-loader",
+        "title": "YAML/JSON normalization and validation pipeline",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/zigflow/loader.go"
+      },
+      {
+        "id": "z-do",
+        "title": "Registered workflow closures, runtime schema checks and continuation",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/zigflow/tasks/task_builder_do.go"
+      },
+      {
+        "id": "z-builder",
+        "title": "Supported task types and activity dispatch patch marker",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/zigflow/tasks/task_builder.go"
+      },
+      {
+        "id": "z-run",
+        "title": "Run-task validation and named child-workflow dispatch",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/zigflow/tasks/task_builder_run.go"
+      },
+      {
+        "id": "z-for",
+        "title": "Sequential runtime iteration implementation",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/zigflow/tasks/task_builder_for.go"
+      },
+      {
+        "id": "z-fork",
+        "title": "Released parallel and competing fork implementation",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/zigflow/tasks/task_builder_fork.go"
+      },
+      {
+        "id": "z-listen",
+        "title": "Signal, query and Update implementation",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/zigflow/tasks/task_builder_listen.go"
+      },
+      {
+        "id": "z-activity",
+        "title": "Named external activity/task-queue dispatch",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/zigflow/tasks/task_builder_call_activity.go"
+      },
+      {
+        "id": "z-exec",
+        "title": "Scripts, shell execution, inherited process environment and volumes",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/zigflow/activities/run.go"
+      },
+      {
+        "id": "z-download",
+        "title": "External source HTTP/file downloader",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/utils/downloader.go"
+      },
+      {
+        "id": "z-state",
+        "title": "Serializable state includes environment and propagated context",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/utils/state.go"
+      },
+      {
+        "id": "z-env",
+        "title": "Worker-prefix environment loading",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/pkg/utils/envvars.go"
+      },
+      {
+        "id": "z-mcp",
+        "title": "Release MCP docs: five read-only authoring/validation tools",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/docs/docs/cli/mcp-server.md"
+      },
+      {
+        "id": "z-deploy",
+        "title": "Release production deployment model",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/docs/docs/deployment/intro.md"
+      },
+      {
+        "id": "z-k8s",
+        "title": "Release immutable image and Worker Controller deployment guidance",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/docs/docs/deployment/kubernetes.md"
+      },
+      {
+        "id": "z-test",
+        "title": "Release integration-testing guidance and restart requirement",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/docs/docs/guides/testing-workflows.md"
+      },
+      {
+        "id": "z-tasks-doc",
+        "title": "Release task catalog, variables and external idempotency responsibility",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/docs/docs/dsl/tasks/intro.md"
+      },
+      {
+        "id": "z-for-doc",
+        "title": "Release For task documentation",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/docs/docs/dsl/tasks/for.md"
+      },
+      {
+        "id": "z-fork-doc",
+        "title": "Release Fork task documentation",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/docs/docs/dsl/tasks/fork.md"
+      },
+      {
+        "id": "z-listen-doc",
+        "title": "Release Listen task documentation",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/docs/docs/dsl/tasks/listen.md"
+      },
+      {
+        "id": "z-run-doc",
+        "title": "Release Run task documentation",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/docs/docs/dsl/tasks/run.md"
+      },
+      {
+        "id": "z-wait-doc",
+        "title": "Release durable timer forms and extensions",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/docs/docs/dsl/tasks/wait.md"
+      },
+      {
+        "id": "z-architecture",
+        "title": "Release architecture and stated DSL scope",
+        "url": "https://github.com/zigflow/zigflow/blob/a18538ba585e580c466ad3f743874af642ccad68/docs/docs/architecture.md"
+      },
+      {
+        "id": "z-main-diff",
+        "title": "Exact unreleased comparison inspected on 2026-09-22",
+        "url": "https://github.com/zigflow/zigflow/compare/a18538ba585e580c466ad3f743874af642ccad68...44d7f1cbaa6de0c4ba7f1fea0758d5bbe776880f"
+      },
+      {
+        "id": "z-current-run",
+        "title": "Current official CLI reference, cross-checked against release",
+        "url": "https://zigflow.dev/docs/cli/commands/zigflow_run/"
+      }
+    ]
+  },
+  "alternativeAuthoringLayers": {
+    "title": "Existing Temporal document-authoring layers beyond Zigflow",
+    "assessmentDate": "2026-09-22",
+    "status": "bounded-research-complete",
+    "scope": "Primary-source screen for existing runtimes that accept customer/agent-authored workflow documents, avoiding an Exomachina-owned universal DSL. No runtime tests, production certification, full feature matrix, or numerical score.",
+    "conclusion": "Tracecat is one credible existing Temporal-backed document platform beyond Zigflow, but it is a larger security-automation product with mixed licensing and paid production components; it is not cleared for our free OSS/commercial embedding baseline. The official Temporal Go DSL sample proves runtime document interpretation is possible, but adopting it means owning the language and authoring platform. This bounded search did not establish a second production-suitable alternative worth padding the shortlist with.",
+    "alternatives": [
+      {
+        "id": "tracecat",
+        "name": "Tracecat",
+        "status": "technically-credible-license-and-scope-review-required",
+        "category": "Complete application platform on Temporal, not a thin SDK library",
+        "maintenance": {
+          "latestRelease": "1.0.1",
+          "releasePublishedAt": "2026-09-18T18:48:01Z",
+          "releasePrereleaseFlag": false,
+          "inspectedMainCommit": "712426150cc07596eafd8255a7e481e699b54540",
+          "mainCommitAt": "2026-09-22T14:46:38Z",
+          "assessment": "Actively maintained with a current 1.0 release. Release metadata is evidence of shipping and maintenance, not proof of our failure-recovery or multi-tenant requirements.",
+          "sources": [
+            "tracecat-release",
+            "tracecat-commit"
+          ]
+        },
+        "documentModel": {
+          "finding": "Tracecat supplies a native YAML workflow schema, import/export, drafts, validation, published versions, HTTP actions, branches, loops, joins, and subflows. Its documented input schema uses Tracecat type expressions rather than universal JSON Schema.",
+          "sources": [
+            "tracecat-definition",
+            "tracecat-workflows"
+          ]
+        },
+        "publicationWithoutNewWorkerDeployment": {
+          "status": "documented-and-source-supported-unrun",
+          "finding": "Existing API and MCP surfaces create/edit/publish workflow documents. The commit route delegates to a shared build/validate/lock/commit service; the existing generic Temporal DSLWorkflow accepts a supplied DSL or loads a published definition. New arrangements of installed actions do not require a distinct Temporal workflow implementation or worker deployment.",
+          "boundary": "Installing new custom action implementations or changing the interpreter is a separate lifecycle. Publishing a document does not confer permission to use paid capabilities or establish safe arbitrary-code execution.",
+          "sources": [
+            "tracecat-management-code",
+            "tracecat-dsl-code",
+            "tracecat-mcp"
+          ]
+        },
+        "licenseAndProduction": {
+          "core": "The repository declares AGPL-3.0 for core source. AGPL permits commercial activity subject to its obligations, including the applicable source requirements for modified network-served software; it does not make every independent API client AGPL automatically.",
+          "exceptions": "The current README excludes packages/tracecat-ee and code that gates EE features from the AGPL grant. It says those exceptions require permission for production use or redistribution. The EE license permits development/testing without a subscription but requires a valid Enterprise License for production and grants no general redistribution right.",
+          "baselineImplication": "Do not treat the entire repository or supplied image as an unrestricted AGPL product artifact, and do not assume disabling EE features resolves the stated exception for gating code. A production/distribution audit must identify the exact artifact and permitted boundary before using Tracecat inside Exomachina.",
+          "relevantPaidControls": "Current README places multi-tenant workspaces, fine-grained access control, human approval of sensitive tool calls, workspace Git synchronization, and metrics/monitoring in Enterprise. Free SSO/audit claims do not clear those separate gates.",
+          "sources": [
+            "tracecat-readme",
+            "tracecat-agpl",
+            "tracecat-ee-license"
+          ]
+        },
+        "fitAndTradeoffs": [
+          "Good match for agent-authored definitions: an agent can use the existing MCP/UI/API workflow lifecycle rather than inventing a language and publication service.",
+          "A larger operational and product commitment: Tracecat includes API, executor, worker, frontend, PostgreSQL, Temporal, and storage concerns. Reusing the platform differs from embedding only a neutral factory interpreter.",
+          "Version selection needs explicit proof: documentation says workflow triggers and subflows use the latest published version. Do not infer that every nested call is bound to the parent's approved factory revision.",
+          "HTTP service composition is available, but Exomachina capability contracts, remote task reconciliation, effect identity, director authority, and budget enforcement still need bounded integration."
+        ],
+        "fitSources": [
+          "tracecat-mcp",
+          "tracecat-architecture",
+          "tracecat-workflows",
+          "tracecat-definition"
+        ],
+        "recommendation": "Retain as a named technical reference or conditional candidate if a full Tracecat platform and its license boundary are acceptable. Do not promote it as the clean permissive substitute for Zigflow or as cleared free production embedding."
+      }
+    ],
+    "officialTemporalDslSample": {
+      "name": "temporalio/samples-go/dsl",
+      "status": "reference-only-custom-platform-work-remains",
+      "license": "Apache-2.0",
+      "inspectedRepositoryCommit": "e9f36fee3251a5c7ad9b798cab710a6e7283b295",
+      "repositoryCommitAt": "2026-09-16T18:49:50Z",
+      "lastDslPathCommitObserved": {
+        "sha": "59fba97bb2c868c71223ab0f48fcc3223aa2aedb",
+        "committedAt": "2023-02-11T02:30:46Z",
+        "message": "Replace deprecated io/ioutil library",
+        "meaning": "The sample is in an actively updated official samples repository, but it is not an independently released or managed workflow-definition product. A path commit date alone does not establish abandonment."
+      },
+      "whatActuallyRuns": "The worker registers one SimpleDSLWorkflow plus SampleActivities. The starter reads an arbitrary selected YAML file, unmarshals it into the sample Workflow struct, and sends that document as workflow input. The existing worker interprets Activity, Sequence, and Parallel nodes. Thus a new arrangement within this vocabulary can execute without replacing the worker.",
+      "builtInBoundary": "The sample supports string-valued variable bindings, activity invocation, ordered sequences, and parallel branches. It sets a ten-second activity timeout in code; parallel branch failure cancels the sibling context. The README explicitly invites users to replace dummy activities with real implementations.",
+      "whatWeWouldOwn": [
+        "The public definition language, its schema/semantic validation, compatibility policy, and migration/versioning rules.",
+        "Catalog storage, authorized publication, approved activity/service bindings, revision selection, and review/testing feedback.",
+        "Additional factory constructs such as conditional routing, bounded repair loops, durable director interaction, remote task reconciliation, budget policy, and accepted artifact contracts.",
+        "Interpreter correctness, deterministic replay compatibility, security isolation, production deployment, and ongoing maintenance of this new application layer."
+      ],
+      "conclusion": "Useful evidence against the claim that every Temporal workflow document must require new code deployment. It does not meet our preference to reuse an existing complete factory-definition language and managed authoring layer. Counting it as a turnkey Temporal feature would hide custom infrastructure.",
+      "sources": [
+        "sample-readme",
+        "sample-workflow",
+        "sample-starter",
+        "sample-worker",
+        "sample-license",
+        "sample-path-history",
+        "sample-main-commit"
+      ]
+    },
+    "screenedOutLeads": [
+      {
+        "name": "joestump/flowspec",
+        "status": "not-an-existing-execution-runtime",
+        "finding": "MIT-licensed YAML types/parser/validator, but its README explicitly lists the Temporal execution engine as planned. It therefore does not remove our need to build an interpreter. Current main commit observed: e28d36178dcedb7122959057f325655cd3539366, 2026-04-19.",
+        "sources": [
+          "flowspec",
+          "flowspec-commit"
+        ]
+      },
+      {
+        "name": "Telo / older @telorun/workflow-temporal package",
+        "status": "not-promoted",
+        "finding": "An older published Temporal package surfaced in search, but current Telo describes a changing declarative backend runtime and explicitly says it is not recommended for production. Its current license includes an anti-competition restriction on managed services where the software supplies the primary value. Current main no longer exposed a Temporal module in the inspected tree; do not infer support from the older package.",
+        "maintenance": "Current release v0.97.0 was published 2026-09-21. Its README still marks the project pre-1.0 and permits breaking manifest/API changes in minor releases.",
+        "sources": [
+          "telo-readme",
+          "telo-license",
+          "telo-release",
+          "telo-tree"
+        ]
+      }
+    ],
+    "zigflowBoundary": "Zigflow is being tested separately. This record makes no claims about upstream dynamic-definition mode and does not transfer behavior from droidraja/zigflow or any other fork to zigflow/zigflow.",
+    "recommendedNextDecision": "Use the live upstream Zigflow probe to decide whether its worker lifecycle meets publication requirements. If it does not, choose explicitly between a managed document engine already on the shortlist, accepting a full platform such as Tracecat with its constraints, or owning a bounded Temporal interpreter. Do not rename that last choice as an existing turnkey DSL product.",
+    "sources": [
+      {
+        "id": "tracecat-release",
+        "title": "Tracecat 1.0.1 release",
+        "url": "https://github.com/TracecatHQ/tracecat/releases/tag/1.0.1"
+      },
+      {
+        "id": "tracecat-commit",
+        "title": "Inspected current Tracecat commit",
+        "url": "https://github.com/TracecatHQ/tracecat/commit/712426150cc07596eafd8255a7e481e699b54540"
+      },
+      {
+        "id": "tracecat-readme",
+        "title": "Current Tracecat scope and license exceptions",
+        "url": "https://github.com/TracecatHQ/tracecat/blob/712426150cc07596eafd8255a7e481e699b54540/README.md"
+      },
+      {
+        "id": "tracecat-agpl",
+        "title": "Tracecat AGPL core license",
+        "url": "https://github.com/TracecatHQ/tracecat/blob/712426150cc07596eafd8255a7e481e699b54540/LICENSE"
+      },
+      {
+        "id": "tracecat-ee-license",
+        "title": "Tracecat Enterprise production and redistribution terms",
+        "url": "https://github.com/TracecatHQ/tracecat/blob/712426150cc07596eafd8255a7e481e699b54540/packages/tracecat-ee/LICENSE.md"
+      },
+      {
+        "id": "tracecat-workflows",
+        "title": "Tracecat drafts, publication, versions, and OSS import/export",
+        "url": "https://docs.tracecat.com/automations/workflows"
+      },
+      {
+        "id": "tracecat-definition",
+        "title": "Tracecat native YAML workflow-definition schema",
+        "url": "https://docs.tracecat.com/automations/core-concepts/workflow-definition"
+      },
+      {
+        "id": "tracecat-mcp",
+        "title": "Tracecat agent authoring and operation through MCP",
+        "url": "https://docs.tracecat.com/automations/tracecat-mcp"
+      },
+      {
+        "id": "tracecat-architecture",
+        "title": "Tracecat self-hosted services and dependencies",
+        "url": "https://docs.tracecat.com/self-hosting/architecture"
+      },
+      {
+        "id": "tracecat-management-code",
+        "title": "Tracecat document import and version publication routes",
+        "url": "https://github.com/TracecatHQ/tracecat/blob/712426150cc07596eafd8255a7e481e699b54540/tracecat/workflow/management/router.py"
+      },
+      {
+        "id": "tracecat-dsl-code",
+        "title": "Generic Temporal DSL workflow accepts or loads definitions",
+        "url": "https://github.com/TracecatHQ/tracecat/blob/712426150cc07596eafd8255a7e481e699b54540/tracecat/dsl/workflow.py"
+      },
+      {
+        "id": "sample-readme",
+        "title": "Official Temporal Go DSL sample purpose and instructions",
+        "url": "https://github.com/temporalio/samples-go/blob/e9f36fee3251a5c7ad9b798cab710a6e7283b295/dsl/README.md"
+      },
+      {
+        "id": "sample-workflow",
+        "title": "Sample DSL vocabulary and interpreter",
+        "url": "https://github.com/temporalio/samples-go/blob/e9f36fee3251a5c7ad9b798cab710a6e7283b295/dsl/workflow.go"
+      },
+      {
+        "id": "sample-starter",
+        "title": "Sample starter supplies YAML as workflow input",
+        "url": "https://github.com/temporalio/samples-go/blob/e9f36fee3251a5c7ad9b798cab710a6e7283b295/dsl/starter/main.go"
+      },
+      {
+        "id": "sample-worker",
+        "title": "Sample worker registers one interpreter and dummy activities",
+        "url": "https://github.com/temporalio/samples-go/blob/e9f36fee3251a5c7ad9b798cab710a6e7283b295/dsl/worker/main.go"
+      },
+      {
+        "id": "sample-license",
+        "title": "Temporal Go samples Apache-2.0 license",
+        "url": "https://github.com/temporalio/samples-go/blob/e9f36fee3251a5c7ad9b798cab710a6e7283b295/LICENSE"
+      },
+      {
+        "id": "sample-path-history",
+        "title": "Official DSL sample path history",
+        "url": "https://api.github.com/repos/temporalio/samples-go/commits?path=dsl&per_page=1"
+      },
+      {
+        "id": "sample-main-commit",
+        "title": "Inspected current samples repository commit",
+        "url": "https://github.com/temporalio/samples-go/commit/e9f36fee3251a5c7ad9b798cab710a6e7283b295"
+      },
+      {
+        "id": "flowspec",
+        "title": "Flowspec README: execution engine planned",
+        "url": "https://github.com/joestump/flowspec/blob/e28d36178dcedb7122959057f325655cd3539366/README.md"
+      },
+      {
+        "id": "flowspec-commit",
+        "title": "Current Flowspec commit",
+        "url": "https://github.com/joestump/flowspec/commit/e28d36178dcedb7122959057f325655cd3539366"
+      },
+      {
+        "id": "telo-readme",
+        "title": "Telo pre-production status and changing manifest contract",
+        "url": "https://github.com/telorun/telo/blob/main/README.md"
+      },
+      {
+        "id": "telo-license",
+        "title": "Telo sustainable-use license and competition restriction",
+        "url": "https://github.com/telorun/telo/blob/main/LICENSE"
+      },
+      {
+        "id": "telo-release",
+        "title": "Telo v0.97.0 release",
+        "url": "https://github.com/telorun/telo/releases/tag/v0.97.0"
+      },
+      {
+        "id": "telo-tree",
+        "title": "Inspected current Telo repository tree",
+        "url": "https://api.github.com/repos/telorun/telo/git/trees/main?recursive=1"
+      }
+    ]
+  },
+  "nextCountertrial": {
+    "status": "bounded-complete; full-product-gates-open",
+    "topology": "Temporal Server v1.32.0 non-development binary, PostgreSQL 16.15 persistence and visibility, Zigflow v0.15.2 one then two pinned workers; no Strands/UI/A2A.",
+    "comparison": "Same whole-install resource and two-harness lifecycle protocol as shared-local Kestra, Dagu and core Strands Graph.",
+    "stopRule": "The owner now accepts automatic, version-pinned bundled worker rollout. Continue only if the launcher proves activation, old-run retention, rollback and acceptable resource/operating cost, or a maintained stable interpreter passes with acceptable owned language/publication work.",
+    "evidenceBoundary": "Existing SQLite start-dev/Zigflow results are development authoring/recovery evidence, not production package or memory evidence.",
+    "source": "../tools/spikes/2026-09-22/countertrials/temporal/result.md",
+    "observed": "Docker-free helper boot; waiting run survived server/PostgreSQL restart; pinned v1/v2 returned correct versions; six overlapping HTTP fixture activities completed. New valid Zigflow definition failed until worker refresh. Warm one-worker group footprint was 321.2 MiB, with concurrent-host and topology caveats."
+  }
+}

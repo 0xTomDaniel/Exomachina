@@ -1,0 +1,79 @@
+{
+  "candidate": "Kestra OSS v2.0.3",
+  "source_commit": "269e8d0d01c27f6117a667758112d2b8d77cc4a3",
+  "server": "127.0.0.1:28084",
+  "postgres": "127.0.0.1:25434/kestra_s3",
+  "child_initial_revision": 1,
+  "changed_child_assigned_revision": 2,
+  "parent_new_revision": 2,
+  "retained_child_revision": 1,
+  "pinned_parent_v1_flow_revision": 1,
+  "pinned_parent_v1_observed": "child-v1",
+  "unpinned_parent_v1_flow_revision": 1,
+  "unpinned_parent_v1_observed": "child-v2",
+  "new_parent_flow_revision": 2,
+  "new_parent_observed": "child-v2",
+  "reference_state": "SUCCESS",
+  "reference_tasks": [
+    {
+      "task": "publication_wait",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "research_parallel",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "research_a",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "research_b",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "synthesis",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "independent_review",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "review_gate",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "repair",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "independent_rereview",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "repair_gate",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "director_wait",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "delivery_gate",
+      "state": "SUCCESS"
+    },
+    {
+      "task": "delivery",
+      "state": "SUCCESS"
+    }
+  ],
+  "reference_director_pause_observed": "PAUSED",
+  "bypass_published": true,
+  "limits": [
+    "Synthetic core Return tasks, no real agents, Quality authorization or delivery effect",
+    "Native engine API only; no Factory Module policy gate",
+    "No workload/capacity claim or restart in S3",
+    "No plugin update or capability revision test"
+  ]
+}

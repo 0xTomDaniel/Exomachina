@@ -1,0 +1,783 @@
+{
+  "cases": {
+    "acceptance": {
+      "child_after": {
+        "authoritative_acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "d827db13-ddfb-449e-b6af-4586982d41f0",
+          "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+          "revision": "r2",
+          "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+        },
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2",
+          "independent_quality:r2",
+          "route_verdict:true",
+          "publish"
+        ],
+        "current_revision": "r2",
+        "current_sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6",
+        "deadline": null,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "node": "done",
+        "owner_epoch": 1,
+        "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+        "phase": "accepted",
+        "quality_verdict": {
+          "accepted": true,
+          "reason": "counterevidence addressed for exact revision",
+          "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+          "revision": "r2",
+          "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+        },
+        "release_receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "release_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+          "revision": "r2",
+          "run_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+        },
+        "repair_count": 1,
+        "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+        "unresolved": null
+      },
+      "child_before": {
+        "authoritative_acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "d827db13-ddfb-449e-b6af-4586982d41f0",
+          "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+          "revision": "r2",
+          "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+        },
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2"
+        ],
+        "current_revision": "r2",
+        "current_sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6",
+        "deadline": null,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "node": "independent_quality",
+        "owner_epoch": 1,
+        "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+        "phase": "accepted-before-release",
+        "quality_verdict": {
+          "accepted": true,
+          "reason": "counterevidence addressed for exact revision",
+          "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+          "revision": "r2",
+          "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+        },
+        "release_receipt": null,
+        "repair_count": 1,
+        "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+        "unresolved": null
+      },
+      "child_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+      "counts": {
+        "accepted_revision": "r2",
+        "authoritative_acceptance": 1,
+        "counter": [
+          {
+            "accepted_count": 1,
+            "action_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:counter_evidence",
+            "attempts": 1,
+            "task_id": "c586ae65-4664-4829-8eac-bb43e320c1af"
+          }
+        ],
+        "quality": [
+          {
+            "accepted_count": 1,
+            "action_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:quality:r1:4b4ff7311f66",
+            "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"528fce12-c2e3-4c8d-b509-f99292022e3a\",\"revision\":\"r1\",\"sha256\":\"4b4ff7311f6692fee423f93094fc296f67fb3a9a2c38d0ea8a04ad9ce966150b\"}",
+            "attempts": 1,
+            "task_id": "72a34f53-a025-4ed2-b161-61685d7c3afd"
+          },
+          {
+            "accepted_count": 1,
+            "action_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:quality:r2:259413d845cf",
+            "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"528fce12-c2e3-4c8d-b509-f99292022e3a\",\"revision\":\"r2\",\"sha256\":\"259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6\"}",
+            "attempts": 1,
+            "task_id": "d827db13-ddfb-449e-b6af-4586982d41f0"
+          }
+        ],
+        "quality_negative": 1,
+        "quality_positive": 1,
+        "release": [
+          {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "release_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2"
+          }
+        ],
+        "release_effects": 1,
+        "source": [
+          {
+            "accepted_count": 1,
+            "action_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:source_evidence",
+            "attempts": 1,
+            "task_id": "b495748d-4517-4e00-838d-24a862757ce9"
+          }
+        ]
+      },
+      "original_task_id": "d1bbdeaf-eced-425c-b05b-8f1681f6445b",
+      "parent_after": {
+        "authoritative_acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "d827db13-ddfb-449e-b6af-4586982d41f0",
+          "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+          "revision": "r2",
+          "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+        },
+        "child_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+        "completed": [
+          "invoke_child"
+        ],
+        "current_revision": null,
+        "current_sha256": null,
+        "deadline": null,
+        "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+        "node": "done",
+        "owner_epoch": 1,
+        "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+        "phase": "accepted",
+        "quality_verdict": null,
+        "release_receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "release_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+          "revision": "r2",
+          "run_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+        },
+        "repair_count": 0,
+        "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8",
+        "unresolved": null
+      },
+      "parent_before": {
+        "authoritative_acceptance": null,
+        "child_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+        "completed": [],
+        "current_revision": null,
+        "current_sha256": null,
+        "deadline": null,
+        "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+        "node": "invoke_child",
+        "owner_epoch": 1,
+        "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+        "phase": "awaiting-child",
+        "quality_verdict": null,
+        "release_receipt": null,
+        "repair_count": 0,
+        "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8",
+        "unresolved": null
+      },
+      "parent_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8",
+      "quality_before_crash": [
+        {
+          "action_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:quality:r1:4b4ff7311f66",
+          "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"528fce12-c2e3-4c8d-b509-f99292022e3a\",\"revision\":\"r1\",\"sha256\":\"4b4ff7311f6692fee423f93094fc296f67fb3a9a2c38d0ea8a04ad9ce966150b\"}",
+          "task_id": "72a34f53-a025-4ed2-b161-61685d7c3afd"
+        },
+        {
+          "action_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:quality:r2:259413d845cf",
+          "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"528fce12-c2e3-4c8d-b509-f99292022e3a\",\"revision\":\"r2\",\"sha256\":\"259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6\"}",
+          "task_id": "d827db13-ddfb-449e-b6af-4586982d41f0"
+        }
+      ],
+      "result": {
+        "acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "d827db13-ddfb-449e-b6af-4586982d41f0",
+          "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+          "revision": "r2",
+          "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+        },
+        "child": {
+          "acceptance": {
+            "attempt": 2,
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "quality_task_id": "d827db13-ddfb-449e-b6af-4586982d41f0",
+            "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+            "revision": "r2",
+            "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+            "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+          },
+          "child": null,
+          "completed": [
+            "gather",
+            "join_evidence",
+            "draft:r1",
+            "independent_quality:r1",
+            "route_verdict:false",
+            "repair:1",
+            "draft:r2",
+            "independent_quality:r2",
+            "route_verdict:true",
+            "publish"
+          ],
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "receipt": {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "release_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+            "revision": "r2",
+            "run_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+            "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+          },
+          "released": true,
+          "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "status": "accepted"
+        },
+        "completed": [
+          "invoke_child"
+        ],
+        "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "release_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+          "revision": "r2",
+          "run_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+        },
+        "released": true,
+        "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8",
+        "status": "accepted"
+      },
+      "stopped": {
+        "postgres_pid": 79595,
+        "postgres_port_closed": true,
+        "temporal_pid": 79602,
+        "temporal_port_closed": true
+      },
+      "task_after": {
+        "artifacts": [
+          {
+            "artifactId": "817b562d48c51a9537ffb44d560485b4718a1fa0ecda936cce8ee274ebe2af96",
+            "parts": [
+              {
+                "data": {
+                  "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+                  "public_result": {
+                    "acceptance": {
+                      "attempt": 2,
+                      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                      "quality_task_id": "d827db13-ddfb-449e-b6af-4586982d41f0",
+                      "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+                      "revision": "r2",
+                      "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+                      "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+                    },
+                    "child": {
+                      "acceptance": {
+                        "attempt": 2,
+                        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                        "quality_task_id": "d827db13-ddfb-449e-b6af-4586982d41f0",
+                        "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+                        "revision": "r2",
+                        "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+                        "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+                      },
+                      "child": null,
+                      "completed": [
+                        "gather",
+                        "join_evidence",
+                        "draft:r1",
+                        "independent_quality:r1",
+                        "route_verdict:false",
+                        "repair:1",
+                        "draft:r2",
+                        "independent_quality:r2",
+                        "route_verdict:true",
+                        "publish"
+                      ],
+                      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                      "receipt": {
+                        "accepted_effect_count": 1,
+                        "attempts": 1,
+                        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                        "release_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+                        "revision": "r2",
+                        "run_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+                        "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+                      },
+                      "released": true,
+                      "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+                      "status": "accepted"
+                    },
+                    "completed": [
+                      "invoke_child"
+                    ],
+                    "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+                    "receipt": {
+                      "accepted_effect_count": 1,
+                      "attempts": 1,
+                      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                      "release_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+                      "revision": "r2",
+                      "run_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+                      "sha256": "259413d845cf10b22265f0fb0129d8484957441b819f53df9687b2a896bfbbf6"
+                    },
+                    "released": true,
+                    "run": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8",
+                    "status": "accepted"
+                  },
+                  "run_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8",
+                  "status": "accepted"
+                },
+                "kind": "data"
+              }
+            ]
+          }
+        ],
+        "contextId": "4053e5a4-a7f4-412f-a930-d827f0e97cde",
+        "id": "d1bbdeaf-eced-425c-b05b-8f1681f6445b",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "7150b867-03c0-45bb-ae56-4912d48210bf",
+          "harness_incarnation": 1,
+          "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+          "run_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8"
+        },
+        "status": {
+          "state": "completed"
+        }
+      },
+      "task_before": {
+        "contextId": "4053e5a4-a7f4-412f-a930-d827f0e97cde",
+        "id": "d1bbdeaf-eced-425c-b05b-8f1681f6445b",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "7150b867-03c0-45bb-ae56-4912d48210bf",
+          "harness_incarnation": 1,
+          "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+          "run_id": "temporal-a2a-acceptance-exo-temporal-recovery-scale-cyxp4vt8"
+        },
+        "status": {
+          "state": "input-required"
+        }
+      }
+    },
+    "quality_commit": {
+      "child_after": {
+        "authoritative_acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "9d41b16c-a947-468a-a9a9-77f3fc806ea4",
+          "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+          "revision": "r2",
+          "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+        },
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:false",
+          "repair:1",
+          "draft:r2",
+          "independent_quality:r2",
+          "route_verdict:true",
+          "publish"
+        ],
+        "current_revision": "r2",
+        "current_sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9",
+        "deadline": null,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "node": "done",
+        "owner_epoch": 1,
+        "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+        "phase": "accepted",
+        "quality_verdict": {
+          "accepted": true,
+          "reason": "counterevidence addressed for exact revision",
+          "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+          "revision": "r2",
+          "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+        },
+        "release_receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "release_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+          "revision": "r2",
+          "run_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+        },
+        "repair_count": 1,
+        "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+        "unresolved": null
+      },
+      "child_before": {
+        "authoritative_acceptance": null,
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1"
+        ],
+        "current_revision": "r1",
+        "current_sha256": "8f37c6cb29e257e54308934cfac181e0a5da0f916bcb20fc836f5f956dbbc1b5",
+        "deadline": null,
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "node": "independent_quality",
+        "owner_epoch": 1,
+        "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+        "phase": "quality",
+        "quality_verdict": null,
+        "release_receipt": null,
+        "repair_count": 0,
+        "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+        "unresolved": null
+      },
+      "child_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+      "counts": {
+        "accepted_revision": "r2",
+        "authoritative_acceptance": 1,
+        "counter": [
+          {
+            "accepted_count": 1,
+            "action_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:counter_evidence",
+            "attempts": 1,
+            "task_id": "a80403c8-5b5c-4762-8a59-d40da16e7ad3"
+          }
+        ],
+        "quality": [
+          {
+            "accepted_count": 1,
+            "action_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:quality:r1:8f37c6cb29e2",
+            "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"528fce12-c2e3-4c8d-b509-f99292022e3a\",\"revision\":\"r1\",\"sha256\":\"8f37c6cb29e257e54308934cfac181e0a5da0f916bcb20fc836f5f956dbbc1b5\"}",
+            "attempts": 1,
+            "task_id": "63763e9d-4832-450d-b2b1-21b7fe23544d"
+          },
+          {
+            "accepted_count": 1,
+            "action_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:quality:r2:818eb9c705cf",
+            "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"528fce12-c2e3-4c8d-b509-f99292022e3a\",\"revision\":\"r2\",\"sha256\":\"818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9\"}",
+            "attempts": 1,
+            "task_id": "9d41b16c-a947-468a-a9a9-77f3fc806ea4"
+          }
+        ],
+        "quality_negative": 1,
+        "quality_positive": 1,
+        "release": [
+          {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "release_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2"
+          }
+        ],
+        "release_effects": 1,
+        "source": [
+          {
+            "accepted_count": 1,
+            "action_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:source_evidence",
+            "attempts": 1,
+            "task_id": "3fa7584f-db21-4e59-9c56-9178d7acecea"
+          }
+        ]
+      },
+      "original_task_id": "96c930cc-1223-4a33-8cd6-2c7019770de1",
+      "parent_after": {
+        "authoritative_acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "9d41b16c-a947-468a-a9a9-77f3fc806ea4",
+          "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+          "revision": "r2",
+          "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+        },
+        "child_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+        "completed": [
+          "invoke_child"
+        ],
+        "current_revision": null,
+        "current_sha256": null,
+        "deadline": null,
+        "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+        "node": "done",
+        "owner_epoch": 1,
+        "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+        "phase": "accepted",
+        "quality_verdict": null,
+        "release_receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "release_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+          "revision": "r2",
+          "run_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+        },
+        "repair_count": 0,
+        "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8",
+        "unresolved": null
+      },
+      "parent_before": {
+        "authoritative_acceptance": null,
+        "child_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+        "completed": [],
+        "current_revision": null,
+        "current_sha256": null,
+        "deadline": null,
+        "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+        "node": "invoke_child",
+        "owner_epoch": 1,
+        "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+        "phase": "awaiting-child",
+        "quality_verdict": null,
+        "release_receipt": null,
+        "repair_count": 0,
+        "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8",
+        "unresolved": null
+      },
+      "parent_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8",
+      "quality_before_crash": [
+        {
+          "action_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:quality:r1:8f37c6cb29e2",
+          "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"528fce12-c2e3-4c8d-b509-f99292022e3a\",\"revision\":\"r1\",\"sha256\":\"8f37c6cb29e257e54308934cfac181e0a5da0f916bcb20fc836f5f956dbbc1b5\"}",
+          "task_id": "63763e9d-4832-450d-b2b1-21b7fe23544d"
+        }
+      ],
+      "result": {
+        "acceptance": {
+          "attempt": 2,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "quality_task_id": "9d41b16c-a947-468a-a9a9-77f3fc806ea4",
+          "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+          "revision": "r2",
+          "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+        },
+        "child": {
+          "acceptance": {
+            "attempt": 2,
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "quality_task_id": "9d41b16c-a947-468a-a9a9-77f3fc806ea4",
+            "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+            "revision": "r2",
+            "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+            "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+          },
+          "child": null,
+          "completed": [
+            "gather",
+            "join_evidence",
+            "draft:r1",
+            "independent_quality:r1",
+            "route_verdict:false",
+            "repair:1",
+            "draft:r2",
+            "independent_quality:r2",
+            "route_verdict:true",
+            "publish"
+          ],
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "receipt": {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+            "release_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+            "revision": "r2",
+            "run_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+            "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+          },
+          "released": true,
+          "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "status": "accepted"
+        },
+        "completed": [
+          "invoke_child"
+        ],
+        "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "release_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+          "revision": "r2",
+          "run_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+          "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+        },
+        "released": true,
+        "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8",
+        "status": "accepted"
+      },
+      "stopped": {
+        "postgres_pid": 79504,
+        "postgres_port_closed": true,
+        "temporal_pid": 79531,
+        "temporal_port_closed": true
+      },
+      "task_after": {
+        "artifacts": [
+          {
+            "artifactId": "20f32c5bdbb1a9e080631f41fd70028499e232facbe68517904eae42d96370ca",
+            "parts": [
+              {
+                "data": {
+                  "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+                  "public_result": {
+                    "acceptance": {
+                      "attempt": 2,
+                      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                      "quality_task_id": "9d41b16c-a947-468a-a9a9-77f3fc806ea4",
+                      "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+                      "revision": "r2",
+                      "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+                      "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+                    },
+                    "child": {
+                      "acceptance": {
+                        "attempt": 2,
+                        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                        "quality_task_id": "9d41b16c-a947-468a-a9a9-77f3fc806ea4",
+                        "reviewer": "528fce12-c2e3-4c8d-b509-f99292022e3a",
+                        "revision": "r2",
+                        "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+                        "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+                      },
+                      "child": null,
+                      "completed": [
+                        "gather",
+                        "join_evidence",
+                        "draft:r1",
+                        "independent_quality:r1",
+                        "route_verdict:false",
+                        "repair:1",
+                        "draft:r2",
+                        "independent_quality:r2",
+                        "route_verdict:true",
+                        "publish"
+                      ],
+                      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                      "receipt": {
+                        "accepted_effect_count": 1,
+                        "attempts": 1,
+                        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                        "release_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+                        "revision": "r2",
+                        "run_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+                        "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+                      },
+                      "released": true,
+                      "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+                      "status": "accepted"
+                    },
+                    "completed": [
+                      "invoke_child"
+                    ],
+                    "definition_digest": "e352d5d493d25faa3f2423228e9289f76ebc2238b738d85b8ff27062a634025b",
+                    "receipt": {
+                      "accepted_effect_count": 1,
+                      "attempts": 1,
+                      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+                      "release_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef:release:r2",
+                      "revision": "r2",
+                      "run_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8:child:755d525ac2ef",
+                      "sha256": "818eb9c705cfec3ae1c0dbd6005311ea189bf097d07e043c88fa5bad2f2f5af9"
+                    },
+                    "released": true,
+                    "run": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8",
+                    "status": "accepted"
+                  },
+                  "run_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8",
+                  "status": "accepted"
+                },
+                "kind": "data"
+              }
+            ]
+          }
+        ],
+        "contextId": "675c5c46-3448-4538-b539-9b733a8a64e1",
+        "id": "96c930cc-1223-4a33-8cd6-2c7019770de1",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "7150b867-03c0-45bb-ae56-4912d48210bf",
+          "harness_incarnation": 1,
+          "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+          "run_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8"
+        },
+        "status": {
+          "state": "completed"
+        }
+      },
+      "task_before": {
+        "contextId": "675c5c46-3448-4538-b539-9b733a8a64e1",
+        "id": "96c930cc-1223-4a33-8cd6-2c7019770de1",
+        "kind": "task",
+        "metadata": {
+          "engine": "temporal",
+          "harness_identity": "7150b867-03c0-45bb-ae56-4912d48210bf",
+          "harness_incarnation": 1,
+          "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+          "run_id": "temporal-a2a-quality_commit-exo-temporal-recovery-scale-cyxp4vt8"
+        },
+        "status": {
+          "state": "input-required"
+        }
+      }
+    }
+  },
+  "child_definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+  "original_frozen_unchanged_after": true,
+  "original_frozen_unchanged_before": true,
+  "package_digest": "d0d5dd10c918a001fb77aca572252167b1a306e0ad03f6bb87b030ad5da2d39f",
+  "source_hashes_after": {
+    "adapter.py": "84358d6f9644d6592b6eea4ed4c5ef70e53ed743b52f2042d6a3a4c2e44981dd",
+    "author.py": "8367537c1a118e653e5dab983b594a89af1ce92eee7df9c6bb6aa932aaae3c23",
+    "definition.py": "8e1aa2c4fd77ab971dfdcfabe3e39391e4f62acdfe45918c02fba01ada812d7c",
+    "director_server.py": "011926c8bbd31fb154da1d79612aca127c7d21d3adf4fe8784715c154be98586",
+    "factory.py": "4e78e21c8eb631c86e0c4e039dcbb40868e9e5f69bc43f053335090366012cc4",
+    "probe.py": "47950245c1d258ef3686dc445fb3d78ef8fb3dc324de952bec66edeeb1d9c7b9",
+    "runtime.py": "5059f05d9d849229ec57a0c468c31cb3108137e08b833e001dad2dd2afefc7a9",
+    "supervisor.py": "256ad7a60015bc4ca5c3fc1858be56fb0236ef99cddabe582b1fbb607a0b82ac",
+    "worker.py": "cecd4a16b281db0ed18c51452fc22907a313b6f37864372a8ecbd7ea4da3df3b"
+  },
+  "source_hashes_before": {
+    "adapter.py": "84358d6f9644d6592b6eea4ed4c5ef70e53ed743b52f2042d6a3a4c2e44981dd",
+    "author.py": "8367537c1a118e653e5dab983b594a89af1ce92eee7df9c6bb6aa932aaae3c23",
+    "definition.py": "8e1aa2c4fd77ab971dfdcfabe3e39391e4f62acdfe45918c02fba01ada812d7c",
+    "director_server.py": "011926c8bbd31fb154da1d79612aca127c7d21d3adf4fe8784715c154be98586",
+    "factory.py": "4e78e21c8eb631c86e0c4e039dcbb40868e9e5f69bc43f053335090366012cc4",
+    "probe.py": "47950245c1d258ef3686dc445fb3d78ef8fb3dc324de952bec66edeeb1d9c7b9",
+    "runtime.py": "5059f05d9d849229ec57a0c468c31cb3108137e08b833e001dad2dd2afefc7a9",
+    "supervisor.py": "256ad7a60015bc4ca5c3fc1858be56fb0236ef99cddabe582b1fbb607a0b82ac",
+    "worker.py": "cecd4a16b281db0ed18c51452fc22907a313b6f37864372a8ecbd7ea4da3df3b"
+  },
+  "state": "/tmp/exo-temporal-recovery-scale-cyxp4vt8",
+  "status": "passed"
+}

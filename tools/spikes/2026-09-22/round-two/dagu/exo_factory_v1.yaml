@@ -1,0 +1,38 @@
+steps:
+  - id: publication_gate
+    action: human.task
+    with:
+      prompt: Release the pinned v1 child closure
+      form:
+        type: object
+        properties:
+          accepted:
+            type: boolean
+        required: [accepted]
+  - id: capability_a
+    depends: publication_gate
+    action: dag.run
+    with:
+      dag: exo_capability_a_v1
+  - id: capability_b
+    depends: publication_gate
+    action: dag.run
+    with:
+      dag: exo_capability_b_v1
+  - id: review
+    depends: [capability_a, capability_b]
+    run: /bin/sh -c "printf 'v1:review\n' >> /tmp/exomachina-round-two-dagu/events.log"
+  - id: director
+    depends: review
+    action: human.task
+    with:
+      prompt: Approve delivery of the reviewed v1 artifact
+      form:
+        type: object
+        properties:
+          accepted:
+            type: boolean
+        required: [accepted]
+  - id: deliver
+    depends: director
+    run: /bin/sh -c "printf 'v1:deliver\n' >> /tmp/exomachina-round-two-dagu/events.log"

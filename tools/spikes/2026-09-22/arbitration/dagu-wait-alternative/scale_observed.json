@@ -1,0 +1,97 @@
+{
+  "dagu_binary_sha256": "fd855996bab956835043ae8cbb00ac3ea5211a6be6992374727b7908d393aac3",
+  "definitions": {
+    "exo_wait_child_v1.yaml": "db4f22a01a86b61f68dbcbe5908e80de739ff04256b1fadef7c0808e08796866",
+    "exo_wait_parent_v1.yaml": "a73482bb2c55a913cc9a636d41b4555e434a5fdfef8179b79d36350b33ee5903"
+  },
+  "outcome": "measured",
+  "pairs_1_to_2": [
+    {
+      "child_id": "exo-wait-scale-child-01",
+      "parent_id": "exo-wait-scale-parent-01"
+    },
+    {
+      "child_id": "exo-wait-scale-child-02",
+      "parent_id": "exo-wait-scale-parent-02"
+    }
+  ],
+  "pairs_3_to_10": [
+    {
+      "child_id": "exo-wait-scale-child-03",
+      "parent_id": "exo-wait-scale-parent-03"
+    },
+    {
+      "child_id": "exo-wait-scale-child-04",
+      "parent_id": "exo-wait-scale-parent-04"
+    },
+    {
+      "child_id": "exo-wait-scale-child-05",
+      "parent_id": "exo-wait-scale-parent-05"
+    },
+    {
+      "child_id": "exo-wait-scale-child-06",
+      "parent_id": "exo-wait-scale-parent-06"
+    },
+    {
+      "child_id": "exo-wait-scale-child-07",
+      "parent_id": "exo-wait-scale-parent-07"
+    },
+    {
+      "child_id": "exo-wait-scale-child-08",
+      "parent_id": "exo-wait-scale-parent-08"
+    },
+    {
+      "child_id": "exo-wait-scale-child-09",
+      "parent_id": "exo-wait-scale-parent-09"
+    },
+    {
+      "child_id": "exo-wait-scale-child-10",
+      "parent_id": "exo-wait-scale-parent-10"
+    }
+  ],
+  "runtime": "/tmp/exomachina-dagu-wait-shared-scale-001",
+  "shared_supervisor_sha256": "a17cd1210b1f2b6e5f4756561efe889a6639afdb6755ac0a96e60fec19a8df8b",
+  "ten_waits": {
+    "bytes": 104007144,
+    "pid_count": 2,
+    "processes": [
+      {
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -B /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/dagu-wait-alternative/shared_supervisor.py /tmp/exomachina-dagu-wait-shared-scale-001 --dagu /tmp/exomachina-countertrials/dagu/dagu --port 64559",
+        "pid": 35351
+      },
+      {
+        "command": "/tmp/exomachina-countertrials/dagu/dagu start-all --host 127.0.0.1 --port 64559",
+        "pid": 35352
+      }
+    ]
+  },
+  "topology": "one Python supervisor/reconciler plus one Dagu start-all; no A2A, capability, Quality, release, or receiver services",
+  "two_waits": {
+    "bytes": 84673952,
+    "pid_count": 2,
+    "processes": [
+      {
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -B /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/dagu-wait-alternative/shared_supervisor.py /tmp/exomachina-dagu-wait-shared-scale-001 --dagu /tmp/exomachina-countertrials/dagu/dagu --port 64559",
+        "pid": 35351
+      },
+      {
+        "command": "/tmp/exomachina-countertrials/dagu/dagu start-all --host 127.0.0.1 --port 64559",
+        "pid": 35352
+      }
+    ]
+  },
+  "zero_waits": {
+    "bytes": 81118576,
+    "pid_count": 2,
+    "processes": [
+      {
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -B /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/dagu-wait-alternative/shared_supervisor.py /tmp/exomachina-dagu-wait-shared-scale-001 --dagu /tmp/exomachina-countertrials/dagu/dagu --port 64559",
+        "pid": 35351
+      },
+      {
+        "command": "/tmp/exomachina-countertrials/dagu/dagu start-all --host 127.0.0.1 --port 64559",
+        "pid": 35352
+      }
+    ]
+  }
+}

@@ -1,0 +1,802 @@
+{
+  "admissions": [
+    {
+      "parent_run_id": "exo-arb-inflight-1-exo-dagu-inflight-q1vqodoo",
+      "start_task_status": "working",
+      "task_id": "eb41a99a-0a5b-4e0a-94ab-4548e287848b"
+    },
+    {
+      "parent_run_id": "exo-arb-inflight-2-exo-dagu-inflight-q1vqodoo",
+      "start_task_status": "working",
+      "task_id": "d087181f-3077-4913-83ee-491510ff55ee"
+    },
+    {
+      "parent_run_id": "exo-arb-inflight-3-exo-dagu-inflight-q1vqodoo",
+      "start_task_status": "working",
+      "task_id": "5e3f1adc-c5ee-4ed3-9f81-fac395f886d0"
+    },
+    {
+      "parent_run_id": "exo-arb-inflight-4-exo-dagu-inflight-q1vqodoo",
+      "start_task_status": "working",
+      "task_id": "a5215811-3eb5-484a-8be5-2d17e8dd5749"
+    },
+    {
+      "parent_run_id": "exo-arb-inflight-5-exo-dagu-inflight-q1vqodoo",
+      "start_task_status": "working",
+      "task_id": "bbdfff51-3187-4644-b24a-022795d6e4ec"
+    },
+    {
+      "parent_run_id": "exo-arb-inflight-6-exo-dagu-inflight-q1vqodoo",
+      "start_task_status": "working",
+      "task_id": "3c6da11f-4d44-473e-8470-c861b94b485e"
+    },
+    {
+      "parent_run_id": "exo-arb-inflight-7-exo-dagu-inflight-q1vqodoo",
+      "start_task_status": "working",
+      "task_id": "668fefbb-e3e8-4b89-82f3-2158498cb3a1"
+    },
+    {
+      "parent_run_id": "exo-arb-inflight-8-exo-dagu-inflight-q1vqodoo",
+      "start_task_status": "working",
+      "task_id": "b42f6c13-8136-4ee5-a690-a6c9d44bf3bd"
+    },
+    {
+      "parent_run_id": "exo-arb-inflight-9-exo-dagu-inflight-q1vqodoo",
+      "start_task_status": "working",
+      "task_id": "71f95742-53d8-4a47-b323-7caa3482e6fe"
+    },
+    {
+      "parent_run_id": "exo-arb-inflight-10-exo-dagu-inflight-q1vqodoo",
+      "start_task_status": "working",
+      "task_id": "ef128f54-655d-4a38-9792-888a67869028"
+    }
+  ],
+  "definition_closure_sha256": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+  "levels": {
+    "0": {
+      "in_flight": [],
+      "snapshot": {
+        "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+        "footprint_exit_code": 0,
+        "physical_footprint_bytes_deduplicated": 548312128,
+        "pid_count": 9,
+        "processes": [
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -B /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/supervisor.py /tmp/exo-dagu-inflight-q1vqodoo --dagu /tmp/exomachina-countertri",
+            "pid": 73192,
+            "ppid": 73180,
+            "role": "supervisor"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/slow_harness_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/source_evid",
+            "pid": 73194,
+            "ppid": 73192,
+            "role": "source_evidence"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/counter_eviden",
+            "pid": 73195,
+            "ppid": 73192,
+            "role": "counter_evidence"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/quality --port 64",
+            "pid": 73196,
+            "ppid": 73192,
+            "role": "quality"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/release --mode pa",
+            "pid": 73197,
+            "ppid": 73192,
+            "role": "release"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/opaque --mode opa",
+            "pid": 73198,
+            "ppid": 73192,
+            "role": "opaque"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start-all --host 127.0.0.1 --port 64525",
+            "pid": 73199,
+            "ppid": 73192,
+            "role": "dagu"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/director_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/director --port",
+            "pid": 73210,
+            "ppid": 73192,
+            "role": "director"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/reconciler.py --dagu /private/tmp/exomachina-countertrials/dagu/dagu",
+            "pid": 73211,
+            "ppid": 73192,
+            "role": "reconciler"
+          }
+        ],
+        "sampled_unix_seconds": 1790171976.6930408,
+        "sampling_retries": [],
+        "selection": "supervisor descendants plus state-bound detached processes plus explicit store descendants"
+      }
+    },
+    "10": {
+      "after_sample": [
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-05ec53fd0d11d723c34b",
+          "child_source_node": "running",
+          "director_task_id": "eb41a99a-0a5b-4e0a-94ab-4548e287848b",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-1-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "22b28b07-41e0-4545-bd1f-a4febb435d49",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-05ec53fd0d11d723c34b:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-ea67326415ace54b6aba",
+          "child_source_node": "running",
+          "director_task_id": "d087181f-3077-4913-83ee-491510ff55ee",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-2-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "42c6b764-ae6b-453a-bc28-66c927b78250",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-ea67326415ace54b6aba:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-c71b715fa3436f15de32",
+          "child_source_node": "running",
+          "director_task_id": "5e3f1adc-c5ee-4ed3-9f81-fac395f886d0",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-3-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "8efc08b8-fd64-403b-a10c-c3c5f15bf672",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-c71b715fa3436f15de32:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-76153e72b38ef80d2619",
+          "child_source_node": "running",
+          "director_task_id": "a5215811-3eb5-484a-8be5-2d17e8dd5749",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-4-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "f2f7ca05-b8ef-4496-b1c0-1208b578ab18",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-76153e72b38ef80d2619:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-80f2bbe3bb8f556e6aab",
+          "child_source_node": "running",
+          "director_task_id": "bbdfff51-3187-4644-b24a-022795d6e4ec",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-5-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "7396b764-9fbe-4357-8b27-7055e60977b6",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-80f2bbe3bb8f556e6aab:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-ba711a5a3eb45e98184a",
+          "child_source_node": "running",
+          "director_task_id": "3c6da11f-4d44-473e-8470-c861b94b485e",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-6-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "11e68ef2-2d24-487d-b3f4-9906a627f11a",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-ba711a5a3eb45e98184a:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-eb71ac80100824998701",
+          "child_source_node": "running",
+          "director_task_id": "668fefbb-e3e8-4b89-82f3-2158498cb3a1",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-7-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "6e716299-0832-4a81-a876-76eb84db5985",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-eb71ac80100824998701:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-2666aaac0ec2e8e15e1c",
+          "child_source_node": "running",
+          "director_task_id": "b42f6c13-8136-4ee5-a690-a6c9d44bf3bd",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-8-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "41c72c11-e0c0-411b-92e8-2b2efe01d4bf",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-2666aaac0ec2e8e15e1c:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-97ebcbf97ba5e49f5950",
+          "child_source_node": "running",
+          "director_task_id": "71f95742-53d8-4a47-b323-7caa3482e6fe",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-9-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "eab1c59e-f801-49ed-b1c6-08a92c25b65e",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-97ebcbf97ba5e49f5950:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-0cc7b55644afb3971aa4",
+          "child_source_node": "running",
+          "director_task_id": "ef128f54-655d-4a38-9792-888a67869028",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-10-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "e5204519-37a1-475c-838c-4da774c5464f",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-0cc7b55644afb3971aa4:source_evidence"
+        }
+      ],
+      "in_flight": [
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-05ec53fd0d11d723c34b",
+          "child_source_node": "running",
+          "director_task_id": "eb41a99a-0a5b-4e0a-94ab-4548e287848b",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-1-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "22b28b07-41e0-4545-bd1f-a4febb435d49",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-05ec53fd0d11d723c34b:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-ea67326415ace54b6aba",
+          "child_source_node": "running",
+          "director_task_id": "d087181f-3077-4913-83ee-491510ff55ee",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-2-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "42c6b764-ae6b-453a-bc28-66c927b78250",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-ea67326415ace54b6aba:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-c71b715fa3436f15de32",
+          "child_source_node": "running",
+          "director_task_id": "5e3f1adc-c5ee-4ed3-9f81-fac395f886d0",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-3-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "8efc08b8-fd64-403b-a10c-c3c5f15bf672",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-c71b715fa3436f15de32:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-76153e72b38ef80d2619",
+          "child_source_node": "running",
+          "director_task_id": "a5215811-3eb5-484a-8be5-2d17e8dd5749",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-4-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "f2f7ca05-b8ef-4496-b1c0-1208b578ab18",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-76153e72b38ef80d2619:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-80f2bbe3bb8f556e6aab",
+          "child_source_node": "running",
+          "director_task_id": "bbdfff51-3187-4644-b24a-022795d6e4ec",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-5-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "7396b764-9fbe-4357-8b27-7055e60977b6",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-80f2bbe3bb8f556e6aab:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-ba711a5a3eb45e98184a",
+          "child_source_node": "running",
+          "director_task_id": "3c6da11f-4d44-473e-8470-c861b94b485e",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-6-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "11e68ef2-2d24-487d-b3f4-9906a627f11a",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-ba711a5a3eb45e98184a:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-eb71ac80100824998701",
+          "child_source_node": "running",
+          "director_task_id": "668fefbb-e3e8-4b89-82f3-2158498cb3a1",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-7-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "6e716299-0832-4a81-a876-76eb84db5985",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-eb71ac80100824998701:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-2666aaac0ec2e8e15e1c",
+          "child_source_node": "running",
+          "director_task_id": "b42f6c13-8136-4ee5-a690-a6c9d44bf3bd",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-8-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "41c72c11-e0c0-411b-92e8-2b2efe01d4bf",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-2666aaac0ec2e8e15e1c:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-97ebcbf97ba5e49f5950",
+          "child_source_node": "running",
+          "director_task_id": "71f95742-53d8-4a47-b323-7caa3482e6fe",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-9-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "eab1c59e-f801-49ed-b1c6-08a92c25b65e",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-97ebcbf97ba5e49f5950:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-0cc7b55644afb3971aa4",
+          "child_source_node": "running",
+          "director_task_id": "ef128f54-655d-4a38-9792-888a67869028",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-10-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "e5204519-37a1-475c-838c-4da774c5464f",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-0cc7b55644afb3971aa4:source_evidence"
+        }
+      ],
+      "snapshot": {
+        "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+        "footprint_exit_code": 0,
+        "physical_footprint_bytes_deduplicated": 1277924544,
+        "pid_count": 39,
+        "processes": [
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -B /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/supervisor.py /tmp/exo-dagu-inflight-q1vqodoo --dagu /tmp/exomachina-countertri",
+            "pid": 73192,
+            "ppid": 73180,
+            "role": "supervisor"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/slow_harness_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/source_evid",
+            "pid": 73194,
+            "ppid": 73192,
+            "role": "source_evidence"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/counter_eviden",
+            "pid": 73195,
+            "ppid": 73192,
+            "role": "counter_evidence"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/quality --port 64",
+            "pid": 73196,
+            "ppid": 73192,
+            "role": "quality"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/release --mode pa",
+            "pid": 73197,
+            "ppid": 73192,
+            "role": "release"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/opaque --mode opa",
+            "pid": 73198,
+            "ppid": 73192,
+            "role": "opaque"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start-all --host 127.0.0.1 --port 64525",
+            "pid": 73199,
+            "ppid": 73192,
+            "role": "dagu"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/director_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/director --port",
+            "pid": 73210,
+            "ppid": 73192,
+            "role": "director"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/reconciler.py --dagu /private/tmp/exomachina-countertrials/dagu/dagu",
+            "pid": 73211,
+            "ppid": 73192,
+            "role": "reconciler"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-ea67326415ace54b6aba --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73231,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-05ec53fd0d11d723c34b --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73232,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73235,
+            "ppid": 73231,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73235",
+            "pid": 73236,
+            "ppid": 73231,
+            "role": "dagu_parent_exit_watcher"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73237,
+            "ppid": 73232,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73237",
+            "pid": 73238,
+            "ppid": 73232,
+            "role": "dagu_parent_exit_watcher"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-c71b715fa3436f15de32 --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73250,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-76153e72b38ef80d2619 --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73255,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73261,
+            "ppid": 73250,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73261",
+            "pid": 73262,
+            "ppid": 73250,
+            "role": "dagu_parent_exit_watcher"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-80f2bbe3bb8f556e6aab --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73263,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-ba711a5a3eb45e98184a --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73278,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73279,
+            "ppid": 73255,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73279",
+            "pid": 73280,
+            "ppid": 73255,
+            "role": "dagu_parent_exit_watcher"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-eb71ac80100824998701 --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73285,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73286,
+            "ppid": 73263,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73286",
+            "pid": 73287,
+            "ppid": 73263,
+            "role": "dagu_parent_exit_watcher"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73293,
+            "ppid": 73278,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73293",
+            "pid": 73294,
+            "ppid": 73278,
+            "role": "dagu_parent_exit_watcher"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-2666aaac0ec2e8e15e1c --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73297,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73303,
+            "ppid": 73285,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73303",
+            "pid": 73304,
+            "ppid": 73285,
+            "role": "dagu_parent_exit_watcher"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-97ebcbf97ba5e49f5950 --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73307,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73308,
+            "ppid": 73297,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73308",
+            "pid": 73309,
+            "ppid": 73297,
+            "role": "dagu_parent_exit_watcher"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73312,
+            "ppid": 73307,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73312",
+            "pid": 73313,
+            "ppid": 73307,
+            "role": "dagu_parent_exit_watcher"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-0cc7b55644afb3971aa4 --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73314,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73319,
+            "ppid": 73314,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73319",
+            "pid": 73320,
+            "ppid": 73314,
+            "role": "dagu_parent_exit_watcher"
+          }
+        ],
+        "sampled_unix_seconds": 1790171981.5217311,
+        "sampling_retries": [],
+        "selection": "supervisor descendants plus state-bound detached processes plus explicit store descendants"
+      },
+      "stage_elapsed_seconds": 2.7592927920632064
+    },
+    "2": {
+      "after_sample": [
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-05ec53fd0d11d723c34b",
+          "child_source_node": "running",
+          "director_task_id": "eb41a99a-0a5b-4e0a-94ab-4548e287848b",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-1-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "22b28b07-41e0-4545-bd1f-a4febb435d49",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-05ec53fd0d11d723c34b:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-ea67326415ace54b6aba",
+          "child_source_node": "running",
+          "director_task_id": "d087181f-3077-4913-83ee-491510ff55ee",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-2-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "42c6b764-ae6b-453a-bc28-66c927b78250",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-ea67326415ace54b6aba:source_evidence"
+        }
+      ],
+      "in_flight": [
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-05ec53fd0d11d723c34b",
+          "child_source_node": "running",
+          "director_task_id": "eb41a99a-0a5b-4e0a-94ab-4548e287848b",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-1-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "22b28b07-41e0-4545-bd1f-a4febb435d49",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-05ec53fd0d11d723c34b:source_evidence"
+        },
+        {
+          "child_definition_digest": "bc48a335c6d8a36fa2bd584861ec2aa18f66eae9d65fec9b2a02b2fbbd7523be",
+          "child_native": "running",
+          "child_run_id": "exo-arb-child-ea67326415ace54b6aba",
+          "child_source_node": "running",
+          "director_task_id": "d087181f-3077-4913-83ee-491510ff55ee",
+          "director_task_status": "input-required",
+          "parent_native": "waiting",
+          "parent_run_id": "exo-arb-inflight-2-exo-dagu-inflight-q1vqodoo",
+          "source_a2a_task_id": "42c6b764-ae6b-453a-bc28-66c927b78250",
+          "source_a2a_task_status": "working",
+          "source_action_id": "exo-arb-child-ea67326415ace54b6aba:source_evidence"
+        }
+      ],
+      "snapshot": {
+        "footprint_command": "footprint -f bytes --noCategories -p <each selected PID>",
+        "footprint_exit_code": 0,
+        "physical_footprint_bytes_deduplicated": 702619976,
+        "pid_count": 15,
+        "processes": [
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -B /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/supervisor.py /tmp/exo-dagu-inflight-q1vqodoo --dagu /tmp/exomachina-countertri",
+            "pid": 73192,
+            "ppid": 73180,
+            "role": "supervisor"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/slow_harness_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/source_evid",
+            "pid": 73194,
+            "ppid": 73192,
+            "role": "source_evidence"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/decision-round/common/harness_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/counter_eviden",
+            "pid": 73195,
+            "ppid": 73192,
+            "role": "counter_evidence"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/quality_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/quality --port 64",
+            "pid": 73196,
+            "ppid": 73192,
+            "role": "quality"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/release --mode pa",
+            "pid": 73197,
+            "ppid": 73192,
+            "role": "release"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/common/release_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/opaque --mode opa",
+            "pid": 73198,
+            "ppid": 73192,
+            "role": "opaque"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start-all --host 127.0.0.1 --port 64525",
+            "pid": 73199,
+            "ppid": 73192,
+            "role": "dagu"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/director_server.py --state /private/tmp/exo-dagu-inflight-q1vqodoo/director --port",
+            "pid": 73210,
+            "ppid": 73192,
+            "role": "director"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/reconciler.py --dagu /private/tmp/exomachina-countertrials/dagu/dagu",
+            "pid": 73211,
+            "ppid": 73192,
+            "role": "reconciler"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-ea67326415ace54b6aba --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73231,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/private/tmp/exomachina-countertrials/dagu/dagu start -q --run-id=exo-arb-child-05ec53fd0d11d723c34b --source-file=/private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml --trigger-type=manual /private/tmp/exo-dagu-inflight-q1vqodoo/home/dags/exo_arb_research_v6.yaml",
+            "pid": 73232,
+            "ppid": 73199,
+            "role": "dagu_run"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73235,
+            "ppid": 73231,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73235",
+            "pid": 73236,
+            "ppid": 73231,
+            "role": "dagu_parent_exit_watcher"
+          },
+          {
+            "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-23/dagu-inflight-scale/ops.py assign --instance source_evidence --type source_evidence",
+            "pid": 73237,
+            "ppid": 73232,
+            "role": "dagu_step_adapter"
+          },
+          {
+            "command": "/bin/sh -c if IFS= read -r line <&3 && [ \"$line\" = \"ok\" ]; then exit 0; fi; kill -KILL -\"$1\" 2>/dev/null; exit 0 dagu-parent-exit-watcher 73237",
+            "pid": 73238,
+            "ppid": 73232,
+            "role": "dagu_parent_exit_watcher"
+          }
+        ],
+        "sampled_unix_seconds": 1790171978.453525,
+        "sampling_retries": [],
+        "selection": "supervisor descendants plus state-bound detached processes plus explicit store descendants"
+      },
+      "stage_elapsed_seconds": 1.6025375830940902
+    }
+  },
+  "method": "actual Director A2A Tasks and working source A2A Tasks",
+  "runtime": "/tmp/exo-dagu-inflight-q1vqodoo",
+  "schema": "exomachina.dagu.inflight-scale/1",
+  "status": "passed",
+  "supervisor_exit_code": 0
+}
