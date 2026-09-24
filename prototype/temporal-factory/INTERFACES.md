@@ -74,6 +74,53 @@ CLI: `python src/runner.py {serve,start,stop,status} --home H`. `ensure_started`
 - `model_from_environment() -> (model | None, reason)`. It reports why no live provider is available and never prompts for credentials.
 - `ScriptedAuthoringModel`: a deterministic Strands `Model` that drives the same tool loop. Its first draft has a defect, and it revises from the returned error. It is always labelled `live: false`.
 
+## Model broker lane (`broker/`, `src/model_broker.py`) — final phase
+
+Decision (debate consensus, 23 Sep 2026): the harness stays **Strands Python**; live model calls go through one **install-wide, persistent Node process running the published `@earendil-works/pi-ai` 0.87.1** behind a custom Strands `Model`. The embedded Pi SDK is the runner-up and is not built here. Proven offline basis: `/tmp/exomachina-pi-strands-debate/matched/strands-broker-interleaved/` (`broker.mjs`, `pi_broker_model.py` with the `contentIndex` ordered-fragment fix and index-restoring reasoning replay, strict mock). Reuse it; do not fork pi-ai or patch `node_modules`.
+
+**Credential policy (hard rules).**
+- Only the ChatGPT/Codex **subscription** OAuth credential (pi-ai provider `openai-codex`, credential `type: "oauth"`). It is obtained by Exomachina's **own** sign-in (`exo-model login`). Never read, copy or import `~/.codex/auth.json`, `~/.pi/**`, or any other tool's credential. pi-ai's `authContext` must return nothing for env and files so `OPENAI_API_KEY` etc. are never consulted.
+- **No API-billing fallback.** A subscription failure (`reauth_required`, quota, rate limit, entitlement) surfaces as an explicit error. It never falls through to `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, AWS, or any other provider.
+- Tokens exist only inside the broker/login Node processes and the credential file. Python, the harness, Temporal workflow inputs/history, A2A messages/artifacts, `evidence/`, logs and git never contain access tokens, refresh tokens, id tokens or authorization codes. Never print a token, even partially. Nobody asks the user for a raw token.
+- Owner-only persistence: `$EXO_MODEL_HOME` is `0700`, the credential file `0600`, written atomically (tmp + rename) under a lock. Refresh happens only inside the broker (pi-ai `Models.getAuth`, which refreshes under the store lock) or via the explicit `refresh` op.
+- Product runtime may remove only its own runtime artifacts (a proven-stale socket or lock). Workers still follow the no-deletion rule for everything else.
+
+**Install layout.** `EXO_MODEL_HOME` (default `~/.exomachina/model-broker`; tests use `/tmp/exo-proto-<lane>-<suffix>/model`). It is install-wide and per OS user, independent of any `EXO_HOME` trial directory, so one sign-in serves every harness instance.
+```
+$EXO_MODEL_HOME/                     0700
+  secrets/openai-codex.json          0600  pi-ai OAuth credential {type:"oauth", access, refresh, expires, accountId}
+  secrets/openai-codex.json.lock/          mkdir lock holding owner pid; stale (dead pid) lock is recovered
+  run/broker.sock                    0600  newline-JSON protocol below (sun_path ≤ 104 bytes)
+  run/broker-ready.json                    {pid, socket, started_at, pi_ai:"0.87.1", provider:"openai-codex", originator}
+  broker-events.jsonl                0600  start/attach/refresh/stream/error events: ids, model, timings, error kinds only
+```
+
+**Node package `broker/`** (owner tw_package). `package.json` pins `"@earendil-works/pi-ai": "0.87.1"` exactly, with `package-lock.json`; `broker/node_modules/` is gitignored and installed with `npm ci` (offline cache `/tmp/exomachina-pi-strands-debate/npm-cache` may be used). Entry point `node broker/exo-model.mjs <command>`:
+- `serve` — persistent singleton for this `EXO_MODEL_HOME`: if a live broker answers `health`, exit 0 reporting attach; replace only a proven-stale socket. Writes `run/broker-ready.json`.
+- `login [--device | --browser]` — interactive sign-in through public `Models.login("openai-codex", "oauth", interaction)`. Default `--device` (prints only the verification URL and one-time user code). Persists via the same store. Prints `{signed_in, account: "sha256:<12 hex>", expires_at}` only.
+- `status` — `{signed_in, account, expires_at, expired}` with no network call and no token material.
+- `refresh` — forces one refresh through the running broker's `refresh` op (starting it if needed); prints `{refreshed, expires_at_before, expires_at_after}`.
+- `logout` — pi-ai `Models.logout`.
+- `leak-scan <path>...` — reads the credential in-process and scans files/directories (binary-safe, including SQLite and JSONL) for the access token, refresh token, and any `id_token`/JWT fragment of them. Prints `{files_scanned, bytes_scanned, hits:[{path, kind}]}`, never the matched text.
+- Codex SSE requests carry `originator: exomachina` and `User-Agent: exomachina-model-broker/<version> (pi-ai/0.87.1)`, applied through pi-ai's public `fetch` stream option. If the live backend rejects that originator, report it; do not silently switch to another client's originator.
+- Egress: only `chatgpt.com`, `auth.openai.com`, and loopback. `EXO_CODEX_BASE_URL` is accepted only if it is a loopback URL (test backend).
+- Errors are redacted (JWT-shaped strings and the live token values) before logging or replying.
+
+**Socket protocol** (one JSON object per line; `id` echoes the request):
+- `{id, op:"health"}` → `{id, health:{pid, pi_ai, provider:"openai-codex", originator, signed_in, expires_at, account}}`
+- `{id, op:"stream", model, session, context:{systemPrompt, messages, tools}, options:{reasoningEffort?}}` → `{id, ev:{type, contentIndex, delta?, toolCall?:{id,name}}}`* then exactly one terminal `{id, done:<pi AssistantMessage>}` or `{id, error:{kind, message}}`. Error kinds: `reauth_required`, `rate_limit`, `quota`, `config`, `provider`, `aborted`, `broker`.
+- `{id, op:"cancel"}` aborts that stream; a closed client connection aborts its streams.
+- `{id, op:"refresh"}` → `{id, refresh:{refreshed:true, expires_at_before, expires_at_after}}` or `{id, error}`.
+
+**Python `src/model_broker.py`** (owner tw_version). Imports nothing from `tools/spikes/` or `/tmp`.
+- `ModelBroker(home: Path | None = None)`: `.socket`; `health() -> dict`; `is_running() -> bool`; `ensure_started(*, reason: str, timeout: float = 30) -> dict` (lazy, idempotent attach-or-spawn of a detached `node broker/exo-model.mjs serve`, recording `reason` in `broker-events.jsonl`); `stop()`. Node binary from `EXO_NODE` or `PATH`.
+- `PiBrokerModel(strands.models.Model)`: `PiBrokerModel(broker, *, model_id, session_id, reasoning_effort="low")`, the interleaved spike adapter (per-`contentIndex` routing, reasoning emitted at `done` with its original index, lossless replay, `BrokerLost` on a connection lost before a terminal event, `ModelThrottledException` for `rate_limit`/`quota`, `SubscriptionAuthRequired` for `reauth_required`). It lazily calls `broker.ensure_started(reason="model-call")`.
+- `authoring.model_from_environment()` selects by `EXO_AUTHOR_PROVIDER`: unset or `codex-subscription` → the broker only (default model `EXO_AUTHOR_MODEL`, else `gpt-6-sol`); if not signed in it returns `(None, "codex-subscription: not signed in; run node broker/exo-model.mjs login")` and **does not look at any API key**. `anthropic`, `bedrock`, `openai-api` are used only when named explicitly. `synthetic-loopback` selects the broker against a loopback `EXO_CODEX_BASE_URL` for tests. The outcome's `model` record is `{kind, id, provider, billing, live}`, where `live: true` only for `codex-subscription` against the real backend.
+
+**Live authoring scenario** (owner tw_director): `scenarios/live_authoring.py --home H --provider {synthetic-loopback,codex-subscription}`. It brings up the testbed, provisions a factory-mode instance, publishes v1, runs `admin.py author` with the selected broker model (no `--allow-scripted`), auto-approves and publishes v2, runs v2 through the harness's normal A2A `message/send` (lazy runner, Temporal, pinned build) to a terminal state, exports the Temporal histories, and runs `leak-scan` over `H`, the evidence file, and the repo diff. Evidence: `evidence/live-authoring-<provider>.json` with every claim labelled `real` or `synthetic`. Ports: runner `EXO_RUNNER_PORT_BASE=44100`, `EXO_RUNNER_MEMBER_BASE=32420`, harness 44830, testbed 45300–45305. Unit/Node tests and mock backends use 46100–46149.
+
+**Test fixtures** (owner tw_quality): `broker/testing/` holds loopback-only test code: the strict-history mock Codex SSE backend (from the interleaved spike, plus an authoring-script mode that drives `describe_vocabulary` → defective `validate_draft` → corrected draft derived from the returned error → `submit_draft`), and a `node --import` preload that intercepts the OAuth token endpoint for refresh tests. Product code never imports `broker/testing/`.
+
 ## Testbed lane (`services/`, `definitions/`)
 
 - `services/testbed.py {up,down,status} --home H [--port-base 45200]`. It starts independent pinned test A2A services, each with durable identity under `$H/services/<name>`: `source_alpha`, `source_beta`, `counter_alpha`, and `counter_beta` (capability, via `src/harness_server.py --role capability`), `quality` (`services/quality_server.py`), and `release` (`services/release_server.py --mode participating`). Ports are `port_base + i` in that order.
