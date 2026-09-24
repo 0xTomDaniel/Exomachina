@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "run_inputs": {
+    "question": {"type": "string", "required": true, "source": "caller", "allowed_actors": ["fixture-operator"], "may_affect_acceptance": false}
+  },
+  "root": {
+    "name": "parent_verified_report", "revision": "v1", "start": "invoke_child",
+    "nodes": {
+      "invoke_child": {"type": "nested_factory", "child": "verified_report", "child_digest": "@child", "next": "done"},
+      "done": {"type": "complete"}
+    }
+  },
+  "child": {
+    "name": "verified_report", "revision": "v1", "start": "gather",
+    "nodes": {
+      "gather": {"type": "parallel", "branches": {
+        "research_findings": {"result_type": "packet_findings", "capability": "packet_findings@1", "service": "research_findings"},
+        "research_risks": {"result_type": "packet_risks", "capability": "packet_risks@1", "service": "research_risks"}
+      }, "next": "join_evidence"},
+      "join_evidence": {"type": "join", "branches": ["research_findings", "research_risks"], "next": "draft"},
+      "draft": {"type": "synthesize", "service": "synthesizer", "next": "independent_quality"},
+      "independent_quality": {"type": "quality", "next": "route_verdict"},
+      "route_verdict": {"type": "route", "field": "verdict.accepted", "cases": {"true": "publish", "false": "repair"}},
+      "repair": {"type": "repair", "max_repairs": 2, "next": "draft", "exhausted": "director"},
+      "director": {"type": "director_wait", "reason": "repair_exhausted", "next": "abort"},
+      "abort": {"type": "abort"},
+      "publish": {"type": "release", "service": "release", "next": "done"},
+      "done": {"type": "complete"}
+    }
+  }
+}

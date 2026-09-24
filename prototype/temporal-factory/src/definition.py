@@ -9,13 +9,14 @@ import json
 import math
 import re
 from pathlib import Path
+from report_contract import validate_packet
 
 
 ALLOWED = {
     "parallel": {"type", "branches", "next"},
     "join": {"type", "branches", "next"},
     "route": {"type", "field", "cases"},
-    "synthesize": {"type", "resolved", "next"},
+    "synthesize": {"type", "service", "next"},
     "quality": {"type", "next"},
     "repair": {"type", "max_repairs", "next", "exhausted"},
     "director_wait": {"type", "reason", "next"},
@@ -24,11 +25,9 @@ ALLOWED = {
     "complete": {"type"},
     "nested_factory": {"type", "child", "child_digest", "next"},
 }
-RESULT_TYPES = {"source_evidence": "source_evidence@1",
-                "counter_evidence": "counter_evidence@1"}
-ROUTE_VALUES = {"join.route_status": {"requires_scope", "clear"},
-                "join.requires_scope": {"true", "false"},
-                "verdict.accepted": {"true", "false"}}
+RESULT_TYPES = {"packet_findings": "packet_findings@1",
+                "packet_risks": "packet_risks@1"}
+ROUTE_VALUES = {"verdict.accepted": {"true", "false"}}
 INPUT_TYPES = {"string", "integer", "number", "boolean"}
 INPUT_SOURCES = {"caller", "director", "verified_artifact"}
 
@@ -198,7 +197,7 @@ def _definition(document: dict, children: dict, bindings: dict, *, parent: bool)
                    for instance in branches):
                 raise ValueError("invalid branch instance")
             for instance, branch in branches.items():
-                _keys(branch, {"result_type", "capability", "service", "scope_status"},
+                _keys(branch, {"result_type", "capability", "service"},
                       f"branch {instance}")
                 result_type = branch["result_type"]
                 if result_type not in RESULT_TYPES:
@@ -208,18 +207,17 @@ def _definition(document: dict, children: dict, bindings: dict, *, parent: bool)
                 binding = bindings.get(branch["service"])
                 if not isinstance(binding, dict) or binding.get("role") != "capability" or not binding.get("approved"):
                     raise ValueError("unapproved capability service")
-                scope = branch["scope_status"]
-                if result_type == "counter_evidence":
-                    if scope not in {"requires_scope", "clear"}:
-                        raise ValueError("invalid counter scope enum")
-                elif scope is not None:
-                    raise ValueError("source branch cannot set counter scope")
+                if branch["service"] != instance or instance != "research_" + result_type.removeprefix("packet_"):
+                    raise ValueError("report branch must use its approved service")
         elif kind == "join":
             if not isinstance(node["branches"], list) or len(node["branches"]) < 2:
                 raise ValueError("join needs named typed predecessors")
         elif kind == "synthesize":
-            if node["resolved"] not in (True, False, "after_repair", "from_run"):
-                raise ValueError("synthesis resolution is not approved")
+            binding = bindings.get(node["service"])
+            if (not isinstance(binding, dict) or binding.get("role") != "capability"
+                    or binding.get("approved") is not True
+                    or node["service"] != "synthesizer"):
+                raise ValueError("unapproved synthesis service")
         elif kind == "repair":
             if type(node["max_repairs"]) is not int or not 1 <= node["max_repairs"] <= 2:
                 raise ValueError("repair bound must be one or two")
@@ -346,10 +344,14 @@ def _definition(document: dict, children: dict, bindings: dict, *, parent: bool)
 
 
 def validate(package: dict, approved_bindings: dict | None = None) -> str:
-    _keys(package, {"schema", "root", "children", "bindings", "run_inputs"}, "package")
+    _keys(package, {"schema", "root", "children", "bindings", "run_inputs", "evidence_packet"}, "package")
     if package["schema"] != 1:
         raise ValueError("unsupported package schema")
     validate_input_schema(package["run_inputs"])
+    if package["run_inputs"] != {"question": {"type": "string", "required": True,
+            "source": "caller", "allowed_actors": ["fixture-operator"],
+            "may_affect_acceptance": False}}:
+        raise ValueError("report run inputs must be exactly required caller question")
     bindings = package["bindings"]
     if not isinstance(bindings, dict):
         raise ValueError("missing approved bindings")
@@ -377,14 +379,9 @@ def validate(package: dict, approved_bindings: dict | None = None) -> str:
             raise ValueError("active child closure mutation or digest mismatch")
         _definition(child, children, bindings, parent=False)
     _definition(package["root"], children, bindings, parent=True)
-    if any(node["type"] == "synthesize" and node["resolved"] == "from_run"
+    if any(node["type"] == "synthesize"
            for child in children.values() for node in child["nodes"].values()):
-        outcome = package["run_inputs"].get("outcome_mode")
-        if (not isinstance(outcome, dict)
-                or outcome.get("type") != "string" or outcome.get("required") is not True
-                or outcome.get("enum") != ["after_first_repair", "never"]
-                or outcome.get("may_affect_acceptance") is not True):
-            raise ValueError("from_run requires the pinned outcome_mode enum")
+        validate_packet(package["evidence_packet"])
     return digest(package)
 
 

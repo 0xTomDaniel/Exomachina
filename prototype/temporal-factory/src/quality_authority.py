@@ -38,6 +38,36 @@ def quality_action_id(run_id: str, assignment_id: str, attempt: int,
     return f"{run_id}:quality:{assignment_id}:{attempt}:{revision}:{sha256}"
 
 
+def decide_quality_async(*, binding: Mapping[str, Any], command: Mapping[str, Any],
+                         candidate: Mapping[str, Any], receipt: Mapping[str, Any],
+                         verdict: Mapping[str, Any], expected_task_id: str) -> QualityDecision:
+    """Bind the async Task journal receipt and decoded verdict to one candidate."""
+    problems = []
+    if binding.get("role") != "quality" or binding.get("approved") is not True:
+        problems.append("pinned-quality-binding")
+    identity = binding.get("identity")
+    if identity == candidate.get("author") or not identity:
+        problems.append("author-quality-independence")
+    if (receipt.get("action_id") != command.get("action_id")
+            or receipt.get("run_id") != command.get("run_id")
+            or receipt.get("definition_digest") != command.get("definition_digest")
+            or receipt.get("task_id") != expected_task_id
+            or receipt.get("harness_identity") != identity
+            or receipt.get("harness_role") != "quality"):
+        problems.append("task-journal-binding")
+    wire = receipt.get("artifact") or {}
+    if (wire.get("author") != identity or wire.get("revision") != candidate.get("revision")
+            or verdict.get("reviewer") != identity
+            or verdict.get("candidate") != {key: candidate.get(key) for key in
+                                              ("revision", "sha256", "author")}):
+        problems.append("verdict-candidate-binding")
+    if problems:
+        return QualityDecision(QualityKind.INCONSISTENT, tuple(problems),
+                               incident="quality-evidence-inconsistent")
+    return QualityDecision(QualityKind.POSITIVE if verdict["accepted"] else QualityKind.NEGATIVE,
+                           (), verdict)
+
+
 def _task_verdict(task: Mapping[str, Any]) -> Mapping[str, Any] | None:
     try:
         artifacts = task["artifacts"]

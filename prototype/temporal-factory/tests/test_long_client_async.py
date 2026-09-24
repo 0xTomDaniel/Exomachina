@@ -107,7 +107,7 @@ class StubServer(ThreadingHTTPServer):
 class AsyncClientTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = StubServer(("127.0.0.1", 46220))
+        cls.server = StubServer(("127.0.0.1", 46451))
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
 
@@ -138,7 +138,7 @@ class AsyncClientTests(unittest.TestCase):
 
     def invoke(self):
         with patch.dict("os.environ", {"EXO_OUTCOME_DB": str(self.home / "runner" / "outcomes.sqlite3")}):
-            return adapter._invoke_async(self.binding, self.contract, self.command)
+            return adapter._invoke_async(self.binding, self.contract, self.command, "r2", "research")
 
     def journal(self):
         with sqlite3.connect(self.home / "runner" / "outcomes.sqlite3") as db:
@@ -150,9 +150,7 @@ class AsyncClientTests(unittest.TestCase):
         self.assertEqual(self.server.blocking, [False])
         self.assertEqual(self.journal()["task_id"], "remote-task-1")
         self.assertEqual(self.journal()["phase"], "confirmed")
-        fixture.branch_value(result, "counter_beta", run_id="run-1",
-            definition_digest="d" * 64, result_type="counter_evidence",
-            scope_status="requires_scope")
+        self.assertEqual(result["artifact"]["revision"], "r2")
 
     def test_lost_reply_resends_exact_payload_once(self):
         self.server.drop_once = True
@@ -176,17 +174,11 @@ class AsyncClientTests(unittest.TestCase):
         self.assertEqual(self.server.effects, 1)
         self.assertEqual(self.server.blocking, [False])
 
-    def test_incomplete_async_pin_does_not_fall_back_to_legacy_send(self):
-        inp = {"run": "run-1", "digest": "d" * 64, "instance": "counter_beta",
-               "result_type": "counter_evidence", "scope_status": "requires_scope",
-               "url": self.url, "identity": self.server.identity,
-               "binding": self.binding, "lookup_supported": True,
-               "contract": {"reconcile": "a2a-idempotent-resend"}}
-        with patch.object(adapter, "_invoke") as legacy, patch.object(adapter, "_invoke_async") as async_call:
-            result = asyncio.run(adapter.assign(inp))
-        self.assertEqual(result["unresolved"], "async-pin-incomplete")
-        legacy.assert_not_called()
-        async_call.assert_not_called()
+    def test_incomplete_async_pin_is_incident(self):
+        contract = {"reconcile": "a2a-idempotent-resend"}
+        with patch.dict("os.environ", {"EXO_OUTCOME_DB": str(self.home / "runner" / "outcomes.sqlite3")}):
+            result = adapter._invoke_async(self.binding, contract, self.command, "r2", "research")
+        self.assertEqual(result["unresolved"], "pinned-agent-verification-failed")
         self.assertEqual(self.server.effects, 0)
 
     def test_stale_attempt_cannot_overwrite_incident(self):

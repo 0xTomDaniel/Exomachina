@@ -16,14 +16,7 @@ from authoring import (AuthoringSession, ScriptedAuthoringModel, StrandsGraphAut
 from definition import validate
 
 
-NAMES = ("source_alpha", "source_beta", "counter_alpha", "counter_beta", "quality", "release")
-
-
-def bindings():
-    return {name: {"role": "capability" if name.startswith(("source", "counter")) else name,
-                   "url": f"http://127.0.0.1:{45200 + i}",
-                   "identity": f"test-identity-{name}", "approved": True}
-            for i, name in enumerate(NAMES)}
+from report_fixture import packet, template, bindings
 
 
 class SubmittingModel(Model):
@@ -65,12 +58,12 @@ class SubmittingModel(Model):
 class AuthoringTests(unittest.TestCase):
     def setUp(self):
         self.bindings = bindings()
-        self.v1 = json.loads((ROOT / "definitions" / "v1-template.json").read_text())
-        self.brief = (ROOT / "definitions" / "authoring-brief-v2.md").read_text()
+        self.v1 = template()
+        self.brief = (ROOT / "definitions" / "authoring-brief-report.md").read_text()
 
     def scripted(self, max_rounds=4):
         return AuthoringSession(StrandsGraphAuthor(ScriptedAuthoringModel()),
-                                approved_bindings=self.bindings, max_rounds=max_rounds).run(
+                                approved_bindings=self.bindings, evidence_packet=packet(), max_rounds=max_rounds).run(
                                     self.brief, self.v1)
 
     def test_scripted_revises_validation_error_and_approves_new_package(self):
@@ -80,7 +73,7 @@ class AuthoringTests(unittest.TestCase):
         self.assertFalse(outcome.rounds[0]["valid"])
         self.assertEqual(outcome.rounds[0]["errors"][0]["message"],
                          "route must cover each typed value")
-        self.assertEqual(outcome.rounds[0]["errors"][0]["missing_cases"], ["requires_scope"])
+        self.assertEqual(outcome.rounds[0]["errors"][0]["missing_cases"], ["false"])
         self.assertTrue(outcome.rounds[1]["valid"])
         self.assertEqual([call["tool"] for call in outcome.tool_calls],
                          ["describe_vocabulary", "validate_draft", "submit_draft"])
@@ -89,13 +82,13 @@ class AuthoringTests(unittest.TestCase):
                          ("scripted", "scripted", "none"))
         self.assertEqual(outcome.approval["status"], "approved")
         self.assertEqual(outcome.package_digest, validate(outcome.package, self.bindings))
-        v1_digest = validate(materialize(self.v1, self.bindings), self.bindings)
-        self.assertNotEqual(outcome.package_digest, v1_digest)
+        v1_digest = validate(materialize(self.v1, self.bindings, evidence_packet=packet()), self.bindings)
+        self.assertEqual(outcome.package_digest, v1_digest)
         self.assertEqual(outcome.package["run_inputs"]["question"]["allowed_actors"],
                          ["fixture-operator"])
         branches = outcome.template["child"]["nodes"]["gather"]["branches"]
-        self.assertEqual(set(branches), {"source_alpha", "source_beta", "counter_alpha"})
-        self.assertEqual(outcome.template["child"]["nodes"]["repair"]["max_repairs"], 1)
+        self.assertEqual(set(branches), {"research_findings", "research_risks"})
+        self.assertEqual(outcome.template["child"]["nodes"]["repair"]["max_repairs"], 2)
 
     def test_round_cap_blocks_corrected_submission(self):
         outcome = self.scripted(max_rounds=1)
@@ -113,20 +106,20 @@ class AuthoringTests(unittest.TestCase):
             with self.subTest(mutation=mutation):
                 draft = json.loads(json.dumps(valid))
                 if mutation == "binding":
-                    draft["child"]["nodes"]["gather"]["branches"]["source_alpha"]["service"] = "unknown"
+                    draft["child"]["nodes"]["gather"]["branches"]["research_findings"]["service"] = "unknown"
                 else:
-                    draft["child"]["nodes"]["draft_clear"]["type"] = "python"
+                    draft["child"]["nodes"]["draft"]["type"] = "python"
                 model = SubmittingModel(draft)
                 outcome = AuthoringSession(StrandsGraphAuthor(model),
-                                           approved_bindings=self.bindings).run(self.brief)
+                                           approved_bindings=self.bindings, evidence_packet=packet()).run(self.brief)
                 self.assertEqual(outcome.status, "no_submission")
                 self.assertFalse(model.feedback["ok"])
                 self.assertEqual(model.feedback["errors"][0]["message"], expected)
 
     def test_vocabulary_and_unavailable_live_model(self):
         vocabulary = authoring_vocabulary(self.bindings)
-        self.assertEqual(vocabulary["route_values"]["join.route_status"],
-                         ["clear", "requires_scope"])
+        self.assertEqual(vocabulary["route_values"]["verdict.accepted"],
+                         ["false", "true"])
         with patch("model_broker.ModelBroker.ensure_started", return_value={"signed_in": False}), \
                 patch.dict("os.environ", {"EXO_AUTHOR_PROVIDER": "codex-subscription"}, clear=True):
             model, reason = model_from_environment()

@@ -88,7 +88,8 @@ def validate_async_task(task: dict, command: dict, identity: str) -> str:
     return state
 
 
-def async_receipt(task: dict, command: dict, identity: str) -> dict:
+def async_receipt(task: dict, command: dict, identity: str,
+                  expected_revision: str, role: str) -> dict:
     if validate_async_task(task, command, identity) != "completed":
         raise ValueError("A2A Task is not complete")
     artifacts = task.get("artifacts") or []
@@ -101,7 +102,7 @@ def async_receipt(task: dict, command: dict, identity: str) -> dict:
     for key in ("action_id", "run_id", "definition_digest"):
         if artifact.get(key) != command[key]:
             raise ValueError("artifact binding mismatch: " + key)
-    if artifact.get("author") != identity or artifact.get("revision") != "r2":
+    if artifact.get("author") != identity or artifact.get("revision") != expected_revision:
         raise ValueError("artifact author or revision mismatch")
     content = artifact.get("content")
     if not isinstance(content, str) or artifact.get("sha256") != hashlib.sha256(content.encode()).hexdigest():
@@ -111,7 +112,7 @@ def async_receipt(task: dict, command: dict, identity: str) -> dict:
     return {"action_id": command["action_id"], "run_id": command["run_id"],
             "definition_digest": command["definition_digest"], "task_id": task["id"],
             "artifact": artifact, "harness_identity": identity,
-            "harness_role": "capability", "a2a_protocol": "0.3.0"}
+            "harness_role": role, "a2a_protocol": "0.3.0"}
 
 
 def reconcile(url, action_id, run_id=None, definition_digest=None):
