@@ -339,6 +339,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
     label = "observed-real" if e.get("provider") == "codex-subscription" else "observed-synthetic"
     live = e.get("provider") == "codex-subscription"
     quality_behavior = "spontaneous verdict on induced defect" if live else "scripted route control"
+    route1_quality_behavior = "spontaneous verdict (no stimulus)" if live else quality_behavior
     model_behavior = "spontaneous" if live else "scripted"
     c: dict[str, dict] = {}
     setup = e.get("setup") or {}
@@ -486,7 +487,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
     c["R1-c"] = verdict(len(synth1) == len(quality1) == 1 and
         _revision(a1) == "r1" and a1.get("live") is live and
         v1.get("accepted") is True and _quality_bound(e, 1, a1, q1, live=live),
-        {"synthesis": a1, "quality": q1}, label, behavior=quality_behavior)
+        {"synthesis": a1, "quality": q1}, label, behavior=route1_quality_behavior)
     useful = r1.get("usefulness") or {}
     report1 = _report(a1)
     packet_ids = set(e.get("packet_ids") or [])
@@ -517,7 +518,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
     c["R1-d"]["semantic_reading"] = "pending-orchestrator-reading"
     c["R1-e"] = verdict(len(quality1) == 1 and v1.get("accepted") is True and
         _quality_bound(e, 1, a1, q1, live=live),
-        {"quality": quality1}, label, behavior=quality_behavior)
+        {"quality": quality1}, label, behavior=route1_quality_behavior)
 
     stimuli2 = r2.get("stimulus_log") or []
     planted2 = stimuli2[0] if len(stimuli2) == 1 else {}

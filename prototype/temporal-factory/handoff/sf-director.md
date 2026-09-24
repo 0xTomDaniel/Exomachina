@@ -1,5 +1,15 @@
 # Review 2 checker fixes
 
+## Post-live-3 label fix
+
+24 September 2026. Route 1 has no induced defect. Live R1-c and R1-e now have behavior `spontaneous verdict (no stimulus)` instead of `spontaneous verdict on induced defect`. Live R2-b and R3-b retain `spontaneous verdict on induced defect`; R2-d retains `spontaneous verdict`; scripted labels are unchanged. This edits labels only, with no checker predicate change. `test_live_route1_quality_labels_have_no_stimulus` covers the live labels using preserved live-3 evidence.
+
+**Replay under corrected labels - not a new run:** an in-memory `check_evidence` replay of preserved `evidence/single-factory/codex-subscription-3.json`, compared with its saved checks after JSON normalization, returned identical `pass` values for all 24 checks. The only changed check fields were the R1-c and R1-e `behavior` strings. The evidence file was not modified.
+
+Live-3's recorded `checker_sha256` is `34737983401309d7d79b3594ceb3f311bddb9ddd8f2f7a373af9a7c63c5d08f1`, matching the pre-fix HEAD checker. The edited checker hashes to `c09db69373491051fbdd8d7e5a0c110749f20e25b13ad952262caa493ea5c11a`. Once this label-only fix becomes HEAD, live-3's recorded checker SHA-256 therefore differs from HEAD by this label-only change; it remains the correct hash for the checker used in the preserved attempt.
+
+Under `/usr/bin/lockf -k /tmp/exo-qual-suite.lock`, `tests.test_sf_checks` passed **24 tests** and the full Python suite passed **175 tests**. No scenario or live provider was run, and no broker command was issued for this fix.
+
 ## Review 3 fixes
 
 24 September 2026. Scope: `scenarios/single_factory.py`, new `scenarios/sf_attest.py`, `tests/test_sf_checks.py`, this handoff, and generated synthetic evidence. No live provider, login, refresh, logout, commit, push, or branch switch was run. The only broker operations outside the scripted scenario were the explicitly requested Python and Node suites under the shared lock. The scripted scenario used its own loopback model home and lane D ports.

@@ -367,6 +367,16 @@ class ReviewTwoCheckerTests(unittest.TestCase):
             self.assertEqual(checks[key]["behavior"],
                 "caller-prompted, model-decided (abort is the only permitted action)")
 
+    def test_live_route1_quality_labels_have_no_stimulus(self):
+        live = json.loads((ROOT / "evidence" / "single-factory" /
+                           "codex-subscription-3.json").read_text())
+        checks = check_evidence(live)
+        for key in ("R1-c", "R1-e"):
+            self.assertEqual(checks[key]["behavior"], "spontaneous verdict (no stimulus)")
+            self.assertNotIn("induced", checks[key]["behavior"])
+        for key in ("R2-b", "R3-b"):
+            self.assertEqual(checks[key]["behavior"], "spontaneous verdict on induced defect")
+
 
 if __name__ == "__main__":
     unittest.main()
