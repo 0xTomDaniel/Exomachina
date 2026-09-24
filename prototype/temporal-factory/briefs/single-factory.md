@@ -271,3 +271,19 @@ Common rules:
 The orchestrator's integrated runs use runner 44500/32500, harness 44870, services 45700–45719 and mocks 46400–46449. Ports 44950 and 44960 are held by unrelated processes; avoid them.
 
 Lane R delivers `agent_roles.py` stubs with the frozen signatures first, so that Lane A can run against them. Lane D builds the scenario against this contract and first runs it on the integration branch after the orchestrator merges I, A and R.
+
+## Amendments
+
+### A1, 24 September 2026 (before any scenario run; from lane handoffs and independent review 1, `handoff/sf-review-1.md`)
+
+- **`usefulness_check` return shape.** `agent_roles.usefulness_check(content, packet)` returns `{ok, reasons}`. It is a structural helper only.
+- **R1-d is strengthened.** R1-d now needs all of the following:
+  1. the helper's `ok`, after it is tightened so every `REPORT_SECTIONS` section has substantive, non-placeholder content (lane R);
+  2. at least 3 claims, each citing packet ids;
+  3. a recorded **human reading** by the orchestrator of the saved report markdown. The reading judges whether live/fixture status, remaining gaps and next priority are actually answered and supported by the cited items, and it is recorded in the handoff.
+
+  The helper's `ok` alone never satisfies R1-d.
+- **SF-2, G-2 and G-3 observation.** `/_test/observe` stays on the synthesizer only. The scenario reads every agent's SQLite `tasks`/`model_calls` read-only (`mode=ro` URI) and preserves a copy in evidence. This is test observation, not product authority.
+- **R2-a and R3-a atomicity.** The stimulus log is idempotent per `(stimulus_id, task_id, revision)` (lane A). The scenario also requires each log row's `sha256_after` to equal the final artifact sha256 of that Task.
+- **Synthetic Quality.** In the `scripted` provider, Quality recognises planted claims by exact match against `scenarios/sf_stimuli.json`. That is scripted route control. It is labelled so in synthetic evidence and supports no independence or detection claim; only live `decided_by:"model"` verdicts can.
+- **SF-2 import audit scope.** The audit covers the agent processes: `services/model_agent.py` and `services/agent_roles.py` may import only `model_broker` from `src/`. `services/testbed.py` is the directory stand-in launcher, not an agent. It imports `agent_binding.pin` to produce the static snapshot, and that import is reported explicitly in evidence, not waived silently. Legacy fixture services are outside the report profile and are listed as such.
