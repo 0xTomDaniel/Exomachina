@@ -298,18 +298,24 @@ def _redact_history(raw_path: Path, export_path: Path) -> dict:
             "redacted_json_paths": paths}
 
 
-def _contains_token(path: Path, token: str) -> bool:
-    if not path.is_file():
-        return False
-    raw = path.read_bytes()
-    if token.encode() in raw:
-        return True
-    if path.suffix == ".json":
-        try:
-            return any(token.encode() in payload for payload in _decoded_payloads(json.loads(raw)))
-        except (ValueError, UnicodeDecodeError):
-            return False
-    return False
+def _redact_export(value: object) -> object:
+    """Redact sensitive observation fields before evidence is exported."""
+    sensitive = {"token", "actor", "authorized_actor", "owner_epoch", "epoch",
+                 "package", "closure", "bindings", "input"}
+    if isinstance(value, dict):
+        result = {}
+        for key, child in value.items():
+            if key in sensitive:
+                result[key] = {"redacted_sha256": hashlib.sha256(json.dumps(child,
+                    sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest(),
+                    "decoded_payload_sha256": [hashlib.sha256(raw).hexdigest()
+                        for raw in _decoded_payloads(child)]}
+            else:
+                result[key] = _redact_export(child)
+        return result
+    if isinstance(value, list):
+        return [_redact_export(child) for child in value]
+    return value
 
 
 def _alive(pid: int) -> bool:
@@ -332,15 +338,23 @@ def check_evidence(e: dict) -> dict[str, dict]:
     """Pure SF-0..G-7 checks over observed evidence; absent evidence fails closed."""
     label = "observed-real" if e.get("provider") == "codex-subscription" else "observed-synthetic"
     live = e.get("provider") == "codex-subscription"
-    quality_behavior = "spontaneous" if live else "scripted route control"
+    quality_behavior = "spontaneous verdict on induced defect" if live else "scripted route control"
     model_behavior = "spontaneous" if live else "scripted"
     c: dict[str, dict] = {}
     setup = e.get("setup") or {}
     env = setup.get("environment") or {}
     broker = setup.get("broker_status") or {}
-    c["SF-0"] = verdict(bool(setup.get("fresh_home") and setup.get("preflight_listeners") == [] and
+    preflight = setup.get("preflight_home_lstat") or {}
+    card = setup.get("served_factory_card") or {}
+    c["SF-0"] = verdict(bool(setup.get("fresh_home") and
+        preflight.get("result") == "FileNotFoundError" and
+        setup.get("preflight_listeners") == [] and
         setup.get("factory_count") == 1 and
-        setup.get("card_skill_count") == 1 and broker.get("signed_in") is True and
+        setup.get("card_skill_count") == 1 and isinstance(card.get("body"), dict) and
+        len(card["body"].get("skills") or []) == 1 and
+        card.get("sha256") == _sha(json.dumps(card["body"], sort_keys=True,
+            separators=(",", ":"), ensure_ascii=False)) and
+        setup.get("broker_status_fields") == broker and broker.get("signed_in") is True and
         broker.get("expired") is False and str(broker.get("account", "")).startswith("sha256:") and
         set(env) == {"EXO_MODEL_HOME", "EXO_CODEX_BASE_URL", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"} and
         not env["EXO_MODEL_HOME"] and not env["EXO_CODEX_BASE_URL"]), setup, label)
@@ -366,7 +380,9 @@ def check_evidence(e: dict) -> dict[str, dict]:
         (author.get("limits") or {}).get("deadline_seconds", 0) and
         publication.get("manifest_digest") == active.get("manifest_digest")
         and len(e.get("publications") or []) == 1 and
-        all(name in bindings for name in SERVICES) and
+        set(e.get("binding_names") or
+            (bindings if set(bindings) != {"redacted_sha256", "decoded_payload_sha256"} else [])) ==
+            set(SERVICES) and
         active.get("bindings") == bindings and
         active.get("packet_digest") == e.get("packet_digest"),
         {"authoring": author, "acceptance_reason": auth_reason, "facts": auth_facts,
@@ -554,7 +570,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
         planted2["planted_text"] not in json.dumps(_report(repair2)) and
         not any(x.get("revision") == "r2" for x in stimuli2),
         {"first": first2, "repair": repair2, "stimulus": stimuli2}, label,
-        behavior=model_behavior)
+        behavior="live repair content on assigned repair" if live else model_behavior)
     accepted2 = next((x for x in q2 if (x.get("verdict") or {}).get("accepted") is True), {})
     av2 = accepted2.get("verdict") or {}
     ak2 = av2.get("candidate", {}).get("revision")
@@ -565,7 +581,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
         _exact_release(r2, _release_rows(e, 2), ak2, h2) and
         all(x.get("sha256") != (first2.get("artifact") or {}).get("sha256") for x in _release_rows(e, 2)),
         {"acceptance": accepted2, "release": _release_rows(e, 2), "artifact": t2.get("artifacts"),
-         "max_repairs": max_repairs}, label, behavior=quality_behavior)
+         "max_repairs": max_repairs}, label, behavior="spontaneous verdict" if live else quality_behavior)
 
     stimuli3 = r3.get("stimulus_log") or []
     s3 = _run_actions(e, 3, "synthesizer"); q3 = _run_actions(e, 3, "quality")
@@ -621,7 +637,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
         r3.get("result_status") == "aborted" and not (t3.get("artifacts") or []) and
         len(_release_rows(e, 3)) == 0,
         {"calls": calls3, "task": t3, "release": _release_rows(e, 3)}, label,
-        behavior="caller-prompted model-decided abort" if live else
+        behavior="caller-prompted, model-decided (abort is the only permitted action)" if live else
                  "caller-prompted scripted abort")
     turns = [x for r in routes.values() for x in r.get("director_turns") or []]
     c["R3-e"] = verdict(all(len((routes.get(str(n)) or {}).get("director_turns") or []) == count
@@ -630,7 +646,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
         1 <= x.get("model_calls", 99) <= 4 and
         x.get("tool_calls", 99) <= 4 and x.get("elapsed_seconds", 999) <= 90 and
         x.get("failure") is None for x in turns),
-        {"turns": turns}, label, behavior="caller-prompted model-decided abort" if live else
+        {"turns": turns}, label, behavior="caller-prompted, model-decided (abort is the only permitted action)" if live else
                                     "caller-prompted scripted abort")
 
     journal = e.get("journal") or []
@@ -728,8 +744,10 @@ def check_evidence(e: dict) -> dict[str, dict]:
         all(row["path"] in scan_inputs for row in manifest) and
         isinstance(raw_scan.get("files_scanned"), int) and
         raw_scan["files_scanned"] >= len(manifest) and recorded_coverage and
-        leak.get("director_token_absent") is True and
-        leak.get("decoded_payload_token_absent") is True,
+        (leak.get("sensitive_fields_redacted") or {}).get("pass") is True and
+        (leak.get("sensitive_fields_redacted") or {}).get("files_checked", 0) >= 9 and
+        leak.get("exported_file_count") ==
+            (leak.get("sensitive_fields_redacted") or {}).get("files_checked"),
         {"leak_scan": leak, "positive_control": control}, label)
     cleanup = e.get("cleanup") or {}
     stop_results_valid = (isinstance(cleanup.get("services"), dict) and
@@ -750,6 +768,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
         cleanup.get("stop_results_valid") is True and stop_results_valid and
         e.get("broker_pid_before") == e.get("broker_pid_after"), cleanup, label)
     synthetic = e.get("synthetic_scenario") or {}
+    synthetic_attestation = synthetic.get("attestation") or {}
     synthetic_record = synthetic.get("record") or {}
     synthetic_record_bound = (isinstance(synthetic_record, dict) and
         all(synthetic_record.get(key) == synthetic.get(key)
@@ -761,6 +780,10 @@ def check_evidence(e: dict) -> dict[str, dict]:
             all(v.get("pass") for v in synthetic["checks"].values()) and
             bool(synthetic.get("evidence_path")) and
             _sha256_field(synthetic.get("evidence_sha256")) and
+            synthetic_attestation.get("g4_final", {}).get("pass") is True and
+            synthetic_attestation.get("evidence_sha256") == synthetic.get("evidence_sha256") and
+            _sha256_field(synthetic.get("attestation_sha256")) and
+            bool(synthetic.get("attestation_path")) and
             synthetic_record_bound and synthetic.get("git_commit") and
             synthetic.get("checker_sha256") == e.get("checker_sha256") and
             synthetic.get("interpreter_build") == next(iter(versions), (None, None, None))[2] and
@@ -1035,6 +1058,7 @@ def main() -> int:
     parser.add_argument("--mock-port", type=int, default=46510)
     parser.add_argument("--attempt", default="1")
     parser.add_argument("--synthetic-evidence", type=Path)
+    parser.add_argument("--synthetic-attestation", type=Path)
     args = parser.parse_args()
     routes = [int(x) for x in args.routes.split(",")]
     if sorted(set(routes)) != routes or any(x not in (1, 2, 3) for x in routes):
@@ -1052,14 +1076,22 @@ def main() -> int:
     if args.provider == "codex-subscription":
         synthetic_path = args.synthetic_evidence or evidence_dir / "scripted-1.json"
         synthetic = json.loads(synthetic_path.read_text()) if synthetic_path.exists() else {}
+        synthetic_attestation = (json.loads(args.synthetic_attestation.read_text())
+            if args.synthetic_attestation and args.synthetic_attestation.is_file() else {})
     else:
         synthetic = {}
+        synthetic_attestation = {}
     env_names = ("EXO_MODEL_HOME", "EXO_CODEX_BASE_URL", "OPENAI_API_KEY", "ANTHROPIC_API_KEY")
     evidence = {"evidence_schema": 2, "provider": args.provider, "label": label, "home": str(home),
                 "status": "running", "routes": {}, "checks": {},
                 "synthetic_scenario": ({k: synthetic.get(k) for k in SYNTHETIC_BINDING_KEYS}
                     | {"evidence_path": _record_path(synthetic_path),
                        "evidence_sha256": hashlib.sha256(synthetic_path.read_bytes()).hexdigest(),
+                       "attestation_path": _record_path(args.synthetic_attestation)
+                           if args.synthetic_attestation else None,
+                       "attestation_sha256": hashlib.sha256(args.synthetic_attestation.read_bytes()).hexdigest()
+                           if args.synthetic_attestation and args.synthetic_attestation.is_file() else None,
+                       "attestation": synthetic_attestation,
                        "record": {k: synthetic.get(k) for k in SYNTHETIC_BINDING_KEYS}})
                     if synthetic else {},
                 "setup": {"fresh_home": True,
@@ -1068,6 +1100,11 @@ def main() -> int:
     evidence["git_commit"] = subprocess.check_output(["git", "rev-parse", "HEAD"],
         cwd=ROOT, text=True).strip()
     evidence["checker_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    try:
+        args.home.lstat()
+        evidence["setup"]["preflight_home_lstat"] = {"result": "exists"}
+    except FileNotFoundError:
+        evidence["setup"]["preflight_home_lstat"] = {"result": "FileNotFoundError"}
     home.mkdir(parents=True)
     instance = home / "instances" / "report-factory"
     broker = ModelBroker() if args.provider == "codex-subscription" else None
@@ -1113,6 +1150,8 @@ def main() -> int:
             if args.mock_port not in _listen([args.mock_port]):
                 raise TimeoutError("loopback mock did not listen")
         evidence["setup"]["broker_status"] = subscription_status()
+        evidence["setup"]["broker_status_fields"] = {key: evidence["setup"]["broker_status"].get(key)
+            for key in ("signed_in", "expired", "account", "expires_at")}
         if not evidence["setup"]["broker_status"].get("signed_in") or \
                 evidence["setup"]["broker_status"].get("expired"):
             raise RuntimeError("broker status is unsigned or expired")
@@ -1126,6 +1165,7 @@ def main() -> int:
             "--profile", "report", "--model-provider", args.provider,
             "--home", str(home), "--port-base", str(args.services_port_base)))
         evidence["testbed"] = testbed
+        evidence["binding_names"] = sorted((testbed.get("bindings") or {}).keys())
         for name, member in (testbed.get("pids") or {}).items():
             record_process("service-" + name, member.get("pid"))
         step = "provision"
@@ -1193,6 +1233,9 @@ def main() -> int:
         record_process("harness", harness.pid)
         card = http(f"http://127.0.0.1:{args.harness_port}/.well-known/agent-card.json", token=False)
         evidence["setup"]["card_skill_count"] = len(card.get("skills") or [])
+        evidence["setup"]["served_factory_card"] = {"body": card,
+            "sha256": _sha(json.dumps(card, sort_keys=True, separators=(",", ":"),
+                ensure_ascii=False))}
         base = f"http://127.0.0.1:{args.harness_port}"
         question = packet["default_question"]
         director_stream_windows = []
@@ -1334,17 +1377,19 @@ def main() -> int:
                             "status": "pending-orchestrator-reading",
                             "report_path": _record_path(path), "packet_ids": evidence["packet_ids"]}
         step = "leak-scan"
+        for route in evidence["routes"].values():
+            for workflow in route.get("workflows") or []:
+                workflow.pop("raw_path", None)
+        evidence = _redact_export(evidence)
+        evidence_path.write_text(json.dumps(evidence, indent=2, sort_keys=True, default=str) + "\n")
         control = positive_control(home)
         evidence["positive_control"] = {"detected": bool(control.get("scan", {}).get("hits")),
             "control_directory": control["control_directory"], "scan": control.get("scan")}
         candidates = candidate_files()
         paths = [home, evidence_dir, model_home, *candidates]
         scan = scan_paths(paths)
-        director_rows = _rows(instance / "director.sqlite3", "identity")
-        token = director_rows[0]["token"] if len(director_rows) == 1 else None
-        exported = [path for path in evidence_dir.rglob("*") if path.is_file()]
-        token_absent = bool(token) and not any(_contains_token(path, token)
-            for path in set(exported) | set(candidates))
+        from sf_attest import exported_files, verify_redaction
+        redaction = verify_redaction(exported_files(evidence_path))
         manifest = [{"path": _record_path(path),
             "sha256": hashlib.sha256(path.read_bytes()).hexdigest()} for path in candidates]
         evidence["leak_scan"] = {"hit_count": len(scan.get("hits") or []),
@@ -1357,8 +1402,8 @@ def main() -> int:
                 "positive_control_detected": evidence["positive_control"]["detected"],
                 "candidate_files_hashed": bool(manifest) and all(
                     _sha256_field(row["sha256"]) for row in manifest)},
-            "director_token_absent": token_absent,
-            "decoded_payload_token_absent": token_absent, "raw": scan}
+            "sensitive_fields_redacted": redaction,
+            "exported_file_count": len(exported_files(evidence_path)), "raw": scan}
         version = evidence["routes"].get("1", {}).get("workflows") or []
         evidence["interpreter_build"] = version[0].get("build_id") if version else None
         evidence["manifest_digest"] = version[0].get("manifest_digest") if version else None
