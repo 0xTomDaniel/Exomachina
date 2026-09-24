@@ -14,26 +14,17 @@ from failure_projection import (decide_closed_failed_child, failure_incident,
 from a2a_outcome import ReceiverKind, lookup_result, send_ambiguous, send_completed, submitted
 
 
+from authoring import materialize
+from report_fixture import packet, template, bindings as report_bindings
+
+
 def materialized_v1(bindings):
-    source = json.loads((ROOT / "definitions" / "v1-template.json").read_text())
-    child = source["child"]
-    child_digest = digest(child)
-    for node in source["root"]["nodes"].values():
-        if node["type"] == "nested_factory" and node["child_digest"] == "@child":
-            node["child_digest"] = child_digest
-    return {"schema": source["schema"], "root": source["root"],
-            "children": {child_digest: child}, "bindings": bindings,
-            "run_inputs": source["run_inputs"]}
+    return materialize(template(), bindings, evidence_packet=packet())
 
 
 class ContractTests(unittest.TestCase):
     def test_mixed_package_schema_is_pinned_and_quality_required(self):
-        names = {"source_alpha": "capability", "source_beta": "capability",
-                 "counter_alpha": "capability", "counter_beta": "capability",
-                 "quality": "quality", "release": "release"}
-        bindings = {name: {"role": role, "url": f"http://127.0.0.1:{41470 + n}",
-                           "identity": name, "approved": True}
-                    for n, (name, role) in enumerate(names.items())}
+        bindings = report_bindings()
         package = materialized_v1(bindings)
         original = validate(package, bindings)
         self.assertEqual(original, digest(package))
@@ -42,7 +33,7 @@ class ContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(changed, bindings)
         changed = copy.deepcopy(package)
-        changed["run_inputs"]["outcome_mode"]["may_affect_acceptance"] = False
+        changed["run_inputs"]["outcome_mode"] = {"type": "string"}
         with self.assertRaises(ValueError):
             validate(changed, bindings)
         changed = copy.deepcopy(package)

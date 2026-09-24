@@ -23,7 +23,7 @@ RETRY = RetryPolicy(initial_interval=timedelta(seconds=1), maximum_attempts=12)
 
 def _activity(fn, input: dict):
     options = {"start_to_close_timeout": ACTIVITY_TIMEOUT, "retry_policy": RETRY}
-    if fn is assign:
+    if fn in {assign, synthesize, review}:
         options["heartbeat_timeout"] = timedelta(seconds=15)
     return workflow.execute_activity(fn, input, **options)
 
@@ -41,6 +41,8 @@ class FactoryRun:
         self.child_id: str | None = None
         self.current: dict | None = None
         self.verdict: dict | None = None
+        self.last_verdict: dict | None = None
+        self.max_repairs = 0
         self.acceptance: dict | None = None
         self.release_receipt: dict | None = None
         self.repair_count = 0
@@ -66,7 +68,8 @@ class FactoryRun:
             "current_revision": self.current and self.current["revision"],
             "current_sha256": self.current and self.current["sha256"],
             "repair_count": self.repair_count,
-            "quality_verdict": self.verdict,
+            "max_repairs": self.max_repairs,
+            "quality_verdict": self.last_verdict,
             "authoritative_acceptance": self.acceptance,
             "release_receipt": self.release_receipt,
             "deadline": self.deadline, "unresolved": self.unresolved,
@@ -145,12 +148,12 @@ class FactoryRun:
                     jobs.append(_activity(assign, {
                         "run": self.run_id, "digest": self.definition_digest,
                         "instance": instance, "result_type": branch["result_type"],
-                        "scope_status": branch["scope_status"],
+                        "capability": branch["capability"],
                         "url": service["url"], "identity": service["identity"],
                         "binding": service,
                         "contract": input["closure"]["contracts"][branch["service"]],
-                        "lookup_supported": True,
-                        "question": self.run_inputs.get("question"),
+                        "packet": package["evidence_packet"],
+                        "question": self.run_inputs["question"],
                     }))
                 receipts = await asyncio.gather(*jobs)
                 branches = dict(zip(node["branches"], receipts, strict=True))
@@ -161,55 +164,48 @@ class FactoryRun:
                 at = node["next"]
             elif kind == "join":
                 selected = {name: branches[name] for name in node["branches"]}
-                declarations = {name: document["nodes"][self._parallel_node]["branches"][name]["result_type"]
-                                for name in node["branches"]}
-                scopes = {name: document["nodes"][self._parallel_node]["branches"][name]["scope_status"]
-                          for name in node["branches"] if
-                          document["nodes"][self._parallel_node]["branches"][name]["scope_status"] is not None}
                 joined = await _activity(typed_join, {
-                    "receipts": selected, "run": self.run_id,
-                    "digest": self.definition_digest,
-                    "declarations": declarations, "scopes": scopes,
-                    "question": self.run_inputs.get("question"),
+                    "receipts": selected, "run": self.run_id, "packet": package["evidence_packet"],
                 })
                 self.completed.append(at)
                 at = node["next"]
             elif kind == "synthesize":
-                if node["resolved"] == "from_run":
-                    mode = self.run_inputs.get("outcome_mode")
-                    if mode not in {"after_first_repair", "never"}:
-                        raise ValueError("missing or invalid typed run outcome mode")
-                    resolved = mode == "after_first_repair" and self.repair_count >= 1
-                else:
-                    resolved = node["resolved"] is True or (
-                        node["resolved"] == "after_repair" and self.repair_count >= 1)
+                prior = ({key: self.current[key] for key in ("revision", "sha256", "content")}
+                         if self.repair_count else None)
+                findings = self.verdict["findings"] if self.repair_count else None
+                service = bindings[node["service"]]
                 self.current = await _activity(synthesize, {
-                    "join": joined, "revision": f"r{self.repair_count + 1}",
-                    "author": f"factory:{self.run_id}", "resolved": resolved,
+                    "run": self.run_id, "digest": self.definition_digest,
+                    "revision": f"r{self.repair_count + 1}", "question": self.run_inputs["question"],
+                    "packet": package["evidence_packet"], "evidence": joined,
+                    "prior": prior, "quality_findings": findings,
+                    "binding": service, "contract": input["closure"]["contracts"][node["service"]],
                 })
+                if "unresolved" in self.current:
+                    return await self._hold_unresolved("synthesis-incident", self.current)
                 self.verdict = None
                 self.acceptance = None
                 self.completed.append(at + ":" + self.current["revision"])
                 at = node["next"]
             elif kind == "quality":
                 quality = next(value for value in bindings.values() if value["role"] == "quality")
+                quality_name = next(name for name, value in bindings.items() if value["role"] == "quality")
                 assignment_id = self.run_id + ":quality"
                 attempt = self.repair_count + 1
-                command = {
-                    "op": "review", "action_id": quality_action_id(self.run_id,
-                        assignment_id, attempt, self.current["revision"], self.current["sha256"]),
-                    "run_id": self.run_id, "definition_digest": self.definition_digest,
-                    "artifact": self.current,
-                }
                 outcome = await _activity(review, {
-                    "url": quality["url"], "identity": quality["identity"],
-                    "binding": quality, "command": command,
+                    "run": self.run_id, "digest": self.definition_digest,
+                    "binding": quality, "contract": input["closure"]["contracts"][quality_name],
+                    "candidate": self.current, "question": self.run_inputs["question"],
+                    "packet": package["evidence_packet"],
+                    "policy_digest": input["closure"]["manifest"]["quality_policy_digest"],
+                    "rubric_digest": input["closure"]["quality_policy"].get("rubric_digest"),
                     "assignment_id": assignment_id, "attempt": attempt,
                 })
                 if "inconsistent" in outcome:
                     return await self._hold_unresolved("quality-incident", outcome)
                 artifact = outcome["artifact"]
                 self.verdict = artifact
+                self.last_verdict = artifact
                 if artifact["accepted"] is True:
                     # This assignment is the authoritative acceptance transition
                     # in Workflow history, after verified remote Quality evidence.
@@ -374,4 +370,6 @@ class FactoryRun:
         document = input["document"]
         self._parallel_node = next((name for name, node in document["nodes"].items()
                                     if node["type"] == "parallel"), "")
+        self.max_repairs = next((node["max_repairs"] for node in document["nodes"].values()
+                                 if node["type"] == "repair"), 0)
         return await self.run_node(document, input["package"], input)

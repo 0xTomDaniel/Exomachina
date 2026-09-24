@@ -174,3 +174,5 @@ An intermediate B+C merge re-run (`evidence/spike-b/merged-bc.json` and `evidenc
 - Topology: two instances only; embedded `create_app()` has no instance lock; no stress testing.
 - Still fixtures: Quality, capability content and the HTTP release receiver.
 - Carried from the README: old-build retirement, contract attestation, operational hardening, and the memory ceiling are out of scope and unbuilt.
+
+Follow-up, 24 September 2026: the single-factory spike ([`SINGLE_FACTORY.md`](SINGLE_FACTORY.md)) replaces the fixture Quality and capability content with live model agents, and exercises rejection/repair and exhaustion/abort live. The release receiver is still a fixture. The text above is unchanged because it is the pinned evidence packet `packets/exo-qualification-2026-09-23`.

@@ -20,26 +20,12 @@ from failure_projection import project
 from fixture import branch_brief
 
 
+from authoring import materialize
+from report_fixture import packet, template, bindings
+
+
 def package_v1() -> dict:
-    source = json.loads((ROOT / "definitions" / "v1-template.json").read_text())
-    child = source["child"]
-    child_digest = definition_digest(child)
-    for node in source["root"]["nodes"].values():
-        if node["type"] == "nested_factory" and node["child_digest"] == "@child":
-            node["child_digest"] = child_digest
-    roles = (("source_alpha", "capability"), ("source_beta", "capability"),
-             ("counter_alpha", "capability"), ("counter_beta", "capability"),
-             ("quality", "quality"), ("release", "release"))
-    bindings = {name: {"role": role, "url": f"http://127.0.0.1:{45300 + index}",
-                       "identity": name, "approved": True}
-                for index, (name, role) in enumerate(roles)}
-    source["run_inputs"]["question"] = {
-        "type": "string", "required": False, "source": "caller",
-        "allowed_actors": ["fixture-operator"], "may_affect_acceptance": False,
-    }
-    return {"schema": source["schema"], "root": source["root"],
-            "children": {child_digest: child}, "bindings": bindings,
-            "run_inputs": source["run_inputs"]}
+    return materialize(template(), bindings(), evidence_packet=packet())
 
 
 class InterpreterTests(unittest.TestCase):
@@ -49,7 +35,13 @@ class InterpreterTests(unittest.TestCase):
 
     def test_closure_rejects_changed_definition_contract_policy_and_build(self):
         package = package_v1()
-        contracts = {name: {"contract": name, "version": 1} for name in package["bindings"]}
+        capabilities = {"research_findings": "packet_findings@1",
+                        "research_risks": "packet_risks@1",
+                        "synthesizer": "report_synthesis@1",
+                        "quality": "report_quality_review@1"}
+        contracts = {name: {"contract": name, "version": 1,
+                            "capability": capabilities.get(name, "http-release@1")}
+                     for name in package["bindings"]}
         policy = {"authority": "quality", "version": 1}
         code_digest = source_digest(SRC)
         build = build_id_for(code_digest)
@@ -85,11 +77,10 @@ class InterpreterTests(unittest.TestCase):
         self.assertEqual(project({"phase": "awaiting-child"}, "RUNNING"), "input-required")
 
     def test_question_in_brief(self):
-        default = branch_brief("source_alpha", "source_evidence")
-        chosen = branch_brief("source_alpha", "source_evidence", question="What changed?")
-        self.assertEqual(chosen["question"], "What changed?")
-        self.assertNotEqual(default["question"], chosen["question"])
-        self.assertEqual(branch_brief("source_alpha", "source_evidence", question=None), default)
+        from report_contract import research_assignment
+        brief = research_assignment("packet_findings@1", "What changed?", packet())
+        self.assertEqual(brief["question"], "What changed?")
+        self.assertEqual(brief["packet_digest"], definition_digest(packet()))
 
     def test_source_digest_stability_and_file_set(self):
         first = source_digest(SRC)

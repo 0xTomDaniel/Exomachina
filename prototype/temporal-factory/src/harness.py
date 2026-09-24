@@ -33,7 +33,7 @@ from a2a.server.apps import A2AFastAPIApplication
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.tasks import TaskStore
 from a2a.types import (AgentCapabilities, AgentCard, AgentSkill, Artifact, DataPart,
-                       Message, Part, Task, TaskStatus)
+                       Message, Part, Task, TaskStatus, TextPart)
 from strands import Agent
 from temporalio.client import Client
 from temporalio.common import PinnedVersioningOverride, WorkerDeploymentVersion
@@ -272,7 +272,7 @@ class Director:
     def perform(self, command: dict, task_id: str, context_id: str) -> dict:
         """Capability contract verified-research@1, as seen by A2A callers.
 
-        start:   {op:"start", action_id, inputs:{question?, outcome_mode}}
+        start:   {op:"start", action_id, inputs:{question}}
         inspect: {op:"inspect"} on the original Task
         abort:   {op:"abort", action_id, revision, sha256} on the original Task,
                  answering its input-required Director wait.
@@ -364,10 +364,13 @@ class Director:
                 return parent
             return await client.get_workflow_handle(parent["child_id"]).query(FactoryRun.status)
         raw = sync(status())
+        verdict = raw.get("quality_verdict") or {}
         return {"phase": raw.get("phase"), "current_revision": raw.get("current_revision"),
                 "current_sha256": raw.get("current_sha256"),
                 "repair_count": raw.get("repair_count"),
-                "wait": raw.get("phase") == "awaiting-director"}
+                "max_repairs": raw.get("max_repairs"),
+                "quality_findings": verdict.get("findings"),
+                "wait_deadline": raw.get("deadline")}
 
     def run_record(self, run_id: str) -> dict:
         with self.connect() as db:
@@ -404,6 +407,8 @@ class Director:
             if not outcome["accepted"]:
                 return {"error": "Director issued no accepted command", "director_turn": outcome}
             return {"accepted_command": outcome["accepted"][-1]}
+        if self.config.get("legacy_structured_commands") is not True:
+            raise Rejected("factory caller messages must contain text parts only")
         agent = Agent(name="Factory Director", model=ToolCallingModelFixture(),
                       plugins=[HarnessPlugin(self, task_id, context_id)], callback_handler=None)
         result = await agent.invoke_async(canonical(command))
@@ -474,14 +479,34 @@ class FactoryTaskStore(TaskStore):
         state, result, status = projection["state"], projection["result"], projection["status"]
         artifacts = None
         message = None
-        if state == "completed" and result:
-            payload = {"capability": "verified-research@1", "status": result["status"],
-                       "run_id": record["run_id"], "acceptance": result.get("acceptance"),
-                       "release_receipt": result.get("receipt"),
-                       "report": result.get("artifact"),
-                       "interpreter_revision": result.get("interpreter_revision")}
-            artifact_id = hashlib.sha256(canonical(payload).encode()).hexdigest()
-            artifacts = [Artifact(artifact_id=artifact_id, parts=[Part(root=DataPart(data=payload))])]
+        if state == "completed" and result and result.get("status") == "accepted":
+            accepted = result.get("artifact") or {}
+            content = accepted.get("content")
+            report = None
+            if isinstance(content, str):
+                try:
+                    report = json.loads(content)
+                except ValueError:
+                    pass
+            if isinstance(report, dict) and report.get("kind") == "verified_report@1":
+                markdown = report.get("markdown")
+                if not isinstance(markdown, str) or not markdown:
+                    raise ValueError("accepted report has no markdown")
+                payload = {"revision": accepted["revision"], "sha256": accepted["sha256"],
+                           "packet_digest": report["packet_digest"],
+                           "acceptance": result["acceptance"],
+                           "release_receipt": result["receipt"]}
+                artifacts = [Artifact(artifact_id=accepted["sha256"], parts=[
+                    Part(root=TextPart(text=markdown)), Part(root=DataPart(data=payload))])]
+            else:
+                # The legacy structured fixture path still returns its original DataPart.
+                payload = {"capability": "verified-research@1", "status": result["status"],
+                           "run_id": record["run_id"], "acceptance": result.get("acceptance"),
+                           "release_receipt": result.get("receipt"), "report": accepted,
+                           "interpreter_revision": result.get("interpreter_revision")}
+                artifact_id = hashlib.sha256(canonical(payload).encode()).hexdigest()
+                artifacts = [Artifact(artifact_id=artifact_id,
+                                      parts=[Part(root=DataPart(data=payload))])]
         if projection.get("incident"):
             message = Message(message_id=str(uuid4()), role="agent",
                               parts=[Part(root=DataPart(data={"incident": projection["incident"]}))])
@@ -491,14 +516,12 @@ class FactoryTaskStore(TaskStore):
         return Task(id=task_id, context_id=context_id, status=TaskStatus(state=state, message=message),
                     artifacts=artifacts, metadata={
                         "run_id": record["run_id"], "harness_identity": self.director.identity,
-                        "harness_incarnation": self.director.incarnation,
                         "capability": "verified-research@1",
                         "publication_label": record["label"],
                         "manifest_digest": record["manifest_digest"],
                         "package_digest": record["package_digest"],
                         "interpreter_build": record["build_id"],
-                        "run_inputs_digest": record["run_inputs_digest"],
-                        "authorized_input_actor": record["authorized_actor"]})
+                        "run_inputs_digest": record["run_inputs_digest"]})
 
     async def save(self, task, context=None):
         if self.director.task_binding(task.id) is None:
@@ -542,7 +565,9 @@ def create_app(instance_dir: Path):
                            description=capability["description"], tags=capability.get("tags", []))],
         security_schemes={"fixtureBearer": {"type": "http", "scheme": "bearer"}},
         security=[{"fixtureBearer": []}])
-    app = A2AFastAPIApplication(card, DefaultRequestHandler(HarnessExecutor(director, store), store)).build()
+    app = A2AFastAPIApplication(card, DefaultRequestHandler(HarnessExecutor(
+        director, store, allow_structured_commands=config.get("legacy_structured_commands") is True
+    ), store)).build()
     _auth(app)
     startup = {"runner_started_at_startup": False, "recovery": None}
 
@@ -568,7 +593,8 @@ def create_app(instance_dir: Path):
 
 
 def init_instance(instance_dir: Path, *, name: str, mode: str, port: int, home: Path,
-                  runner: dict | None = None, wait_seconds: int = 900) -> dict:
+                  runner: dict | None = None, wait_seconds: int = 900,
+                  legacy_structured_commands: bool = False) -> dict:
     import fcntl
     import os
 
@@ -584,6 +610,10 @@ def init_instance(instance_dir: Path, *, name: str, mode: str, port: int, home: 
                                  "description": "Researches a question with independent counter-evidence "
                                                 "review; returns one accepted report and release receipt.",
                                  "tags": ["research", "verified"]}}
+        if legacy_structured_commands:
+            if mode != "factory":
+                raise ValueError("legacy structured commands require factory mode")
+            config["legacy_structured_commands"] = True
         path = instance_dir / "instance.json"
         if path.exists():
             existing = json.loads(path.read_text())

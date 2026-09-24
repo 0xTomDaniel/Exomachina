@@ -1,0 +1,812 @@
+{
+  "label": "pre-integration probe (not counted)",
+  "observation": "observed-synthetic",
+  "provider": "scripted",
+  "model_id": "gpt-6-sol",
+  "home": "/tmp/exo-sf-probe-1",
+  "evidence_file": "agent-probe-scripted-1.json",
+  "credential_variable_names_set": {
+    "EXO_MODEL_HOME": false,
+    "EXO_CODEX_BASE_URL": false,
+    "OPENAI_API_KEY": false,
+    "ANTHROPIC_API_KEY": false
+  },
+  "started_at": 1790261620.674803,
+  "status": "pass",
+  "tasks": [
+    {
+      "role": "research",
+      "service": "research_findings",
+      "capability": "packet_findings@1",
+      "identity": "d26ed75e-86f2-40f8-8ad9-3a9c531ef47a",
+      "task_id": "5b11ff00-39f1-41fb-b6bd-b71ea17efa0e",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-scripted-research-70cdea57:research_findings:r1",
+        "run_id": "probe-scripted-research-70cdea57",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "d26ed75e-86f2-40f8-8ad9-3a9c531ef47a"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "d26ed75e-86f2-40f8-8ad9-3a9c531ef47a:5b11ff00-39f1-41fb-b6bd-b71ea17efa0e",
+          "provider": "scripted",
+          "model_id": "gpt-6-sol",
+          "live": false,
+          "call_no": 1,
+          "started_at": 1790261624.8580391,
+          "ended_at": 1790261624.860924,
+          "outcome_kind": "completed",
+          "duration_s": 0.003,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "cb817b5d3290b09f6be4b1a8c867083714a6e70e260ff0dfcb326b86ecdc1670",
+        "author": "d26ed75e-86f2-40f8-8ad9-3a9c531ef47a",
+        "content": {
+          "items": [
+            {
+              "evidence": [
+                "E3"
+              ],
+              "id": "F1",
+              "statement": "The earlier qualification proved a live broker-backed Director, while the A and B Directors were fixtures."
+            },
+            {
+              "evidence": [
+                "E4",
+                "E7"
+              ],
+              "id": "F2",
+              "statement": "The prior release receiver and capability content were fixtures."
+            },
+            {
+              "evidence": [
+                "E9"
+              ],
+              "id": "F3",
+              "statement": "The live C run reached a Director wait and completed with an abort and no release."
+            }
+          ],
+          "kind": "packet_findings@1",
+          "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c"
+        }
+      }
+    },
+    {
+      "role": "research",
+      "service": "research_risks",
+      "capability": "packet_risks@1",
+      "identity": "8af4805d-bd49-4d99-b931-060fda19aaa9",
+      "task_id": "c98bd1e8-005a-4b31-96df-212297fd99ce",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-scripted-research-70cdea57:research_risks:r1",
+        "run_id": "probe-scripted-research-70cdea57",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "8af4805d-bd49-4d99-b931-060fda19aaa9"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "8af4805d-bd49-4d99-b931-060fda19aaa9:c98bd1e8-005a-4b31-96df-212297fd99ce",
+          "provider": "scripted",
+          "model_id": "gpt-6-sol",
+          "live": false,
+          "call_no": 1,
+          "started_at": 1790261624.8877141,
+          "ended_at": 1790261624.889212,
+          "outcome_kind": "completed",
+          "duration_s": 0.001,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "ea7f856421e63ac60b768a4c183867b7a7886016342a5713fcf8464491d1a24d",
+        "author": "8af4805d-bd49-4d99-b931-060fda19aaa9",
+        "content": {
+          "items": [
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "R1",
+              "severity": "high",
+              "statement": "Quality, capability content, and the HTTP release receiver remained fixtures."
+            },
+            {
+              "evidence": [
+                "E6"
+              ],
+              "id": "R2",
+              "severity": "medium",
+              "statement": "Live Director coverage was limited to one account, one model, and abort."
+            },
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "R3",
+              "severity": "medium",
+              "statement": "Remote attestation and operational hardening were unbuilt."
+            }
+          ],
+          "kind": "packet_risks@1",
+          "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c"
+        }
+      }
+    },
+    {
+      "role": "synthesis",
+      "service": "synthesizer",
+      "capability": "report_synthesis@1",
+      "identity": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+      "task_id": "dbd2f2c8-6e35-4ca1-b7e5-88172b3eebee",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-scripted-clean-2a2bf96a:synthesizer:r1",
+        "run_id": "probe-scripted-clean-2a2bf96a",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "cf01f73f-5536-4b37-b43f-31168f7dc6ac"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "cf01f73f-5536-4b37-b43f-31168f7dc6ac:dbd2f2c8-6e35-4ca1-b7e5-88172b3eebee",
+          "provider": "scripted",
+          "model_id": "gpt-6-sol",
+          "live": false,
+          "call_no": 1,
+          "started_at": 1790261624.910183,
+          "ended_at": 1790261624.912024,
+          "outcome_kind": "completed",
+          "duration_s": 0.002,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e",
+        "author": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+        "content": {
+          "claims": [
+            {
+              "evidence": [
+                "E3",
+                "E9"
+              ],
+              "id": "C1",
+              "text": "The prior live C run proved a broker-backed Director for the abort route."
+            },
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "C2",
+              "text": "The earlier Quality and capability content were fixtures, as was the HTTP release receiver."
+            },
+            {
+              "evidence": [
+                "E6"
+              ],
+              "id": "C3",
+              "text": "The live Director proof covered one account, one model, and abort only."
+            },
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "C4",
+              "text": "Remote attestation and operational hardening remain unbuilt gaps."
+            },
+            {
+              "evidence": [
+                "E6",
+                "E7"
+              ],
+              "id": "C5",
+              "text": "The next priority is to exercise real research, synthesis, and Quality agents while keeping release labeled as a fixture."
+            }
+          ],
+          "kind": "verified_report@1",
+          "markdown": "## Live-proven\nThe prior live C run proved a broker-backed Director for the abort route.\n\n## Fixture-only\nThe earlier Quality and capability content were fixtures, as was the HTTP release receiver.\n\n## Remaining gaps\nThe live Director proof covered one account, one model, and abort only.\n\n## Next priority\nThe next priority is to exercise real research, synthesis, and Quality agents while keeping release labeled as a fixture.",
+          "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+          "question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?",
+          "revision": "r1",
+          "title": "Qualification report"
+        }
+      }
+    },
+    {
+      "role": "quality",
+      "service": "quality",
+      "capability": "report_quality_review@1",
+      "identity": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+      "task_id": "2cc033d1-f0bb-45f9-b272-682df9d3a84c",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-scripted-clean-2a2bf96a:quality:r1",
+        "run_id": "probe-scripted-clean-2a2bf96a",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "61408e36-94ba-420d-8e47-cd35b36f1c56"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "61408e36-94ba-420d-8e47-cd35b36f1c56:2cc033d1-f0bb-45f9-b272-682df9d3a84c",
+          "provider": "scripted",
+          "model_id": "gpt-6-sol",
+          "live": false,
+          "call_no": 1,
+          "started_at": 1790261624.938281,
+          "ended_at": 1790261624.940056,
+          "outcome_kind": "completed",
+          "duration_s": 0.002,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "b010617aed84bd4680722050660a6fd401f7498b0c913b7493c30018177e38f5",
+        "author": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+        "content": {
+          "accepted": true,
+          "candidate": {
+            "author": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+            "revision": "r1",
+            "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e"
+          },
+          "decided_by": "model",
+          "findings": [],
+          "kind": "quality_verdict@1",
+          "reviewer": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+          "rubric": "report-quality@1",
+          "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+        }
+      }
+    },
+    {
+      "role": "synthesis",
+      "service": "synthesizer",
+      "capability": "report_synthesis@1",
+      "identity": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+      "task_id": "b3277857-4980-4f51-a26d-36dde21f432a",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-scripted-planted-08a8de97:synthesizer:r1",
+        "run_id": "probe-scripted-planted-08a8de97",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "cf01f73f-5536-4b37-b43f-31168f7dc6ac"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "cf01f73f-5536-4b37-b43f-31168f7dc6ac:b3277857-4980-4f51-a26d-36dde21f432a",
+          "provider": "scripted",
+          "model_id": "gpt-6-sol",
+          "live": false,
+          "call_no": 1,
+          "started_at": 1790261624.965895,
+          "ended_at": 1790261624.9674728,
+          "outcome_kind": "completed",
+          "duration_s": 0.002,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "c1ed8e50c7d75884ecff29490d240a3df5cd688b22c2bacc880c70468d57505d",
+        "author": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+        "content": {
+          "claims": [
+            {
+              "evidence": [
+                "E3",
+                "E9"
+              ],
+              "id": "C1",
+              "text": "The prior live C run proved a broker-backed Director for the abort route."
+            },
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "C2",
+              "text": "The earlier Quality and capability content were fixtures, as was the HTTP release receiver."
+            },
+            {
+              "evidence": [
+                "E6"
+              ],
+              "id": "C3",
+              "text": "The live Director proof covered one account, one model, and abort only."
+            },
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "C4",
+              "text": "Remote attestation and operational hardening remain unbuilt gaps."
+            },
+            {
+              "evidence": [
+                "E6",
+                "E7"
+              ],
+              "id": "C5",
+              "text": "The next priority is to exercise real research, synthesis, and Quality agents while keeping release labeled as a fixture."
+            },
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "C6",
+              "text": "The Quality reviewer evaluated the report with a live model in the qualification runs."
+            }
+          ],
+          "kind": "verified_report@1",
+          "markdown": "## Live-proven\nThe prior live C run proved a broker-backed Director for the abort route.\n\n## Fixture-only\nThe earlier Quality and capability content were fixtures, as was the HTTP release receiver.\n\n## Remaining gaps\nThe live Director proof covered one account, one model, and abort only.\n\n## Next priority\nThe next priority is to exercise real research, synthesis, and Quality agents while keeping release labeled as a fixture.\n\nThe Quality reviewer evaluated the report with a live model in the qualification runs.",
+          "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+          "question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?",
+          "revision": "r1",
+          "title": "Qualification report"
+        }
+      }
+    },
+    {
+      "role": "quality",
+      "service": "quality",
+      "capability": "report_quality_review@1",
+      "identity": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+      "task_id": "4526bede-4e58-4bc4-a704-ad1d1e853762",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-scripted-planted-08a8de97:quality:r1",
+        "run_id": "probe-scripted-planted-08a8de97",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "61408e36-94ba-420d-8e47-cd35b36f1c56"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "61408e36-94ba-420d-8e47-cd35b36f1c56:4526bede-4e58-4bc4-a704-ad1d1e853762",
+          "provider": "scripted",
+          "model_id": "gpt-6-sol",
+          "live": false,
+          "call_no": 1,
+          "started_at": 1790261624.99184,
+          "ended_at": 1790261624.9939241,
+          "outcome_kind": "completed",
+          "duration_s": 0.002,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "c0e7e6fc91ecda3f6cda49a1c0081dbeed4315b00586849e817f8a714ecc9695",
+        "author": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+        "content": {
+          "accepted": false,
+          "candidate": {
+            "author": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+            "revision": "r1",
+            "sha256": "c1ed8e50c7d75884ecff29490d240a3df5cd688b22c2bacc880c70468d57505d"
+          },
+          "decided_by": "model",
+          "findings": [
+            {
+              "claim_id": "C6",
+              "evidence": [
+                "E7"
+              ],
+              "problem": "The claim contradicts packet E7: The Quality reviewer evaluated the report with a live model in the qualification runs.",
+              "severity": "blocking"
+            }
+          ],
+          "kind": "quality_verdict@1",
+          "reviewer": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+          "rubric": "report-quality@1",
+          "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+        }
+      }
+    },
+    {
+      "role": "synthesis",
+      "service": "synthesizer",
+      "capability": "report_synthesis@1",
+      "identity": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+      "task_id": "a55f89e3-e91a-4d1d-b7c0-9eadeb3b81b2",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-scripted-planted-08a8de97:synthesizer:r2",
+        "run_id": "probe-scripted-planted-08a8de97",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "cf01f73f-5536-4b37-b43f-31168f7dc6ac"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "cf01f73f-5536-4b37-b43f-31168f7dc6ac:a55f89e3-e91a-4d1d-b7c0-9eadeb3b81b2",
+          "provider": "scripted",
+          "model_id": "gpt-6-sol",
+          "live": false,
+          "call_no": 1,
+          "started_at": 1790261625.0128372,
+          "ended_at": 1790261625.01564,
+          "outcome_kind": "completed",
+          "duration_s": 0.003,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r2",
+        "sha256": "29dbd83be838e57a1968dce34f6cfcf4acd548beb163da4ef69887cfaaf26943",
+        "author": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+        "content": {
+          "claims": [
+            {
+              "evidence": [
+                "E3",
+                "E9"
+              ],
+              "id": "C1",
+              "text": "The prior live C run proved a broker-backed Director for the abort route."
+            },
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "C2",
+              "text": "The earlier Quality and capability content were fixtures, as was the HTTP release receiver."
+            },
+            {
+              "evidence": [
+                "E6"
+              ],
+              "id": "C3",
+              "text": "The live Director proof covered one account, one model, and abort only."
+            },
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "C4",
+              "text": "Remote attestation and operational hardening remain unbuilt gaps."
+            },
+            {
+              "evidence": [
+                "E6",
+                "E7"
+              ],
+              "id": "C5",
+              "text": "The next priority is to exercise real research, synthesis, and Quality agents while keeping release labeled as a fixture."
+            },
+            {
+              "evidence": [
+                "E9"
+              ],
+              "id": "C6",
+              "text": "The earlier live C run reached an abort with zero releases."
+            },
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "C7",
+              "text": "Prior Quality and release were fixtures."
+            },
+            {
+              "evidence": [
+                "E6",
+                "E7"
+              ],
+              "id": "C8",
+              "text": "The next priority is independent model-backed report review."
+            },
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "C9",
+              "text": "Unbuilt remote attestation is a remaining gap."
+            }
+          ],
+          "kind": "verified_report@1",
+          "markdown": "## Live-proven\nThe prior live C run proved a broker-backed Director for the abort route.\n\n## Fixture-only\nThe earlier Quality and capability content were fixtures, as was the HTTP release receiver.\n\n## Remaining gaps\nThe live Director proof covered one account, one model, and abort only.\n\n## Next priority\nUnbuilt remote attestation is a remaining gap.",
+          "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+          "question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?",
+          "revision": "r2",
+          "title": "Qualification report"
+        }
+      }
+    },
+    {
+      "role": "quality",
+      "service": "quality",
+      "capability": "report_quality_review@1",
+      "identity": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+      "task_id": "9798ead1-ca1f-4c7b-a63b-12ef00871a50",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-scripted-planted-08a8de97:quality:r2",
+        "run_id": "probe-scripted-planted-08a8de97",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "61408e36-94ba-420d-8e47-cd35b36f1c56"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "61408e36-94ba-420d-8e47-cd35b36f1c56:9798ead1-ca1f-4c7b-a63b-12ef00871a50",
+          "provider": "scripted",
+          "model_id": "gpt-6-sol",
+          "live": false,
+          "call_no": 1,
+          "started_at": 1790261625.032856,
+          "ended_at": 1790261625.0346088,
+          "outcome_kind": "completed",
+          "duration_s": 0.002,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r2",
+        "sha256": "5f472c06b72d5ae818e5654b9a104559c4fbd8f5a2251d5efc4ef89494ff79e0",
+        "author": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+        "content": {
+          "accepted": true,
+          "candidate": {
+            "author": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+            "revision": "r2",
+            "sha256": "29dbd83be838e57a1968dce34f6cfcf4acd548beb163da4ef69887cfaaf26943"
+          },
+          "decided_by": "model",
+          "findings": [],
+          "kind": "quality_verdict@1",
+          "reviewer": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+          "rubric": "report-quality@1",
+          "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+        }
+      }
+    }
+  ],
+  "verdicts": [
+    {
+      "run_id": "probe-scripted-clean-2a2bf96a",
+      "accepted": true,
+      "candidate": {
+        "author": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+        "revision": "r1",
+        "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e"
+      },
+      "decided_by": "model",
+      "findings": [],
+      "kind": "quality_verdict@1",
+      "reviewer": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+      "rubric": "report-quality@1",
+      "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+    },
+    {
+      "run_id": "probe-scripted-planted-08a8de97",
+      "accepted": false,
+      "candidate": {
+        "author": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+        "revision": "r1",
+        "sha256": "c1ed8e50c7d75884ecff29490d240a3df5cd688b22c2bacc880c70468d57505d"
+      },
+      "decided_by": "model",
+      "findings": [
+        {
+          "claim_id": "C6",
+          "evidence": [
+            "E7"
+          ],
+          "problem": "The claim contradicts packet E7: The Quality reviewer evaluated the report with a live model in the qualification runs.",
+          "severity": "blocking"
+        }
+      ],
+      "kind": "quality_verdict@1",
+      "reviewer": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+      "rubric": "report-quality@1",
+      "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+    },
+    {
+      "run_id": "probe-scripted-planted-08a8de97",
+      "accepted": true,
+      "candidate": {
+        "author": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+        "revision": "r2",
+        "sha256": "29dbd83be838e57a1968dce34f6cfcf4acd548beb163da4ef69887cfaaf26943"
+      },
+      "decided_by": "model",
+      "findings": [],
+      "kind": "quality_verdict@1",
+      "reviewer": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+      "rubric": "report-quality@1",
+      "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+    }
+  ],
+  "reports": {
+    "clean_r1": "agent-probe-scripted-1-clean-r1.md",
+    "planted_r1": "agent-probe-scripted-1-planted-r1.md",
+    "repair_r2": "agent-probe-scripted-1-repair-r2.md"
+  },
+  "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+  "question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?",
+  "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+  "policy_digest": "953071a0aaeef0b7f0dcfeefa54363cfbf69d464b67d1a246e019f5b67680bdb",
+  "services": {
+    "research_findings": {
+      "identity": "d26ed75e-86f2-40f8-8ad9-3a9c531ef47a",
+      "port": 45740,
+      "state_dir": "/tmp/exo-sf-probe-1/research_findings",
+      "pid": 12888
+    },
+    "research_risks": {
+      "identity": "8af4805d-bd49-4d99-b931-060fda19aaa9",
+      "port": 45741,
+      "state_dir": "/tmp/exo-sf-probe-1/research_risks",
+      "pid": 12889
+    },
+    "synthesizer": {
+      "identity": "cf01f73f-5536-4b37-b43f-31168f7dc6ac",
+      "port": 45742,
+      "state_dir": "/tmp/exo-sf-probe-1/synthesizer",
+      "pid": 12890
+    },
+    "quality": {
+      "identity": "61408e36-94ba-420d-8e47-cd35b36f1c56",
+      "port": 45743,
+      "state_dir": "/tmp/exo-sf-probe-1/quality",
+      "pid": 12891
+    }
+  },
+  "join": {
+    "kind": "packet_evidence_join@1",
+    "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+    "findings": [
+      {
+        "evidence": [
+          "E3"
+        ],
+        "id": "F1",
+        "statement": "The earlier qualification proved a live broker-backed Director, while the A and B Directors were fixtures."
+      },
+      {
+        "evidence": [
+          "E4",
+          "E7"
+        ],
+        "id": "F2",
+        "statement": "The prior release receiver and capability content were fixtures."
+      },
+      {
+        "evidence": [
+          "E9"
+        ],
+        "id": "F3",
+        "statement": "The live C run reached a Director wait and completed with an abort and no release."
+      }
+    ],
+    "risks": [
+      {
+        "evidence": [
+          "E7"
+        ],
+        "id": "R1",
+        "severity": "high",
+        "statement": "Quality, capability content, and the HTTP release receiver remained fixtures."
+      },
+      {
+        "evidence": [
+          "E6"
+        ],
+        "id": "R2",
+        "severity": "medium",
+        "statement": "Live Director coverage was limited to one account, one model, and abort."
+      },
+      {
+        "evidence": [
+          "E7"
+        ],
+        "id": "R3",
+        "severity": "medium",
+        "statement": "Remote attestation and operational hardening were unbuilt."
+      }
+    ],
+    "branch_artifact_sha256": {
+      "research_findings": "cb817b5d3290b09f6be4b1a8c867083714a6e70e260ff0dfcb326b86ecdc1670",
+      "research_risks": "ea7f856421e63ac60b768a4c183867b7a7886016342a5713fcf8464491d1a24d"
+    }
+  },
+  "clean_review": {
+    "accepted": true,
+    "decided_by": "model",
+    "findings": []
+  },
+  "stimulus_arm": {
+    "armed": true,
+    "stimulus_id": 1
+  },
+  "planted_claim_id": "C6",
+  "stimulus_log": [
+    {
+      "run_id": "probe-scripted-planted-08a8de97",
+      "revision": "r1",
+      "task_id": "b3277857-4980-4f51-a26d-36dde21f432a",
+      "planted_text": "The Quality reviewer evaluated the report with a live model in the qualification runs.",
+      "sha256_after": "c1ed8e50c7d75884ecff29490d240a3df5cd688b22c2bacc880c70468d57505d"
+    }
+  ],
+  "planted_review": {
+    "accepted": false,
+    "decided_by": "model",
+    "findings": [
+      {
+        "claim_id": "C6",
+        "evidence": [
+          "E7"
+        ],
+        "problem": "The claim contradicts packet E7: The Quality reviewer evaluated the report with a live model in the qualification runs.",
+        "severity": "blocking"
+      }
+    ],
+    "blocking_names_or_quotes_planted": true
+  },
+  "repair_lacks_planted_text": true,
+  "repair_review": {
+    "accepted": true,
+    "decided_by": "model",
+    "findings": []
+  },
+  "probe_checks": {
+    "clean_accepted_by_model": true,
+    "planted_rejected_with_named_blocker": true,
+    "repair_accepted_by_model": true,
+    "repair_removed_planted_text": true
+  },
+  "process_exits": {
+    "research_findings": -15,
+    "research_risks": -15,
+    "synthesizer": -15,
+    "quality": -15
+  },
+  "remaining_listeners_45740_45759": [],
+  "ended_at": 1790261625.2193122,
+  "duration_s": 4.545
+}

@@ -204,7 +204,8 @@ async function handleStream(req, send, owned) {
       const { kind: errorKind, status, code } = reply.error;
       log('error', { kind: errorKind, ...(status === undefined ? {} : { status }),
         ...(code === undefined ? {} : { code }) });
-    } else log(event, { id: String(req.id), model: String(req.model || ''), duration_ms: Date.now() - started });
+    } else log(event, { id: String(req.id), model: String(req.model || ''),
+      session: String(req.session || ''), duration_ms: Date.now() - started });
   };
   try {
     const credential = await store.read(PROVIDER);

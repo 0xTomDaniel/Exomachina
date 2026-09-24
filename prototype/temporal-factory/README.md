@@ -91,6 +91,15 @@ The integrated scenario uses ports 44000–44012, 32400–32404, 44800 and 45200
 
 Three follow-up spikes tested the delayed external A2A agent, two instances in one home and the broker-backed Director. Their checks were fixed before any code change. Results, preserved failures and remaining limits are in [`QUALIFICATION.md`](QUALIFICATION.md). That file supersedes the Director, second-instance and fixture-only-A2A gaps below.
 
+## Single factory, real agent work
+
+One factory-mode harness now runs a live-authored report graph through four independent async A2A model agents: two research agents, a synthesizer and an independent Quality reviewer, each with its own Task store and broker session. It runs all three core routes live on `gpt-6-sol`:
+- first-pass acceptance;
+- Quality rejection, then repair, then acceptance of the exact revision;
+- repair exhaustion, then a Director wait, then an abort.
+
+Live attempt 3, the final pre-registered attempt, qualified. It passed all 24 automated checks, and a post-write attestation of the final evidence bytes also passed. The release receiver is still a fixture. The route 2 and route 3 defects were induced by a test-only stimulus; the Quality verdicts on them were live. Results, all attempts and limits are in [`SINGLE_FACTORY.md`](SINGLE_FACTORY.md), which supersedes the "Quality and capabilities are fixtures" and "failure paths not observed live" items below for the paths it covers.
+
 ## Remaining gaps
 
 - **Live scope is narrow.** One account and one completed live authoring run establish device sign-in, forced refresh, token-endpoint and SSE originator acceptance, and first-pass graph authoring through A2A/Temporal. Rate and quota behavior, entitlement and applicable terms remain unverified. The browser authorize-URL rewrite and callback were not live-tested; the hard-coded `client_id` remains a compatibility and commercial uncertainty.

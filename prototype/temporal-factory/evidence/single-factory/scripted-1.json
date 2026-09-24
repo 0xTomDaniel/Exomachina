@@ -1,0 +1,344 @@
+{
+  "broker_pid_after": null,
+  "checks": {
+    "G-1": {
+      "behavior": null,
+      "decisive_evidence": {
+        "incidents": null,
+        "journal": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "G-2": {
+      "behavior": null,
+      "decisive_evidence": {
+        "authoring_calls": null,
+        "broker_pid_after": null,
+        "broker_pid_before": null,
+        "director_calls": null,
+        "sessions": [],
+        "stream_sessions": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "G-3": {
+      "behavior": null,
+      "decisive_evidence": {
+        "tasks": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "G-4": {
+      "behavior": null,
+      "decisive_evidence": {
+        "leak_scan": {},
+        "positive_control": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "G-5": {
+      "behavior": null,
+      "decisive_evidence": {
+        "errors": [],
+        "listeners": [],
+        "mock_exit": -15,
+        "processes_stopped": true
+      },
+      "label": "observed-synthetic",
+      "pass": true
+    },
+    "G-7": {
+      "behavior": null,
+      "decisive_evidence": {
+        "structural_checks": {
+          "G-1": false,
+          "G-2": false,
+          "G-3": false,
+          "G-4": false,
+          "G-5": true,
+          "R1-a": false,
+          "R1-b": false,
+          "R1-c": false,
+          "R1-d": false,
+          "R1-e": false,
+          "R2-a": false,
+          "R2-b": false,
+          "R2-c": false,
+          "R2-d": false,
+          "R3-a": false,
+          "R3-b": false,
+          "R3-c": false,
+          "R3-d": false,
+          "R3-e": false,
+          "SF-0": false,
+          "SF-1": false,
+          "SF-2": false,
+          "SF-3": false
+        },
+        "synthetic_scenario": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R1-a": {
+      "behavior": "scripted",
+      "decisive_evidence": {
+        "calls": [],
+        "states": null,
+        "task_state": null
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R1-b": {
+      "behavior": "scripted",
+      "decisive_evidence": {
+        "research": [
+          [],
+          []
+        ]
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R1-c": {
+      "behavior": "scripted route control",
+      "decisive_evidence": {
+        "quality": {},
+        "synthesis": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R1-d": {
+      "behavior": null,
+      "decisive_evidence": {
+        "artifact": null,
+        "claim_count": 0,
+        "claims_cite_packet": false,
+        "packet_ids": [],
+        "release": [],
+        "report_path": null,
+        "usefulness": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false,
+      "scope": "structural",
+      "semantic_reading": "pending-orchestrator-reading"
+    },
+    "R1-e": {
+      "behavior": "scripted route control",
+      "decisive_evidence": {
+        "quality": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R2-a": {
+      "behavior": "induced",
+      "decisive_evidence": {
+        "factory_absence": null,
+        "stimulus": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R2-b": {
+      "behavior": "scripted route control",
+      "decisive_evidence": {
+        "planted": {},
+        "review": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R2-c": {
+      "behavior": "scripted",
+      "decisive_evidence": {
+        "first": {},
+        "repair": {},
+        "stimulus": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R2-d": {
+      "behavior": "scripted route control",
+      "decisive_evidence": {
+        "acceptance": {},
+        "artifact": null,
+        "max_repairs": null,
+        "release": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R3-a": {
+      "behavior": "induced",
+      "decisive_evidence": {
+        "expected": [],
+        "stimulus": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R3-b": {
+      "behavior": "scripted route control",
+      "decisive_evidence": {
+        "child_status": {},
+        "reviews": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R3-c": {
+      "behavior": null,
+      "decisive_evidence": {
+        "states": null,
+        "wait_status": null
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R3-d": {
+      "behavior": "caller-prompted scripted abort",
+      "decisive_evidence": {
+        "calls": [],
+        "release": [],
+        "task": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R3-e": {
+      "behavior": "caller-prompted scripted abort",
+      "decisive_evidence": {
+        "turns": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "SF-0": {
+      "behavior": null,
+      "decisive_evidence": {
+        "environment": {
+          "ANTHROPIC_API_KEY": false,
+          "EXO_CODEX_BASE_URL": false,
+          "EXO_MODEL_HOME": false,
+          "OPENAI_API_KEY": false
+        },
+        "fresh_home": true,
+        "preflight_listeners": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "SF-1": {
+      "behavior": null,
+      "decisive_evidence": {
+        "acceptance_reason": "authoring_not_published",
+        "active": {},
+        "authoring": {},
+        "catalog_count": 0,
+        "facts": {
+          "first_pass_valid": false,
+          "invalid_rounds": [],
+          "round_count": 0,
+          "submitted_digest": null
+        }
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "SF-2": {
+      "behavior": null,
+      "decisive_evidence": {
+        "identities": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "import_audit": {},
+        "pins": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "ports": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "release_store": null,
+        "sqlite_copies": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "states": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "stores": [
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "SF-3": {
+      "behavior": null,
+      "decisive_evidence": {
+        "caller_messages": [],
+        "versions": [],
+        "workflows": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    }
+  },
+  "cleanup": {
+    "errors": [],
+    "listeners": [],
+    "mock_exit": -15,
+    "processes_stopped": true
+  },
+  "failure": {
+    "message": "broker status command failed",
+    "step": "preflight",
+    "type": "RuntimeError"
+  },
+  "home": "/private/tmp/exo-sf-syn-1",
+  "label": "observed-synthetic",
+  "provider": "scripted",
+  "release_label": "http-release (fixture)",
+  "routes": {},
+  "setup": {
+    "environment": {
+      "ANTHROPIC_API_KEY": false,
+      "EXO_CODEX_BASE_URL": false,
+      "EXO_MODEL_HOME": false,
+      "OPENAI_API_KEY": false
+    },
+    "fresh_home": true,
+    "preflight_listeners": []
+  },
+  "status": "fail",
+  "synthetic_scenario": {}
+}

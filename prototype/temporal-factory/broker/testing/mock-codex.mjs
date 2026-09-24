@@ -11,13 +11,15 @@ function options(argv) {
 		opts[argv[i].slice(2)] = argv[i + 1];
 	}
 	const port = Number(opts.port);
-	if (!Number.isInteger(port) || !(opts.script === "director" ? port >= 46300 && port <= 46349 : port >= 46120 && port <= 46149) || !opts.record || !["authoring", "interleaved", "runaway", "director"].includes(opts.script) || (opts.script === "authoring" && !opts.draft) || (opts["hold-ms"] !== undefined && (!Number.isSafeInteger(Number(opts["hold-ms"])) || Number(opts["hold-ms"]) < 0 || opts.script !== "runaway"))) throw new Error("invalid fixture options");
+	if (!Number.isInteger(port) || !((port >= 46120 && port <= 46149) || (port >= 46300 && port <= 46349) || (port >= 46400 && port <= 46529)) || !opts.record || !["authoring", "interleaved", "runaway", "director"].includes(opts.script) || (opts["hold-ms"] !== undefined && (!Number.isSafeInteger(Number(opts["hold-ms"])) || Number(opts["hold-ms"]) < 0 || opts.script !== "runaway"))) throw new Error("invalid fixture options");
 	return opts;
 }
 const opts = options(process.argv.slice(2));
 const PORT = Number(opts.port);
 const LOG = opts.record;
-const FIRST_DRAFT = opts.draft ? JSON.parse(fs.readFileSync(opts.draft, "utf8")) : null;
+const REPORT_TEMPLATE = JSON.parse(fs.readFileSync(new URL("../../definitions/report-template.json", import.meta.url), "utf8"));
+const FIRST_DRAFT = structuredClone(REPORT_TEMPLATE);
+delete FIRST_DRAFT.child.nodes.route_verdict.cases.false;
 const HOLD_MS = Number(opts["hold-ms"] ?? 0);
 const emitted = new Map(); // prompt_cache_key -> ordered response segments
 let seq = 0, dirStarts = 0, holds = 0;
@@ -200,10 +202,9 @@ const server = http.createServer((req, res) => {
 				const run = inspected.run || {};
 				return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_decide_${seq + 1}`, name: "decide_wait", args: { action: "abort", revision: run.current_revision || "", sha256: run.current_sha256 || "", rationale: "repair exhausted" } }]) });
 			}
-			if (/answer the director wait|abort the waiting run/i.test(brief)) return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_inspect_${seq + 1}`, name: "inspect_run", args: {} }]) });
+			if (/answer the director wait|abort the waiting run|waiting for a director decision|review the run and decide/i.test(brief)) return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_inspect_${seq + 1}`, name: "inspect_run", args: {} }]) });
 			const question = brief.match(/Research (.*?);/i)?.[1] || brief;
-			const outcome_mode = brief.match(/outcome_mode\s*[:=]\s*["']?([a-z_]+)/i)?.[1] || "never";
-			return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_start_${seq + 1}`, name: "start_research", args: { question, outcome_mode } }]) });
+			return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_start_${seq + 1}`, name: "start_research", args: { question } }]) });
 		}
 		if (opts.script === "runaway") {
 			if (!tools.includes("describe_vocabulary") || !tools.includes("validate_draft")) return reject(res, base, "runaway authoring tools missing");
@@ -231,13 +232,13 @@ const server = http.createServer((req, res) => {
 			if (submitted) return reject(res, base, "submitted draft was not accepted");
 			if (validated) {
 				if (opts.script === "interleaved" && !FIRST_DRAFT) return log({ kind: "interleaved", ...base, reply: turn(res, body.model, session, null, [], "interleaved complete") });
-				const error = validated.errors?.find((e) => e.message === "route must cover each typed value" && e.path === "child.nodes.route_scope.cases");
+				const error = validated.errors?.find((e) => e.message === "route must cover each typed value" && e.path === "child.nodes.route_verdict.cases");
 				const miss = error?.missing_cases;
 				if (validated.ok || !Array.isArray(miss) || miss.length === 0) return reject(res, base, "expected defective route validation feedback");
 				const fixed = structuredClone(FIRST_DRAFT);
 				for (const m of miss) {
-					if (!vocabulary?.route_values?.["join.route_status"]?.includes(m)) return reject(res, base, "feedback requested undeclared route case");
-					fixed.child.nodes.route_scope.cases[m] = "draft_unresolved";
+					if (!vocabulary?.route_values?.["verdict.accepted"]?.includes(m)) return reject(res, base, "feedback requested undeclared route case");
+					fixed.child.nodes.route_verdict.cases[m] = "repair";
 				}
 				return log({ kind: "authoring", ...base, feedback: validated.errors, reply: turn(res, body.model, session, "rs_author_3", [{ call_id: "call_submit_1", name: "submit_draft", args: { template_json: JSON.stringify(fixed) } }]) });
 			}

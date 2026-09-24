@@ -15,28 +15,26 @@ from binding import DEPLOYMENT, PublicationStore, build_id_for, digest, make_man
 from definition import digest as definition_digest
 
 
+from authoring import materialize
+from report_fixture import packet, template
+
+
 def materialized_v1(bindings):
-    source = json.loads((ROOT / "definitions" / "v1-template.json").read_text())
-    child = source["child"]
-    child_digest = definition_digest(child)
-    for node in source["root"]["nodes"].values():
-        if node["type"] == "nested_factory" and node["child_digest"] == "@child":
-            node["child_digest"] = child_digest
-    return {"schema": source["schema"], "root": source["root"],
-            "children": {child_digest: child}, "bindings": bindings,
-            "run_inputs": source["run_inputs"]}
+    return materialize(template(), bindings, evidence_packet=packet())
 
 
 class BindingTests(unittest.TestCase):
     def setUp(self):
-        bindings = {name: {"role": role, "url": f"http://127.0.0.1:{42161+i}",
-                           "identity": name, "approved": True}
-                    for i, (name, role) in enumerate((("source_alpha", "capability"),
-                        ("source_beta", "capability"), ("counter_alpha", "capability"),
-                        ("counter_beta", "capability"), ("quality", "quality"),
-                        ("release", "release")))}
+        from report_fixture import bindings as report_bindings
+        bindings = report_bindings()
         self.package = materialized_v1(bindings)
-        self.contracts = {name: {"revision": 1, "service": name} for name in bindings}
+        capabilities = {"research_findings": "packet_findings@1",
+                        "research_risks": "packet_risks@1",
+                        "synthesizer": "report_synthesis@1",
+                        "quality": "report_quality_review@1"}
+        self.contracts = {name: {"revision": 1, "service": name,
+                                 "capability": capabilities.get(name, "http-release@1")}
+                          for name in bindings}
         self.policy = {"revision": 1, "authority": "quality"}
         self.build = build_id_for("a" * 64)
         manifest = make_manifest(self.package, self.contracts, self.policy,
@@ -56,7 +54,7 @@ class BindingTests(unittest.TestCase):
     def test_mutations_fail_closed(self):
         cases = []
         changed = copy.deepcopy(self.closure)
-        changed["contracts"]["source_alpha"]["revision"] = 2
+        changed["contracts"]["research_findings"]["revision"] = 2
         cases.append((changed, self.package, self.build))
         changed = copy.deepcopy(self.closure)
         changed["quality_policy"]["revision"] = 2
@@ -65,7 +63,7 @@ class BindingTests(unittest.TestCase):
         changed["manifest"]["interpreter"]["source_digest"] = "b" * 64
         cases.append((changed, self.package, self.build))
         changed_package = copy.deepcopy(self.package)
-        changed_package["bindings"]["source_alpha"]["identity"] = "other"
+        changed_package["bindings"]["research_findings"]["identity"] = "other"
         cases.append((self.closure, changed_package, self.build))
         cases.append((self.closure, self.package, "b-other"))
         for closure, package, build in cases:

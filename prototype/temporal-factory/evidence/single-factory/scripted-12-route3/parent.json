@@ -1,0 +1,298 @@
+{
+  "events": [
+    {
+      "eventId": "1",
+      "eventTime": "2026-09-24T16:41:09.294008Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED",
+      "taskId": "1048714",
+      "workflowExecutionStartedEventAttributes": {
+        "attempt": 1,
+        "firstExecutionRunId": "01a0d44a-d5ae-701b-a17c-a7ecf5f88525",
+        "firstWorkflowTaskBackoff": "0s",
+        "identity": "33658@MacBookPro.lan",
+        "input": {
+          "decoded_payload_sha256": [
+            "360502c1ad00074442dceda9527cba5943f2c31c1f1cab3c85115c16751ff6e5"
+          ],
+          "redacted_sha256": "0c0c4c2512f54424d9f2cd76b7d5f54968b639754f05ba0c06d3746554e755a7"
+        },
+        "originalExecutionRunId": "01a0d44a-d5ae-701b-a17c-a7ecf5f88525",
+        "priority": {},
+        "taskQueue": {
+          "kind": "TASK_QUEUE_KIND_NORMAL",
+          "name": "exo-factory"
+        },
+        "versioningOverride": {
+          "pinned": {
+            "behavior": "PINNED_OVERRIDE_BEHAVIOR_PINNED",
+            "version": {
+              "buildId": "b-3e196d3f362c",
+              "deploymentName": "exo-factory"
+            }
+          }
+        },
+        "workflowExecutionExpirationTime": "2026-09-24T17:06:09.293Z",
+        "workflowExecutionTimeout": "1500s",
+        "workflowId": "f78c81b9-d702-4edd-9aa3-4f730d6dcf9b.6a1c14556e95b1b3e12a",
+        "workflowRunTimeout": "1500s",
+        "workflowTaskTimeout": "10s",
+        "workflowType": {
+          "name": "FactoryRun"
+        }
+      }
+    },
+    {
+      "eventId": "2",
+      "eventTime": "2026-09-24T16:41:09.294078Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "1048715",
+      "workflowTaskScheduledEventAttributes": {
+        "attempt": 1,
+        "startToCloseTimeout": "10s",
+        "taskQueue": {
+          "kind": "TASK_QUEUE_KIND_NORMAL",
+          "name": "exo-factory"
+        }
+      }
+    },
+    {
+      "eventId": "3",
+      "eventTime": "2026-09-24T16:41:09.303854Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "1048721",
+      "workflowTaskStartedEventAttributes": {
+        "historySizeBytes": "13176",
+        "identity": "33724@MacBookPro.lan",
+        "requestId": "796cd99c-197d-4f6d-ad9b-f820450eca46",
+        "scheduledEventId": "2"
+      }
+    },
+    {
+      "eventId": "4",
+      "eventTime": "2026-09-24T16:41:09.313154Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "1048725",
+      "workflowTaskCompletedEventAttributes": {
+        "deploymentVersion": {
+          "buildId": "b-3e196d3f362c",
+          "deploymentName": "exo-factory"
+        },
+        "identity": "33724@MacBookPro.lan",
+        "meteringMetadata": {},
+        "scheduledEventId": "2",
+        "sdkMetadata": {
+          "coreUsedFlags": [
+            2,
+            1,
+            3
+          ],
+          "sdkName": "temporal-python",
+          "sdkVersion": "1.33.0"
+        },
+        "startedEventId": "3",
+        "versioningBehavior": "VERSIONING_BEHAVIOR_PINNED",
+        "workerDeploymentName": "exo-factory",
+        "workerVersion": {
+          "buildId": "b-3e196d3f362c"
+        }
+      }
+    },
+    {
+      "eventId": "5",
+      "eventTime": "2026-09-24T16:41:09.313217Z",
+      "eventType": "EVENT_TYPE_START_CHILD_WORKFLOW_EXECUTION_INITIATED",
+      "startChildWorkflowExecutionInitiatedEventAttributes": {
+        "header": {},
+        "inheritBuildId": true,
+        "input": {
+          "decoded_payload_sha256": [
+            "02155207eb66da22b8391327600a1aaf60488adcad0b468b1a7c48b0db9534f8"
+          ],
+          "redacted_sha256": "8d702da03f5cfb5c792e8ef5b305db795211836a7c7bf4ba35048d53784cba10"
+        },
+        "namespace": "exomachina",
+        "namespaceId": "01671abf-432c-4868-b226-e4b73734e1b3",
+        "parentClosePolicy": "PARENT_CLOSE_POLICY_TERMINATE",
+        "priority": {},
+        "taskQueue": {
+          "kind": "TASK_QUEUE_KIND_NORMAL",
+          "name": "exo-factory"
+        },
+        "workflowId": "f78c81b9-d702-4edd-9aa3-4f730d6dcf9b.6a1c14556e95b1b3e12a:child:82c5bfe305ea",
+        "workflowIdReusePolicy": "WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE",
+        "workflowRunTimeout": "0s",
+        "workflowTaskCompletedEventId": "4",
+        "workflowTaskTimeout": "10s",
+        "workflowType": {
+          "name": "FactoryRun"
+        }
+      },
+      "taskId": "1048726"
+    },
+    {
+      "childWorkflowExecutionStartedEventAttributes": {
+        "header": {},
+        "initiatedEventId": "5",
+        "namespace": "exomachina",
+        "namespaceId": "01671abf-432c-4868-b226-e4b73734e1b3",
+        "workflowExecution": {
+          "runId": "01a0d44a-d5c8-745d-ab77-b5d0372f4634",
+          "workflowId": "f78c81b9-d702-4edd-9aa3-4f730d6dcf9b.6a1c14556e95b1b3e12a:child:82c5bfe305ea"
+        },
+        "workflowType": {
+          "name": "FactoryRun"
+        }
+      },
+      "eventId": "6",
+      "eventTime": "2026-09-24T16:41:09.325212Z",
+      "eventType": "EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_STARTED",
+      "taskId": "1048730"
+    },
+    {
+      "eventId": "7",
+      "eventTime": "2026-09-24T16:41:09.325219Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "1048731",
+      "workflowTaskScheduledEventAttributes": {
+        "attempt": 1,
+        "startToCloseTimeout": "10s",
+        "taskQueue": {
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "name": "33724@MacBookPro.lan-9c9298e8610c49d8a688d70c285105ed",
+          "normalName": "exo-factory"
+        }
+      }
+    },
+    {
+      "eventId": "8",
+      "eventTime": "2026-09-24T16:41:09.330527Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "1048736",
+      "workflowTaskStartedEventAttributes": {
+        "historySizeBytes": "27505",
+        "identity": "33724@MacBookPro.lan",
+        "requestId": "8b42875c-1b75-4305-acb4-1fce8770381c",
+        "scheduledEventId": "7"
+      }
+    },
+    {
+      "eventId": "9",
+      "eventTime": "2026-09-24T16:41:09.338079Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "1048740",
+      "workflowTaskCompletedEventAttributes": {
+        "deploymentVersion": {
+          "buildId": "b-3e196d3f362c",
+          "deploymentName": "exo-factory"
+        },
+        "identity": "33724@MacBookPro.lan",
+        "meteringMetadata": {},
+        "scheduledEventId": "7",
+        "sdkMetadata": {},
+        "startedEventId": "8",
+        "versioningBehavior": "VERSIONING_BEHAVIOR_PINNED",
+        "workerDeploymentName": "exo-factory",
+        "workerVersion": {
+          "buildId": "b-3e196d3f362c"
+        }
+      }
+    },
+    {
+      "childWorkflowExecutionCompletedEventAttributes": {
+        "initiatedEventId": "5",
+        "namespace": "exomachina",
+        "namespaceId": "01671abf-432c-4868-b226-e4b73734e1b3",
+        "result": {
+          "payloads": [
+            {
+              "data": "eyJkZWZpbml0aW9uX2RpZ2VzdCI6IjgyYzViZmUzMDVlYWZiYTg4YTBiZTNlMzY2ZTM0ZWNiMzVjY2EwNjhmMmY1YjExYzZmM2I2MDFlNmUxMWIyZWEiLCJyZWxlYXNlZCI6ZmFsc2UsInJldmlzaW9uIjoicjMiLCJydW4iOiJmNzhjODFiOS1kNzAyLTRlZGQtOWFhMy00ZjczMGQ2ZGNmOWIuNmExYzE0NTU2ZTk1YjFiM2UxMmE6Y2hpbGQ6ODJjNWJmZTMwNWVhIiwic3RhdHVzIjoiYWJvcnRlZCJ9",
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              }
+            }
+          ]
+        },
+        "startedEventId": "6",
+        "workflowExecution": {
+          "runId": "01a0d44a-d5c8-745d-ab77-b5d0372f4634",
+          "workflowId": "f78c81b9-d702-4edd-9aa3-4f730d6dcf9b.6a1c14556e95b1b3e12a:child:82c5bfe305ea"
+        },
+        "workflowType": {
+          "name": "FactoryRun"
+        }
+      },
+      "eventId": "10",
+      "eventTime": "2026-09-24T16:41:10.281635Z",
+      "eventType": "EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_COMPLETED",
+      "taskId": "1048742"
+    },
+    {
+      "eventId": "11",
+      "eventTime": "2026-09-24T16:41:10.281642Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "1048743",
+      "workflowTaskScheduledEventAttributes": {
+        "attempt": 1,
+        "startToCloseTimeout": "10s",
+        "taskQueue": {
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "name": "33724@MacBookPro.lan-9c9298e8610c49d8a688d70c285105ed",
+          "normalName": "exo-factory"
+        }
+      }
+    },
+    {
+      "eventId": "12",
+      "eventTime": "2026-09-24T16:41:10.286242Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "1048747",
+      "workflowTaskStartedEventAttributes": {
+        "historySizeBytes": "28294",
+        "identity": "33724@MacBookPro.lan",
+        "requestId": "490aae63-d647-4be1-86ba-268ff04751a5",
+        "scheduledEventId": "11"
+      }
+    },
+    {
+      "eventId": "13",
+      "eventTime": "2026-09-24T16:41:10.293523Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "1048751",
+      "workflowTaskCompletedEventAttributes": {
+        "deploymentVersion": {
+          "buildId": "b-3e196d3f362c",
+          "deploymentName": "exo-factory"
+        },
+        "identity": "33724@MacBookPro.lan",
+        "meteringMetadata": {},
+        "scheduledEventId": "11",
+        "sdkMetadata": {},
+        "startedEventId": "12",
+        "versioningBehavior": "VERSIONING_BEHAVIOR_PINNED",
+        "workerDeploymentName": "exo-factory",
+        "workerVersion": {
+          "buildId": "b-3e196d3f362c"
+        }
+      }
+    },
+    {
+      "eventId": "14",
+      "eventTime": "2026-09-24T16:41:10.293555Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+      "taskId": "1048752",
+      "workflowExecutionCompletedEventAttributes": {
+        "result": {
+          "payloads": [
+            {
+              "data": "eyJjaGlsZCI6eyJkZWZpbml0aW9uX2RpZ2VzdCI6IjgyYzViZmUzMDVlYWZiYTg4YTBiZTNlMzY2ZTM0ZWNiMzVjY2EwNjhmMmY1YjExYzZmM2I2MDFlNmUxMWIyZWEiLCJyZWxlYXNlZCI6ZmFsc2UsInJldmlzaW9uIjoicjMiLCJydW4iOiJmNzhjODFiOS1kNzAyLTRlZGQtOWFhMy00ZjczMGQ2ZGNmOWIuNmExYzE0NTU2ZTk1YjFiM2UxMmE6Y2hpbGQ6ODJjNWJmZTMwNWVhIiwic3RhdHVzIjoiYWJvcnRlZCJ9LCJkZWZpbml0aW9uX2RpZ2VzdCI6IjQxYjRjZjIyZmUyOGRiMmNiMDgxYjhkMDRjMmEyNWJiMTU5MGE2NWQ3MTgyYTcyNDNiYmQxZTdjMmI3NTVmMzMiLCJyZWxlYXNlZCI6ZmFsc2UsInJ1biI6ImY3OGM4MWI5LWQ3MDItNGVkZC05YWEzLTRmNzMwZDZkY2Y5Yi42YTFjMTQ1NTZlOTViMWIzZTEyYSIsInN0YXR1cyI6ImFib3J0ZWQifQ==",
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              }
+            }
+          ]
+        },
+        "workflowTaskCompletedEventId": "13"
+      }
+    }
+  ]
+}

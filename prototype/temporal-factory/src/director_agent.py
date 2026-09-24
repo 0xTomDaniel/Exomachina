@@ -100,7 +100,7 @@ class DirectorTurn:
             return self._record(name, arguments, {"ok": False, "error": {"code": "budget", "message": "deadline"}})
         if len(self.calls) >= self.limits["max_tool_calls"]:
             return self._record(name, arguments, {"ok": False, "error": {"code": "budget", "message": "tool_call_limit"}})
-        schemas = {"start_research": {"question", "outcome_mode"},
+        schemas = {"start_research": {"question"},
                    "inspect_run": set(),
                    "decide_wait": {"action", "revision", "sha256", "rationale"}}
         if name not in schemas or not isinstance(arguments, dict) or set(arguments) != schemas[name]:
@@ -108,8 +108,7 @@ class DirectorTurn:
         try:
             if name == "start_research":
                 command = {"op": "start", "action_id": self.action_id("start"),
-                           "inputs": {"question": arguments["question"],
-                                      "outcome_mode": arguments["outcome_mode"]}}
+                           "inputs": {"question": arguments["question"]}}
                 self.director.perform(command, self.task_id, self.context_id)
                 value = {"ok": True, "accepted_command": "start"}
             elif name == "inspect_run":
@@ -132,16 +131,15 @@ class DirectorTurn:
         return self._record(name, arguments, value)
 
     async def run(self, brief: str, model: Model) -> dict:
+        started = time.monotonic()
         @tool
-        def start_research(question: str, outcome_mode: str) -> str:
+        def start_research(question: str) -> str:
             """Start verified research for this Task.
 
             Args:
                 question: The research question from the caller's brief.
-                outcome_mode: Pinned input mode, normally never or after_first_repair.
             """
-            return json.dumps(self.call("start_research", {"question": question,
-                "outcome_mode": outcome_mode}), sort_keys=True)
+            return json.dumps(self.call("start_research", {"question": question}), sort_keys=True)
 
         @tool
         def inspect_run() -> str:
@@ -166,10 +164,9 @@ class DirectorTurn:
                       tools=[start_research, inspect_run, decide_wait],
                       system_prompt=("You are the Director for one verified-research Task. "
                                      "For a new research brief, call start_research once with the caller's "
-                                     "question and requested outcome_mode. For an instruction to answer "
-                                     "a Director wait, first call inspect_run, then use its current revision "
-                                     "and sha256 in exactly one decide_wait with action abort. "
-                                     "Never invent input modes or silently substitute a forbidden one. "
+                                     "question. At a Director wait, the pinned graph permits only abort "
+                                     "at repair_exhausted. First call inspect_run, then decide using its "
+                                     "current revision and sha256. "
                                      "Tools return structured errors; do not claim a rejected action succeeded."),
                       callback_handler=None)
         failure = None
@@ -179,6 +176,7 @@ class DirectorTurn:
             failure = "budget" if any(isinstance(e, DirectorBudgetExhausted) for e in
                 (error, error.__cause__, error.__context__)) else type(error).__name__
         result = {"model_calls": budgeted.calls, "tool_calls": len(self.calls),
+                  "elapsed_seconds": round(time.monotonic() - started, 3),
                   "accepted": self.accepted, "limits": self.limits, "failure": failure}
         with self.director.connect() as db:
             db.execute("INSERT INTO director_turns VALUES (?,?,?,?,?,?,?)",
