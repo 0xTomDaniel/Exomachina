@@ -1,0 +1,30 @@
+{
+  "base_merge": "8189412",
+  "branch": "qual/factory-spikes",
+  "bytes_scanned": 322142519,
+  "candidate_file_count": 164,
+  "claim": "observed-real",
+  "excluded": [
+    "/Users/tomdaniel/.exomachina/model-broker/secrets/openai-codex.json"
+  ],
+  "files_scanned": 7825,
+  "input_path_count": 170,
+  "model_home": "/Users/tomdaniel/.exomachina/model-broker",
+  "positive_control": {
+    "canary": "fresh synthetic credential; no live token used",
+    "control_directory": "/tmp/exo-qual-final-sidecar-leak-control",
+    "detected_copy_and_bare": true,
+    "hits": 9
+  },
+  "purpose": "orchestrator sidecar before commit: real-store token absent outside canonical store",
+  "real_store_hits": [],
+  "scanned_at": 1790222825.481745,
+  "status": "pass",
+  "supersedes": "stale copy of /tmp/exo-qual-c-live-3 sidecar summary",
+  "trial_homes": [
+    "/tmp/exo-qual-a-combined-1",
+    "/tmp/exo-qual-b-combined-1",
+    "/tmp/exo-qual-c-combined-syn-1",
+    "/tmp/exo-qual-c-combined-live-1"
+  ]
+}

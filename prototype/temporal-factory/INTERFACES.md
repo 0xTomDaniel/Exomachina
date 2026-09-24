@@ -160,3 +160,26 @@ Not live-tested:
 - `services/testbed.py {up,down,status} --home H [--port-base 45200]`. It starts independent pinned test services, each with durable identity under `$H/services/<name>` (five A2A; `release` is the HTTP exception): `source_alpha`, `source_beta`, `counter_alpha`, and `counter_beta` (capability, via `src/harness_server.py --role capability`), `quality` (`services/quality_server.py`), and `release` (`services/release_server.py --mode participating`). Ports are `port_base + i` in that order.
 - `up` writes `$H/testbed/approved_bindings.json` (`{name: {role, url, identity, approved: true}}`, the exact shape `definition.validate` requires), `contracts.json` (one fixture-authored capability contract per binding name), and `quality_policy.json`. It is idempotent. On restart, identities are unchanged.
 - `definitions/v1-template.json`: the lane-1 mixed v4 template, plus a caller input `question` (string, not required, `allowed_actors: ["fixture-operator"]`, `may_affect_acceptance: false`).
+
+## Qualification amendments (23 Sep 2026, `QUALIFICATION.md`)
+
+These supersede the statements above where they conflict.
+
+- **Runner configuration is install-scoped (Spike B).**
+  - `Runner(home)` reads and pins `port_base`/`member_base` in `$EXO_HOME/runner-config.json` under a lock. Explicit conflicting ports raise.
+  - `init_instance` stores no runner ports. It rejects a harness port already configured for another instance in the home.
+  - `harness.py serve` holds `instances/<name>/harness.lock` before the Director claims an incarnation. A second process for the same instance exits with `instance already serving`.
+- **Async external agents (Spike A).**
+  - A binding may pin, in its closure contract, `{card_sha256 (url-less card), a2a_extension:{uri:"urn:exomachina:a2a-action-contract:v1", contract, contract_digest}, reconcile}`.
+  - `reconcile` is `a2a-idempotent-resend` only when the served contract document declares action-id keying, same-payload replay to the original Task, and commit-before-response. Otherwise it is `opaque`. Existing fixtures keep `fixture-lookup`.
+  - Before every send, resend and poll, `agent_binding.resolve` maps the pinned identity to a URL through `$EXO_HOME/testbed/agent_snapshot.json` (`{snapshot_version:1, agents:{identity:{url}}}`) and re-verifies the card and contract.
+  - The outcome journal adds phase `working`, `task_id`, `payload_sha256`, `pinned_identity` and a compare-and-set `sequence`. Terminal rows are immutable.
+  - `assign` heartbeats (timeout 15 s). HTTP calls time out at 10 s.
+  - `agent_binding.py` is in `INTERPRETER_FILES`.
+- **Broker-backed Director (Spike C).** This replaces "a broker-backed Director is not built here".
+  - Instance config `director_model: {provider: fixture|synthetic-loopback|codex-subscription, model?}`; the default is `fixture`.
+  - An A2A **text** part goes to `director_agent.DirectorTurn`, whose tools are `start_research(question, outcome_mode)`, `inspect_run()` and `decide_wait(action, revision, sha256, rationale)`. The per-turn budget is 4 model calls, 4 tool calls and 90 s.
+  - Code derives `action_id` from sha256 of the Task id, operation and message id. The model never sees the actor, token, epoch, run, graph, package, version or bindings.
+  - `inspect` and `abort` require the run's `authorized_actor` and the original `context_id`.
+  - A second fixture bearer, `fixture-observer`, authenticates but is not an allowed actor.
+  - Tool calls and turns are audited in `director_tool_calls` and `director_turns`.
