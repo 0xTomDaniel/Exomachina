@@ -118,12 +118,19 @@ def _release_rows(evidence: dict, route: int) -> list[dict]:
     return [row for row in evidence.get("releases", []) if row.get("run_id") == run_id]
 
 
-def _findings_on_claim(verdict_value: dict, stimulus: dict) -> bool:
+def _findings_on_claim(verdict_value: dict, stimulus: dict, synthesis: dict) -> bool:
+    # R2-b/R3-b: "its claim_id equals the planted claim id, or its text quotes it."
+    # The stimulus log records text, while the served synthesis assigns the claim id.
     planted = stimulus.get("planted_text") or ""
-    claim_id = stimulus.get("claim_id")
+    claims = [claim for claim in _report(synthesis).get("claims") or []
+              if claim.get("text") == planted]
+    claim_id = claims[0].get("id") if len(claims) == 1 else None
+    recorded_id = stimulus.get("claim_id")
+    if not planted or not claim_id or (recorded_id and recorded_id != claim_id):
+        return False
     return any(f.get("severity") == "blocking" and
                ((claim_id and f.get("claim_id") == claim_id) or
-                (planted and planted in json.dumps(f, sort_keys=True)))
+                planted in (f.get("problem") or ""))
                for f in verdict_value.get("findings") or [])
 
 
@@ -534,7 +541,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
     rejected2 = review2.get("verdict") or {}
     c["R2-b"] = verdict(rejected2.get("accepted") is False and
         _quality_bound(e, 2, first2, review2, live=live) and
-        _findings_on_claim(rejected2, planted2),
+        _findings_on_claim(rejected2, planted2, first2),
         {"review": review2, "planted": planted2}, label, behavior=quality_behavior)
     repair2 = next((x for x in s2 if _revision(x) == "r2"), {})
     brief2 = repair2.get("brief") or {}
@@ -581,7 +588,8 @@ def check_evidence(e: dict) -> dict[str, dict]:
         len(s3) == len(expected) and set(reviews3) == set(synthesis3) == expected and
         all((reviews3[x].get("verdict") or {}).get("accepted") is False and
             _quality_bound(e, 3, synthesis3[x], reviews3[x], live=live) and
-            _findings_on_claim(reviews3[x]["verdict"], stimuli3_by_revision.get(x) or {})
+            _findings_on_claim(reviews3[x]["verdict"], stimuli3_by_revision.get(x) or {},
+                               synthesis3[x])
             for x in expected) and child3.get("repair_count") == max3 and
         any("repair:exhausted" in x for x in child3.get("completed") or []),
         {"reviews": q3, "child_status": child3}, label, behavior=quality_behavior)
@@ -589,9 +597,12 @@ def check_evidence(e: dict) -> dict[str, dict]:
         r3.get("wait_status", {}).get("phase") == "awaiting-director",
         {"states": r3.get("observed_states"), "wait_status": r3.get("wait_status")}, label)
     calls3 = r3.get("director_calls") or []
-    inspected = [i for i, x in enumerate(calls3) if x.get("tool") == "inspect_run" and x.get("accepted")]
-    aborted = [i for i, x in enumerate(calls3) if x.get("tool") == "decide_wait" and x.get("accepted")]
     follow_id = ((r3.get("caller_messages") or [{}])[-1]).get("messageId")
+    # R3-d: "The live Director turn calls `inspect_run`, then one accepted
+    # `decide_wait`" refers to the follow-up turn, not the earlier START turn.
+    inspected = [i for i, x in enumerate(calls3) if x.get("tool") == "inspect_run" and
+                 x.get("accepted") and x.get("message_id") == follow_id]
+    aborted = [i for i, x in enumerate(calls3) if x.get("tool") == "decide_wait" and x.get("accepted")]
     follow_turns = [x for x in r3.get("director_turns") or [] if x.get("message_id") == follow_id]
     c["R3-d"] = verdict(r3.get("follow_up_text") == FOLLOW_UP and
         r3.get("follow_up_original_task") is True and follow_id and
@@ -652,8 +663,12 @@ def check_evidence(e: dict) -> dict[str, dict]:
     broker_records = e.get("broker_events") or []
     broker_starts = [x for x in broker_records if x.get("event") == "start" and x.get("pid")]
     broker_attach = [x for x in broker_records if x.get("event") == "attach"]
-    broker_stable = (len(broker_starts) == 1 and bool(broker_attach) and
-        all(pid == broker_starts[0]["pid"] for pid in e.get("broker_pids_during") or []))
+    # G-2: "one broker PID across the scenario" also permits a broker already
+    # running before the observation window, which produces attaches but no start.
+    broker_pid = broker_starts[0]["pid"] if len(broker_starts) == 1 else e.get("broker_pid_before")
+    broker_stable = (len(broker_starts) <= 1 and bool(broker_attach) and bool(broker_pid) and
+        (not broker_starts or e.get("broker_pid_before") in (None, broker_pid)) and
+        all(pid == broker_pid for pid in e.get("broker_pids_during") or []))
     # Agent sessions are absent from broker streams for the scripted agent provider.
     stream_reconciled = (not live or all(stream_counts.get(s) == n for s, n in call_counts.items()))
     author_count = e.get("authoring_call_count")
@@ -726,7 +741,9 @@ def check_evidence(e: dict) -> dict[str, dict]:
         (live or isinstance(cleanup.get("mock_exit"), int) and
             isinstance(e.get("mock_authoring_exit"), int)))
     c["G-5"] = verdict(cleanup.get("errors") == [] and cleanup.get("listeners") == [] and
-        cleanup.get("ports_checked") and len(cleanup["ports_checked"]) >= 40 and
+        # G-5: "no listener remains in the block." The live block has 39
+        # ports; the scripted provider adds one mock port.
+        cleanup.get("ports_checked") and len(cleanup["ports_checked"]) >= (39 if live else 40) and
         cleanup.get("started_processes") and all(row.get("exited") is True and
             row.get("group_exited") is True
             for row in cleanup["started_processes"]) and
