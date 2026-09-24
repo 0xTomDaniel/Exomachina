@@ -11,6 +11,7 @@ import os
 import subprocess
 import sys
 import time
+import shutil
 from pathlib import Path
 
 SRC = Path(__file__).resolve().parent
@@ -23,11 +24,21 @@ def _instance(instance_dir: Path):
 
 
 def provision(instance_dir: Path, *, name: str, port: int, home: Path, testbed: Path,
-              mode: str = "factory", wait_seconds: int = 900) -> dict:
+              mode: str = "factory", wait_seconds: int = 900,
+              evidence_packet: Path) -> dict:
     """Create the instance and pin the test services that stand in for the directory."""
     from harness import init_instance
+    from report_contract import validate_packet
+    if evidence_packet.stat().st_size > 12 * 1024:
+        raise ValueError("evidence packet exceeds 12 KB")
+    packet = json.loads(evidence_packet.read_text())
+    validate_packet(packet)
     config = init_instance(instance_dir, name=name, mode=mode, port=port, home=home,
                            wait_seconds=wait_seconds)
+    target_packet = instance_dir / "evidence_packet.json"
+    if target_packet.exists() and json.loads(target_packet.read_text()) != packet:
+        raise ValueError("pinned evidence packet differs; refusing to re-pin silently")
+    shutil.copyfile(evidence_packet, target_packet)
     catalog = instance_dir / "catalog"
     catalog.mkdir(parents=True, exist_ok=True)
     for file in ("approved_bindings.json", "contracts.json", "quality_policy.json"):
@@ -43,7 +54,9 @@ def publish_template(instance_dir: Path, template_path: Path, *, label: str,
                      approver: str) -> dict:
     from authoring import approve, materialize
     director = _instance(instance_dir)
-    package = materialize(json.loads(template_path.read_text()), director.module.approved())
+    packet = json.loads((instance_dir / "evidence_packet.json").read_text())
+    package = materialize(json.loads(template_path.read_text()), director.module.approved(),
+                          evidence_packet=packet)
     approval = {**approve(package, approver=approver,
                           policy={"mode": "human", "approved_bindings": director.module.approved()}),
                 "status": "approved", "decision": "operator reviewed hand-written template"}
@@ -73,7 +86,9 @@ def author_and_publish(instance_dir: Path, brief_path: Path, *, label: str,
                     "selection_seconds": selection_seconds}
         model = ScriptedAuthoringModel()
     session = AuthoringSession(StrandsGraphAuthor(model),
-                               approved_bindings=director.module.approved(), **limits)
+                               approved_bindings=director.module.approved(),
+                               evidence_packet=json.loads((instance_dir / "evidence_packet.json").read_text()),
+                               **limits)
     base = json.loads(base_template.read_text()) if base_template else None
     started = time.time()
     outcome = session.run(brief_path.read_text(), base_template=base)
@@ -126,6 +141,7 @@ def main() -> None:
     p.add_argument("--port", type=int, required=True)
     p.add_argument("--home", type=Path, required=True)
     p.add_argument("--testbed", type=Path, required=True)
+    p.add_argument("--evidence-packet", type=Path, required=True)
     p.add_argument("--mode", choices=["agent", "factory"], default="factory")
     p.add_argument("--wait-seconds", type=int, default=900)
     p = sub.add_parser("publish-template")
@@ -151,7 +167,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.command == "provision":
         value = provision(args.instance_dir, name=args.name, port=args.port, home=args.home,
-                          testbed=args.testbed, mode=args.mode, wait_seconds=args.wait_seconds)
+                          testbed=args.testbed, mode=args.mode, wait_seconds=args.wait_seconds,
+                          evidence_packet=args.evidence_packet)
     elif args.command == "publish-template":
         value = publish_template(args.instance_dir, args.template, label=args.label,
                                  approver=args.approver)

@@ -15,7 +15,10 @@ from temporalio import activity
 from a2a_outcome import (EffectKind, OutcomeJournal, Phase, ReceiverKind, lookup_result,
                          send_ambiguous, send_completed, submitted, task_started,
                          task_finished, task_incident, StaleOutcome)
-from quality_authority import QualityKind, decide_quality
+from quality_authority import QualityKind, quality_action_id
+from report_contract import (canonical, packet_evidence_join, research_assignment,
+    synthesis_assignment, quality_review_request, validate_research_result,
+    validate_report, validate_verdict)
 import long_client as a2a
 import fixture
 import receiver_client
@@ -30,7 +33,9 @@ def _async_unresolved(record) -> dict:
             "task_id": record.task_id}
 
 
-def _invoke_async(binding: dict, contract: dict, command: dict) -> dict:
+def _invoke_async(binding: dict, contract: dict, command: dict,
+                  expected_revision: str, role: str,
+                  expected_capability: str | None = None) -> dict:
     journal_path = os.environ.get("EXO_OUTCOME_DB")
     if not journal_path:
         raise RuntimeError("durable A2A outcome journal is not configured")
@@ -69,6 +74,11 @@ def _invoke_async(binding: dict, contract: dict, command: dict) -> dict:
                 _log("agent-pin-incident", action_id=record.action_id,
                      pinned_identity=binding["identity"], error_type=type(error).__name__)
                 return _async_unresolved(record)
+            if (expected_capability is not None
+                    and observed["contract_document"].get("capability") != expected_capability):
+                record = task_incident(record, "pinned-agent-capability-mismatch")
+                journal.put(record)
+                return _async_unresolved(record)
             _log("agent-card-verified", action_id=record.action_id,
                  pinned_identity=binding["identity"], pinned_card_sha256=contract["card_sha256"],
                  pinned_contract_digest=contract["a2a_extension"]["contract_digest"],
@@ -103,7 +113,8 @@ def _invoke_async(binding: dict, contract: dict, command: dict) -> dict:
                     return _async_unresolved(record)
                 if state == "completed":
                     try:
-                        receipt = a2a.async_receipt(task, command, binding["identity"])
+                        receipt = a2a.async_receipt(task, command, binding["identity"],
+                                                    expected_revision, role)
                     except Exception:
                         record = task_incident(record, "async-artifact-inconsistent")
                     else:
@@ -128,7 +139,8 @@ def _invoke_async(binding: dict, contract: dict, command: dict) -> dict:
                  task_id=record.task_id, state=state, url=url)
             if state == "completed":
                 try:
-                    receipt = a2a.async_receipt(task, command, binding["identity"])
+                    receipt = a2a.async_receipt(task, command, binding["identity"],
+                                                expected_revision, role)
                 except Exception as error:
                     record = task_incident(record, "async-artifact-inconsistent")
                     _log("agent-artifact-incident", action_id=record.action_id,
@@ -297,113 +309,92 @@ def _bounded_lookup(journal: OutcomeJournal, record, url: str, identity: str,
 
 @activity.defn
 async def assign(input: dict) -> dict:
-    _log("assign-start", run=input["run"], instance=input["instance"])
-    command = fixture.assignment(input["run"], input["digest"], input["instance"],
-        result_type=input["result_type"], scope_status=input["scope_status"],
-        question=input.get("question"))
+    capability = input["capability"]
+    brief = research_assignment(capability, input["question"], input["packet"])
+    command = {"op": "assign", "action_id": f"{input['run']}:{input['instance']}",
+               "run_id": input["run"], "definition_digest": input["digest"],
+               "brief": canonical(brief)}
     try:
-        contract = input.get("contract") or {}
-        mode = contract.get("reconcile")
-        async_marker = mode in {"a2a-idempotent-resend", "opaque"} or bool(
-            {"card_sha256", "a2a_extension"} & set(contract))
-        if async_marker:
-            extension = contract.get("a2a_extension") or {}
-            if (mode not in {"a2a-idempotent-resend", "opaque"}
-                    or not isinstance(contract.get("card_sha256"), str)
-                    or len(contract["card_sha256"]) != 64
-                    or extension.get("uri") != "urn:exomachina:a2a-action-contract:v1"
-                    or extension.get("contract") != "action-idempotent-async@1"
-                    or not isinstance(extension.get("contract_digest"), str)
-                    or len(extension["contract_digest"]) != 64):
-                return {"unresolved": "async-pin-incomplete",
-                        "action_id": command["action_id"]}
-            result = await _thread_with_heartbeat(_invoke_async, input["binding"],
-                                             input["contract"], command)
-        elif mode in {None, "fixture-lookup"}:
-            result = await _thread_with_heartbeat(_invoke, input["url"], input["identity"],
-                "capability", command, input["lookup_supported"])
-        else:
-            return {"unresolved": "undeclared-reconciliation-mode",
-                    "action_id": command["action_id"]}
+        result = await _thread_with_heartbeat(_invoke_async, input["binding"],
+            input["contract"], command, "r1", "research", capability)
+        if "unresolved" in result:
+            return result
+        artifact = result["artifact"]
+        content = json.loads(artifact["content"])
+        if canonical(content) != artifact["content"]:
+            raise ValueError("noncanonical research content")
+        validate_research_result(content, capability, input["packet"])
+        return {**result, "content": content}
     except PendingTask:
         raise
     except Exception as error:
-        return {"unresolved": "assignment-adapter-incident",
-                "action_id": command["action_id"], "error_type": type(error).__name__}
-    if "unresolved" not in result:
-        try:
-            artifact = result["artifact"]
-            content = artifact.get("content", "")
-            import hashlib
-            if not isinstance(content, str) or artifact.get("sha256") != hashlib.sha256(content.encode()).hexdigest():
-                raise ValueError("assignment artifact digest mismatch")
-            if artifact.get("author") != input["identity"]:
-                raise ValueError("assignment author identity mismatch")
-            fixture.branch_value(result, input["instance"], run_id=input["run"],
-                definition_digest=input["digest"], result_type=input["result_type"],
-                scope_status=input["scope_status"], question=input.get("question"))
-        except Exception as error:
-            return {"unresolved": "assignment-evidence-inconsistent",
-                    "action_id": command["action_id"], "error_type": type(error).__name__}
-        _log("assign-remote-receipt", run=input["run"], instance=input["instance"],
-             task_id=result["task_id"])
-    _log("assign-complete", run=input["run"], instance=input["instance"])
-    return result
-
-
-@activity.defn
-async def review(input: dict) -> dict:
-    try:
-        result = await asyncio.to_thread(_invoke, input["url"], input["identity"],
-            "quality", input["command"], True)
-    except Exception as error:
-        return {"inconsistent": "quality-action-incident",
-                "error_type": type(error).__name__,
-                "action_id": input["command"]["action_id"]}
-    if "unresolved" in result:
-        return {"inconsistent": "quality-action-outcome-unknown", "detail": result}
-    try:
-        task = await asyncio.to_thread(a2a.get_task, input["url"], result["task_id"])
-        lookup = await asyncio.to_thread(a2a.reconcile, input["url"],
-            input["command"]["action_id"], input["command"]["run_id"],
-            input["command"]["definition_digest"])
-    except Exception as error:
-        return {"inconsistent": "quality-evidence-unavailable",
+        return {"unresolved": "research-evidence-inconsistent", "action_id": command["action_id"],
                 "error_type": type(error).__name__}
-    try:
-        decision = decide_quality(binding=input["binding"],
-            observed_endpoint=input["url"], observed_identity=input["identity"],
-            command=input["command"], assignment_id=input["assignment_id"],
-            attempt=input["attempt"], task=task, lookup=lookup,
-            send_payload=result["artifact"])
-    except Exception as error:
-        return {"inconsistent": "quality-evidence-inconsistent",
-                "error_type": type(error).__name__,
-                "action_id": input["command"]["action_id"]}
-    if decision.kind == QualityKind.INCONSISTENT:
-        return {"inconsistent": decision.incident, "reasons": list(decision.reasons),
-                "action_id": input["command"]["action_id"]}
-    artifact = dict(decision.verdict)
-    result["artifact"] = artifact
-    _log("quality-verdict", run=input["command"]["run_id"],
-         decision_kind=decision.kind.value,
-         revision=artifact["revision"], accepted=artifact["accepted"],
-         task_id=result["task_id"])
-    return result
 
 
 @activity.defn
 async def typed_join(input: dict) -> dict:
-    _log("join-start", run=input["run"], instances=sorted(input["receipts"]))
-    return fixture.typed_join(input["receipts"], run_id=input["run"],
-        definition_digest=input["digest"], declarations=input["declarations"],
-        scope_status_by_instance=input["scopes"], question=input.get("question"))
+    results = {name: {"content": receipt["content"], "sha256": receipt["artifact"]["sha256"]}
+               for name, receipt in input["receipts"].items()}
+    return packet_evidence_join(results, input["packet"])
 
 
 @activity.defn
 async def synthesize(input: dict) -> dict:
-    return fixture.candidate_artifact(input["join"], input["revision"],
-                                      input["author"], resolved=input["resolved"])
+    brief = synthesis_assignment(input["revision"], input["question"], input["packet"],
+        input["evidence"], prior=input.get("prior"), quality_findings=input.get("quality_findings"))
+    command = {"op": "assign", "action_id": f"{input['run']}:synthesize:{input['revision']}",
+               "run_id": input["run"], "definition_digest": input["digest"],
+               "brief": canonical(brief)}
+    try:
+        result = await _thread_with_heartbeat(_invoke_async, input["binding"],
+            input["contract"], command, input["revision"], "synthesis", "report_synthesis@1")
+        if "unresolved" in result:
+            return result
+        artifact = result["artifact"]
+        content = json.loads(artifact["content"])
+        if canonical(content) != artifact["content"]:
+            raise ValueError("noncanonical report content")
+        validate_report(content, input["revision"], input["question"], input["packet"])
+        return artifact
+    except PendingTask:
+        raise
+    except Exception as error:
+        return {"unresolved": "synthesis-evidence-inconsistent", "action_id": command["action_id"],
+                "error_type": type(error).__name__}
+
+
+@activity.defn
+async def review(input: dict) -> dict:
+    from quality_authority import decide_quality_async
+    candidate = input["candidate"]
+    brief = quality_review_request(candidate, input["question"], input["packet"],
+                                   input["policy_digest"])
+    command = {"op": "assign", "action_id": quality_action_id(input["run"],
+        input["assignment_id"], input["attempt"], candidate["revision"], candidate["sha256"]),
+        "run_id": input["run"], "definition_digest": input["digest"], "brief": canonical(brief)}
+    try:
+        result = await _thread_with_heartbeat(_invoke_async, input["binding"],
+            input["contract"], command, candidate["revision"], "quality", "report_quality_review@1")
+        if "unresolved" in result:
+            return {"inconsistent": "quality-action-outcome-unknown", "detail": result}
+        artifact = result["artifact"]
+        content = json.loads(artifact["content"])
+        if canonical(content) != artifact["content"]:
+            raise ValueError("noncanonical verdict content")
+        validate_verdict(content, candidate, input["binding"]["identity"],
+                         packet=input["packet"], rubric_digest=input.get("rubric_digest"))
+        decision = decide_quality_async(binding=input["binding"], command=command,
+            candidate=candidate, receipt=result, verdict=content,
+            expected_task_id=result["task_id"])
+        if decision.kind == QualityKind.INCONSISTENT:
+            return {"inconsistent": decision.incident, "reasons": list(decision.reasons)}
+        return {**result, "artifact": content}
+    except PendingTask:
+        raise
+    except Exception as error:
+        return {"inconsistent": "quality-evidence-inconsistent", "action_id": command["action_id"],
+                "error_type": type(error).__name__}
 
 
 def _release(input: dict) -> dict:

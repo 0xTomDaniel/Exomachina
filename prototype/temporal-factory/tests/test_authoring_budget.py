@@ -54,7 +54,7 @@ def fixture_store(folder: Path) -> Path:
     return home
 
 
-def start_mock(folder: Path, *, port: int = 46140, hold_ms: int = 0) -> subprocess.Popen:
+def start_mock(folder: Path, *, port: int = 46450, hold_ms: int = 0) -> subprocess.Popen:
     command = [os.environ.get("EXO_NODE", "node"), str(MOCK), "--port", str(port),
                "--record", str(folder / "mock-requests.jsonl"), "--script", "runaway"]
     if hold_ms:
@@ -162,16 +162,16 @@ class SlowStartingBroker(ModelBroker):
         raise BrokerLost("startup failed after deadline")
 
 
+from report_fixture import packet, bindings as report_bindings
+
+
 def approved_bindings() -> dict:
-    names = ("source_alpha", "source_beta", "counter_alpha", "counter_beta", "quality", "release")
-    return {name: {"role": "capability" if name.startswith(("source", "counter")) else name,
-                   "url": f"http://127.0.0.1:{45200 + index}", "identity": f"test-{name}",
-                   "approved": True} for index, name in enumerate(names)}
+    return report_bindings()
 
 
 class BudgetTests(unittest.TestCase):
     def run_session(self, model, **limits):
-        return AuthoringSession(StrandsGraphAuthor(model), approved_bindings={},
+        return AuthoringSession(StrandsGraphAuthor(model), approved_bindings={}, evidence_packet=packet(),
                                 **limits).run("keep asking")
 
     def test_model_call_limit(self):
@@ -199,14 +199,14 @@ class BudgetTests(unittest.TestCase):
         self.assertIsNone(outcome.approval)
 
     def test_valid_fourth_round_can_be_revalidated_and_submitted(self):
-        valid = json.loads((ROOT / "definitions" / "v1-template.json").read_text())
+        valid = json.loads((ROOT / "definitions" / "report-template.json").read_text())
         invalid = [{"schema": 1, "variant": index} for index in range(3)]
         actions = [("validate_draft", draft) for draft in invalid]
         actions += [("validate_draft", valid), ("validate_draft", valid),
                     ("submit_draft", valid)]
         model = DraftSequenceModel(actions)
         outcome = AuthoringSession(StrandsGraphAuthor(model),
-                                   approved_bindings=approved_bindings(),
+                                   approved_bindings=approved_bindings(), evidence_packet=packet(),
                                    max_rounds=4).run("submit the valid draft")
         self.assertEqual(outcome.status, "approved")
         self.assertEqual((len(outcome.rounds), len(outcome.tool_calls)), (4, 6))
@@ -215,7 +215,7 @@ class BudgetTests(unittest.TestCase):
         self.assertIsNotNone(outcome.approval)
 
     def test_describe_vocabulary_after_valid_round_limit_aborts(self):
-        valid = json.loads((ROOT / "definitions" / "v1-template.json").read_text())
+        valid = json.loads((ROOT / "definitions" / "report-template.json").read_text())
         class DescribeAfterDraft(DraftSequenceModel):
             async def stream(self, messages, tool_specs=None, system_prompt=None, **kwargs):
                 self.calls += 1
@@ -228,7 +228,7 @@ class BudgetTests(unittest.TestCase):
                 yield {"contentBlockStop": {}}
                 yield {"messageStop": {"stopReason": "tool_use"}}
         outcome = AuthoringSession(StrandsGraphAuthor(DescribeAfterDraft([])),
-                                   approved_bindings=approved_bindings(), max_rounds=1).run("try another tool")
+                                   approved_bindings=approved_bindings(), evidence_packet=packet(), max_rounds=1).run("try another tool")
         self.assertEqual((outcome.status, outcome.abort["reason"]), ("aborted", "round_limit"))
         self.assertEqual((len(outcome.rounds), outcome.abort["tool_calls"]), (1, 1))
 
@@ -265,13 +265,13 @@ class BudgetTests(unittest.TestCase):
         self.assertLess(time.monotonic() - started, 0.12)
 
     def test_fifth_distinct_draft_aborts_before_evaluation(self):
-        valid = json.loads((ROOT / "definitions" / "v1-template.json").read_text())
+        valid = json.loads((ROOT / "definitions" / "report-template.json").read_text())
         actions = [("validate_draft", {"schema": 1, "variant": index}) for index in range(3)]
         actions += [("validate_draft", valid),
                     ("validate_draft", {"schema": 1, "variant": "fifth"})]
         model = DraftSequenceModel(actions)
         outcome = AuthoringSession(StrandsGraphAuthor(model),
-                                   approved_bindings=approved_bindings(),
+                                   approved_bindings=approved_bindings(), evidence_packet=packet(),
                                    max_rounds=4).run("try a fifth draft")
         self.assertEqual((outcome.status, outcome.abort["reason"]), ("aborted", "round_limit"))
         self.assertEqual((len(outcome.rounds), outcome.abort["tool_calls"]), (4, 4))
@@ -290,6 +290,7 @@ class BudgetTests(unittest.TestCase):
         folder = Path(tempfile.mkdtemp(prefix="exo-proto-budget-", dir="/tmp"))
         brief = folder / "brief.txt"
         brief.write_text("keep asking")
+        (folder / "evidence_packet.json").write_text(json.dumps(packet()))
         class Module:
             published = False
             def approved(self):
@@ -323,6 +324,7 @@ class BudgetTests(unittest.TestCase):
         folder = Path(tempfile.mkdtemp(prefix="exo-proto-budget-", dir="/tmp"))
         brief = folder / "brief.txt"
         brief.write_text("author a draft")
+        (folder / "evidence_packet.json").write_text(json.dumps(packet()))
         class Module:
             def approved(self):
                 return {}
@@ -405,12 +407,12 @@ class NodeBrokerBudgetTests(unittest.TestCase):
                 broker = ModelBroker(home)
                 try:
                     with patch.dict(os.environ, {"EXO_MODEL_HOME": str(home),
-                                                 "EXO_CODEX_BASE_URL": "http://127.0.0.1:46140/backend-api"}):
+                                                 "EXO_CODEX_BASE_URL": "http://127.0.0.1:46450/backend-api"}):
                         broker.ensure_started(reason="budget-test")
                         model = PiBrokerModel(broker, model_id="gpt-6-sol",
                                               session_id=f"budget-{name}")
                         model.provider, model.billing, model.live = "synthetic-loopback", "none", False
-                        outcome = AuthoringSession(StrandsGraphAuthor(model), approved_bindings={},
+                        outcome = AuthoringSession(StrandsGraphAuthor(model), approved_bindings={}, evidence_packet=packet(),
                                                    **limits).run("keep calling")
                     self.assertEqual((outcome.status, outcome.abort["reason"]), ("aborted", name))
                     self.assertEqual(outcome.abort["model_calls"], expected)
@@ -439,6 +441,8 @@ class NodeBrokerBudgetTests(unittest.TestCase):
 import json, sys, time
 from pathlib import Path
 sys.path.insert(0, sys.argv[1])
+sys.path.insert(0, 'tests')
+from report_fixture import packet
 from authoring import AuthoringSession, StrandsGraphAuthor
 from model_broker import ModelBroker, PiBrokerModel
 home, session, start = Path(sys.argv[2]), sys.argv[3], float(sys.argv[4])
@@ -446,7 +450,7 @@ time.sleep(max(0, start - time.time()))
 broker = ModelBroker(home)
 health = broker.ensure_started(reason='process-race', timeout=20)
 model = PiBrokerModel(broker, model_id='gpt-6-sol', session_id=session)
-outcome = AuthoringSession(StrandsGraphAuthor(model), approved_bindings={},
+outcome = AuthoringSession(StrandsGraphAuthor(model), approved_bindings={}, evidence_packet=packet(),
                            max_model_calls=3, deadline_seconds=20).run('race fixture')
 print(json.dumps({'pid': health['pid'], 'session': session,
                   'status': outcome.status, 'reason': outcome.abort['reason']}))
@@ -454,7 +458,7 @@ print(json.dumps({'pid': health['pid'], 'session': session,
         processes = []
         try:
             environment = {**os.environ, "EXO_MODEL_HOME": str(home),
-                           "EXO_CODEX_BASE_URL": "http://127.0.0.1:46140/backend-api"}
+                           "EXO_CODEX_BASE_URL": "http://127.0.0.1:46450/backend-api"}
             start_at = time.time() + 0.5
             for session in ("race-a", "race-b"):
                 processes.append(subprocess.Popen([PY, "-B", "-c", child_code, str(ROOT / "src"),

@@ -43,14 +43,14 @@ def authoring_vocabulary(approved_bindings: dict) -> dict:
         "bindings": {name: {"role": binding["role"], "approved": binding.get("approved") is True}
                      for name, binding in approved_bindings.items()},
         "rules": ["All route cases must cover their typed values.",
-                  "Source and counter evidence must meet at a typed join.",
+                  "Packet findings and risks must meet at a typed join.",
                   "Quality must review a candidate before release.",
                   "Repair must have a bounded exhausted edge to Director wait and abort.",
                   "The root may only invoke its digest-pinned child and complete."],
     }
 
 
-def materialize(template: dict, bindings: dict) -> dict:
+def materialize(template: dict, bindings: dict, *, evidence_packet: dict) -> dict:
     """Pin the child digest and the supplied service bindings in a package."""
     if not isinstance(template, dict) or set(template) != {"schema", "root", "child", "run_inputs"}:
         raise ValueError("template: expected schema, root, child, run_inputs")
@@ -62,7 +62,8 @@ def materialize(template: dict, bindings: dict) -> dict:
             node["child_digest"] = child_digest
     return {"schema": template["schema"], "root": root,
             "children": {child_digest: child}, "bindings": deepcopy(bindings),
-            "run_inputs": deepcopy(template["run_inputs"])}
+            "run_inputs": deepcopy(template["run_inputs"]),
+            "evidence_packet": deepcopy(evidence_packet)}
 
 
 @dataclass
@@ -131,7 +132,7 @@ class _BudgetedModel(Model):
 class GraphAuthor(Protocol):
     def author(self, brief: str, *, approved_bindings: dict, max_rounds: int,
                max_model_calls: int, max_tool_calls: int, deadline_seconds: float,
-               base_template: dict | None = None) -> AuthoringOutcome: ...
+               evidence_packet: dict, base_template: dict | None = None) -> AuthoringOutcome: ...
 
 
 def approve(package: dict, *, approver: str, policy: dict | str) -> dict:
@@ -165,7 +166,7 @@ class StrandsGraphAuthor:
 
     def author(self, brief: str, *, approved_bindings: dict, max_rounds: int,
                max_model_calls: int, max_tool_calls: int, deadline_seconds: float,
-               base_template: dict | None = None) -> AuthoringOutcome:
+               evidence_packet: dict, base_template: dict | None = None) -> AuthoringOutcome:
         started = time.monotonic()
         deadline = started + deadline_seconds
         rounds: list[dict] = []
@@ -214,7 +215,8 @@ class StrandsGraphAuthor:
                                   "errors": _errors(parse_error)}
                     else:
                         try:
-                            package = materialize(template, approved_bindings)
+                            package = materialize(template, approved_bindings,
+                                                  evidence_packet=evidence_packet)
                             package_digest = validate(package, approved_bindings)
                             result = {"ok": True, "draft_digest": draft_digest,
                                       "package_digest": package_digest, "errors": []}
@@ -318,7 +320,7 @@ class StrandsGraphAuthor:
 
 
 class AuthoringSession:
-    def __init__(self, author: GraphAuthor, *, approved_bindings: dict, max_rounds: int = 4,
+    def __init__(self, author: GraphAuthor, *, approved_bindings: dict, evidence_packet: dict, max_rounds: int = 4,
                  max_model_calls: int = 12, max_tool_calls: int = 24,
                  deadline_seconds: float = 600):
         for name, value in (("max_rounds", max_rounds), ("max_model_calls", max_model_calls),
@@ -329,6 +331,7 @@ class AuthoringSession:
             raise ValueError("deadline_seconds must be positive")
         self.author = author
         self.approved_bindings = deepcopy(approved_bindings)
+        self.evidence_packet = deepcopy(evidence_packet)
         self.max_rounds = max_rounds
         self.max_model_calls = max_model_calls
         self.max_tool_calls = max_tool_calls
@@ -336,6 +339,7 @@ class AuthoringSession:
 
     def run(self, brief: str, base_template: dict | None = None) -> AuthoringOutcome:
         return self.author.author(brief, approved_bindings=self.approved_bindings,
+                                  evidence_packet=self.evidence_packet,
                                   max_rounds=self.max_rounds, max_model_calls=self.max_model_calls,
                                   max_tool_calls=self.max_tool_calls,
                                   deadline_seconds=self.deadline_seconds,
@@ -343,45 +347,10 @@ class AuthoringSession:
 
 
 def _scripted_first_draft(base: dict | None) -> dict:
-    root = deepcopy(base["root"]) if base else {
-        "name": "parent_verified_research", "revision": "v5", "start": "invoke_child",
-        "nodes": {"invoke_child": {"type": "nested_factory", "child": "verified_research",
-                                  "child_digest": "@child", "next": "done"},
-                  "done": {"type": "complete"}}}
-    root["revision"] = "v5"
-    root["nodes"]["invoke_child"]["child_digest"] = "@child"
-    branch = lambda kind, service, scope: {"result_type": kind,
-        "capability": RESULT_TYPES[kind], "service": service, "scope_status": scope}
-    child = {"name": "verified_research", "revision": "v5", "start": "gather",
-             "nodes": {
-                 "gather": {"type": "parallel", "branches": {
-                     "source_alpha": branch("source_evidence", "source_alpha", None),
-                     "source_beta": branch("source_evidence", "source_beta", None),
-                     "counter_alpha": branch("counter_evidence", "counter_alpha", "clear")},
-                     "next": "join_all"},
-                 "join_all": {"type": "join", "branches": ["source_alpha", "source_beta", "counter_alpha"],
-                              "next": "route_scope"},
-                 "route_scope": {"type": "route", "field": "join.route_status",
-                                 "cases": {"clear": "draft_clear"}},
-                 "draft_unresolved": {"type": "synthesize", "resolved": False,
-                                      "next": "independent_quality"},
-                 "draft_clear": {"type": "synthesize", "resolved": True,
-                                 "next": "independent_quality"},
-                 "independent_quality": {"type": "quality", "next": "route_verdict"},
-                 "route_verdict": {"type": "route", "field": "verdict.accepted",
-                                   "cases": {"true": "publish", "false": "repair"}},
-                 "repair": {"type": "repair", "max_repairs": 1,
-                            "next": "draft_repair", "exhausted": "director"},
-                 "draft_repair": {"type": "synthesize", "resolved": "after_repair",
-                                  "next": "independent_quality"},
-                 "director": {"type": "director_wait", "reason": "repair_exhausted", "next": "abort"},
-                 "abort": {"type": "abort"},
-                 "publish": {"type": "release", "service": "release", "next": "done"},
-                 "done": {"type": "complete"}}}
-    return {"schema": 1, "root": root, "child": child,
-            "run_inputs": {"question": {"type": "string", "required": False,
-                                        "source": "caller", "allowed_actors": ["fixture-operator"],
-                                        "may_affect_acceptance": False}}}
+    draft = deepcopy(base) if base else json.loads((Path(__file__).parent.parent /
+        "definitions" / "report-template.json").read_text())
+    draft["child"]["nodes"]["route_verdict"]["cases"].pop("false", None)
+    return draft
 
 
 class ScriptedAuthoringModel(Model):
@@ -420,11 +389,11 @@ class ScriptedAuthoringModel(Model):
             elif not result.get("ok") and self._draft is not None:
                 error = result["errors"][0]
                 if error.get("message") == "route must cover each typed value" and error.get("missing_cases"):
-                    cases = self._draft["child"]["nodes"]["route_scope"]["cases"]
+                    cases = self._draft["child"]["nodes"]["route_verdict"]["cases"]
                     for missing in error["missing_cases"]:
-                        if missing not in self._vocabulary["route_values"]["join.route_status"]:
+                        if missing not in self._vocabulary["route_values"]["verdict.accepted"]:
                             raise ValueError("feedback requested an undeclared route case")
-                        cases[missing] = "draft_unresolved"
+                        cases[missing] = "repair"
                     tool_name = "submit_draft"
                     argument = {"template_json": _json(self._draft)}
         yield {"messageStart": {"role": "assistant"}}

@@ -20,7 +20,7 @@ QUEUE = "exo-factory"
 NAMESPACE = "exomachina"
 INTERPRETER_FILES = (
     "worker.py", "factory.py", "adapter.py", "binding.py", "buildinfo.py",
-    "definition.py", "fixture.py", "failure_projection.py",
+    "definition.py", "report_contract.py", "fixture.py", "failure_projection.py",
     "incident_projection.py", "quality_authority.py", "a2a_outcome.py",
     "long_client.py", "agent_binding.py", "receiver_client.py",
 )
@@ -46,6 +46,23 @@ def build_id_for(code_digest: str) -> str:
     return "b-" + code_digest[:12]
 
 
+def _verify_report_capabilities(package: dict, contracts: dict) -> None:
+    expected = {}
+    for child in package["children"].values():
+        for node in child["nodes"].values():
+            if node["type"] == "parallel":
+                for branch in node["branches"].values():
+                    expected[branch["service"]] = branch["capability"]
+            elif node["type"] == "synthesize":
+                expected[node["service"]] = "report_synthesis@1"
+    for name, binding in package["bindings"].items():
+        if binding["role"] == "quality":
+            expected[name] = "report_quality_review@1"
+    for name, capability in expected.items():
+        if contracts.get(name, {}).get("capability") != capability:
+            raise ValueError(f"service {name} lacks pinned {capability} capability")
+
+
 def make_manifest(package: dict, contracts: dict, quality_policy: dict,
                   *, build_id: str, code_digest: str, python: str,
                   temporalio: str) -> dict:
@@ -54,6 +71,7 @@ def make_manifest(package: dict, contracts: dict, quality_policy: dict,
         raise ValueError("invalid immutable worker build ID")
     if set(contracts) != set(package["bindings"]):
         raise ValueError("one contract per bound service required")
+    _verify_report_capabilities(package, contracts)
     if not isinstance(quality_policy, dict) or not quality_policy:
         raise ValueError("Quality policy required")
     if not re.fullmatch(r"[0-9a-f]{64}", code_digest):
@@ -97,6 +115,7 @@ def verify_closure(closure: dict, package: dict, *, build_id: str,
         raise ValueError("wrong interpreter build")
     if set(closure["contracts"]) != set(manifest["services"]):
         raise ValueError("service contract set changed")
+    _verify_report_capabilities(package, closure["contracts"])
     for name, entry in manifest["services"].items():
         if digest(package["bindings"][name]) != entry["binding_digest"]:
             raise ValueError("service binding changed")
