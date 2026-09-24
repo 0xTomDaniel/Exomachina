@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scenarios"))
@@ -24,11 +25,6 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.e = copy.deepcopy(self.snapshot)
         self.temp = tempfile.TemporaryDirectory(prefix="exo-sf-check-", dir="/tmp")
         self.addCleanup(self.temp.cleanup)
-        synth = self._tasks(1, "synthesizer")[0]
-        markdown = json.loads(synth["artifact"]["content"])["markdown"]
-        path = Path(self.temp.name) / "report.md"
-        path.write_bytes(markdown.encode())
-        self.e["routes"]["1"]["report_path"] = str(path)
         self.assertTrue(all(v["pass"] for v in check_evidence(self.e).values()))
 
     def _tasks(self, route: int, agent: str) -> list[dict]:
@@ -82,8 +78,7 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.e["routes"]["1"]["task"]["artifacts"][0]["parts"][0]["text"] = "unrelated"
         self.fails("R1-d")
         self.e = copy.deepcopy(self.snapshot)
-        self.e["routes"]["1"]["report_path"] = str(Path(self.temp.name) / "report.md")
-        Path(self.e["routes"]["1"]["report_path"]).write_text("unrelated")
+        self.e["routes"]["1"]["report_sha256"] = "0" * 64
         self.fails("R1-d")
         self.e = copy.deepcopy(self.snapshot)
         self.e["releases"][0]["sha256"] = "unrelated"
@@ -127,6 +122,27 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.e = copy.deepcopy(self.snapshot)
         self.e["leak_scan"]["raw"]["files_scanned"] = 0
         self.fails("G-4")
+        self.e = copy.deepcopy(self.snapshot)
+        leak = self.e["leak_scan"]
+        self.e["evidence_schema"] = 2
+        leak["required_scan_inputs"] = leak["scan_inputs"][:3]
+        leak["coverage"] = {"manifest_count": len(leak["candidate_manifest"]),
+            "scanner_file_count": leak["raw"]["files_scanned"], "zero_hits": True,
+            "positive_control_detected": True, "candidate_files_hashed": True}
+        self.assertTrue(check_evidence(self.e)["G-4"]["pass"])
+        leak["coverage"]["scanner_file_count"] = 0
+        self.fails("G-4")
+
+    def test_pure_replay_with_different_worktree_prefix(self):
+        original = "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director"
+        moved = "/tmp/exo-relocated-checkout"
+        self.e = json.loads(json.dumps(self.snapshot).replace(original, moved))
+        with patch.object(Path, "read_bytes", side_effect=AssertionError("checker read bytes")), \
+             patch.object(Path, "read_text", side_effect=AssertionError("checker read text")), \
+             patch.object(Path, "is_file", side_effect=AssertionError("checker inspected disk")):
+            checks = check_evidence(self.e)
+        self.assertTrue(all(v["pass"] for v in checks.values()),
+                        {k: v["pass"] for k, v in checks.items()})
 
     def test_f10_cleanup_process_and_stop_results(self):
         self.e["cleanup"]["started_processes"] = []
@@ -149,10 +165,17 @@ class ReviewTwoCheckerTests(unittest.TestCase):
             "git_commit", "checker_sha256", "interpreter_build", "manifest_digest", "route_inventory")}
         synthetic["evidence_path"] = str(path)
         synthetic["evidence_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+        synthetic["record"] = {key: self.e[key] for key in ("status", "provider", "checks",
+            "git_commit", "checker_sha256", "interpreter_build", "manifest_digest", "route_inventory")}
         self.e["synthetic_scenario"] = synthetic
         self.e["provider"] = "codex-subscription"
-        self.assertTrue(check_evidence(self.e)["G-7"]["pass"])
+        with patch.object(Path, "read_bytes", side_effect=AssertionError("checker read bytes")), \
+             patch.object(Path, "read_text", side_effect=AssertionError("checker read text")):
+            self.assertTrue(check_evidence(self.e)["G-7"]["pass"])
         synthetic["evidence_sha256"] = "wrong"
+        self.fails("G-7")
+        synthetic["evidence_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+        synthetic["record"]["git_commit"] = "wrong"
         self.fails("G-7")
 
 
