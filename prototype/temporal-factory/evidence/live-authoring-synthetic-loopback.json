@@ -1,0 +1,757 @@
+{
+  "claims": {
+    "a2a_task": {
+      "level": "real",
+      "value": {
+        "send_state": "working",
+        "task": {
+          "_observed_states": [
+            "working",
+            "completed"
+          ],
+          "artifacts": [
+            {
+              "artifactId": "3ce9eebd1e14f4607bfd33639456c54cef6af06029915c9eba63429d55f02a03",
+              "parts": [
+                {
+                  "data": {
+                    "acceptance": {
+                      "attempt": 1,
+                      "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                      "quality_task_id": "9f0de0c2-162d-4f51-a01b-c27d45f23a6f",
+                      "reviewer": "738c02d7-3837-4e60-8c7f-9ecd5ef4fe25",
+                      "revision": "r1",
+                      "run": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380",
+                      "sha256": "4528892cc53251c0ede4701057a65f56ea5661dd0f53983fbcab52c2290072e2"
+                    },
+                    "capability": "verified-research@1",
+                    "interpreter_revision": null,
+                    "release_receipt": {
+                      "accepted_effect_count": 1,
+                      "attempts": 1,
+                      "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                      "release_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380:release:r1",
+                      "revision": "r1",
+                      "run_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380",
+                      "sha256": "4528892cc53251c0ede4701057a65f56ea5661dd0f53983fbcab52c2290072e2"
+                    },
+                    "report": {
+                      "author": "factory:a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380",
+                      "content": "{\"assessment\":\"documented limits addressed\",\"join\":{\"branch_artifact_sha256\":{\"counter_alpha\":\"0f0537a3c539af2e1170a49ee7d84d486900ea3062e0123f856f9a3782f70420\",\"source_alpha\":\"29ce44469e5b0119d78391ccd0da62a9853b03e9f35c26db2c4e61a576708c85\",\"source_beta\":\"4c8e364e61ed4b3b77965608948db2a2070e42bea2b70ff62a43c40d547faa39\"},\"claims\":[{\"branch_instance\":\"source_alpha\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_alpha\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_alpha\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_alpha\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":false,\"route_status\":\"clear\",\"run_id\":\"a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":true,\"revision\":\"r1\"}",
+                      "revision": "r1",
+                      "sha256": "4528892cc53251c0ede4701057a65f56ea5661dd0f53983fbcab52c2290072e2"
+                    },
+                    "run_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d",
+                    "status": "accepted"
+                  },
+                  "kind": "data"
+                }
+              ]
+            }
+          ],
+          "contextId": "5012163a-6f0e-4c7b-8e28-14a66497aade",
+          "id": "1f82b64d-71bc-4e6a-b311-3d966fda2519",
+          "kind": "task",
+          "metadata": {
+            "authorized_input_actor": "fixture-operator",
+            "capability": "verified-research@1",
+            "harness_identity": "a59a41ef-e037-4b39-b05a-05aa618b9750",
+            "harness_incarnation": 2,
+            "interpreter_build": "b-05b5760359e6",
+            "manifest_digest": "dd446ae0fe42b25fef4946450cf43c0b8d9f5c3377899721d777a2e105ebf8a6",
+            "package_digest": "e78ffa05b934476cb618e16b3340ede586b306792055f0e5831b6aaf2cb9e348",
+            "publication_label": "v2",
+            "run_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d",
+            "run_inputs_digest": "160f1d38295583c88486728087391f09d73f1ddd0f8d34691475ad57dea99ede"
+          },
+          "status": {
+            "state": "completed"
+          }
+        }
+      }
+    },
+    "agent_card": {
+      "level": "real",
+      "value": {
+        "capabilities": {
+          "streaming": false
+        },
+        "defaultInputModes": [
+          "application/json"
+        ],
+        "defaultOutputModes": [
+          "application/json"
+        ],
+        "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+        "name": "research-factory",
+        "preferredTransport": "JSONRPC",
+        "protocolVersion": "0.3.0",
+        "security": [
+          {
+            "fixtureBearer": []
+          }
+        ],
+        "securitySchemes": {
+          "fixtureBearer": {
+            "scheme": "bearer",
+            "type": "http"
+          }
+        },
+        "skills": [
+          {
+            "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+            "id": "verified-research@1",
+            "name": "Verified research",
+            "tags": [
+              "research",
+              "verified"
+            ]
+          }
+        ],
+        "url": "http://127.0.0.1:44830/",
+        "version": "0.1.0"
+      }
+    },
+    "api_key_provider": {
+      "level": "synthetic",
+      "value": {
+        "consulted": false,
+        "observed_model_calls": 4,
+        "selected_provider": "synthetic-loopback",
+        "synthetic_api_key_poisoned": true
+      }
+    },
+    "approval": {
+      "level": "real",
+      "value": {
+        "approver": "director:a59a41ef-e037-4b39-b05a-05aa618b9750",
+        "package_digest": "e78ffa05b934476cb618e16b3340ede586b306792055f0e5831b6aaf2cb9e348",
+        "policy": "auto",
+        "status": "approved"
+      }
+    },
+    "authoring": {
+      "level": "synthetic",
+      "value": {
+        "abort": null,
+        "acceptance": {
+          "ok": true,
+          "reason": "accepted"
+        },
+        "admin_exit_code": 0,
+        "first_pass_valid": false,
+        "invalid_rounds": [
+          {
+            "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+            "errors": [
+              {
+                "code": "validation_error",
+                "message": "route must cover each typed value",
+                "missing_cases": [
+                  "requires_scope"
+                ],
+                "path": "child.nodes.route_scope.cases"
+              }
+            ],
+            "round": 1,
+            "valid": false
+          }
+        ],
+        "limits": {
+          "deadline_seconds": 600,
+          "max_model_calls": 12,
+          "max_rounds": 4,
+          "max_tool_calls": 24
+        },
+        "model": {
+          "billing": "none",
+          "id": "gpt-6-sol",
+          "kind": "broker",
+          "live": false,
+          "provider": "synthetic-loopback"
+        },
+        "model_calls": 4,
+        "provider_selection": {
+          "live_model_available": true,
+          "provider": "synthetic-loopback",
+          "reason": "synthetic-loopback broker available",
+          "refusal_reason": null
+        },
+        "round_count": 2,
+        "rounds": [
+          {
+            "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+            "errors": [
+              {
+                "code": "validation_error",
+                "message": "route must cover each typed value",
+                "missing_cases": [
+                  "requires_scope"
+                ],
+                "path": "child.nodes.route_scope.cases"
+              }
+            ],
+            "round": 1,
+            "valid": false
+          },
+          {
+            "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+            "errors": [],
+            "round": 2,
+            "valid": true
+          }
+        ],
+        "selection_seconds": 0.0,
+        "status": "published",
+        "submitted_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+        "tool_call_count": 3,
+        "tool_calls": [
+          "describe_vocabulary",
+          "validate_draft",
+          "submit_draft"
+        ]
+      }
+    },
+    "broker_health": {
+      "level": "real",
+      "value": {
+        "account": "sha256:5d8719a9b57c",
+        "expires_at": 4102444800000,
+        "originator": "exomachina",
+        "pi_ai": "0.87.1",
+        "pid": 62645,
+        "provider": "openai-codex",
+        "signed_in": true
+      }
+    },
+    "broker_start": {
+      "level": "real",
+      "value": {
+        "already_running": false,
+        "events": [
+          {
+            "at": 1790216258.588419,
+            "caller_pid": 62643,
+            "event": "start",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:17:39.116Z",
+            "event": "start",
+            "pid": 62645
+          },
+          {
+            "at": "2026-09-24T02:17:39.177Z",
+            "duration_ms": 51,
+            "event": "stream",
+            "id": "37df9585-de93-4bdc-a2ba-e4d6132d0f86",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790216259.181289,
+            "caller_pid": 62643,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:17:39.190Z",
+            "duration_ms": 5,
+            "event": "stream",
+            "id": "841b13b8-a7b1-4a8a-acd3-5b255be6e815",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790216259.193509,
+            "caller_pid": 62643,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:17:39.205Z",
+            "duration_ms": 10,
+            "event": "stream",
+            "id": "7f4def39-1a49-42a4-9ea3-1d8767752fa6",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790216259.20863,
+            "caller_pid": 62643,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:17:39.214Z",
+            "duration_ms": 4,
+            "event": "stream",
+            "id": "109c6084-0e9a-4194-a745-46c4efea9d12",
+            "model": "gpt-6-sol"
+          }
+        ]
+      }
+    },
+    "cold_start": {
+      "level": "real",
+      "value": {
+        "broker_events_before": [],
+        "broker_ready_before": false,
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "capability": "verified-research@1",
+          "identity": "a59a41ef-e037-4b39-b05a-05aa618b9750",
+          "incarnation": 2,
+          "name": "research-factory",
+          "role": "factory-harness",
+          "runner_running": false,
+          "startup": {
+            "recovery": null,
+            "runner_started_at_startup": false
+          },
+          "unfinished_runs": 0
+        },
+        "runner_ready_before": false
+      }
+    },
+    "director_model": {
+      "level": "synthetic",
+      "value": {
+        "broker_scope": "authoring only",
+        "director_model": "fixture",
+        "implementation": "ToolCallingModelFixture"
+      }
+    },
+    "leak_scan": {
+      "level": "real",
+      "value": {
+        "bytes_scanned": 79890394,
+        "candidate_file_count": 104,
+        "control_directory": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control",
+        "control_included": true,
+        "evidence_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-synthetic-loopback.json",
+        "excluded": [
+          "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4/model/secrets/openai-codex.json"
+        ],
+        "files_scanned": 2012,
+        "histories_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-synthetic-loopback",
+        "hits": [],
+        "input_path_count": 109,
+        "model_home": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4/model",
+        "scan_purpose": "scenario-store token absent outside canonical store"
+      }
+    },
+    "leak_scan_positive_control": {
+      "level": "synthetic",
+      "value": {
+        "bare_access": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/bare-access.txt",
+        "canary": "fresh synthetic credential; no live token used",
+        "control_directory": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control",
+        "copied_credential": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/credential-copy.json",
+        "fixture_model_home": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/model",
+        "scan": {
+          "bytes_scanned": 736,
+          "excluded": [
+            "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/model/secrets/openai-codex.json"
+          ],
+          "files_scanned": 3,
+          "hits": [
+            {
+              "kind": "access",
+              "path": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_0",
+              "path": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_1",
+              "path": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_2",
+              "path": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access",
+              "path": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_0",
+              "path": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_1",
+              "path": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_2",
+              "path": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "refresh",
+              "path": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4-leak-control/credential-copy.json"
+            }
+          ]
+        }
+      }
+    },
+    "mock_headers": {
+      "level": "synthetic",
+      "value": [
+        {
+          "kind": "request",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "authoring",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "request",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "authoring",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "request",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "authoring",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "request",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "authoring",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        }
+      ]
+    },
+    "originator_acceptance": {
+      "level": "synthetic",
+      "value": {
+        "result": "success"
+      }
+    },
+    "pinned_run": {
+      "level": "real",
+      "value": {
+        "build_id": "b-05b5760359e6",
+        "closed": 1,
+        "label": "v2",
+        "manifest_digest": "dd446ae0fe42b25fef4946450cf43c0b8d9f5c3377899721d777a2e105ebf8a6",
+        "package_digest": "e78ffa05b934476cb618e16b3340ede586b306792055f0e5831b6aaf2cb9e348",
+        "run_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d",
+        "task_id": "1f82b64d-71bc-4e6a-b311-3d966fda2519"
+      }
+    },
+    "release": {
+      "level": "synthetic",
+      "value": {
+        "effects": [
+          {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+            "fingerprint": "47e25ed5e1b30bf45587a8073e30ff0c4948364a4704855f553d3cc4f7754dee",
+            "release_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380:release:r1",
+            "revision": "r1",
+            "run_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380",
+            "sha256": "4528892cc53251c0ede4701057a65f56ea5661dd0f53983fbcab52c2290072e2"
+          }
+        ],
+        "transport": "http-release (fixture)"
+      }
+    },
+    "temporal": {
+      "level": "real",
+      "value": {
+        "parent_status_query": {
+          "authoritative_acceptance": {
+            "attempt": 1,
+            "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+            "quality_task_id": "9f0de0c2-162d-4f51-a01b-c27d45f23a6f",
+            "reviewer": "738c02d7-3837-4e60-8c7f-9ecd5ef4fe25",
+            "revision": "r1",
+            "run": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380",
+            "sha256": "4528892cc53251c0ede4701057a65f56ea5661dd0f53983fbcab52c2290072e2"
+          },
+          "authorized_actor": "fixture-operator",
+          "child_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380",
+          "completed": [
+            "invoke_child"
+          ],
+          "current_revision": null,
+          "current_sha256": null,
+          "deadline": null,
+          "definition_digest": "ee28f3cf37f647aac8e0c0afd6a81b24b9680458776c89da1235f0d15ced087c",
+          "incident": null,
+          "input_authority": {
+            "question": {
+              "actor": "fixture-operator",
+              "source": "caller"
+            }
+          },
+          "interpreter_build": "b-05b5760359e6",
+          "manifest_digest": "dd446ae0fe42b25fef4946450cf43c0b8d9f5c3377899721d777a2e105ebf8a6",
+          "node": "done",
+          "owner_epoch": 2,
+          "package_digest": "e78ffa05b934476cb618e16b3340ede586b306792055f0e5831b6aaf2cb9e348",
+          "phase": "accepted",
+          "quality_verdict": null,
+          "release_receipt": {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+            "release_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380:release:r1",
+            "revision": "r1",
+            "run_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380",
+            "sha256": "4528892cc53251c0ede4701057a65f56ea5661dd0f53983fbcab52c2290072e2"
+          },
+          "repair_count": 0,
+          "run": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d",
+          "run_inputs": {
+            "question": "Is the documented capability usable now?"
+          },
+          "run_inputs_digest": "160f1d38295583c88486728087391f09d73f1ddd0f8d34691475ad57dea99ede",
+          "unresolved": null
+        },
+        "workflows": {
+          "child": {
+            "event_count": 44,
+            "history_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-synthetic-loopback/child.json",
+            "status": "COMPLETED",
+            "versioning": {
+              "behavior": 1,
+              "build_id": "b-05b5760359e6",
+              "deployment": "exo-factory"
+            },
+            "workflow_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d:child:edd46c74d380"
+          },
+          "parent": {
+            "event_count": 14,
+            "history_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-synthetic-loopback/parent.json",
+            "status": "COMPLETED",
+            "versioning": {
+              "behavior": 1,
+              "build_id": "b-05b5760359e6",
+              "deployment": "exo-factory"
+            },
+            "workflow_id": "a59a41ef-e037-4b39-b05a-05aa618b9750.574e200fbc7596bda62d"
+          }
+        }
+      }
+    },
+    "testbed": {
+      "level": "synthetic",
+      "value": {
+        "bindings": {
+          "counter_alpha": {
+            "approved": true,
+            "identity": "52d9cdf3-db6d-479f-8b87-f2606f5b40c9",
+            "role": "capability",
+            "url": "http://127.0.0.1:45302"
+          },
+          "counter_beta": {
+            "approved": true,
+            "identity": "e52f1b71-77ce-452b-891a-fd12efbf4d1e",
+            "role": "capability",
+            "url": "http://127.0.0.1:45303"
+          },
+          "quality": {
+            "approved": true,
+            "identity": "738c02d7-3837-4e60-8c7f-9ecd5ef4fe25",
+            "role": "quality",
+            "url": "http://127.0.0.1:45304"
+          },
+          "release": {
+            "approved": true,
+            "identity": "c92780ca-7013-47e2-8aca-90a2ea4a1881",
+            "role": "release",
+            "url": "http://127.0.0.1:45305"
+          },
+          "source_alpha": {
+            "approved": true,
+            "identity": "6e2323aa-f3ba-4587-b89a-fed16c81406d",
+            "role": "capability",
+            "url": "http://127.0.0.1:45300"
+          },
+          "source_beta": {
+            "approved": true,
+            "identity": "5add5570-67bb-40d8-9a8e-cac6caf7dfc0",
+            "role": "capability",
+            "url": "http://127.0.0.1:45301"
+          }
+        },
+        "health": {
+          "counter_alpha": {
+            "a2a_protocol": "0.3.0",
+            "identity": "52d9cdf3-db6d-479f-8b87-f2606f5b40c9",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "counter_beta": {
+            "a2a_protocol": "0.3.0",
+            "identity": "e52f1b71-77ce-452b-891a-fd12efbf4d1e",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "quality": {
+            "a2a_protocol": "0.3.0",
+            "identity": "738c02d7-3837-4e60-8c7f-9ecd5ef4fe25",
+            "incarnation": 1,
+            "role": "quality"
+          },
+          "release": {
+            "identity": "c92780ca-7013-47e2-8aca-90a2ea4a1881",
+            "incarnation": 1,
+            "mode": "participating"
+          },
+          "source_alpha": {
+            "a2a_protocol": "0.3.0",
+            "identity": "6e2323aa-f3ba-4587-b89a-fed16c81406d",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "source_beta": {
+            "a2a_protocol": "0.3.0",
+            "identity": "5add5570-67bb-40d8-9a8e-cac6caf7dfc0",
+            "incarnation": 1,
+            "role": "capability"
+          }
+        },
+        "pids": {
+          "counter_alpha": {
+            "identity": "52d9cdf3-db6d-479f-8b87-f2606f5b40c9",
+            "pid": 62635,
+            "port": 45302
+          },
+          "counter_beta": {
+            "identity": "e52f1b71-77ce-452b-891a-fd12efbf4d1e",
+            "pid": 62636,
+            "port": 45303
+          },
+          "quality": {
+            "identity": "738c02d7-3837-4e60-8c7f-9ecd5ef4fe25",
+            "pid": 62638,
+            "port": 45304
+          },
+          "release": {
+            "identity": "c92780ca-7013-47e2-8aca-90a2ea4a1881",
+            "pid": 62639,
+            "port": 45305
+          },
+          "source_alpha": {
+            "identity": "6e2323aa-f3ba-4587-b89a-fed16c81406d",
+            "pid": 62633,
+            "port": 45300
+          },
+          "source_beta": {
+            "identity": "5add5570-67bb-40d8-9a8e-cac6caf7dfc0",
+            "pid": 62634,
+            "port": 45301
+          }
+        }
+      }
+    },
+    "v1_publication": {
+      "level": "real",
+      "value": {
+        "approval": {
+          "approver": "operator:fixture-operator",
+          "decision": "operator reviewed hand-written template",
+          "package_digest": "2cf541a152ad074bb2c85dca92ced2fc02458942a48bdb3d1d57e6447f979b50",
+          "policy": "human",
+          "status": "approved"
+        },
+        "publication": {
+          "build_id": "b-05b5760359e6",
+          "label": "v1",
+          "manifest_digest": "174aced0c213d39afc5c352e8c1a34347d0dc2fef74693cfe942ddc7cda32a75",
+          "package_digest": "2cf541a152ad074bb2c85dca92ced2fc02458942a48bdb3d1d57e6447f979b50"
+        },
+        "source": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/definitions/v1-template.json"
+      }
+    },
+    "v2_publication": {
+      "level": "real",
+      "value": {
+        "build_id": "b-05b5760359e6",
+        "label": "v2",
+        "manifest_digest": "dd446ae0fe42b25fef4946450cf43c0b8d9f5c3377899721d777a2e105ebf8a6",
+        "package_digest": "e78ffa05b934476cb618e16b3340ede586b306792055f0e5831b6aaf2cb9e348"
+      }
+    }
+  },
+  "cleanup_broker": "stopped",
+  "cleanup_errors": [],
+  "cleanup_harness_exit": -15,
+  "cleanup_mock_exit": -15,
+  "cleanup_runner": {
+    "address": "127.0.0.1:44102",
+    "builds": {},
+    "namespace": "exomachina",
+    "pid": null,
+    "pids": {},
+    "rss_kib": {},
+    "running": false,
+    "worker_rss_kib": {}
+  },
+  "cleanup_testbed": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  },
+  "director_model": "fixture",
+  "finished_at": 1790216281.460882,
+  "home": "/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4",
+  "limits": {
+    "deadline_seconds": 600,
+    "max_model_calls": 12,
+    "max_rounds": 4,
+    "max_tool_calls": 24
+  },
+  "model": {
+    "billing": "none",
+    "live": false,
+    "provider": "synthetic-loopback"
+  },
+  "provider": "synthetic-loopback",
+  "release": "http-release (fixture)",
+  "started_at": 1790216247.094327,
+  "status": "pass",
+  "wall_times": {
+    "level": "real",
+    "value": {
+      "author_and_publish_v2_s": 1.837,
+      "history_export_s": 0.215,
+      "leak_scan_s": 0.8,
+      "provision_and_publish_v1_s": 8.372,
+      "selection_seconds": 0.0,
+      "total_s": 34.367,
+      "v2_a2a_terminal_s": 17.633
+    }
+  }
+}

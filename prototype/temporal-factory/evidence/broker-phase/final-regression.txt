@@ -1,0 +1,16 @@
+SHA: 7ac775f2c3fdbcf4bc0f64b062f18da09bc8333b
+UTC: 2026-09-24T02:05:27Z
+Preflight command: rg -n 'DEFAULT_HOME|\.exomachina|EXO_MODEL_HOME|EXO_CODEX_BASE_URL' broker/test tests broker/testing/mock-codex.mjs scenarios/live_authoring.py
+Preflight: PASS; default-home references reviewed; HOME=/tmp/exo-final-regression-home.6i1ME6 for all checks; live default-store accesses 0.
+Command: env -u EXO_MODEL_HOME -u EXO_CODEX_BASE_URL HOME='/tmp/exo-final-regression-home.6i1ME6' git rev-parse HEAD
+PASS: 1 SHA; 7ac775f2c3fdbcf4bc0f64b062f18da09bc8333b.
+Command: env -u EXO_MODEL_HOME -u EXO_CODEX_BASE_URL HOME='/tmp/exo-final-regression-home.6i1ME6' git status --short -- src broker tests scenarios
+PASS: 0 changed paths.
+Command: env -u EXO_MODEL_HOME -u EXO_CODEX_BASE_URL HOME='/tmp/exo-final-regression-home.6i1ME6' node --test broker/test/*.test.mjs
+PASS: 18 tests; 0 failures; 0 skipped.
+Command: env -u EXO_MODEL_HOME -u EXO_CODEX_BASE_URL HOME='/tmp/exo-final-regression-home.6i1ME6' /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python -B -m unittest discover -s tests
+PASS: 80 tests; 0 failures.
+Command: env -u EXO_MODEL_HOME -u EXO_CODEX_BASE_URL HOME='/tmp/exo-final-regression-home.6i1ME6' node broker/testing/mock-codex.mjs --self-check
+PASS: 6 controls; 0 failures.
+Command: env -u EXO_MODEL_HOME -u EXO_CODEX_BASE_URL HOME='/tmp/exo-final-regression-home.6i1ME6' /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python -B scenarios/live_authoring.py --self-test-live-guard
+PASS: 1 guard check; 0 failures; 0 loopback requests.

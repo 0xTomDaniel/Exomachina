@@ -1,0 +1,759 @@
+{
+  "claims": {
+    "a2a_task": {
+      "level": "real",
+      "value": {
+        "send_state": "working",
+        "task": {
+          "_observed_states": [
+            "working",
+            "completed"
+          ],
+          "artifacts": [
+            {
+              "artifactId": "a004095800bda24a8066af045186b16e3f6fc40da8c2393f0884404d90970bfb",
+              "parts": [
+                {
+                  "data": {
+                    "acceptance": {
+                      "attempt": 1,
+                      "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                      "quality_task_id": "f4cc7aaf-502f-4a0e-88c6-87a79efaf8ab",
+                      "reviewer": "bf990049-8036-4400-afa2-0500558016d9",
+                      "revision": "r1",
+                      "run": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380",
+                      "sha256": "eca00fda9153e939b36af95cd46e42567e500b2c1f43232a71eaa04a2145acea"
+                    },
+                    "capability": "verified-research@1",
+                    "interpreter_revision": null,
+                    "release_receipt": {
+                      "accepted_effect_count": 1,
+                      "attempts": 1,
+                      "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                      "release_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380:release:r1",
+                      "revision": "r1",
+                      "run_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380",
+                      "sha256": "eca00fda9153e939b36af95cd46e42567e500b2c1f43232a71eaa04a2145acea"
+                    },
+                    "report": {
+                      "author": "factory:4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380",
+                      "content": "{\"assessment\":\"documented limits addressed\",\"join\":{\"branch_artifact_sha256\":{\"counter_alpha\":\"0f0537a3c539af2e1170a49ee7d84d486900ea3062e0123f856f9a3782f70420\",\"source_alpha\":\"29ce44469e5b0119d78391ccd0da62a9853b03e9f35c26db2c4e61a576708c85\",\"source_beta\":\"4c8e364e61ed4b3b77965608948db2a2070e42bea2b70ff62a43c40d547faa39\"},\"claims\":[{\"branch_instance\":\"source_alpha\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_alpha\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_alpha\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_alpha\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":false,\"route_status\":\"clear\",\"run_id\":\"4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":true,\"revision\":\"r1\"}",
+                      "revision": "r1",
+                      "sha256": "eca00fda9153e939b36af95cd46e42567e500b2c1f43232a71eaa04a2145acea"
+                    },
+                    "run_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d",
+                    "status": "accepted"
+                  },
+                  "kind": "data"
+                }
+              ]
+            }
+          ],
+          "contextId": "ed4b6b16-9398-4526-b697-486f829b8b70",
+          "id": "f53f7bb8-ee23-4b4c-a6ab-326b07b37906",
+          "kind": "task",
+          "metadata": {
+            "authorized_input_actor": "fixture-operator",
+            "capability": "verified-research@1",
+            "harness_identity": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e",
+            "harness_incarnation": 2,
+            "interpreter_build": "b-05b5760359e6",
+            "manifest_digest": "847d65de4c163649e461b5da330d041977c7ab79314401b83c135fdc240a42a9",
+            "package_digest": "c4c07c37f030d2dc4a6909979dab38af6e22bfe4f6c80ba801eb3ee62eb26783",
+            "publication_label": "v2",
+            "run_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d",
+            "run_inputs_digest": "160f1d38295583c88486728087391f09d73f1ddd0f8d34691475ad57dea99ede"
+          },
+          "status": {
+            "state": "completed"
+          }
+        }
+      }
+    },
+    "agent_card": {
+      "level": "real",
+      "value": {
+        "capabilities": {
+          "streaming": false
+        },
+        "defaultInputModes": [
+          "application/json"
+        ],
+        "defaultOutputModes": [
+          "application/json"
+        ],
+        "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+        "name": "research-factory",
+        "preferredTransport": "JSONRPC",
+        "protocolVersion": "0.3.0",
+        "security": [
+          {
+            "fixtureBearer": []
+          }
+        ],
+        "securitySchemes": {
+          "fixtureBearer": {
+            "scheme": "bearer",
+            "type": "http"
+          }
+        },
+        "skills": [
+          {
+            "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+            "id": "verified-research@1",
+            "name": "Verified research",
+            "tags": [
+              "research",
+              "verified"
+            ]
+          }
+        ],
+        "url": "http://127.0.0.1:44830/",
+        "version": "0.1.0"
+      }
+    },
+    "api_key_provider": {
+      "level": "real",
+      "value": {
+        "consulted": false,
+        "observed_model_calls": 4,
+        "selected_provider": "codex-subscription",
+        "synthetic_api_key_poisoned": false
+      }
+    },
+    "approval": {
+      "level": "real",
+      "value": {
+        "approver": "director:4693ce8a-5fe0-488f-bcd0-c7bf752e700e",
+        "package_digest": "c4c07c37f030d2dc4a6909979dab38af6e22bfe4f6c80ba801eb3ee62eb26783",
+        "policy": "auto",
+        "status": "approved"
+      }
+    },
+    "authoring": {
+      "level": "real",
+      "value": {
+        "abort": null,
+        "acceptance": {
+          "ok": true,
+          "reason": "accepted"
+        },
+        "admin_exit_code": 0,
+        "first_pass_valid": true,
+        "invalid_rounds": [],
+        "limits": {
+          "deadline_seconds": 600,
+          "max_model_calls": 12,
+          "max_rounds": 4,
+          "max_tool_calls": 24
+        },
+        "model": {
+          "billing": "subscription",
+          "id": "gpt-6-sol",
+          "kind": "broker",
+          "live": true,
+          "provider": "codex-subscription"
+        },
+        "model_calls": 4,
+        "provider_selection": {
+          "live_model_available": true,
+          "provider": "codex-subscription",
+          "reason": "codex-subscription broker available",
+          "refusal_reason": null
+        },
+        "round_count": 1,
+        "rounds": [
+          {
+            "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+            "errors": [],
+            "round": 1,
+            "valid": true
+          }
+        ],
+        "selection_seconds": 0.002,
+        "status": "published",
+        "submitted_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+        "tool_call_count": 3,
+        "tool_calls": [
+          "describe_vocabulary",
+          "validate_draft",
+          "submit_draft"
+        ]
+      }
+    },
+    "broker_health": {
+      "level": "real",
+      "value": {
+        "account": "sha256:188b022d6e97",
+        "expires_at": 1791079397973,
+        "originator": "exomachina",
+        "pi_ai": "0.87.1",
+        "pid": 59833,
+        "provider": "openai-codex",
+        "signed_in": true
+      }
+    },
+    "broker_start": {
+      "level": "real",
+      "value": {
+        "already_running": true,
+        "events": [
+          {
+            "at": 1790216322.63528,
+            "caller_pid": 62819,
+            "event": "attach",
+            "reason": "authoring-selection"
+          },
+          {
+            "at": 1790216322.6423979,
+            "caller_pid": 62819,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:18:44.750Z",
+            "duration_ms": 2107,
+            "event": "stream",
+            "id": "5fdea1da-746b-4099-a62d-fc0d229185a4",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790216324.752684,
+            "caller_pid": 62819,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:18:57.167Z",
+            "duration_ms": 12412,
+            "event": "stream",
+            "id": "ee8d0bdc-0a18-4b7c-bd21-97644b25dddb",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790216337.171322,
+            "caller_pid": 62819,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:19:07.978Z",
+            "duration_ms": 10805,
+            "event": "stream",
+            "id": "9c4ae5d3-dbec-4a60-9b90-21d88f2d7618",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790216347.981594,
+            "caller_pid": 62819,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:19:14.654Z",
+            "duration_ms": 6667,
+            "event": "stream",
+            "id": "1e616b01-66ff-4b1b-b7de-e23791b9a6ce",
+            "model": "gpt-6-sol"
+          }
+        ]
+      }
+    },
+    "broker_status": {
+      "level": "real",
+      "value": {
+        "account": "sha256:188b022d6e97",
+        "expired": false,
+        "expires_at": 1791079397973,
+        "signed_in": true
+      }
+    },
+    "cold_start": {
+      "level": "real",
+      "value": {
+        "broker_events_before": [
+          {
+            "at": "2026-09-24T02:03:17.581Z",
+            "event": "start",
+            "pid": 59833
+          },
+          {
+            "at": "2026-09-24T02:03:17.976Z",
+            "event": "refresh",
+            "expires_at_after": 1791079397973,
+            "expires_at_before": 1791079350578
+          },
+          {
+            "at": 1790215579.559129,
+            "caller_pid": 60816,
+            "event": "attach",
+            "reason": "authoring-selection"
+          },
+          {
+            "at": 1790215579.564224,
+            "caller_pid": 60816,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:06:23.539Z",
+            "duration_ms": 3974,
+            "event": "stream",
+            "id": "4ac3f04a-c861-4efe-b0b3-3a3859bdefde",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790215583.542089,
+            "caller_pid": 60816,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:06:34.072Z",
+            "duration_ms": 10528,
+            "event": "stream",
+            "id": "984799d2-f975-415f-9756-d37a27f9caf4",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790215594.0744588,
+            "caller_pid": 60816,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:06:44.332Z",
+            "duration_ms": 10254,
+            "event": "stream",
+            "id": "24a6a889-c5f3-4fda-8095-448b95c34327",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790215604.335402,
+            "caller_pid": 60816,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T02:06:46.728Z",
+            "duration_ms": 2389,
+            "event": "stream",
+            "id": "ea32aa2d-b02a-42e2-adc3-7ccb0ef46ad9",
+            "model": "gpt-6-sol"
+          }
+        ],
+        "broker_ready_before": true,
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "capability": "verified-research@1",
+          "identity": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e",
+          "incarnation": 2,
+          "name": "research-factory",
+          "role": "factory-harness",
+          "runner_running": false,
+          "startup": {
+            "recovery": null,
+            "runner_started_at_startup": false
+          },
+          "unfinished_runs": 0
+        },
+        "runner_ready_before": false
+      }
+    },
+    "director_model": {
+      "level": "synthetic",
+      "value": {
+        "broker_scope": "authoring only",
+        "director_model": "fixture",
+        "implementation": "ToolCallingModelFixture"
+      }
+    },
+    "leak_scan": {
+      "level": "real",
+      "value": {
+        "bytes_scanned": 80020032,
+        "candidate_file_count": 107,
+        "control_directory": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control",
+        "control_included": true,
+        "evidence_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-codex-subscription.json",
+        "excluded": [
+          "/Users/tomdaniel/.exomachina/model-broker/secrets/openai-codex.json"
+        ],
+        "files_scanned": 2011,
+        "histories_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-codex-subscription",
+        "hits": [],
+        "input_path_count": 112,
+        "model_home": "/Users/tomdaniel/.exomachina/model-broker",
+        "scan_purpose": "real-store token absent outside canonical store"
+      }
+    },
+    "leak_scan_positive_control": {
+      "level": "synthetic",
+      "value": {
+        "bare_access": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/bare-access.txt",
+        "canary": "fresh synthetic credential; no live token used",
+        "control_directory": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control",
+        "copied_credential": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/credential-copy.json",
+        "fixture_model_home": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/model",
+        "scan": {
+          "bytes_scanned": 736,
+          "excluded": [
+            "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/model/secrets/openai-codex.json"
+          ],
+          "files_scanned": 3,
+          "hits": [
+            {
+              "kind": "access",
+              "path": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_0",
+              "path": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_1",
+              "path": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_2",
+              "path": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access",
+              "path": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_0",
+              "path": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_1",
+              "path": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_2",
+              "path": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "refresh",
+              "path": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e-leak-control/credential-copy.json"
+            }
+          ]
+        }
+      }
+    },
+    "originator_acceptance": {
+      "level": "real",
+      "value": {
+        "result": "success"
+      }
+    },
+    "pinned_run": {
+      "level": "real",
+      "value": {
+        "build_id": "b-05b5760359e6",
+        "closed": 1,
+        "label": "v2",
+        "manifest_digest": "847d65de4c163649e461b5da330d041977c7ab79314401b83c135fdc240a42a9",
+        "package_digest": "c4c07c37f030d2dc4a6909979dab38af6e22bfe4f6c80ba801eb3ee62eb26783",
+        "run_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d",
+        "task_id": "f53f7bb8-ee23-4b4c-a6ab-326b07b37906"
+      }
+    },
+    "real_token_absence": {
+      "level": "real",
+      "value": {
+        "control_directory_scanned": true,
+        "scope": "trial home, default model home, synthetic control, evidence, commit candidates",
+        "zero_hits": true
+      }
+    },
+    "release": {
+      "level": "synthetic",
+      "value": {
+        "effects": [
+          {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+            "fingerprint": "1532afd2a6ced020dda27673d6f7e793ad8523d7ad4822c7644ff29d8a75b976",
+            "release_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380:release:r1",
+            "revision": "r1",
+            "run_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380",
+            "sha256": "eca00fda9153e939b36af95cd46e42567e500b2c1f43232a71eaa04a2145acea"
+          }
+        ],
+        "transport": "http-release (fixture)"
+      }
+    },
+    "temporal": {
+      "level": "real",
+      "value": {
+        "parent_status_query": {
+          "authoritative_acceptance": {
+            "attempt": 1,
+            "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+            "quality_task_id": "f4cc7aaf-502f-4a0e-88c6-87a79efaf8ab",
+            "reviewer": "bf990049-8036-4400-afa2-0500558016d9",
+            "revision": "r1",
+            "run": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380",
+            "sha256": "eca00fda9153e939b36af95cd46e42567e500b2c1f43232a71eaa04a2145acea"
+          },
+          "authorized_actor": "fixture-operator",
+          "child_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380",
+          "completed": [
+            "invoke_child"
+          ],
+          "current_revision": null,
+          "current_sha256": null,
+          "deadline": null,
+          "definition_digest": "ee28f3cf37f647aac8e0c0afd6a81b24b9680458776c89da1235f0d15ced087c",
+          "incident": null,
+          "input_authority": {
+            "question": {
+              "actor": "fixture-operator",
+              "source": "caller"
+            }
+          },
+          "interpreter_build": "b-05b5760359e6",
+          "manifest_digest": "847d65de4c163649e461b5da330d041977c7ab79314401b83c135fdc240a42a9",
+          "node": "done",
+          "owner_epoch": 2,
+          "package_digest": "c4c07c37f030d2dc4a6909979dab38af6e22bfe4f6c80ba801eb3ee62eb26783",
+          "phase": "accepted",
+          "quality_verdict": null,
+          "release_receipt": {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+            "release_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380:release:r1",
+            "revision": "r1",
+            "run_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380",
+            "sha256": "eca00fda9153e939b36af95cd46e42567e500b2c1f43232a71eaa04a2145acea"
+          },
+          "repair_count": 0,
+          "run": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d",
+          "run_inputs": {
+            "question": "Is the documented capability usable now?"
+          },
+          "run_inputs_digest": "160f1d38295583c88486728087391f09d73f1ddd0f8d34691475ad57dea99ede",
+          "unresolved": null
+        },
+        "workflows": {
+          "child": {
+            "event_count": 44,
+            "history_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-codex-subscription/child.json",
+            "status": "COMPLETED",
+            "versioning": {
+              "behavior": 1,
+              "build_id": "b-05b5760359e6",
+              "deployment": "exo-factory"
+            },
+            "workflow_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d:child:edd46c74d380"
+          },
+          "parent": {
+            "event_count": 14,
+            "history_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-codex-subscription/parent.json",
+            "status": "COMPLETED",
+            "versioning": {
+              "behavior": 1,
+              "build_id": "b-05b5760359e6",
+              "deployment": "exo-factory"
+            },
+            "workflow_id": "4693ce8a-5fe0-488f-bcd0-c7bf752e700e.574e200fbc7596bda62d"
+          }
+        }
+      }
+    },
+    "testbed": {
+      "level": "synthetic",
+      "value": {
+        "bindings": {
+          "counter_alpha": {
+            "approved": true,
+            "identity": "e748fab3-6284-4154-806b-5ef1a962e8c0",
+            "role": "capability",
+            "url": "http://127.0.0.1:45302"
+          },
+          "counter_beta": {
+            "approved": true,
+            "identity": "7e501537-c6ad-4e17-a9a0-b9c916bd56d6",
+            "role": "capability",
+            "url": "http://127.0.0.1:45303"
+          },
+          "quality": {
+            "approved": true,
+            "identity": "bf990049-8036-4400-afa2-0500558016d9",
+            "role": "quality",
+            "url": "http://127.0.0.1:45304"
+          },
+          "release": {
+            "approved": true,
+            "identity": "5115a963-7ba9-470c-ac49-5cb4b624b907",
+            "role": "release",
+            "url": "http://127.0.0.1:45305"
+          },
+          "source_alpha": {
+            "approved": true,
+            "identity": "66b54472-f065-4d99-a110-8c0532428566",
+            "role": "capability",
+            "url": "http://127.0.0.1:45300"
+          },
+          "source_beta": {
+            "approved": true,
+            "identity": "6f94f4b3-d5b0-4477-8a7b-5b3b125b65cd",
+            "role": "capability",
+            "url": "http://127.0.0.1:45301"
+          }
+        },
+        "health": {
+          "counter_alpha": {
+            "a2a_protocol": "0.3.0",
+            "identity": "e748fab3-6284-4154-806b-5ef1a962e8c0",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "counter_beta": {
+            "a2a_protocol": "0.3.0",
+            "identity": "7e501537-c6ad-4e17-a9a0-b9c916bd56d6",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "quality": {
+            "a2a_protocol": "0.3.0",
+            "identity": "bf990049-8036-4400-afa2-0500558016d9",
+            "incarnation": 1,
+            "role": "quality"
+          },
+          "release": {
+            "identity": "5115a963-7ba9-470c-ac49-5cb4b624b907",
+            "incarnation": 1,
+            "mode": "participating"
+          },
+          "source_alpha": {
+            "a2a_protocol": "0.3.0",
+            "identity": "66b54472-f065-4d99-a110-8c0532428566",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "source_beta": {
+            "a2a_protocol": "0.3.0",
+            "identity": "6f94f4b3-d5b0-4477-8a7b-5b3b125b65cd",
+            "incarnation": 1,
+            "role": "capability"
+          }
+        },
+        "pids": {
+          "counter_alpha": {
+            "identity": "e748fab3-6284-4154-806b-5ef1a962e8c0",
+            "pid": 62812,
+            "port": 45302
+          },
+          "counter_beta": {
+            "identity": "7e501537-c6ad-4e17-a9a0-b9c916bd56d6",
+            "pid": 62813,
+            "port": 45303
+          },
+          "quality": {
+            "identity": "bf990049-8036-4400-afa2-0500558016d9",
+            "pid": 62814,
+            "port": 45304
+          },
+          "release": {
+            "identity": "5115a963-7ba9-470c-ac49-5cb4b624b907",
+            "pid": 62815,
+            "port": 45305
+          },
+          "source_alpha": {
+            "identity": "66b54472-f065-4d99-a110-8c0532428566",
+            "pid": 62810,
+            "port": 45300
+          },
+          "source_beta": {
+            "identity": "6f94f4b3-d5b0-4477-8a7b-5b3b125b65cd",
+            "pid": 62811,
+            "port": 45301
+          }
+        }
+      }
+    },
+    "v1_publication": {
+      "level": "real",
+      "value": {
+        "approval": {
+          "approver": "operator:fixture-operator",
+          "decision": "operator reviewed hand-written template",
+          "package_digest": "6067ff811e2e75509f075139b7c3b5bf3f75773c394c31eaae1be3bf515c4e61",
+          "policy": "human",
+          "status": "approved"
+        },
+        "publication": {
+          "build_id": "b-05b5760359e6",
+          "label": "v1",
+          "manifest_digest": "a439d4608482776f5110328b7861a30460e5e225c38e530d070306e791d2e499",
+          "package_digest": "6067ff811e2e75509f075139b7c3b5bf3f75773c394c31eaae1be3bf515c4e61"
+        },
+        "source": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/definitions/v1-template.json"
+      }
+    },
+    "v2_publication": {
+      "level": "real",
+      "value": {
+        "build_id": "b-05b5760359e6",
+        "label": "v2",
+        "manifest_digest": "847d65de4c163649e461b5da330d041977c7ab79314401b83c135fdc240a42a9",
+        "package_digest": "c4c07c37f030d2dc4a6909979dab38af6e22bfe4f6c80ba801eb3ee62eb26783"
+      }
+    }
+  },
+  "cleanup_errors": [],
+  "cleanup_harness_exit": -15,
+  "cleanup_runner": {
+    "address": "127.0.0.1:44102",
+    "builds": {},
+    "namespace": "exomachina",
+    "pid": null,
+    "pids": {},
+    "rss_kib": {},
+    "running": false,
+    "worker_rss_kib": {}
+  },
+  "cleanup_testbed": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  },
+  "director_model": "fixture",
+  "finished_at": 1790216377.3522902,
+  "home": "/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e",
+  "limits": {
+    "deadline_seconds": 600,
+    "max_model_calls": 12,
+    "max_rounds": 4,
+    "max_tool_calls": 24
+  },
+  "model": {
+    "billing": "subscription",
+    "live": true,
+    "provider": "codex-subscription"
+  },
+  "provider": "codex-subscription",
+  "release": "http-release (fixture)",
+  "started_at": 1790216311.634964,
+  "status": "pass",
+  "wall_times": {
+    "level": "real",
+    "value": {
+      "author_and_publish_v2_s": 33.332,
+      "history_export_s": 0.271,
+      "leak_scan_s": 1.016,
+      "provision_and_publish_v1_s": 8.09,
+      "selection_seconds": 0.002,
+      "total_s": 65.717,
+      "v2_a2a_terminal_s": 17.813
+    }
+  }
+}

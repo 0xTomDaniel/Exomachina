@@ -1,0 +1,92 @@
+{
+  "address": "127.0.0.1:44002",
+  "counts": {
+    "histories": 6,
+    "replay_fail": 0,
+    "replay_pass": 6
+  },
+  "errors": [],
+  "home": "/private/tmp/exo-proto-int-r2",
+  "namespace": "exomachina",
+  "out": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/histories-r2",
+  "workflows": [
+    {
+      "build_id": "b-05b5760359e6",
+      "history": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/histories-r2/c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8.json",
+      "negative_control": {
+        "build_id": "b-e3d01047763d",
+        "error": "NondeterminismError: Workflow activation completion failed: Failure { failure: Some(Failure { message: \"[TMPRL1100] Nondeterminism error: Fail workflow machine does not handle this event: HistoryEvent(id: 5, StartChildWorkflowExecutionInitiated)\", source: \"\", stack_trace: \"\", encoded_attributes: None, cause: None, failure_info: Some(ApplicationFailureInfo(ApplicationFailureInfo { r#type: \"\", non_retryable: false, details: None, next_retry_delay: None, category: Unspecified })) }), force_cause: NonDeterministicError }",
+        "status": "fail"
+      },
+      "replay": {
+        "status": "pass"
+      },
+      "workflow_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8"
+    },
+    {
+      "build_id": "b-05b5760359e6",
+      "history": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/histories-r2/c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8_child_911e5a4edd64.json",
+      "negative_control": {
+        "build_id": "b-e3d01047763d",
+        "error": "NondeterminismError: Workflow activation completion failed: Failure { failure: Some(Failure { message: \"[TMPRL1100] Nondeterminism error: Fail workflow machine does not handle this event: HistoryEvent(id: 5, ActivityTaskScheduled)\", source: \"\", stack_trace: \"\", encoded_attributes: None, cause: None, failure_info: Some(ApplicationFailureInfo(ApplicationFailureInfo { r#type: \"\", non_retryable: false, details: None, next_retry_delay: None, category: Unspecified })) }), force_cause: NonDeterministicError }",
+        "status": "fail"
+      },
+      "replay": {
+        "status": "pass"
+      },
+      "workflow_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.ca0ad4f050731a02fcd8:child:911e5a4edd64"
+    },
+    {
+      "build_id": "b-e3d01047763d",
+      "history": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/histories-r2/c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a.json",
+      "negative_control": {
+        "build_id": "b-05b5760359e6",
+        "error": "NondeterminismError: Workflow activation completion failed: Failure { failure: Some(Failure { message: \"[TMPRL1100] Nondeterminism error: Fail workflow machine does not handle this event: HistoryEvent(id: 5, StartChildWorkflowExecutionInitiated)\", source: \"\", stack_trace: \"\", encoded_attributes: None, cause: None, failure_info: Some(ApplicationFailureInfo(ApplicationFailureInfo { r#type: \"\", non_retryable: false, details: None, next_retry_delay: None, category: Unspecified })) }), force_cause: NonDeterministicError }",
+        "status": "fail"
+      },
+      "replay": {
+        "status": "pass"
+      },
+      "workflow_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a"
+    },
+    {
+      "build_id": "b-e3d01047763d",
+      "history": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/histories-r2/c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a_child_edd46c74d380.json",
+      "negative_control": {
+        "build_id": "b-05b5760359e6",
+        "error": "NondeterminismError: Workflow activation completion failed: Failure { failure: Some(Failure { message: \"[TMPRL1100] Nondeterminism error: Fail workflow machine does not handle this event: HistoryEvent(id: 5, ActivityTaskScheduled)\", source: \"\", stack_trace: \"\", encoded_attributes: None, cause: None, failure_info: Some(ApplicationFailureInfo(ApplicationFailureInfo { r#type: \"\", non_retryable: false, details: None, next_retry_delay: None, category: Unspecified })) }), force_cause: NonDeterministicError }",
+        "status": "fail"
+      },
+      "replay": {
+        "status": "pass"
+      },
+      "workflow_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.f722388d596f74ca287a:child:edd46c74d380"
+    },
+    {
+      "build_id": "b-05b5760359e6",
+      "history": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/histories-r2/c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3.json",
+      "negative_control": {
+        "build_id": "b-e3d01047763d",
+        "error": "NondeterminismError: Workflow activation completion failed: Failure { failure: Some(Failure { message: \"[TMPRL1100] Nondeterminism error: Fail workflow machine does not handle this event: HistoryEvent(id: 5, StartChildWorkflowExecutionInitiated)\", source: \"\", stack_trace: \"\", encoded_attributes: None, cause: None, failure_info: Some(ApplicationFailureInfo(ApplicationFailureInfo { r#type: \"\", non_retryable: false, details: None, next_retry_delay: None, category: Unspecified })) }), force_cause: NonDeterministicError }",
+        "status": "fail"
+      },
+      "replay": {
+        "status": "pass"
+      },
+      "workflow_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3"
+    },
+    {
+      "build_id": "b-05b5760359e6",
+      "history": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/histories-r2/c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3_child_911e5a4edd64.json",
+      "negative_control": {
+        "build_id": "b-e3d01047763d",
+        "error": "NondeterminismError: Workflow activation completion failed: Failure { failure: Some(Failure { message: \"[TMPRL1100] Nondeterminism error: Fail workflow machine does not handle this event: HistoryEvent(id: 5, ActivityTaskScheduled)\", source: \"\", stack_trace: \"\", encoded_attributes: None, cause: None, failure_info: Some(ApplicationFailureInfo(ApplicationFailureInfo { r#type: \"\", non_retryable: false, details: None, next_retry_delay: None, category: Unspecified })) }), force_cause: NonDeterministicError }",
+        "status": "fail"
+      },
+      "replay": {
+        "status": "pass"
+      },
+      "workflow_id": "c905870f-6467-4cbb-aad9-8be1d85b987b.63a59ec29163054e44b3:child:911e5a4edd64"
+    }
+  ]
+}

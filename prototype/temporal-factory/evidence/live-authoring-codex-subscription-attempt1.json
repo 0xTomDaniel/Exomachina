@@ -1,0 +1,433 @@
+{
+  "claims": {
+    "agent_card": {
+      "level": "real",
+      "value": {
+        "capabilities": {
+          "streaming": false
+        },
+        "defaultInputModes": [
+          "application/json"
+        ],
+        "defaultOutputModes": [
+          "application/json"
+        ],
+        "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+        "name": "research-factory",
+        "preferredTransport": "JSONRPC",
+        "protocolVersion": "0.3.0",
+        "security": [
+          {
+            "fixtureBearer": []
+          }
+        ],
+        "securitySchemes": {
+          "fixtureBearer": {
+            "scheme": "bearer",
+            "type": "http"
+          }
+        },
+        "skills": [
+          {
+            "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+            "id": "verified-research@1",
+            "name": "Verified research",
+            "tags": [
+              "research",
+              "verified"
+            ]
+          }
+        ],
+        "url": "http://127.0.0.1:44830/",
+        "version": "0.1.0"
+      }
+    },
+    "approval": {
+      "level": "real",
+      "value": {
+        "approver": "director:285d24d6-71ad-493b-8fdd-71b0058f6cc3",
+        "package_digest": "66934029ca324b117f85617ce97a0fd87f2402fd28b424cbf03a25b1c7f2896e",
+        "policy": "auto",
+        "status": "approved"
+      }
+    },
+    "authoring": {
+      "level": "real",
+      "value": {
+        "abort": null,
+        "admin_exit_code": 0,
+        "limits": {
+          "deadline_seconds": 600,
+          "max_model_calls": 12,
+          "max_rounds": 4,
+          "max_tool_calls": 24
+        },
+        "model": {
+          "billing": "subscription",
+          "id": "gpt-6-sol",
+          "kind": "broker",
+          "live": true,
+          "provider": "codex-subscription"
+        },
+        "model_calls": 4,
+        "provider_selection": {
+          "live_model_available": true,
+          "provider": "codex-subscription",
+          "reason": "codex-subscription broker available",
+          "refusal_reason": null
+        },
+        "rounds": [
+          {
+            "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+            "errors": [],
+            "round": 1,
+            "valid": true
+          }
+        ],
+        "selection_seconds": 0.001,
+        "status": "published",
+        "tool_call_count": 3,
+        "tool_calls": [
+          "describe_vocabulary",
+          "validate_draft",
+          "submit_draft"
+        ]
+      }
+    },
+    "broker_health": {
+      "level": "real",
+      "value": {
+        "account": "sha256:188b022d6e97",
+        "expires_at": 1791079397973,
+        "originator": "exomachina",
+        "pi_ai": "0.87.1",
+        "pid": 59833,
+        "provider": "openai-codex",
+        "signed_in": true
+      }
+    },
+    "broker_status": {
+      "level": "real",
+      "value": {
+        "account": "sha256:188b022d6e97",
+        "expired": false,
+        "expires_at": 1791079397973,
+        "signed_in": true
+      }
+    },
+    "cold_start": {
+      "level": "real",
+      "value": {
+        "broker_events_before": [
+          {
+            "at": "2026-09-24T02:03:17.581Z",
+            "event": "start",
+            "pid": 59833
+          },
+          {
+            "at": "2026-09-24T02:03:17.976Z",
+            "event": "refresh",
+            "expires_at_after": 1791079397973,
+            "expires_at_before": 1791079350578
+          }
+        ],
+        "broker_ready_before": true,
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "capability": "verified-research@1",
+          "identity": "285d24d6-71ad-493b-8fdd-71b0058f6cc3",
+          "incarnation": 2,
+          "name": "research-factory",
+          "role": "factory-harness",
+          "runner_running": false,
+          "startup": {
+            "recovery": null,
+            "runner_started_at_startup": false
+          },
+          "unfinished_runs": 0
+        },
+        "runner_ready_before": false
+      }
+    },
+    "leak_scan": {
+      "level": "real",
+      "value": {
+        "bytes_scanned": 1873544,
+        "candidate_file_count": 102,
+        "control_directory": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control",
+        "control_included": true,
+        "evidence_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-codex-subscription.json",
+        "excluded": [
+          "/Users/tomdaniel/.exomachina/model-broker/secrets/openai-codex.json"
+        ],
+        "files_scanned": 158,
+        "histories_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-codex-subscription",
+        "hits": [],
+        "input_path_count": 107,
+        "model_home": "/Users/tomdaniel/.exomachina/model-broker",
+        "scan_purpose": "real-store token absent outside canonical store"
+      }
+    },
+    "leak_scan_positive_control": {
+      "level": "synthetic",
+      "value": {
+        "bare_access": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/bare-access.txt",
+        "canary": "fresh synthetic credential; no live token used",
+        "control_directory": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control",
+        "copied_credential": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/credential-copy.json",
+        "fixture_model_home": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/model",
+        "scan": {
+          "bytes_scanned": 736,
+          "excluded": [
+            "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/model/secrets/openai-codex.json"
+          ],
+          "files_scanned": 3,
+          "hits": [
+            {
+              "kind": "access",
+              "path": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_0",
+              "path": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_1",
+              "path": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_2",
+              "path": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access",
+              "path": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_0",
+              "path": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_1",
+              "path": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_2",
+              "path": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "refresh",
+              "path": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1-leak-control/credential-copy.json"
+            }
+          ]
+        }
+      }
+    },
+    "originator_acceptance": {
+      "level": "real",
+      "value": {
+        "result": "success"
+      }
+    },
+    "real_token_absence": {
+      "level": "real",
+      "value": {
+        "control_directory_scanned": true,
+        "scope": "trial home, default model home, synthetic control, evidence, commit candidates",
+        "zero_hits": true
+      }
+    },
+    "testbed": {
+      "level": "synthetic",
+      "value": {
+        "bindings": {
+          "counter_alpha": {
+            "approved": true,
+            "identity": "feb93d4a-ba59-4ce8-bb35-3eb25b98954a",
+            "role": "capability",
+            "url": "http://127.0.0.1:45302"
+          },
+          "counter_beta": {
+            "approved": true,
+            "identity": "106acbc1-8f3e-4be0-9281-70657ff2effc",
+            "role": "capability",
+            "url": "http://127.0.0.1:45303"
+          },
+          "quality": {
+            "approved": true,
+            "identity": "8a876904-b4fe-4712-9ef6-591abf4926be",
+            "role": "quality",
+            "url": "http://127.0.0.1:45304"
+          },
+          "release": {
+            "approved": true,
+            "identity": "ac58b809-03fd-4938-bd5c-78c2649a4a42",
+            "role": "release",
+            "url": "http://127.0.0.1:45305"
+          },
+          "source_alpha": {
+            "approved": true,
+            "identity": "0d1916b1-cdaa-4255-8bcd-505c24ecb2fb",
+            "role": "capability",
+            "url": "http://127.0.0.1:45300"
+          },
+          "source_beta": {
+            "approved": true,
+            "identity": "b45bba95-5238-470f-8cb0-eb0a14ab6981",
+            "role": "capability",
+            "url": "http://127.0.0.1:45301"
+          }
+        },
+        "health": {
+          "counter_alpha": {
+            "a2a_protocol": "0.3.0",
+            "identity": "feb93d4a-ba59-4ce8-bb35-3eb25b98954a",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "counter_beta": {
+            "a2a_protocol": "0.3.0",
+            "identity": "106acbc1-8f3e-4be0-9281-70657ff2effc",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "quality": {
+            "a2a_protocol": "0.3.0",
+            "identity": "8a876904-b4fe-4712-9ef6-591abf4926be",
+            "incarnation": 1,
+            "role": "quality"
+          },
+          "release": {
+            "identity": "ac58b809-03fd-4938-bd5c-78c2649a4a42",
+            "incarnation": 1,
+            "mode": "participating"
+          },
+          "source_alpha": {
+            "a2a_protocol": "0.3.0",
+            "identity": "0d1916b1-cdaa-4255-8bcd-505c24ecb2fb",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "source_beta": {
+            "a2a_protocol": "0.3.0",
+            "identity": "b45bba95-5238-470f-8cb0-eb0a14ab6981",
+            "incarnation": 1,
+            "role": "capability"
+          }
+        },
+        "pids": {
+          "counter_alpha": {
+            "identity": "feb93d4a-ba59-4ce8-bb35-3eb25b98954a",
+            "pid": 60775,
+            "port": 45302
+          },
+          "counter_beta": {
+            "identity": "106acbc1-8f3e-4be0-9281-70657ff2effc",
+            "pid": 60776,
+            "port": 45303
+          },
+          "quality": {
+            "identity": "8a876904-b4fe-4712-9ef6-591abf4926be",
+            "pid": 60777,
+            "port": 45304
+          },
+          "release": {
+            "identity": "ac58b809-03fd-4938-bd5c-78c2649a4a42",
+            "pid": 60779,
+            "port": 45305
+          },
+          "source_alpha": {
+            "identity": "0d1916b1-cdaa-4255-8bcd-505c24ecb2fb",
+            "pid": 60773,
+            "port": 45300
+          },
+          "source_beta": {
+            "identity": "b45bba95-5238-470f-8cb0-eb0a14ab6981",
+            "pid": 60774,
+            "port": 45301
+          }
+        }
+      }
+    },
+    "v1_publication": {
+      "level": "real",
+      "value": {
+        "approval": {
+          "approver": "operator:fixture-operator",
+          "decision": "operator reviewed hand-written template",
+          "package_digest": "2d04bf7012ec9b02019b56c2d79a1cf287ac211badc34f468194ae8865dfafca",
+          "policy": "human",
+          "status": "approved"
+        },
+        "publication": {
+          "build_id": "b-05b5760359e6",
+          "label": "v1",
+          "manifest_digest": "cda0fb68d9fc4030e5f79a7246404038f8969c7fd11bcd7337f82643908fd10b",
+          "package_digest": "2d04bf7012ec9b02019b56c2d79a1cf287ac211badc34f468194ae8865dfafca"
+        },
+        "source": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/definitions/v1-template.json"
+      }
+    },
+    "v2_publication": {
+      "level": "real",
+      "value": {
+        "build_id": "b-05b5760359e6",
+        "label": "v2",
+        "manifest_digest": "7a1db1eba62e7c645ee5437f323f68b820c3a5f13ff9f39ecae1eb1fd7c65c53",
+        "package_digest": "66934029ca324b117f85617ce97a0fd87f2402fd28b424cbf03a25b1c7f2896e"
+      }
+    }
+  },
+  "cleanup_errors": [],
+  "cleanup_harness_exit": -15,
+  "cleanup_runner": {
+    "address": "127.0.0.1:44102",
+    "builds": {},
+    "namespace": "exomachina",
+    "pid": null,
+    "pids": {},
+    "rss_kib": {},
+    "running": false,
+    "worker_rss_kib": {}
+  },
+  "cleanup_testbed": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  },
+  "director_model": "fixture",
+  "failure": {
+    "error_type": "AssertionError",
+    "step": "broker authoring and v2 publication"
+  },
+  "finished_at": 1790215608.932319,
+  "home": "/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1",
+  "limits": {
+    "deadline_seconds": 600,
+    "max_model_calls": 12,
+    "max_rounds": 4,
+    "max_tool_calls": 24
+  },
+  "model": {
+    "billing": "subscription",
+    "live": true,
+    "provider": "codex-subscription"
+  },
+  "provider": "codex-subscription",
+  "release": "http-release (fixture)",
+  "started_at": 1790215569.405844,
+  "status": "fail",
+  "wall_times": {
+    "level": "real",
+    "value": {
+      "author_and_publish_v2_s": 28.278,
+      "leak_scan_s": 0.438,
+      "provision_and_publish_v1_s": 7.725,
+      "selection_seconds": 0.001,
+      "total_s": 39.526
+    }
+  }
+}

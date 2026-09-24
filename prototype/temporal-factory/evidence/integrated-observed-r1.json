@@ -1,0 +1,1597 @@
+{
+  "cold_before_harness": {
+    "runner_dir_has_pgdata": false,
+    "runner_events": [
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "build-added",
+        "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f",
+        "time": 1790193135.794423
+      }
+    ],
+    "runner_ready_file": false
+  },
+  "finished_at": 1790193160.9151921,
+  "harness_exit": -15,
+  "home": "/tmp/exo-proto-int-r1",
+  "path1": {
+    "agent_card": {
+      "capabilities": {
+        "streaming": false
+      },
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ],
+      "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+      "name": "research-factory",
+      "preferredTransport": "JSONRPC",
+      "protocolVersion": "0.3.0",
+      "security": [
+        {
+          "fixtureBearer": []
+        }
+      ],
+      "securitySchemes": {
+        "fixtureBearer": {
+          "scheme": "bearer",
+          "type": "http"
+        }
+      },
+      "skills": [
+        {
+          "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+          "id": "verified-research@1",
+          "name": "Verified research",
+          "tags": [
+            "research",
+            "verified"
+          ]
+        }
+      ],
+      "url": "http://127.0.0.1:44800/",
+      "version": "0.1.0"
+    },
+    "capability_actions": {
+      "counter_alpha": [
+        {
+          "action_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64:counter_alpha",
+          "artifact": "{\"author\":\"ffea9edb-e8b2-4139-a83a-bb85f791a17a\",\"content\":\"fixture-result:{\\\"instance\\\":\\\"counter_alpha\\\",\\\"kind\\\":\\\"counter_evidence@1\\\",\\\"objections\\\":[{\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"question\\\":\\\"Can the customer use the documented capability?\\\",\\\"scope_status\\\":\\\"clear\\\"}\",\"revision\":\"r2\",\"sha256\":\"84c3f830a2638a83ddb22cfc1c19b33c2f07d646bf3e3c3d03f2de683390102f\"}",
+          "attempts": 1,
+          "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+          "task_id": "d114e6fc-b0f5-4ae6-8df0-86fc5e9fea79"
+        }
+      ],
+      "counter_beta": [
+        {
+          "action_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64:counter_beta",
+          "artifact": "{\"author\":\"9f1d0e9d-c0b9-4209-b13e-c442add45f2e\",\"content\":\"fixture-result:{\\\"instance\\\":\\\"counter_beta\\\",\\\"kind\\\":\\\"counter_evidence@1\\\",\\\"objections\\\":[{\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"question\\\":\\\"Can the customer use the documented capability?\\\",\\\"scope_status\\\":\\\"requires_scope\\\"}\",\"revision\":\"r2\",\"sha256\":\"725fd458955e6f19c68031fec23cd22584117c0a04be121ca2441d1f33399f37\"}",
+          "attempts": 1,
+          "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+          "task_id": "8e772086-2bcb-44fe-8d63-b96ad103023d"
+        }
+      ],
+      "source_alpha": [
+        {
+          "action_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64:source_alpha",
+          "artifact": "{\"author\":\"d07592fa-a74c-49df-9fdd-c3bd1561da79\",\"content\":\"fixture-result:{\\\"availability\\\":\\\"documented\\\",\\\"claims\\\":[{\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"instance\\\":\\\"source_alpha\\\",\\\"kind\\\":\\\"source_evidence@1\\\",\\\"question\\\":\\\"Can the customer use the documented capability?\\\"}\",\"revision\":\"r2\",\"sha256\":\"cb2bce586fb2462b9c5bdcc174b2d9454404e1456d4fdc979cfd6173ec160d47\"}",
+          "attempts": 1,
+          "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+          "task_id": "b4dc9d91-7c79-487f-9020-647006fe280e"
+        }
+      ],
+      "source_beta": [
+        {
+          "action_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64:source_beta",
+          "artifact": "{\"author\":\"c84b0832-306b-4449-899f-5db63d1fc198\",\"content\":\"fixture-result:{\\\"availability\\\":\\\"documented\\\",\\\"claims\\\":[{\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"instance\\\":\\\"source_beta\\\",\\\"kind\\\":\\\"source_evidence@1\\\",\\\"question\\\":\\\"Can the customer use the documented capability?\\\"}\",\"revision\":\"r2\",\"sha256\":\"8503b5c2046a8180345af8ca0b488289eca30287285e3bef1a2ab30fb0fa92cf\"}",
+          "attempts": 1,
+          "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+          "task_id": "eeb6615f-f05e-463d-990d-7d7512b94dbb"
+        }
+      ]
+    },
+    "health_at_start": {
+      "a2a_protocol": "0.3.0",
+      "capability": "verified-research@1",
+      "identity": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b",
+      "incarnation": 2,
+      "name": "research-factory",
+      "role": "factory-harness",
+      "runner_running": false,
+      "startup": {
+        "recovery": null,
+        "runner_started_at_startup": false
+      },
+      "unfinished_runs": 0
+    },
+    "histories": {
+      "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3": {
+        "activities": [],
+        "event_count": 14,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          }
+        }
+      },
+      "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64": {
+        "activities": [
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "typed_join",
+            "19"
+          ],
+          [
+            "synthesize",
+            "25"
+          ],
+          [
+            "review",
+            "31"
+          ],
+          [
+            "synthesize",
+            "37"
+          ],
+          [
+            "review",
+            "43"
+          ],
+          [
+            "release",
+            "49"
+          ]
+        ],
+        "event_count": 56,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          }
+        }
+      }
+    },
+    "outcome_journal": [],
+    "parallel": {
+      "assign_count": 4,
+      "scheduled_in_one_workflow_task": true,
+      "workflow_task_completed_event_ids": [
+        "4"
+      ]
+    },
+    "parallel_remote_overlap": {
+      "all_started_before_first_completed": true,
+      "assign_completes": 4,
+      "assign_starts": 4
+    },
+    "quality_actions": [
+      {
+        "action_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64:quality:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64:quality:1:r1:cc2b69f30e0e0270d968215dadf19442026894a68296359f59a8fbe06f563913",
+        "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"141f63fb-6c11-4365-9b2e-4cc0d5f892ce\",\"revision\":\"r1\",\"sha256\":\"cc2b69f30e0e0270d968215dadf19442026894a68296359f59a8fbe06f563913\"}",
+        "attempts": 1,
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+        "task_id": "8769b5f5-ecaf-4fd6-b175-072cc6fbc452"
+      },
+      {
+        "action_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64:quality:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64:quality:2:r2:016b2c4d4c80071343b0617ae28c23088e3fc8378b3248df526586bec6910350",
+        "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"141f63fb-6c11-4365-9b2e-4cc0d5f892ce\",\"revision\":\"r2\",\"sha256\":\"016b2c4d4c80071343b0617ae28c23088e3fc8378b3248df526586bec6910350\"}",
+        "attempts": 1,
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+        "task_id": "80ff3dce-45f6-4b37-b021-f898d7faab33"
+      }
+    ],
+    "refetch_same_task": {
+      "artifacts": [
+        {
+          "artifactId": "947a70608c05c7e64e8fda6759b4c6bc86914380e719db6e063f61cdffa8bfeb",
+          "parts": [
+            {
+              "data": {
+                "acceptance": {
+                  "attempt": 2,
+                  "definition_digest": "911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb",
+                  "quality_task_id": "80ff3dce-45f6-4b37-b021-f898d7faab33",
+                  "reviewer": "141f63fb-6c11-4365-9b2e-4cc0d5f892ce",
+                  "revision": "r2",
+                  "run": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "sha256": "016b2c4d4c80071343b0617ae28c23088e3fc8378b3248df526586bec6910350"
+                },
+                "capability": "verified-research@1",
+                "release_receipt": {
+                  "accepted_effect_count": 1,
+                  "attempts": 1,
+                  "definition_digest": "911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb",
+                  "release_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64:release:r2",
+                  "revision": "r2",
+                  "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "sha256": "016b2c4d4c80071343b0617ae28c23088e3fc8378b3248df526586bec6910350"
+                },
+                "report": {
+                  "author": "factory:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "content": "{\"assessment\":\"documented limits addressed\",\"join\":{\"branch_artifact_sha256\":{\"counter_alpha\":\"84c3f830a2638a83ddb22cfc1c19b33c2f07d646bf3e3c3d03f2de683390102f\",\"counter_beta\":\"725fd458955e6f19c68031fec23cd22584117c0a04be121ca2441d1f33399f37\",\"source_alpha\":\"cb2bce586fb2462b9c5bdcc174b2d9454404e1456d4fdc979cfd6173ec160d47\",\"source_beta\":\"8503b5c2046a8180345af8ca0b488289eca30287285e3bef1a2ab30fb0fa92cf\"},\"claims\":[{\"branch_instance\":\"source_alpha\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_alpha\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_alpha\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_alpha\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"},{\"branch_instance\":\"counter_beta\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_beta\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":true,\"revision\":\"r2\"}",
+                  "revision": "r2",
+                  "sha256": "016b2c4d4c80071343b0617ae28c23088e3fc8378b3248df526586bec6910350"
+                },
+                "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3",
+                "status": "accepted"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "5183ea3b-962c-4048-93fe-a834e2d64e8c",
+      "id": "965195c8-4ee6-478a-84e9-4504b9a40470",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b",
+        "harness_incarnation": 2,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "ff3a37733f0445ebc1da22c66bd9197397bf481acfa32c5b7b2e8957d5b7a5c7",
+        "package_digest": "230dcb31e8f0d8a007d72ba2e4dc604b905bc5dc4e12c6959eff3ed019dae2f6",
+        "publication_label": "v1",
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3",
+        "run_inputs_digest": "138a081a917793bef45f42f1bd26fe6279497b664bf2ed5ff513c08e4149d82e"
+      },
+      "status": {
+        "state": "completed"
+      }
+    },
+    "releases": [
+      {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "definition_digest": "911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb",
+        "fingerprint": "d58d14d06a89c81b65958b9d203d12444de7990eb72778e3f57e8b865c289f80",
+        "release_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64:release:r2",
+        "revision": "r2",
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+        "sha256": "016b2c4d4c80071343b0617ae28c23088e3fc8378b3248df526586bec6910350"
+      }
+    ],
+    "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3",
+    "runner_events": [
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "build-added",
+        "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f",
+        "time": 1790193135.794423
+      },
+      {
+        "first": true,
+        "kind": "postgres-start",
+        "time": 1790193140.072341
+      },
+      {
+        "kind": "temporal-start",
+        "pid": 19019,
+        "time": 1790193140.081013
+      },
+      {
+        "kind": "namespace-create",
+        "namespace": "exomachina",
+        "time": 1790193141.0800781
+      },
+      {
+        "kind": "serve-ready",
+        "pid": 18975,
+        "time": 1790193141.082467
+      },
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "worker-start",
+        "pid": 19072,
+        "time": 1790193141.087285
+      },
+      {
+        "kind": "start",
+        "pid": 18975,
+        "reason": "factory-work:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3",
+        "time": 1790193141.179307
+      }
+    ],
+    "runner_running_before_work": false,
+    "send_reply_state": "input-required",
+    "task": {
+      "_observed_states": [
+        "input-required",
+        "completed"
+      ],
+      "artifacts": [
+        {
+          "artifactId": "947a70608c05c7e64e8fda6759b4c6bc86914380e719db6e063f61cdffa8bfeb",
+          "parts": [
+            {
+              "data": {
+                "acceptance": {
+                  "attempt": 2,
+                  "definition_digest": "911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb",
+                  "quality_task_id": "80ff3dce-45f6-4b37-b021-f898d7faab33",
+                  "reviewer": "141f63fb-6c11-4365-9b2e-4cc0d5f892ce",
+                  "revision": "r2",
+                  "run": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "sha256": "016b2c4d4c80071343b0617ae28c23088e3fc8378b3248df526586bec6910350"
+                },
+                "capability": "verified-research@1",
+                "release_receipt": {
+                  "accepted_effect_count": 1,
+                  "attempts": 1,
+                  "definition_digest": "911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb",
+                  "release_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64:release:r2",
+                  "revision": "r2",
+                  "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "sha256": "016b2c4d4c80071343b0617ae28c23088e3fc8378b3248df526586bec6910350"
+                },
+                "report": {
+                  "author": "factory:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64",
+                  "content": "{\"assessment\":\"documented limits addressed\",\"join\":{\"branch_artifact_sha256\":{\"counter_alpha\":\"84c3f830a2638a83ddb22cfc1c19b33c2f07d646bf3e3c3d03f2de683390102f\",\"counter_beta\":\"725fd458955e6f19c68031fec23cd22584117c0a04be121ca2441d1f33399f37\",\"source_alpha\":\"cb2bce586fb2462b9c5bdcc174b2d9454404e1456d4fdc979cfd6173ec160d47\",\"source_beta\":\"8503b5c2046a8180345af8ca0b488289eca30287285e3bef1a2ab30fb0fa92cf\"},\"claims\":[{\"branch_instance\":\"source_alpha\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_alpha\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_alpha\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_alpha\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"},{\"branch_instance\":\"counter_beta\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_beta\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3:child:911e5a4edd64\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":true,\"revision\":\"r2\"}",
+                  "revision": "r2",
+                  "sha256": "016b2c4d4c80071343b0617ae28c23088e3fc8378b3248df526586bec6910350"
+                },
+                "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3",
+                "status": "accepted"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "5183ea3b-962c-4048-93fe-a834e2d64e8c",
+      "id": "965195c8-4ee6-478a-84e9-4504b9a40470",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b",
+        "harness_incarnation": 2,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "ff3a37733f0445ebc1da22c66bd9197397bf481acfa32c5b7b2e8957d5b7a5c7",
+        "package_digest": "230dcb31e8f0d8a007d72ba2e4dc604b905bc5dc4e12c6959eff3ed019dae2f6",
+        "publication_label": "v1",
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3",
+        "run_inputs_digest": "138a081a917793bef45f42f1bd26fe6279497b664bf2ed5ff513c08e4149d82e"
+      },
+      "status": {
+        "state": "completed"
+      }
+    }
+  },
+  "path2": {
+    "abort_reply_task_id": "d19d36ae-e4c9-4b95-82f4-d12110bf8e43",
+    "authoring": {
+      "approval": {
+        "approver": "director:ea4a56b5-188f-4e37-b37b-0e2429a2e98b",
+        "package_digest": "9bd905405cf359ce1cc5bdd54a65b107f3971a2dec0005563dba0f35603260ca",
+        "policy": "auto",
+        "status": "approved"
+      },
+      "live": {
+        "live_model_available": false,
+        "reason": "ANTHROPIC_API_KEY absent; AWS credentials/configuration absent; OPENAI_API_KEY absent"
+      },
+      "outcome": {
+        "approval": {
+          "approver": "authoring-session",
+          "package_digest": "9bd905405cf359ce1cc5bdd54a65b107f3971a2dec0005563dba0f35603260ca",
+          "policy": "auto",
+          "status": "approved"
+        },
+        "model": {
+          "id": "scripted-authoring-fixture",
+          "kind": "scripted",
+          "live": false
+        },
+        "package": {
+          "bindings": {
+            "counter_alpha": {
+              "approved": true,
+              "identity": "ffea9edb-e8b2-4139-a83a-bb85f791a17a",
+              "role": "capability",
+              "url": "http://127.0.0.1:45202"
+            },
+            "counter_beta": {
+              "approved": true,
+              "identity": "9f1d0e9d-c0b9-4209-b13e-c442add45f2e",
+              "role": "capability",
+              "url": "http://127.0.0.1:45203"
+            },
+            "quality": {
+              "approved": true,
+              "identity": "141f63fb-6c11-4365-9b2e-4cc0d5f892ce",
+              "role": "quality",
+              "url": "http://127.0.0.1:45204"
+            },
+            "release": {
+              "approved": true,
+              "identity": "edac3b10-345c-44b1-ba6b-c4a115098888",
+              "role": "release",
+              "url": "http://127.0.0.1:45205"
+            },
+            "source_alpha": {
+              "approved": true,
+              "identity": "d07592fa-a74c-49df-9fdd-c3bd1561da79",
+              "role": "capability",
+              "url": "http://127.0.0.1:45200"
+            },
+            "source_beta": {
+              "approved": true,
+              "identity": "c84b0832-306b-4449-899f-5db63d1fc198",
+              "role": "capability",
+              "url": "http://127.0.0.1:45201"
+            }
+          },
+          "children": {
+            "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a": {
+              "name": "verified_research",
+              "nodes": {
+                "abort": {
+                  "type": "abort"
+                },
+                "director": {
+                  "next": "abort",
+                  "reason": "repair_exhausted",
+                  "type": "director_wait"
+                },
+                "done": {
+                  "type": "complete"
+                },
+                "draft_clear": {
+                  "next": "independent_quality",
+                  "resolved": true,
+                  "type": "synthesize"
+                },
+                "draft_repair": {
+                  "next": "independent_quality",
+                  "resolved": "after_repair",
+                  "type": "synthesize"
+                },
+                "draft_unresolved": {
+                  "next": "independent_quality",
+                  "resolved": false,
+                  "type": "synthesize"
+                },
+                "gather": {
+                  "branches": {
+                    "counter_alpha": {
+                      "capability": "counter_evidence@1",
+                      "result_type": "counter_evidence",
+                      "scope_status": "clear",
+                      "service": "counter_alpha"
+                    },
+                    "source_alpha": {
+                      "capability": "source_evidence@1",
+                      "result_type": "source_evidence",
+                      "scope_status": null,
+                      "service": "source_alpha"
+                    },
+                    "source_beta": {
+                      "capability": "source_evidence@1",
+                      "result_type": "source_evidence",
+                      "scope_status": null,
+                      "service": "source_beta"
+                    }
+                  },
+                  "next": "join_all",
+                  "type": "parallel"
+                },
+                "independent_quality": {
+                  "next": "route_verdict",
+                  "type": "quality"
+                },
+                "join_all": {
+                  "branches": [
+                    "source_alpha",
+                    "source_beta",
+                    "counter_alpha"
+                  ],
+                  "next": "route_scope",
+                  "type": "join"
+                },
+                "publish": {
+                  "next": "done",
+                  "service": "release",
+                  "type": "release"
+                },
+                "repair": {
+                  "exhausted": "director",
+                  "max_repairs": 1,
+                  "next": "draft_repair",
+                  "type": "repair"
+                },
+                "route_scope": {
+                  "cases": {
+                    "clear": "draft_clear",
+                    "requires_scope": "draft_unresolved"
+                  },
+                  "field": "join.route_status",
+                  "type": "route"
+                },
+                "route_verdict": {
+                  "cases": {
+                    "false": "repair",
+                    "true": "publish"
+                  },
+                  "field": "verdict.accepted",
+                  "type": "route"
+                }
+              },
+              "revision": "v5",
+              "start": "gather"
+            }
+          },
+          "root": {
+            "name": "parent_verified_research",
+            "nodes": {
+              "done": {
+                "type": "complete"
+              },
+              "invoke_child": {
+                "child": "verified_research",
+                "child_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                "next": "done",
+                "type": "nested_factory"
+              }
+            },
+            "revision": "v5",
+            "start": "invoke_child"
+          },
+          "run_inputs": {
+            "question": {
+              "allowed_actors": [
+                "fixture-operator"
+              ],
+              "may_affect_acceptance": false,
+              "required": false,
+              "source": "caller",
+              "type": "string"
+            }
+          },
+          "schema": 1
+        },
+        "package_digest": "9bd905405cf359ce1cc5bdd54a65b107f3971a2dec0005563dba0f35603260ca",
+        "rounds": [
+          {
+            "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+            "errors": [
+              {
+                "code": "validation_error",
+                "message": "route must cover each typed value",
+                "missing_cases": [
+                  "requires_scope"
+                ],
+                "path": "child.nodes.route_scope.cases"
+              }
+            ],
+            "round": 1,
+            "valid": false
+          },
+          {
+            "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+            "errors": [],
+            "round": 2,
+            "valid": true
+          }
+        ],
+        "status": "approved",
+        "template": {
+          "child": {
+            "name": "verified_research",
+            "nodes": {
+              "abort": {
+                "type": "abort"
+              },
+              "director": {
+                "next": "abort",
+                "reason": "repair_exhausted",
+                "type": "director_wait"
+              },
+              "done": {
+                "type": "complete"
+              },
+              "draft_clear": {
+                "next": "independent_quality",
+                "resolved": true,
+                "type": "synthesize"
+              },
+              "draft_repair": {
+                "next": "independent_quality",
+                "resolved": "after_repair",
+                "type": "synthesize"
+              },
+              "draft_unresolved": {
+                "next": "independent_quality",
+                "resolved": false,
+                "type": "synthesize"
+              },
+              "gather": {
+                "branches": {
+                  "counter_alpha": {
+                    "capability": "counter_evidence@1",
+                    "result_type": "counter_evidence",
+                    "scope_status": "clear",
+                    "service": "counter_alpha"
+                  },
+                  "source_alpha": {
+                    "capability": "source_evidence@1",
+                    "result_type": "source_evidence",
+                    "scope_status": null,
+                    "service": "source_alpha"
+                  },
+                  "source_beta": {
+                    "capability": "source_evidence@1",
+                    "result_type": "source_evidence",
+                    "scope_status": null,
+                    "service": "source_beta"
+                  }
+                },
+                "next": "join_all",
+                "type": "parallel"
+              },
+              "independent_quality": {
+                "next": "route_verdict",
+                "type": "quality"
+              },
+              "join_all": {
+                "branches": [
+                  "source_alpha",
+                  "source_beta",
+                  "counter_alpha"
+                ],
+                "next": "route_scope",
+                "type": "join"
+              },
+              "publish": {
+                "next": "done",
+                "service": "release",
+                "type": "release"
+              },
+              "repair": {
+                "exhausted": "director",
+                "max_repairs": 1,
+                "next": "draft_repair",
+                "type": "repair"
+              },
+              "route_scope": {
+                "cases": {
+                  "clear": "draft_clear",
+                  "requires_scope": "draft_unresolved"
+                },
+                "field": "join.route_status",
+                "type": "route"
+              },
+              "route_verdict": {
+                "cases": {
+                  "false": "repair",
+                  "true": "publish"
+                },
+                "field": "verdict.accepted",
+                "type": "route"
+              }
+            },
+            "revision": "v5",
+            "start": "gather"
+          },
+          "root": {
+            "name": "parent_verified_research",
+            "nodes": {
+              "done": {
+                "type": "complete"
+              },
+              "invoke_child": {
+                "child": "verified_research",
+                "child_digest": "@child",
+                "next": "done",
+                "type": "nested_factory"
+              }
+            },
+            "revision": "v5",
+            "start": "invoke_child"
+          },
+          "run_inputs": {
+            "question": {
+              "allowed_actors": [
+                "fixture-operator"
+              ],
+              "may_affect_acceptance": false,
+              "required": false,
+              "source": "caller",
+              "type": "string"
+            }
+          },
+          "schema": 1
+        },
+        "tool_calls": [
+          {
+            "result": {
+              "bindings": {
+                "counter_alpha": {
+                  "approved": true,
+                  "role": "capability"
+                },
+                "counter_beta": {
+                  "approved": true,
+                  "role": "capability"
+                },
+                "quality": {
+                  "approved": true,
+                  "role": "quality"
+                },
+                "release": {
+                  "approved": true,
+                  "role": "release"
+                },
+                "source_alpha": {
+                  "approved": true,
+                  "role": "capability"
+                },
+                "source_beta": {
+                  "approved": true,
+                  "role": "capability"
+                }
+              },
+              "bounds": {
+                "max_repairs": [
+                  1,
+                  2
+                ],
+                "nodes_per_definition": 32,
+                "parallel_branches": [
+                  2,
+                  4
+                ],
+                "run_input_fields": 16
+              },
+              "input_sources": [
+                "caller",
+                "director",
+                "verified_artifact"
+              ],
+              "input_types": [
+                "boolean",
+                "integer",
+                "number",
+                "string"
+              ],
+              "node_fields": {
+                "abort": [
+                  "type"
+                ],
+                "complete": [
+                  "type"
+                ],
+                "director_wait": [
+                  "next",
+                  "reason",
+                  "type"
+                ],
+                "join": [
+                  "branches",
+                  "next",
+                  "type"
+                ],
+                "nested_factory": [
+                  "child",
+                  "child_digest",
+                  "next",
+                  "type"
+                ],
+                "parallel": [
+                  "branches",
+                  "next",
+                  "type"
+                ],
+                "quality": [
+                  "next",
+                  "type"
+                ],
+                "release": [
+                  "next",
+                  "service",
+                  "type"
+                ],
+                "repair": [
+                  "exhausted",
+                  "max_repairs",
+                  "next",
+                  "type"
+                ],
+                "route": [
+                  "cases",
+                  "field",
+                  "type"
+                ],
+                "synthesize": [
+                  "next",
+                  "resolved",
+                  "type"
+                ]
+              },
+              "result_types": {
+                "counter_evidence": "counter_evidence@1",
+                "source_evidence": "source_evidence@1"
+              },
+              "route_values": {
+                "join.requires_scope": [
+                  "false",
+                  "true"
+                ],
+                "join.route_status": [
+                  "clear",
+                  "requires_scope"
+                ],
+                "verdict.accepted": [
+                  "false",
+                  "true"
+                ]
+              },
+              "rules": [
+                "All route cases must cover their typed values.",
+                "Source and counter evidence must meet at a typed join.",
+                "Quality must review a candidate before release.",
+                "Repair must have a bounded exhausted edge to Director wait and abort.",
+                "The root may only invoke its digest-pinned child and complete."
+              ],
+              "schema": 1,
+              "template_fields": [
+                "schema",
+                "root",
+                "child",
+                "run_inputs"
+              ]
+            },
+            "tool": "describe_vocabulary"
+          },
+          {
+            "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+            "result": {
+              "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+              "errors": [
+                {
+                  "code": "validation_error",
+                  "message": "route must cover each typed value",
+                  "missing_cases": [
+                    "requires_scope"
+                  ],
+                  "path": "child.nodes.route_scope.cases"
+                }
+              ],
+              "ok": false
+            },
+            "tool": "validate_draft"
+          },
+          {
+            "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+            "result": {
+              "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+              "errors": [],
+              "ok": true,
+              "package_digest": "9bd905405cf359ce1cc5bdd54a65b107f3971a2dec0005563dba0f35603260ca"
+            },
+            "tool": "submit_draft"
+          }
+        ]
+      },
+      "publication": {
+        "build_id": "b-05b5760359e6",
+        "label": "v2",
+        "manifest_digest": "e1a00e4c51a563b409f322f04b35e34d1ceea9c238b6f642d42cb4bc5aa46dd1",
+        "package_digest": "9bd905405cf359ce1cc5bdd54a65b107f3971a2dec0005563dba0f35603260ca"
+      },
+      "seconds": 0.008,
+      "status": "published"
+    },
+    "director_runs": [
+      {
+        "build_id": "b-05b5760359e6",
+        "closed": 1,
+        "label": "v1",
+        "manifest_digest": "ff3a37733f0445ebc1da22c66bd9197397bf481acfa32c5b7b2e8957d5b7a5c7",
+        "package_digest": "230dcb31e8f0d8a007d72ba2e4dc604b905bc5dc4e12c6959eff3ed019dae2f6",
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3",
+        "task_id": "965195c8-4ee6-478a-84e9-4504b9a40470"
+      },
+      {
+        "build_id": "b-05b5760359e6",
+        "closed": 1,
+        "label": "v1",
+        "manifest_digest": "ff3a37733f0445ebc1da22c66bd9197397bf481acfa32c5b7b2e8957d5b7a5c7",
+        "package_digest": "230dcb31e8f0d8a007d72ba2e4dc604b905bc5dc4e12c6959eff3ed019dae2f6",
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8",
+        "task_id": "d19d36ae-e4c9-4b95-82f4-d12110bf8e43"
+      },
+      {
+        "build_id": "b-05b5760359e6",
+        "closed": 1,
+        "label": "v2",
+        "manifest_digest": "e1a00e4c51a563b409f322f04b35e34d1ceea9c238b6f642d42cb4bc5aa46dd1",
+        "package_digest": "9bd905405cf359ce1cc5bdd54a65b107f3971a2dec0005563dba0f35603260ca",
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a",
+        "task_id": "f55e9ec4-1003-44c7-bc72-d75d6a0183fa"
+      }
+    ],
+    "harness_pid": 18974,
+    "health_after_restart": {
+      "a2a_protocol": "0.3.0",
+      "capability": "verified-research@1",
+      "identity": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b",
+      "incarnation": 4,
+      "name": "research-factory",
+      "role": "factory-harness",
+      "runner_running": true,
+      "startup": {
+        "recovery": {
+          "address": "127.0.0.1:44002",
+          "builds": {
+            "b-05b5760359e6": {
+              "pid": 19209,
+              "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f"
+            }
+          },
+          "namespace": "exomachina",
+          "pid": 19173,
+          "pids": {
+            "postgres": 19176,
+            "temporal": 19183
+          },
+          "rss_kib": {
+            "postgres": 15632,
+            "temporal": 147088
+          },
+          "running": true,
+          "worker_rss_kib": {
+            "b-05b5760359e6": 40832
+          }
+        },
+        "runner_started_at_startup": true
+      },
+      "unfinished_runs": 1
+    },
+    "health_before_restart": {
+      "a2a_protocol": "0.3.0",
+      "capability": "verified-research@1",
+      "identity": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b",
+      "incarnation": 2,
+      "name": "research-factory",
+      "role": "factory-harness",
+      "runner_running": true,
+      "startup": {
+        "recovery": null,
+        "runner_started_at_startup": false
+      },
+      "unfinished_runs": 1
+    },
+    "histories": {
+      "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8": {
+        "activities": [],
+        "event_count": 14,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          }
+        }
+      },
+      "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64": {
+        "activities": [
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "typed_join",
+            "22"
+          ],
+          [
+            "synthesize",
+            "28"
+          ],
+          [
+            "review",
+            "34"
+          ],
+          [
+            "synthesize",
+            "40"
+          ],
+          [
+            "review",
+            "46"
+          ],
+          [
+            "synthesize",
+            "52"
+          ],
+          [
+            "review",
+            "58"
+          ]
+        ],
+        "event_count": 77,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          }
+        }
+      },
+      "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a": {
+        "activities": [],
+        "event_count": 14,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          }
+        }
+      },
+      "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a:child:edd46c74d380": {
+        "activities": [
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "assign",
+            "4"
+          ],
+          [
+            "typed_join",
+            "19"
+          ],
+          [
+            "synthesize",
+            "25"
+          ],
+          [
+            "review",
+            "31"
+          ],
+          [
+            "release",
+            "37"
+          ]
+        ],
+        "event_count": 44,
+        "status": "COMPLETED",
+        "versioning": {
+          "behavior": 1,
+          "deployment_version": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          },
+          "override_pinned": {
+            "build_id": "b-05b5760359e6",
+            "deployment": "exo-factory"
+          }
+        }
+      }
+    },
+    "publications_after_v2": {
+      "active": {
+        "build_id": "b-05b5760359e6",
+        "label": "v2",
+        "manifest_digest": "e1a00e4c51a563b409f322f04b35e34d1ceea9c238b6f642d42cb4bc5aa46dd1"
+      },
+      "all": [
+        {
+          "build_id": "b-05b5760359e6",
+          "label": "v2",
+          "manifest_digest": "e1a00e4c51a563b409f322f04b35e34d1ceea9c238b6f642d42cb4bc5aa46dd1",
+          "package_digest": "9bd905405cf359ce1cc5bdd54a65b107f3971a2dec0005563dba0f35603260ca"
+        },
+        {
+          "build_id": "b-05b5760359e6",
+          "label": "v1",
+          "manifest_digest": "ff3a37733f0445ebc1da22c66bd9197397bf481acfa32c5b7b2e8957d5b7a5c7",
+          "package_digest": "230dcb31e8f0d8a007d72ba2e4dc604b905bc5dc4e12c6959eff3ed019dae2f6"
+        }
+      ]
+    },
+    "quality_actions": {
+      "v1": [
+        {
+          "action_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:1:r1:7d06cb6320b219b887484c40f596bc66ad00c7f21e6d86cd30fd748cb1b59558",
+          "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"141f63fb-6c11-4365-9b2e-4cc0d5f892ce\",\"revision\":\"r1\",\"sha256\":\"7d06cb6320b219b887484c40f596bc66ad00c7f21e6d86cd30fd748cb1b59558\"}",
+          "attempts": 1,
+          "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+          "task_id": "c16f7e6c-a968-47c2-b8da-8be284dfb614"
+        },
+        {
+          "action_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:2:r2:8be46f37f707e51d855d3ab2a3a09799aa03afd84f80e23b280d22eba84f4f90",
+          "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"141f63fb-6c11-4365-9b2e-4cc0d5f892ce\",\"revision\":\"r2\",\"sha256\":\"8be46f37f707e51d855d3ab2a3a09799aa03afd84f80e23b280d22eba84f4f90\"}",
+          "attempts": 1,
+          "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+          "task_id": "4e8cb68a-4c93-44d5-8c26-c6f77a3c77b4"
+        },
+        {
+          "action_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64:quality:3:r3:e02e79c571049890f9272ba8c2817895bee78163632e73b10ae467ae07bc1704",
+          "artifact": "{\"accepted\":false,\"reason\":\"counterevidence remains unresolved\",\"reviewer\":\"141f63fb-6c11-4365-9b2e-4cc0d5f892ce\",\"revision\":\"r3\",\"sha256\":\"e02e79c571049890f9272ba8c2817895bee78163632e73b10ae467ae07bc1704\"}",
+          "attempts": 1,
+          "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+          "task_id": "1bcaba93-09e8-4d99-b630-12c87b7bc0bb"
+        }
+      ],
+      "v2": [
+        {
+          "action_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a:child:edd46c74d380:quality:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a:child:edd46c74d380:quality:1:r1:bc074f3a5a83fc98967442a76d980674ec161e7b708d2180010570e25679c09c",
+          "artifact": "{\"accepted\":true,\"reason\":\"counterevidence addressed for exact revision\",\"reviewer\":\"141f63fb-6c11-4365-9b2e-4cc0d5f892ce\",\"revision\":\"r1\",\"sha256\":\"bc074f3a5a83fc98967442a76d980674ec161e7b708d2180010570e25679c09c\"}",
+          "attempts": 1,
+          "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a:child:edd46c74d380",
+          "task_id": "37c63259-ec27-419c-b53f-7afa4dd2c8ee"
+        }
+      ]
+    },
+    "releases": {
+      "v1": [],
+      "v2": [
+        {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+          "fingerprint": "afc952dca423ee51ffe8ef5ae3228c41d1d714227a9a7679a53f683b0f487db8",
+          "release_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a:child:edd46c74d380:release:r1",
+          "revision": "r1",
+          "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a:child:edd46c74d380",
+          "sha256": "bc074f3a5a83fc98967442a76d980674ec161e7b708d2180010570e25679c09c"
+        }
+      ]
+    },
+    "runner_events": [
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "build-added",
+        "source_digest": "05b5760359e6e31b1baa76333846bba9b96d811c10fda58870951eab73a4b69f",
+        "time": 1790193135.794423
+      },
+      {
+        "first": true,
+        "kind": "postgres-start",
+        "time": 1790193140.072341
+      },
+      {
+        "kind": "temporal-start",
+        "pid": 19019,
+        "time": 1790193140.081013
+      },
+      {
+        "kind": "namespace-create",
+        "namespace": "exomachina",
+        "time": 1790193141.0800781
+      },
+      {
+        "kind": "serve-ready",
+        "pid": 18975,
+        "time": 1790193141.082467
+      },
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "worker-start",
+        "pid": 19072,
+        "time": 1790193141.087285
+      },
+      {
+        "kind": "start",
+        "pid": 18975,
+        "reason": "factory-work:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.63a59ec29163054e44b3",
+        "time": 1790193141.179307
+      },
+      {
+        "kind": "attach",
+        "pid": 18975,
+        "reason": "factory-work:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8",
+        "time": 1790193153.603745
+      },
+      {
+        "kind": "serve-stop",
+        "pid": 18975,
+        "time": 1790193157.5242639
+      },
+      {
+        "first": false,
+        "kind": "postgres-start",
+        "time": 1790193158.916426
+      },
+      {
+        "kind": "temporal-start",
+        "pid": 19183,
+        "time": 1790193158.9218502
+      },
+      {
+        "kind": "serve-ready",
+        "pid": 19173,
+        "time": 1790193159.32027
+      },
+      {
+        "build_id": "b-05b5760359e6",
+        "kind": "worker-start",
+        "pid": 19209,
+        "time": 1790193159.32619
+      },
+      {
+        "kind": "start",
+        "pid": 19173,
+        "reason": "recover-unfinished:1",
+        "time": 1790193159.470304
+      },
+      {
+        "kind": "attach",
+        "pid": 19173,
+        "reason": "factory-work:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a",
+        "time": 1790193159.830385
+      },
+      {
+        "kind": "attach",
+        "pid": 19173,
+        "reason": "director-command:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8",
+        "time": 1790193160.523077
+      }
+    ],
+    "runner_stop": {
+      "address": "127.0.0.1:44002",
+      "builds": {},
+      "namespace": "exomachina",
+      "pid": null,
+      "pids": {},
+      "rss_kib": {},
+      "running": false,
+      "worker_rss_kib": {}
+    },
+    "v1_task_final": {
+      "_observed_states": [
+        "completed"
+      ],
+      "contextId": "58c6dec6-c7ab-4041-94b5-155b402a8bd9",
+      "id": "d19d36ae-e4c9-4b95-82f4-d12110bf8e43",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b",
+        "harness_incarnation": 4,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "ff3a37733f0445ebc1da22c66bd9197397bf481acfa32c5b7b2e8957d5b7a5c7",
+        "package_digest": "230dcb31e8f0d8a007d72ba2e4dc604b905bc5dc4e12c6959eff3ed019dae2f6",
+        "publication_label": "v1",
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8",
+        "run_inputs_digest": "3624c1ffdd564a676fe29b485ba047012c8f2be8de7e5d83c1ca70750689579d"
+      },
+      "status": {
+        "state": "completed"
+      }
+    },
+    "v1_waiting_task_after_restart": {
+      "_observed_states": [
+        "input-required"
+      ],
+      "contextId": "58c6dec6-c7ab-4041-94b5-155b402a8bd9",
+      "id": "d19d36ae-e4c9-4b95-82f4-d12110bf8e43",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b",
+        "harness_incarnation": 4,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "ff3a37733f0445ebc1da22c66bd9197397bf481acfa32c5b7b2e8957d5b7a5c7",
+        "package_digest": "230dcb31e8f0d8a007d72ba2e4dc604b905bc5dc4e12c6959eff3ed019dae2f6",
+        "publication_label": "v1",
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8",
+        "run_inputs_digest": "3624c1ffdd564a676fe29b485ba047012c8f2be8de7e5d83c1ca70750689579d"
+      },
+      "status": {
+        "message": {
+          "kind": "message",
+          "messageId": "cccaf2f9-73d8-4ba0-ae94-95ce17867959",
+          "parts": [
+            {
+              "data": {
+                "director_wait": {
+                  "child_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+                  "phase": "awaiting-child"
+                }
+              },
+              "kind": "data"
+            }
+          ],
+          "role": "agent"
+        },
+        "state": "input-required"
+      }
+    },
+    "v1_waiting_task_before": {
+      "_observed_states": [
+        "input-required"
+      ],
+      "contextId": "58c6dec6-c7ab-4041-94b5-155b402a8bd9",
+      "id": "d19d36ae-e4c9-4b95-82f4-d12110bf8e43",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b",
+        "harness_incarnation": 2,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "ff3a37733f0445ebc1da22c66bd9197397bf481acfa32c5b7b2e8957d5b7a5c7",
+        "package_digest": "230dcb31e8f0d8a007d72ba2e4dc604b905bc5dc4e12c6959eff3ed019dae2f6",
+        "publication_label": "v1",
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8",
+        "run_inputs_digest": "3624c1ffdd564a676fe29b485ba047012c8f2be8de7e5d83c1ca70750689579d"
+      },
+      "status": {
+        "message": {
+          "kind": "message",
+          "messageId": "d36f53cd-2954-4f53-a7ec-33db37da848a",
+          "parts": [
+            {
+              "data": {
+                "director_wait": {
+                  "child_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.ca0ad4f050731a02fcd8:child:911e5a4edd64",
+                  "phase": "awaiting-child"
+                }
+              },
+              "kind": "data"
+            }
+          ],
+          "role": "agent"
+        },
+        "state": "input-required"
+      }
+    },
+    "v2_task": {
+      "_observed_states": [
+        "input-required",
+        "completed"
+      ],
+      "artifacts": [
+        {
+          "artifactId": "821078850dc83bd3cb408c9e5b3a7780a86165134368ed353c3c7bbcf2df749d",
+          "parts": [
+            {
+              "data": {
+                "acceptance": {
+                  "attempt": 1,
+                  "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                  "quality_task_id": "37c63259-ec27-419c-b53f-7afa4dd2c8ee",
+                  "reviewer": "141f63fb-6c11-4365-9b2e-4cc0d5f892ce",
+                  "revision": "r1",
+                  "run": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a:child:edd46c74d380",
+                  "sha256": "bc074f3a5a83fc98967442a76d980674ec161e7b708d2180010570e25679c09c"
+                },
+                "capability": "verified-research@1",
+                "release_receipt": {
+                  "accepted_effect_count": 1,
+                  "attempts": 1,
+                  "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                  "release_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a:child:edd46c74d380:release:r1",
+                  "revision": "r1",
+                  "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a:child:edd46c74d380",
+                  "sha256": "bc074f3a5a83fc98967442a76d980674ec161e7b708d2180010570e25679c09c"
+                },
+                "report": {
+                  "author": "factory:ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a:child:edd46c74d380",
+                  "content": "{\"assessment\":\"documented limits addressed\",\"join\":{\"branch_artifact_sha256\":{\"counter_alpha\":\"0f0537a3c539af2e1170a49ee7d84d486900ea3062e0123f856f9a3782f70420\",\"source_alpha\":\"29ce44469e5b0119d78391ccd0da62a9853b03e9f35c26db2c4e61a576708c85\",\"source_beta\":\"4c8e364e61ed4b3b77965608948db2a2070e42bea2b70ff62a43c40d547faa39\"},\"claims\":[{\"branch_instance\":\"source_alpha\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_alpha\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_alpha\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_alpha\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":false,\"route_status\":\"clear\",\"run_id\":\"ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a:child:edd46c74d380\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":true,\"revision\":\"r1\"}",
+                  "revision": "r1",
+                  "sha256": "bc074f3a5a83fc98967442a76d980674ec161e7b708d2180010570e25679c09c"
+                },
+                "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a",
+                "status": "accepted"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "cf75c7b6-be9f-4f19-abe4-37f4573b8d95",
+      "id": "f55e9ec4-1003-44c7-bc72-d75d6a0183fa",
+      "kind": "task",
+      "metadata": {
+        "authorized_input_actor": "fixture-operator",
+        "capability": "verified-research@1",
+        "harness_identity": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b",
+        "harness_incarnation": 4,
+        "interpreter_build": "b-05b5760359e6",
+        "manifest_digest": "e1a00e4c51a563b409f322f04b35e34d1ceea9c238b6f642d42cb4bc5aa46dd1",
+        "package_digest": "9bd905405cf359ce1cc5bdd54a65b107f3971a2dec0005563dba0f35603260ca",
+        "publication_label": "v2",
+        "run_id": "ea4a56b5-188f-4e37-b37b-0e2429a2e98b.f722388d596f74ca287a",
+        "run_inputs_digest": "160f1d38295583c88486728087391f09d73f1ddd0f8d34691475ad57dea99ede"
+      },
+      "status": {
+        "state": "completed"
+      }
+    }
+  },
+  "python": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python",
+  "started_at": 1790193129.318283,
+  "testbed_up": {
+    "bindings": {
+      "counter_alpha": {
+        "approved": true,
+        "identity": "ffea9edb-e8b2-4139-a83a-bb85f791a17a",
+        "role": "capability",
+        "url": "http://127.0.0.1:45202"
+      },
+      "counter_beta": {
+        "approved": true,
+        "identity": "9f1d0e9d-c0b9-4209-b13e-c442add45f2e",
+        "role": "capability",
+        "url": "http://127.0.0.1:45203"
+      },
+      "quality": {
+        "approved": true,
+        "identity": "141f63fb-6c11-4365-9b2e-4cc0d5f892ce",
+        "role": "quality",
+        "url": "http://127.0.0.1:45204"
+      },
+      "release": {
+        "approved": true,
+        "identity": "edac3b10-345c-44b1-ba6b-c4a115098888",
+        "role": "release",
+        "url": "http://127.0.0.1:45205"
+      },
+      "source_alpha": {
+        "approved": true,
+        "identity": "d07592fa-a74c-49df-9fdd-c3bd1561da79",
+        "role": "capability",
+        "url": "http://127.0.0.1:45200"
+      },
+      "source_beta": {
+        "approved": true,
+        "identity": "c84b0832-306b-4449-899f-5db63d1fc198",
+        "role": "capability",
+        "url": "http://127.0.0.1:45201"
+      }
+    },
+    "health": {
+      "counter_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "ffea9edb-e8b2-4139-a83a-bb85f791a17a",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "counter_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "9f1d0e9d-c0b9-4209-b13e-c442add45f2e",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "quality": {
+        "a2a_protocol": "0.3.0",
+        "identity": "141f63fb-6c11-4365-9b2e-4cc0d5f892ce",
+        "incarnation": 1,
+        "role": "quality"
+      },
+      "release": {
+        "identity": "edac3b10-345c-44b1-ba6b-c4a115098888",
+        "incarnation": 1,
+        "mode": "participating"
+      },
+      "source_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "d07592fa-a74c-49df-9fdd-c3bd1561da79",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "source_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "c84b0832-306b-4449-899f-5db63d1fc198",
+        "incarnation": 1,
+        "role": "capability"
+      }
+    },
+    "pids": {
+      "counter_alpha": {
+        "identity": "ffea9edb-e8b2-4139-a83a-bb85f791a17a",
+        "pid": 18956,
+        "port": 45202
+      },
+      "counter_beta": {
+        "identity": "9f1d0e9d-c0b9-4209-b13e-c442add45f2e",
+        "pid": 18957,
+        "port": 45203
+      },
+      "quality": {
+        "identity": "141f63fb-6c11-4365-9b2e-4cc0d5f892ce",
+        "pid": 18958,
+        "port": 45204
+      },
+      "release": {
+        "identity": "edac3b10-345c-44b1-ba6b-c4a115098888",
+        "pid": 18971,
+        "port": 45205
+      },
+      "source_alpha": {
+        "identity": "d07592fa-a74c-49df-9fdd-c3bd1561da79",
+        "pid": 18912,
+        "port": 45200
+      },
+      "source_beta": {
+        "identity": "c84b0832-306b-4449-899f-5db63d1fc198",
+        "pid": 18921,
+        "port": 45201
+      }
+    }
+  },
+  "v1_publication": {
+    "approval": {
+      "approver": "operator:fixture-operator",
+      "decision": "operator reviewed hand-written template",
+      "package_digest": "230dcb31e8f0d8a007d72ba2e4dc604b905bc5dc4e12c6959eff3ed019dae2f6",
+      "policy": "human",
+      "status": "approved"
+    },
+    "publication": {
+      "build_id": "b-05b5760359e6",
+      "label": "v1",
+      "manifest_digest": "ff3a37733f0445ebc1da22c66bd9197397bf481acfa32c5b7b2e8957d5b7a5c7",
+      "package_digest": "230dcb31e8f0d8a007d72ba2e4dc604b905bc5dc4e12c6959eff3ed019dae2f6"
+    },
+    "source": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/definitions/v1-template.json"
+  }
+}
