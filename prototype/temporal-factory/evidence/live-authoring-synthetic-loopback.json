@@ -1,0 +1,733 @@
+{
+  "claims": {
+    "a2a_task": {
+      "level": "real",
+      "value": {
+        "send_state": "working",
+        "task": {
+          "_observed_states": [
+            "working",
+            "completed"
+          ],
+          "artifacts": [
+            {
+              "artifactId": "6994c47a0b51e2726644ebd63fbabcc31cf2fb7623cb22e68080002000d0c213",
+              "parts": [
+                {
+                  "data": {
+                    "acceptance": {
+                      "attempt": 1,
+                      "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                      "quality_task_id": "e8ad9faa-62aa-44e3-a76b-022d72154660",
+                      "reviewer": "8b463181-b822-4525-9034-78ade7e8cb6e",
+                      "revision": "r1",
+                      "run": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380",
+                      "sha256": "f6c32bd143a3077af084d80c359c6ab72c941658295e26ea3a47f789dcbcb839"
+                    },
+                    "capability": "verified-research@1",
+                    "interpreter_revision": null,
+                    "release_receipt": {
+                      "accepted_effect_count": 1,
+                      "attempts": 1,
+                      "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+                      "release_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380:release:r1",
+                      "revision": "r1",
+                      "run_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380",
+                      "sha256": "f6c32bd143a3077af084d80c359c6ab72c941658295e26ea3a47f789dcbcb839"
+                    },
+                    "report": {
+                      "author": "factory:52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380",
+                      "content": "{\"assessment\":\"documented limits addressed\",\"join\":{\"branch_artifact_sha256\":{\"counter_alpha\":\"0f0537a3c539af2e1170a49ee7d84d486900ea3062e0123f856f9a3782f70420\",\"source_alpha\":\"29ce44469e5b0119d78391ccd0da62a9853b03e9f35c26db2c4e61a576708c85\",\"source_beta\":\"4c8e364e61ed4b3b77965608948db2a2070e42bea2b70ff62a43c40d547faa39\"},\"claims\":[{\"branch_instance\":\"source_alpha\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_alpha\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_beta\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_alpha\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_alpha\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":false,\"route_status\":\"clear\",\"run_id\":\"52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":true,\"revision\":\"r1\"}",
+                      "revision": "r1",
+                      "sha256": "f6c32bd143a3077af084d80c359c6ab72c941658295e26ea3a47f789dcbcb839"
+                    },
+                    "run_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d",
+                    "status": "accepted"
+                  },
+                  "kind": "data"
+                }
+              ]
+            }
+          ],
+          "contextId": "96d3571e-b0c9-49b5-b981-ae5c6d99c2ac",
+          "id": "f87dd5dc-0294-40a6-87b4-8e98047e54ca",
+          "kind": "task",
+          "metadata": {
+            "authorized_input_actor": "fixture-operator",
+            "capability": "verified-research@1",
+            "harness_identity": "52aa74eb-3dc4-4062-8c43-4a490d96e61f",
+            "harness_incarnation": 2,
+            "interpreter_build": "b-05b5760359e6",
+            "manifest_digest": "b51e0d84a1cd9e2b233c436f10ba3de7172da0a2851cf62a4c68a5e1bb080f99",
+            "package_digest": "aab42f9ce17b78e7d869bf8c8642ce6184eb29c2847cc04de0131444ad760b2e",
+            "publication_label": "v2",
+            "run_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d",
+            "run_inputs_digest": "160f1d38295583c88486728087391f09d73f1ddd0f8d34691475ad57dea99ede"
+          },
+          "status": {
+            "state": "completed"
+          }
+        }
+      }
+    },
+    "agent_card": {
+      "level": "real",
+      "value": {
+        "capabilities": {
+          "streaming": false
+        },
+        "defaultInputModes": [
+          "application/json"
+        ],
+        "defaultOutputModes": [
+          "application/json"
+        ],
+        "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+        "name": "research-factory",
+        "preferredTransport": "JSONRPC",
+        "protocolVersion": "0.3.0",
+        "security": [
+          {
+            "fixtureBearer": []
+          }
+        ],
+        "securitySchemes": {
+          "fixtureBearer": {
+            "scheme": "bearer",
+            "type": "http"
+          }
+        },
+        "skills": [
+          {
+            "description": "Researches a question with independent counter-evidence review; returns one accepted report and release receipt.",
+            "id": "verified-research@1",
+            "name": "Verified research",
+            "tags": [
+              "research",
+              "verified"
+            ]
+          }
+        ],
+        "url": "http://127.0.0.1:44830/",
+        "version": "0.1.0"
+      }
+    },
+    "api_key_provider": {
+      "level": "synthetic",
+      "value": {
+        "consulted": false,
+        "observed_model_calls": 4,
+        "selected_provider": "synthetic-loopback",
+        "synthetic_api_key_poisoned": true
+      }
+    },
+    "approval": {
+      "level": "real",
+      "value": {
+        "approver": "director:52aa74eb-3dc4-4062-8c43-4a490d96e61f",
+        "package_digest": "aab42f9ce17b78e7d869bf8c8642ce6184eb29c2847cc04de0131444ad760b2e",
+        "policy": "auto",
+        "status": "approved"
+      }
+    },
+    "authoring": {
+      "level": "synthetic",
+      "value": {
+        "abort": null,
+        "admin_exit_code": 0,
+        "limits": {
+          "deadline_seconds": 600,
+          "max_model_calls": 12,
+          "max_rounds": 4,
+          "max_tool_calls": 24
+        },
+        "model": {
+          "billing": "none",
+          "id": "gpt-6-sol",
+          "kind": "broker",
+          "live": false,
+          "provider": "synthetic-loopback"
+        },
+        "model_calls": 4,
+        "provider_selection": {
+          "live_model_available": true,
+          "provider": "synthetic-loopback",
+          "reason": "synthetic-loopback broker available",
+          "refusal_reason": null
+        },
+        "rounds": [
+          {
+            "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+            "errors": [
+              {
+                "code": "validation_error",
+                "message": "route must cover each typed value",
+                "missing_cases": [
+                  "requires_scope"
+                ],
+                "path": "child.nodes.route_scope.cases"
+              }
+            ],
+            "round": 1,
+            "valid": false
+          },
+          {
+            "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+            "errors": [],
+            "round": 2,
+            "valid": true
+          }
+        ],
+        "selection_seconds": 0.001,
+        "status": "published",
+        "tool_call_count": 3,
+        "tool_calls": [
+          "describe_vocabulary",
+          "validate_draft",
+          "submit_draft"
+        ]
+      }
+    },
+    "broker_health": {
+      "level": "real",
+      "value": {
+        "account": "sha256:5d8719a9b57c",
+        "expires_at": 4102444800000,
+        "originator": "exomachina",
+        "pi_ai": "0.87.1",
+        "pid": 56701,
+        "provider": "openai-codex",
+        "signed_in": true
+      }
+    },
+    "broker_start": {
+      "level": "real",
+      "value": {
+        "already_running": false,
+        "events": [
+          {
+            "at": 1790214015.4477582,
+            "caller_pid": 56699,
+            "event": "start",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T01:40:15.803Z",
+            "event": "start",
+            "pid": 56701
+          },
+          {
+            "at": "2026-09-24T01:40:15.873Z",
+            "duration_ms": 52,
+            "event": "stream",
+            "id": "eac8d24d-1810-48d6-8086-fa5b2b0bd3a5",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790214015.879051,
+            "caller_pid": 56699,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T01:40:15.886Z",
+            "duration_ms": 5,
+            "event": "stream",
+            "id": "7b781e96-45ab-4eda-8c14-b38a72d1aa42",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790214015.8892648,
+            "caller_pid": 56699,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T01:40:15.896Z",
+            "duration_ms": 5,
+            "event": "stream",
+            "id": "d8eee4be-d7d3-4aa5-92f9-d90d9a977c91",
+            "model": "gpt-6-sol"
+          },
+          {
+            "at": 1790214015.8990989,
+            "caller_pid": 56699,
+            "event": "attach",
+            "reason": "model-call"
+          },
+          {
+            "at": "2026-09-24T01:40:15.906Z",
+            "duration_ms": 5,
+            "event": "stream",
+            "id": "3306c59c-6226-4cad-a593-04e1ecfac005",
+            "model": "gpt-6-sol"
+          }
+        ]
+      }
+    },
+    "cold_start": {
+      "level": "real",
+      "value": {
+        "broker_events_before": [],
+        "broker_ready_before": false,
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "capability": "verified-research@1",
+          "identity": "52aa74eb-3dc4-4062-8c43-4a490d96e61f",
+          "incarnation": 2,
+          "name": "research-factory",
+          "role": "factory-harness",
+          "runner_running": false,
+          "startup": {
+            "recovery": null,
+            "runner_started_at_startup": false
+          },
+          "unfinished_runs": 0
+        },
+        "runner_ready_before": false
+      }
+    },
+    "director_model": {
+      "level": "synthetic",
+      "value": {
+        "broker_scope": "authoring only",
+        "director_model": "fixture",
+        "implementation": "ToolCallingModelFixture"
+      }
+    },
+    "leak_scan": {
+      "level": "real",
+      "value": {
+        "bytes_scanned": 79807945,
+        "candidate_file_count": 99,
+        "control_directory": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control",
+        "control_included": true,
+        "evidence_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-synthetic-loopback.json",
+        "excluded": [
+          "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a/model/secrets/openai-codex.json"
+        ],
+        "files_scanned": 2007,
+        "histories_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-synthetic-loopback",
+        "hits": [],
+        "input_path_count": 104,
+        "model_home": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a/model",
+        "scan_purpose": "scenario-store token absent outside canonical store"
+      }
+    },
+    "leak_scan_positive_control": {
+      "level": "synthetic",
+      "value": {
+        "bare_access": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/bare-access.txt",
+        "canary": "fresh synthetic credential; no live token used",
+        "control_directory": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control",
+        "copied_credential": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/credential-copy.json",
+        "fixture_model_home": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/model",
+        "scan": {
+          "bytes_scanned": 736,
+          "excluded": [
+            "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/model/secrets/openai-codex.json"
+          ],
+          "files_scanned": 3,
+          "hits": [
+            {
+              "kind": "access",
+              "path": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_0",
+              "path": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_1",
+              "path": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access_jwt_fragment_2",
+              "path": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/bare-access.txt"
+            },
+            {
+              "kind": "access",
+              "path": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_0",
+              "path": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_1",
+              "path": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "access_jwt_fragment_2",
+              "path": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/credential-copy.json"
+            },
+            {
+              "kind": "refresh",
+              "path": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a-leak-control/credential-copy.json"
+            }
+          ]
+        }
+      }
+    },
+    "mock_headers": {
+      "level": "synthetic",
+      "value": [
+        {
+          "kind": "request",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "authoring",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "request",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "authoring",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "request",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "authoring",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "request",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        },
+        {
+          "kind": "authoring",
+          "originator": "exomachina",
+          "rejected": false,
+          "user_agent": "exomachina-model-broker/0.1.0 (pi-ai/0.87.1)"
+        }
+      ]
+    },
+    "originator_acceptance": {
+      "level": "synthetic",
+      "value": {
+        "result": "success"
+      }
+    },
+    "pinned_run": {
+      "level": "real",
+      "value": {
+        "build_id": "b-05b5760359e6",
+        "closed": 1,
+        "label": "v2",
+        "manifest_digest": "b51e0d84a1cd9e2b233c436f10ba3de7172da0a2851cf62a4c68a5e1bb080f99",
+        "package_digest": "aab42f9ce17b78e7d869bf8c8642ce6184eb29c2847cc04de0131444ad760b2e",
+        "run_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d",
+        "task_id": "f87dd5dc-0294-40a6-87b4-8e98047e54ca"
+      }
+    },
+    "release": {
+      "level": "synthetic",
+      "value": {
+        "effects": [
+          {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+            "fingerprint": "a5ae1afcf5d1e54d8249f71c7f296f8e877af97f2caef42d48614404a8d057e3",
+            "release_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380:release:r1",
+            "revision": "r1",
+            "run_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380",
+            "sha256": "f6c32bd143a3077af084d80c359c6ab72c941658295e26ea3a47f789dcbcb839"
+          }
+        ],
+        "transport": "http-release (fixture)"
+      }
+    },
+    "temporal": {
+      "level": "real",
+      "value": {
+        "parent_status_query": {
+          "authoritative_acceptance": {
+            "attempt": 1,
+            "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+            "quality_task_id": "e8ad9faa-62aa-44e3-a76b-022d72154660",
+            "reviewer": "8b463181-b822-4525-9034-78ade7e8cb6e",
+            "revision": "r1",
+            "run": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380",
+            "sha256": "f6c32bd143a3077af084d80c359c6ab72c941658295e26ea3a47f789dcbcb839"
+          },
+          "authorized_actor": "fixture-operator",
+          "child_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380",
+          "completed": [
+            "invoke_child"
+          ],
+          "current_revision": null,
+          "current_sha256": null,
+          "deadline": null,
+          "definition_digest": "ee28f3cf37f647aac8e0c0afd6a81b24b9680458776c89da1235f0d15ced087c",
+          "incident": null,
+          "input_authority": {
+            "question": {
+              "actor": "fixture-operator",
+              "source": "caller"
+            }
+          },
+          "interpreter_build": "b-05b5760359e6",
+          "manifest_digest": "b51e0d84a1cd9e2b233c436f10ba3de7172da0a2851cf62a4c68a5e1bb080f99",
+          "node": "done",
+          "owner_epoch": 2,
+          "package_digest": "aab42f9ce17b78e7d869bf8c8642ce6184eb29c2847cc04de0131444ad760b2e",
+          "phase": "accepted",
+          "quality_verdict": null,
+          "release_receipt": {
+            "accepted_effect_count": 1,
+            "attempts": 1,
+            "definition_digest": "edd46c74d380d5552c12f21f37d9ac9323cba1b17f51052a96a1a45d2fbaf72a",
+            "release_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380:release:r1",
+            "revision": "r1",
+            "run_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380",
+            "sha256": "f6c32bd143a3077af084d80c359c6ab72c941658295e26ea3a47f789dcbcb839"
+          },
+          "repair_count": 0,
+          "run": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d",
+          "run_inputs": {
+            "question": "Is the documented capability usable now?"
+          },
+          "run_inputs_digest": "160f1d38295583c88486728087391f09d73f1ddd0f8d34691475ad57dea99ede",
+          "unresolved": null
+        },
+        "workflows": {
+          "child": {
+            "event_count": 44,
+            "history_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-synthetic-loopback/child.json",
+            "status": "COMPLETED",
+            "versioning": {
+              "behavior": 1,
+              "build_id": "b-05b5760359e6",
+              "deployment": "exo-factory"
+            },
+            "workflow_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d:child:edd46c74d380"
+          },
+          "parent": {
+            "event_count": 14,
+            "history_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-synthetic-loopback/parent.json",
+            "status": "COMPLETED",
+            "versioning": {
+              "behavior": 1,
+              "build_id": "b-05b5760359e6",
+              "deployment": "exo-factory"
+            },
+            "workflow_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d"
+          }
+        }
+      }
+    },
+    "testbed": {
+      "level": "synthetic",
+      "value": {
+        "bindings": {
+          "counter_alpha": {
+            "approved": true,
+            "identity": "dab52801-f3d9-49ac-a780-211e2ee200e6",
+            "role": "capability",
+            "url": "http://127.0.0.1:45302"
+          },
+          "counter_beta": {
+            "approved": true,
+            "identity": "d6f88d95-15ba-4a02-abc9-0922b6b11bf7",
+            "role": "capability",
+            "url": "http://127.0.0.1:45303"
+          },
+          "quality": {
+            "approved": true,
+            "identity": "8b463181-b822-4525-9034-78ade7e8cb6e",
+            "role": "quality",
+            "url": "http://127.0.0.1:45304"
+          },
+          "release": {
+            "approved": true,
+            "identity": "b534be97-5169-449b-93e9-36a22fefba37",
+            "role": "release",
+            "url": "http://127.0.0.1:45305"
+          },
+          "source_alpha": {
+            "approved": true,
+            "identity": "772b76c3-14ac-454c-af33-670a78346215",
+            "role": "capability",
+            "url": "http://127.0.0.1:45300"
+          },
+          "source_beta": {
+            "approved": true,
+            "identity": "1a1113cb-7f93-41d7-8ea7-5acdac20c4a3",
+            "role": "capability",
+            "url": "http://127.0.0.1:45301"
+          }
+        },
+        "health": {
+          "counter_alpha": {
+            "a2a_protocol": "0.3.0",
+            "identity": "dab52801-f3d9-49ac-a780-211e2ee200e6",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "counter_beta": {
+            "a2a_protocol": "0.3.0",
+            "identity": "d6f88d95-15ba-4a02-abc9-0922b6b11bf7",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "quality": {
+            "a2a_protocol": "0.3.0",
+            "identity": "8b463181-b822-4525-9034-78ade7e8cb6e",
+            "incarnation": 1,
+            "role": "quality"
+          },
+          "release": {
+            "identity": "b534be97-5169-449b-93e9-36a22fefba37",
+            "incarnation": 1,
+            "mode": "participating"
+          },
+          "source_alpha": {
+            "a2a_protocol": "0.3.0",
+            "identity": "772b76c3-14ac-454c-af33-670a78346215",
+            "incarnation": 1,
+            "role": "capability"
+          },
+          "source_beta": {
+            "a2a_protocol": "0.3.0",
+            "identity": "1a1113cb-7f93-41d7-8ea7-5acdac20c4a3",
+            "incarnation": 1,
+            "role": "capability"
+          }
+        },
+        "pids": {
+          "counter_alpha": {
+            "identity": "dab52801-f3d9-49ac-a780-211e2ee200e6",
+            "pid": 56690,
+            "port": 45302
+          },
+          "counter_beta": {
+            "identity": "d6f88d95-15ba-4a02-abc9-0922b6b11bf7",
+            "pid": 56691,
+            "port": 45303
+          },
+          "quality": {
+            "identity": "8b463181-b822-4525-9034-78ade7e8cb6e",
+            "pid": 56692,
+            "port": 45304
+          },
+          "release": {
+            "identity": "b534be97-5169-449b-93e9-36a22fefba37",
+            "pid": 56693,
+            "port": 45305
+          },
+          "source_alpha": {
+            "identity": "772b76c3-14ac-454c-af33-670a78346215",
+            "pid": 56678,
+            "port": 45300
+          },
+          "source_beta": {
+            "identity": "1a1113cb-7f93-41d7-8ea7-5acdac20c4a3",
+            "pid": 56683,
+            "port": 45301
+          }
+        }
+      }
+    },
+    "v1_publication": {
+      "level": "real",
+      "value": {
+        "approval": {
+          "approver": "operator:fixture-operator",
+          "decision": "operator reviewed hand-written template",
+          "package_digest": "de1e8ead91d886efe517e7c8bc35126062b29befd6eadd457beb6a42739cf467",
+          "policy": "human",
+          "status": "approved"
+        },
+        "publication": {
+          "build_id": "b-05b5760359e6",
+          "label": "v1",
+          "manifest_digest": "853efdb02b92a29da1881d9c961bdcba1cf3b16676498ee417404a815df50273",
+          "package_digest": "de1e8ead91d886efe517e7c8bc35126062b29befd6eadd457beb6a42739cf467"
+        },
+        "source": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/definitions/v1-template.json"
+      }
+    },
+    "v2_publication": {
+      "level": "real",
+      "value": {
+        "build_id": "b-05b5760359e6",
+        "label": "v2",
+        "manifest_digest": "b51e0d84a1cd9e2b233c436f10ba3de7172da0a2851cf62a4c68a5e1bb080f99",
+        "package_digest": "aab42f9ce17b78e7d869bf8c8642ce6184eb29c2847cc04de0131444ad760b2e"
+      }
+    }
+  },
+  "cleanup_broker": "stopped",
+  "cleanup_errors": [],
+  "cleanup_harness_exit": -15,
+  "cleanup_mock_exit": -15,
+  "cleanup_runner": {
+    "address": "127.0.0.1:44102",
+    "builds": {},
+    "namespace": "exomachina",
+    "pid": null,
+    "pids": {},
+    "rss_kib": {},
+    "running": false,
+    "worker_rss_kib": {}
+  },
+  "cleanup_testbed": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  },
+  "director_model": "fixture",
+  "finished_at": 1790214038.0850701,
+  "home": "/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a",
+  "limits": {
+    "deadline_seconds": 600,
+    "max_model_calls": 12,
+    "max_rounds": 4,
+    "max_tool_calls": 24
+  },
+  "model": {
+    "billing": "none",
+    "live": false,
+    "provider": "synthetic-loopback"
+  },
+  "provider": "synthetic-loopback",
+  "release": "http-release (fixture)",
+  "started_at": 1790214005.1498828,
+  "status": "pass",
+  "wall_times": {
+    "level": "real",
+    "value": {
+      "author_and_publish_v2_s": 1.622,
+      "history_export_s": 0.203,
+      "leak_scan_s": 0.752,
+      "provision_and_publish_v1_s": 7.62,
+      "selection_seconds": 0.001,
+      "total_s": 32.935,
+      "v2_a2a_terminal_s": 17.802
+    }
+  }
+}

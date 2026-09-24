@@ -53,3 +53,24 @@ The evidence explicitly marks `director_model: fixture`: the broker powers graph
 ## Gap
 
 `scenarios/live_authoring.py` accepts `--max-rounds N` and forwards nondefault values to `admin.py author`, but the current read-only `src/admin.py` does not expose that option. Default `N=4` passed. The admin owner must add the CLI option to make nondefault runs work. The `codex-subscription` path was not run, per instruction. The local guard self-test proves its refusal function leaves a recording loopback server at zero requests; it does not execute the live provider path.
+
+## Final synthetic run
+
+Committed code SHA: `67cbec08399cff5dcd969077e47ab350cd82f05f`. Trial home: `/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a` (resolved by macOS to `/private/tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a`). The fresh-home check passed before the run. No `codex-subscription` run or OpenAI request was made.
+
+Commands from `prototype/temporal-factory` and their output:
+
+```sh
+git status --short -- src scenarios broker tests
+# exit 0; no output
+git rev-parse HEAD
+# 67cbec08399cff5dcd969077e47ab350cd82f05f
+test ! -e /tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a
+# exit 0; no output
+/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python -B scenarios/live_authoring.py --self-test-live-guard
+# {"status": "pass", "test": "live_override_guard", "loopback_requests": 0}
+/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python -B scenarios/live_authoring.py --home /tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a --provider synthetic-loopback
+# {"status": "pass", "evidence": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-synthetic-loopback.json", "scan_evidence": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/prototype/temporal-factory/evidence/live-authoring-synthetic-loopback-scan.json", "provider": "synthetic-loopback", "run_id": "52aa74eb-3dc4-4062-8c43-4a490d96e61f.574e200fbc7596bda62d"}
+```
+
+The evidence and sidecar were read and assertions over their recorded values passed: `{"status": "pass", "rounds": 2, "model_calls": 4, "tool_calls": 3, "release_effects": 1, "history_events": {"child": 44, "parent": 14}, "files_scanned": 2007, "candidate_files": 99, "hits": 0, "positive_control_hits": 9, "final_scan_hits": 0, "broker": "stopped", "runner_running": false}`. Limits were 4 rounds, 12 model calls, 24 tool calls, and 600 seconds; the two drafts were invalid then valid. The completed v2 run recorded `director_model: fixture` and one `http-release (fixture)` effect with `accepted_effect_count: 1`. The planted bare access token and copied credential were both detected in the positive control. The final sidecar scan had zero hits, and its evidence SHA-256 matched the JSON file. Cleanup recorded no errors, with the broker, runner, and testbed stopped. The run left its trial state and raw parent/child histories in place.
