@@ -22,7 +22,7 @@ INTERPRETER_FILES = (
     "worker.py", "factory.py", "adapter.py", "binding.py", "buildinfo.py",
     "definition.py", "fixture.py", "failure_projection.py",
     "incident_projection.py", "quality_authority.py", "a2a_outcome.py",
-    "long_client.py", "receiver_client.py",
+    "long_client.py", "agent_binding.py", "receiver_client.py",
 )
 
 

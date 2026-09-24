@@ -14,6 +14,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+from agent_binding import pin
 SERVICE_NAMES = (
     "source_alpha", "source_beta", "counter_alpha", "counter_beta", "quality", "release"
 )
@@ -81,16 +83,23 @@ def contract_records() -> dict[str, dict]:
     return contracts
 
 
-def write_metadata(home: Path, bindings: dict[str, dict], pids: dict[str, dict]) -> None:
+def write_metadata(home: Path, bindings: dict[str, dict], pids: dict[str, dict],
+                   contracts: dict[str, dict] | None = None, *, snapshot: bool = False) -> None:
     directory = home / "testbed"
     directory.mkdir(parents=True, exist_ok=True)
     for name, value in (
         ("approved_bindings.json", bindings),
-        ("contracts.json", contract_records()),
+        ("contracts.json", contracts if contracts is not None else contract_records()),
         ("quality_policy.json", QUALITY_POLICY),
         ("pids.json", pids),
     ):
         (directory / name).write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+    if snapshot:
+        value = {"snapshot_version": 1,
+                 "agents": {binding["identity"]: {"url": binding["url"]}
+                            for binding in bindings.values()}}
+        (directory / "agent_snapshot.json").write_text(json.dumps(value, indent=2,
+                                                                sort_keys=True) + "\n")
 
 
 def read_pids(home: Path) -> dict[str, dict]:
@@ -115,7 +124,12 @@ def alive(pid: int) -> bool:
         return False
 
 
-def command_for(name: str, state: Path, port: int) -> list[str]:
+def command_for(name: str, state: Path, port: int, *, delayed_agent: bool = False,
+                delay_seconds: float = 15) -> list[str]:
+    if name == "counter_beta" and delayed_agent:
+        return [sys.executable, "-B", str(ROOT / "services" / "delayed_agent.py"),
+                "--state", str(state), "--port", str(port),
+                "--delay-seconds", str(delay_seconds)]
     if role_for(name) == "capability":
         script = ROOT / "src" / "harness_server.py"
         extra = ["--role", "capability"]
@@ -128,7 +142,8 @@ def command_for(name: str, state: Path, port: int) -> list[str]:
     return [sys.executable, "-B", str(script), "--state", str(state), "--port", str(port), *extra]
 
 
-def up(home: Path, port_base: int) -> dict:
+def up(home: Path, port_base: int, *, delayed_agent: bool = False,
+       delay_seconds: float = 15) -> dict:
     pids = read_pids(home)
     health = {}
     for index, name in enumerate(SERVICE_NAMES):
@@ -145,7 +160,8 @@ def up(home: Path, port_base: int) -> dict:
             state = home / "services" / name
             state.mkdir(parents=True, exist_ok=True)
             with (state / "service.log").open("a") as log:
-                process = subprocess.Popen(command_for(name, state, port), stdout=log, stderr=log,
+                process = subprocess.Popen(command_for(name, state, port,
+                    delayed_agent=delayed_agent, delay_seconds=delay_seconds), stdout=log, stderr=log,
                                            start_new_session=True)
             deadline = time.monotonic() + 30
             while time.monotonic() < deadline:
@@ -164,13 +180,25 @@ def up(home: Path, port_base: int) -> dict:
             directory = home / "testbed"
             directory.mkdir(parents=True, exist_ok=True)
             (directory / "pids.json").write_text(json.dumps(pids, indent=2, sort_keys=True) + "\n")
-        if observed.get("role", observed.get("mode")) != (
+        if not (name == "counter_beta" and delayed_agent) and observed.get("role", observed.get("mode")) != (
             "participating" if name == "release" else role_for(name)
         ):
             raise RuntimeError(f"{name}: health role mismatch")
         health[name] = observed
     bindings = binding_records(health, port_base)
-    write_metadata(home, bindings, pids)
+    contracts = contract_records()
+    if delayed_agent:
+        for value in contracts.values():
+            value["reconcile"] = "fixture-lookup"
+        delayed = bindings["counter_beta"]
+        delayed_pin = pin(delayed["url"], delayed["identity"])
+        contracts["counter_beta"].update(delayed_pin)
+        contracts["counter_beta"]["operations"] = {
+            "idempotent_action_id": delayed_pin["reconcile"] == "a2a-idempotent-resend",
+            "task_lookup": "tasks/get"}
+        contracts["counter_beta"]["input"]["blocking"] = False
+        contracts["counter_beta"]["attested"] = True
+    write_metadata(home, bindings, pids, contracts, snapshot=delayed_agent)
     return {"bindings": bindings, "health": health, "pids": pids}
 
 
@@ -219,9 +247,12 @@ def main() -> None:
     parser.add_argument("command", choices=("up", "down", "status"))
     parser.add_argument("--home", type=Path, required=True)
     parser.add_argument("--port-base", type=int, default=45200)
+    parser.add_argument("--delayed-agent", action="store_true")
+    parser.add_argument("--delay-seconds", type=float, default=15)
     args = parser.parse_args()
     if args.command == "up":
-        value = up(args.home, args.port_base)
+        value = up(args.home, args.port_base, delayed_agent=args.delayed_agent,
+                   delay_seconds=args.delay_seconds)
     elif args.command == "down":
         value = down(args.home)
     else:

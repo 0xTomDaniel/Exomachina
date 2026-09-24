@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import urllib.error
 import urllib.parse
 import urllib.request
 from uuid import uuid4
+
+from agent_binding import UnavailableBinding, resolve as resolve_pinned
 
 
 TOKEN = "Bearer fixture-token"
@@ -22,7 +25,7 @@ def _request(url, method, data=None):
     request = urllib.request.Request(url, data=payload, method=method,
         headers={"Authorization": TOKEN, "Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(request, timeout=120) as response:
+        with urllib.request.urlopen(request, timeout=10) as response:
             return json.loads(response.read())
     except urllib.error.HTTPError as error:
         body = error.read().decode(errors="replace")
@@ -56,6 +59,59 @@ def send(url, command):
             "definition_digest": command["definition_digest"], "task_id": result["id"],
             "artifact": artifact, "harness_identity": metadata.get("harness_identity"),
             "harness_role": metadata.get("harness_role"), "a2a_protocol": "0.3.0"}
+
+
+def send_async(url: str, command: dict) -> dict:
+    """Submit the pinned async contract; retain the Task, including its id."""
+    rpc = {"jsonrpc": "2.0", "id": str(uuid4()), "method": "message/send",
+           "params": {"message": {"role": "user", "messageId": str(uuid4()),
+                                  "parts": [{"kind": "data", "data": command}]},
+                      "configuration": {"blocking": False}}}
+    response = _request(url.rstrip("/") + "/", "POST", rpc)
+    if "error" in response:
+        raise RuntimeError("A2A error: " + json.dumps(response["error"]))
+    return response["result"]
+
+
+def validate_async_task(task: dict, command: dict, identity: str) -> str:
+    if task.get("kind") != "task" or not isinstance(task.get("id"), str) or not task["id"]:
+        raise ValueError("A2A response lacks Task id")
+    metadata = task.get("metadata") or {}
+    for key in ("action_id", "run_id", "definition_digest"):
+        if metadata.get(key) != command[key]:
+            raise ValueError("A2A Task binding mismatch: " + key)
+    if metadata.get("agent_identity") != identity:
+        raise ValueError("A2A Task identity mismatch")
+    state = (task.get("status") or {}).get("state")
+    if state not in {"submitted", "working", "completed", "failed", "canceled", "rejected"}:
+        raise ValueError("A2A Task state invalid")
+    return state
+
+
+def async_receipt(task: dict, command: dict, identity: str) -> dict:
+    if validate_async_task(task, command, identity) != "completed":
+        raise ValueError("A2A Task is not complete")
+    artifacts = task.get("artifacts") or []
+    if len(artifacts) != 1 or len(artifacts[0].get("parts") or []) != 1:
+        raise ValueError("expected one structured artifact")
+    part = artifacts[0]["parts"][0]
+    if part.get("kind") != "data" or not isinstance(part.get("data"), dict):
+        raise ValueError("expected artifact DataPart")
+    artifact = part["data"]
+    for key in ("action_id", "run_id", "definition_digest"):
+        if artifact.get(key) != command[key]:
+            raise ValueError("artifact binding mismatch: " + key)
+    if artifact.get("author") != identity or artifact.get("revision") != "r2":
+        raise ValueError("artifact author or revision mismatch")
+    content = artifact.get("content")
+    if not isinstance(content, str) or artifact.get("sha256") != hashlib.sha256(content.encode()).hexdigest():
+        raise ValueError("artifact content digest mismatch")
+    if artifacts[0].get("artifactId") != artifact["sha256"]:
+        raise ValueError("A2A Artifact id differs from content digest")
+    return {"action_id": command["action_id"], "run_id": command["run_id"],
+            "definition_digest": command["definition_digest"], "task_id": task["id"],
+            "artifact": artifact, "harness_identity": identity,
+            "harness_role": "capability", "a2a_protocol": "0.3.0"}
 
 
 def reconcile(url, action_id, run_id=None, definition_digest=None):

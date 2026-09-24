@@ -26,9 +26,14 @@ class EffectKind(StrEnum):
 
 class Phase(StrEnum):
     SUBMITTED = "submitted"
+    WORKING = "working"
     CONFIRMED = "confirmed"
     UNKNOWN = "unknown"
     INCIDENT = "incident"
+
+
+class StaleOutcome(Exception):
+    """A different Activity attempt advanced the durable row first."""
 
 
 @dataclass(frozen=True)
@@ -45,6 +50,11 @@ class OutcomeRecord:
     lookup_limit: int = 3
     receipt: dict[str, Any] | None = None
     reason: str | None = None
+    task_id: str | None = None
+    payload_sha256: str | None = None
+    pinned_identity: str | None = None
+    sequence: int = 0
+    expected_phase: Phase | None = None
 
     @property
     def may_submit(self) -> bool:
@@ -55,7 +65,8 @@ class OutcomeRecord:
 def submitted(action_id: str, run_id: str, definition_digest: str,
               receiver: ReceiverKind, *, effect_kind: EffectKind = EffectKind.A2A,
               revision: str | None = None, sha256: str | None = None,
-              lookup_limit: int = 3) -> OutcomeRecord:
+              lookup_limit: int = 3, payload_sha256: str | None = None,
+              pinned_identity: str | None = None) -> OutcomeRecord:
     if not all(isinstance(x, str) and x for x in (action_id, run_id, definition_digest)):
         raise ValueError("missing A2A action binding")
     if type(lookup_limit) is not int or lookup_limit < 1:
@@ -67,7 +78,35 @@ def submitted(action_id: str, run_id: str, definition_digest: str,
         raise ValueError("A2A action cannot carry release binding")
     return OutcomeRecord(action_id, run_id, definition_digest, receiver,
                          effect_kind=effect_kind, revision=revision, sha256=sha256,
-                         lookup_limit=lookup_limit)
+                         lookup_limit=lookup_limit, payload_sha256=payload_sha256,
+                         pinned_identity=pinned_identity)
+
+
+def task_started(record: OutcomeRecord, task_id: str) -> OutcomeRecord:
+    if record.phase not in {Phase.SUBMITTED, Phase.UNKNOWN, Phase.WORKING}:
+        raise ValueError("Task cannot start from terminal outcome")
+    if not isinstance(task_id, str) or not task_id or (record.task_id and record.task_id != task_id):
+        return _advance(record, phase=Phase.INCIDENT, reason="task-id-inconsistent")
+    return _advance(record, phase=Phase.WORKING, task_id=task_id, reason=None)
+
+
+def task_finished(record: OutcomeRecord, receipt: Mapping[str, Any]) -> OutcomeRecord:
+    if record.phase != Phase.WORKING:
+        raise ValueError("Task completion requires journaled Task id")
+    if not _matching(record, receipt) or receipt.get("task_id") != record.task_id:
+        return _advance(record, phase=Phase.INCIDENT, reason="reply-binding-inconsistent")
+    return _advance(record, phase=Phase.CONFIRMED, receipt=dict(receipt), reason=None)
+
+
+def task_incident(record: OutcomeRecord, reason: str) -> OutcomeRecord:
+    if record.phase in {Phase.CONFIRMED, Phase.INCIDENT}:
+        raise ValueError("terminal outcome cannot change")
+    return _advance(record, phase=Phase.INCIDENT, reason=reason)
+
+
+def _advance(record: OutcomeRecord, **changes) -> OutcomeRecord:
+    return replace(record, sequence=record.sequence + 1,
+                   expected_phase=record.phase, **changes)
 
 
 def _matching(record: OutcomeRecord, receipt: Mapping[str, Any]) -> bool:
@@ -90,14 +129,14 @@ def send_completed(record: OutcomeRecord, receipt: Mapping[str, Any]) -> Outcome
     if record.phase != Phase.SUBMITTED:
         raise ValueError("submission already resolved or uncertain")
     if not _matching(record, receipt):
-        return replace(record, phase=Phase.INCIDENT, reason="reply-binding-inconsistent")
-    return replace(record, phase=Phase.CONFIRMED, receipt=dict(receipt))
+        return _advance(record, phase=Phase.INCIDENT, reason="reply-binding-inconsistent")
+    return _advance(record, phase=Phase.CONFIRMED, receipt=dict(receipt))
 
 
 def send_ambiguous(record: OutcomeRecord) -> OutcomeRecord:
     if record.phase != Phase.SUBMITTED:
         raise ValueError("submission already resolved or uncertain")
-    return replace(record, phase=Phase.UNKNOWN, reason="submission-outcome-unknown")
+    return _advance(record, phase=Phase.UNKNOWN, reason="submission-outcome-unknown")
 
 
 def lookup_result(record: OutcomeRecord, receipt: Mapping[str, Any] | None,
@@ -105,18 +144,18 @@ def lookup_result(record: OutcomeRecord, receipt: Mapping[str, Any] | None,
     if record.phase != Phase.UNKNOWN:
         raise ValueError("lookup requires an unknown outcome")
     if record.receiver == ReceiverKind.OPAQUE:
-        return replace(record, phase=Phase.INCIDENT, reason="opaque-effect-unknown")
+        return _advance(record, phase=Phase.INCIDENT, reason="opaque-effect-unknown")
     count = record.lookup_count + 1
     if receipt is not None:
         if not _matching(record, receipt):
-            return replace(record, phase=Phase.INCIDENT, lookup_count=count,
+            return _advance(record, phase=Phase.INCIDENT, lookup_count=count,
                            reason="lookup-binding-inconsistent")
-        return replace(record, phase=Phase.CONFIRMED, lookup_count=count,
+        return _advance(record, phase=Phase.CONFIRMED, lookup_count=count,
                        receipt=dict(receipt), reason=None)
     if count >= record.lookup_limit:
-        return replace(record, phase=Phase.INCIDENT, lookup_count=count,
+        return _advance(record, phase=Phase.INCIDENT, lookup_count=count,
                        reason="lookup-exhausted" if available else "lookup-unavailable")
-    return replace(record, lookup_count=count,
+    return _advance(record, lookup_count=count,
                    reason="lookup-empty" if available else "lookup-unavailable")
 
 
@@ -144,13 +183,27 @@ class OutcomeJournal:
         data["receiver"] = ReceiverKind(data["receiver"])
         data["effect_kind"] = EffectKind(data["effect_kind"])
         data["phase"] = Phase(data["phase"])
+        if data.get("expected_phase") is not None:
+            data["expected_phase"] = Phase(data["expected_phase"])
         return OutcomeRecord(**data)
 
-    def put(self, record: OutcomeRecord) -> None:
+    def put(self, record: OutcomeRecord) -> OutcomeRecord:
         with self.connection:
-            self.connection.execute("INSERT INTO outcomes VALUES (?, ?) "
-                                    "ON CONFLICT(action_id) DO UPDATE SET value=excluded.value",
-                                    (record.action_id, json.dumps(asdict(record), sort_keys=True)))
+            row = self.connection.execute("SELECT value FROM outcomes WHERE action_id=?",
+                                          (record.action_id,)).fetchone()
+            if row is None:
+                raise ValueError("outcome must begin before transition")
+            prior = json.loads(row[0])
+            if (prior["phase"] in {Phase.CONFIRMED, Phase.INCIDENT}
+                    or prior.get("sequence", 0) + 1 != record.sequence
+                    or prior["phase"] != record.expected_phase):
+                raise StaleOutcome("outcome row advanced before this transition")
+            cursor = self.connection.execute(
+                "UPDATE outcomes SET value=? WHERE action_id=? AND value=?",
+                (json.dumps(asdict(record), sort_keys=True), record.action_id, row[0]))
+            if cursor.rowcount != 1:
+                raise StaleOutcome("outcome compare-and-set failed")
+        return record
 
     def begin(self, record: OutcomeRecord) -> tuple[OutcomeRecord, bool]:
         with self.connection:
@@ -160,8 +213,10 @@ class OutcomeJournal:
         prior = self.get(record.action_id)
         assert prior is not None
         if (prior.run_id, prior.definition_digest, prior.receiver,
-                prior.effect_kind, prior.revision, prior.sha256) != (
+                prior.effect_kind, prior.revision, prior.sha256,
+                prior.payload_sha256, prior.pinned_identity) != (
                 record.run_id, record.definition_digest, record.receiver,
-                record.effect_kind, record.revision, record.sha256):
+                record.effect_kind, record.revision, record.sha256,
+                record.payload_sha256, record.pinned_identity):
             raise ValueError("action ID reused with different receiver or binding")
         return prior, created
