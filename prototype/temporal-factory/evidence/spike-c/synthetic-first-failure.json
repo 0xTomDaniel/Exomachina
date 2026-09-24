@@ -1,0 +1,176 @@
+{
+  "account_hash": null,
+  "broker_stopped": true,
+  "checks": {},
+  "claim": "observed-synthetic",
+  "cold_health": {
+    "a2a_protocol": "0.3.0",
+    "capability": "verified-research@1",
+    "identity": "961cef89-7d5a-4b37-a6c1-fed26599be5f",
+    "incarnation": 2,
+    "name": "research-factory",
+    "role": "factory-harness",
+    "runner_running": false,
+    "startup": {
+      "recovery": null,
+      "runner_started_at_startup": false
+    },
+    "unfinished_runs": 0
+  },
+  "director_model": "synthetic",
+  "failure": {
+    "message": "'id'",
+    "step": "C-1",
+    "type": "KeyError"
+  },
+  "fixture_services": [
+    "Quality",
+    "source/counter capabilities",
+    "HTTP release receiver"
+  ],
+  "harness_exit": -15,
+  "home": "/private/tmp/exo-qual-c-synthetic-2",
+  "limits": {
+    "deadline_seconds": 90,
+    "max_model_calls": 4,
+    "max_tool_calls": 4
+  },
+  "listeners_after": [],
+  "mock_exit": 1,
+  "model_id": "gpt-6-sol",
+  "provider": "synthetic-loopback",
+  "publication": {
+    "build_id": "b-05b5760359e6",
+    "label": "spike-c-v1",
+    "manifest_digest": "116bc299719629310706b9141c77637ee4d7426f32013d4a934f5918e854313b",
+    "package_digest": "e5861243f33db807377fbf75885c177a1bad188401a9c16c3802fd9bb2ef4923"
+  },
+  "runner_stop": {
+    "address": "127.0.0.1:44402",
+    "builds": {},
+    "namespace": "exomachina",
+    "pid": null,
+    "pids": {},
+    "rss_kib": {},
+    "running": false,
+    "worker_rss_kib": {}
+  },
+  "status": "fail",
+  "testbed": {
+    "bindings": {
+      "counter_alpha": {
+        "approved": true,
+        "identity": "cc7e99a7-7b5e-4774-866f-b78587806bb8",
+        "role": "capability",
+        "url": "http://127.0.0.1:45602"
+      },
+      "counter_beta": {
+        "approved": true,
+        "identity": "fc007056-0b2a-464b-9b05-53306721f339",
+        "role": "capability",
+        "url": "http://127.0.0.1:45603"
+      },
+      "quality": {
+        "approved": true,
+        "identity": "cdecadab-d0d0-4da4-9a70-75e6b80dea40",
+        "role": "quality",
+        "url": "http://127.0.0.1:45604"
+      },
+      "release": {
+        "approved": true,
+        "identity": "5e92b46a-9a62-4d34-9192-4e8353eaa63c",
+        "role": "release",
+        "url": "http://127.0.0.1:45605"
+      },
+      "source_alpha": {
+        "approved": true,
+        "identity": "afe26a8d-5fab-4772-9b17-39eb8ebd3564",
+        "role": "capability",
+        "url": "http://127.0.0.1:45600"
+      },
+      "source_beta": {
+        "approved": true,
+        "identity": "aeecb83b-a36e-4b69-afa9-e650f6bb1586",
+        "role": "capability",
+        "url": "http://127.0.0.1:45601"
+      }
+    },
+    "health": {
+      "counter_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "cc7e99a7-7b5e-4774-866f-b78587806bb8",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "counter_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "fc007056-0b2a-464b-9b05-53306721f339",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "quality": {
+        "a2a_protocol": "0.3.0",
+        "identity": "cdecadab-d0d0-4da4-9a70-75e6b80dea40",
+        "incarnation": 1,
+        "role": "quality"
+      },
+      "release": {
+        "identity": "5e92b46a-9a62-4d34-9192-4e8353eaa63c",
+        "incarnation": 1,
+        "mode": "participating"
+      },
+      "source_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "afe26a8d-5fab-4772-9b17-39eb8ebd3564",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "source_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "aeecb83b-a36e-4b69-afa9-e650f6bb1586",
+        "incarnation": 1,
+        "role": "capability"
+      }
+    },
+    "pids": {
+      "counter_alpha": {
+        "identity": "cc7e99a7-7b5e-4774-866f-b78587806bb8",
+        "pid": 73344,
+        "port": 45602
+      },
+      "counter_beta": {
+        "identity": "fc007056-0b2a-464b-9b05-53306721f339",
+        "pid": 73345,
+        "port": 45603
+      },
+      "quality": {
+        "identity": "cdecadab-d0d0-4da4-9a70-75e6b80dea40",
+        "pid": 73356,
+        "port": 45604
+      },
+      "release": {
+        "identity": "5e92b46a-9a62-4d34-9192-4e8353eaa63c",
+        "pid": 73358,
+        "port": 45605
+      },
+      "source_alpha": {
+        "identity": "afe26a8d-5fab-4772-9b17-39eb8ebd3564",
+        "pid": 73322,
+        "port": 45600
+      },
+      "source_beta": {
+        "identity": "aeecb83b-a36e-4b69-afa9-e650f6bb1586",
+        "pid": 73343,
+        "port": 45601
+      }
+    }
+  },
+  "testbed_down": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  }
+}
