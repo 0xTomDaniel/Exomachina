@@ -1,38 +1,37 @@
 # Lane R handoff
 
-## Contract questions
-
-None identified before work stopped.
-
 ## Status
 
-Partial. `services/agent_roles.py` has the frozen interface as working stubs; the full implementation and tests were not completed. A patch to replace the stubs failed patch verification because the patch contained both Delete File and Add File for the same path. Per `briefs/qual-common.md`, stopped that action and did not retry it by another route.
+Complete for the bounded repair job. The role implementation and 12 focused tests pass; the full unit suite passes 124 tests. `packets/` and `scenarios/sf_stimuli.json` remain as committed in `21a4b9d`.
+
+The previous attempt stopped after a patch containing both Delete File and Add File for `services/agent_roles.py` failed patch verification. Its interface stubs, packet and stimuli were committed as `21a4b9d`. This repair used Update File hunks for the existing file and proceeded under the clarified stop rule. During this repair, the first focused test invocation found a syntax error (`== not`); the next found an assertion failure because the research system prompt omitted the literal capability. Both were corrected before the passing runs.
 
 ## Files changed
 
-- `services/agent_roles.py`: interface stubs (`ROLES`, `Role` methods, `RoleOutputError`, `RUBRIC`, `RUBRIC_DIGEST`, `REPORT_SECTIONS`, `usefulness_check`). Methods other than `precheck` still raise `NotImplementedError`.
-- `packets/exo-qualification-2026-09-23/packet.json`: 10 verbatim items from the committed `QUALIFICATION.md`, 6,019 bytes.
-- `scenarios/sf_stimuli.json`: route 2 and 3 planted claims and revision controls.
+- `services/agent_roles.py`: prompts, strict JSON parsers, Quality precheck, scripted research/synthesis/Quality replies, and structured usefulness checker. Frozen exported names and method signatures remain.
+- `tests/test_agent_roles.py`: 12 tests for each result schema, invalid data, precheck, verdict consistency and binding, scripted route acceptance/rejection/repair, usefulness, and all 10 packet excerpts against the pinned commit.
 - `handoff/sf-roles.md`: this record.
 
 ## Commands and results
 
-- `pwd; rg --files ...` — pass; confirmed roles worktree and required reading files.
-- `cat` of `briefs/single-factory.md`, `briefs/qual-common.md`, `INTERFACES.md`, `README.md`, `QUALIFICATION.md` — pass; tool output was truncated, followed by targeted reads and searches.
-- `rg -n ...; rg --files ...; git status --short; git branch --show-current` — pass; branch `sf/roles`.
-- `sed -n '245,300p' briefs/single-factory.md`, `git show 2d609e3:... | nl -ba | rg -n ...`, `rg -n ...` — pass.
-- `git show 2d609e3:... | nl -ba | sed -n ...` — pass.
-- Absolute venv Python `-B` heredoc generating packet and stimuli from `git show 2d609e3:prototype/temporal-factory/QUALIFICATION.md` — pass; output `packet bytes 6019 items 10 stimuli written`.
-- `apply_patch` to create `services/agent_roles.py` stubs — pass.
-- `apply_patch` attempting full implementation — failed: `apply_patch verification failed: invalid patch: multiple operations target .../services/agent_roles.py`. No files were modified by that patch.
+- Earlier attempt: `git show 2d609e3:prototype/temporal-factory/QUALIFICATION.md` and packet generation passed (`packet bytes 6019 items 10 stimuli written`); the Delete File + Add File patch failed verification, with no modification from that patch.
+- From the roles worktree, `git log -1 --oneline && git status --short && command -v lockf` — pass: `21a4b9d`, branch clean at start, `/usr/bin/lockf` present.
+- From the roles worktree, `npm --prefix prototype/temporal-factory/broker ci --offline --cache /tmp/exomachina-pi-strands-debate/npm-cache` — pass: 85 packages added; 0 vulnerabilities.
+- From `prototype/temporal-factory`, `/usr/bin/lockf -k /tmp/exo-qual-suite.lock /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python -B -m unittest discover -s tests` — first attempt failed: 110 tests, 1 `setUpClass` error because the offline Node dependencies were not yet installed. After `npm ci`, baseline passed: 112 tests in 19.887s. Final run passed: 124 tests in 19.335s.
+- From `prototype/temporal-factory`, `/usr/bin/lockf -k /tmp/exo-qual-suite.lock /Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python -B -m unittest discover -s tests -p test_agent_roles.py -v` — initial run failed to import due to syntax error; next run had 11 pass and 1 prompt assertion failure; final run passed all 12 tests in 0.054s.
+- From the roles worktree, `git diff --check && git status --short && git diff --stat` — pass at the implementation stage; no whitespace errors. No commit, push, merge, rebase or branch switch was made.
 
 ## Tests
 
-Before: not run. After: not run. Counts unavailable because work stopped at the rejected patch.
+Before the new test file: 112 tests, pass (after the required offline broker install). After: 124 tests, pass. The focused role suite: 12 tests, pass. The excerpt test runs `git show 2d609e3:<source path>` and compares each cited line range byte-for-byte as text with every packet item's `text`.
+
+## Contract questions
+
+- `usefulness_check(content, packet)` returns `{"ok": bool, "reasons": [...]}`, not a boolean. Callers must use the `ok` field. This repairs the earlier stub's boolean annotation.
+- `policy_digest` in the Quality brief is a pinned policy digest, separate from `RUBRIC_DIGEST`. The parser validates its digest format and writes the local rubric and rubric digest into the verdict. A model may reply with just `accepted` and `findings`; the parser binds the full `quality_verdict@1` envelope to the supplied candidate and reviewer. A full, correctly bound envelope is also accepted.
 
 ## Gaps
 
-- Full role prompts, validators, deterministic Quality precheck, scripted replies, and usefulness checker remain unimplemented.
-- `tests/test_agent_roles.py` remains unwritten, including the verbatim packet test.
-- Packet excerpts were generated directly from the pinned commit, but not independently tested.
-- No processes were started; no listeners in the lane's port block were created.
+- These are unit-tested role behaviors. The independent agent service, integrated scripted scenario and live broker routes are owned by the other lanes and were not run here. No live model or credential was used.
+- The usefulness checker verifies claim count, packet citations, headings and non-empty markdown. The human/model review still decides whether the prose actually answers the question and whether each claim is supported by its cited excerpt.
+- No lane service, harness or runner process was started; no trial home was created.
