@@ -54,6 +54,8 @@ from runner import Runner  # noqa: E402
 
 TOKEN = "Bearer fixture-token"
 TOKEN_ACTOR = "fixture-operator"
+OBSERVER_TOKEN = "Bearer fixture-observer"
+OBSERVER_ACTOR = "fixture-observer"
 CURRENT_ACTOR: ContextVar[str | None] = ContextVar("harness_authenticated_actor", default=None)
 TERMINAL = {"completed", "failed", "canceled", "rejected"}
 
@@ -160,6 +162,15 @@ class Director:
                     run_id TEXT PRIMARY KEY, child_id TEXT, package_digest TEXT NOT NULL,
                     failure_class TEXT NOT NULL, timestamp TEXT NOT NULL,
                     authority_conflict INTEGER NOT NULL);
+                CREATE TABLE IF NOT EXISTS director_tool_calls (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT, task_id TEXT NOT NULL,
+                    message_id TEXT NOT NULL, model_kind TEXT NOT NULL, tool TEXT NOT NULL,
+                    arguments_json TEXT NOT NULL, result_json TEXT NOT NULL,
+                    accepted INTEGER NOT NULL, created_at REAL NOT NULL);
+                CREATE TABLE IF NOT EXISTS director_turns (
+                    task_id TEXT NOT NULL, message_id TEXT NOT NULL, model_kind TEXT NOT NULL,
+                    model_calls INTEGER NOT NULL, tool_calls INTEGER NOT NULL,
+                    result_json TEXT NOT NULL, created_at REAL NOT NULL);
             """)
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT * FROM identity WHERE singleton=1").fetchone()
@@ -315,7 +326,13 @@ class Director:
             else:
                 if alias is None:
                     raise Rejected("inspect/abort must continue the original factory Task")
+                if alias["context_id"] != context_id:
+                    raise Rejected("original factory Task context mismatch")
                 run_id = alias["run_id"]
+                owner = db.execute("SELECT authorized_actor FROM runs WHERE run_id=?",
+                                   (run_id,)).fetchone()
+                if owner is None or owner["authorized_actor"] != actor:
+                    raise Rejected("actor is not authorized for this factory run")
             if op != "inspect":
                 prior = db.execute("SELECT * FROM commands WHERE action_id=?", (action_id,)).fetchone()
                 if prior and (prior["fingerprint"] != fingerprint or prior["run_id"] != run_id):
@@ -335,6 +352,22 @@ class Director:
         with self.connect() as db:
             row = db.execute("SELECT * FROM aliases WHERE task_id=?", (task_id,)).fetchone()
             return (row["run_id"], row["context_id"]) if row else None
+
+    def inspect_bound_run(self, task_id: str) -> dict:
+        binding = self.task_binding(task_id)
+        if binding is None:
+            raise Rejected("inspect must continue the original factory Task")
+        async def status():
+            client = await self.client()
+            parent = await client.get_workflow_handle(binding[0]).query(FactoryRun.status)
+            if not parent.get("child_id"):
+                return parent
+            return await client.get_workflow_handle(parent["child_id"]).query(FactoryRun.status)
+        raw = sync(status())
+        return {"phase": raw.get("phase"), "current_revision": raw.get("current_revision"),
+                "current_sha256": raw.get("current_sha256"),
+                "repair_count": raw.get("repair_count"),
+                "wait": raw.get("phase") == "awaiting-director"}
 
     def run_record(self, run_id: str) -> dict:
         with self.connect() as db:
@@ -358,7 +391,19 @@ class Director:
             return dict(db.execute("SELECT * FROM incidents WHERE run_id=?",
                                    (incident["run_id"],)).fetchone())
 
-    async def invoke(self, command, task_id, context_id):
+    async def invoke(self, command, task_id, context_id, *, message_id=None):
+        if isinstance(command, str):
+            from director_agent import DirectorTurn, selected_model
+            selection = self.config.get("director_model", {"provider": "fixture"})
+            if selection.get("provider", "fixture") == "fixture":
+                return {"error": "text briefs require a configured broker-backed Director"}
+            message_id = message_id or str(uuid4())
+            model, kind = selected_model(self.config, session_id=str(uuid4()))
+            turn = DirectorTurn(self, task_id, context_id, message_id, kind)
+            outcome = await turn.run(command, model)
+            if not outcome["accepted"]:
+                return {"error": "Director issued no accepted command", "director_turn": outcome}
+            return {"accepted_command": outcome["accepted"][-1]}
         agent = Agent(name="Factory Director", model=ToolCallingModelFixture(),
                       plugins=[HarnessPlugin(self, task_id, context_id)], callback_handler=None)
         result = await agent.invoke_async(canonical(command))
@@ -468,9 +513,10 @@ def _auth(app):
     async def fixture_auth(request, call_next):
         if request.url.path in {"/health", "/.well-known/agent-card.json"}:
             return await call_next(request)
-        if request.headers.get("authorization") != TOKEN:
+        bearer = request.headers.get("authorization")
+        if bearer not in {TOKEN, OBSERVER_TOKEN}:
             return JSONResponse({"error": "fixture authentication required"}, status_code=401)
-        token = CURRENT_ACTOR.set(TOKEN_ACTOR)
+        token = CURRENT_ACTOR.set(TOKEN_ACTOR if bearer == TOKEN else OBSERVER_ACTOR)
         try:
             return await call_next(request)
         finally:
@@ -523,28 +569,52 @@ def create_app(instance_dir: Path):
 
 def init_instance(instance_dir: Path, *, name: str, mode: str, port: int, home: Path,
                   runner: dict | None = None, wait_seconds: int = 900) -> dict:
-    instance_dir.mkdir(parents=True, exist_ok=True)
-    config = {"name": name, "mode": mode, "port": port, "home": str(home),
-              "runner": runner or {}, "director_wait_seconds": wait_seconds,
-              "capability": {"id": "verified-research@1", "name": "Verified research",
-                             "description": "Researches a question with independent counter-evidence "
-                                            "review; returns one accepted report and release receipt.",
-                             "tags": ["research", "verified"]}}
-    path = instance_dir / "instance.json"
-    if path.exists():
-        existing = json.loads(path.read_text())
-        if existing != config:
-            raise FileExistsError("instance already configured differently")
-        return existing
-    path.write_text(json.dumps(config, indent=2, sort_keys=True) + "\n")
-    return config
+    import fcntl
+    import os
+
+    home = home.resolve()
+    instance_dir = instance_dir.resolve()
+    instances = home / "instances"
+    instances.mkdir(parents=True, exist_ok=True)
+    with (instances / "provision.lock").open("a+") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        config = {"name": name, "mode": mode, "port": port, "home": str(home),
+                  "runner": {}, "director_wait_seconds": wait_seconds,
+                  "capability": {"id": "verified-research@1", "name": "Verified research",
+                                 "description": "Researches a question with independent counter-evidence "
+                                                "review; returns one accepted report and release receipt.",
+                                 "tags": ["research", "verified"]}}
+        path = instance_dir / "instance.json"
+        if path.exists():
+            existing = json.loads(path.read_text())
+            if existing != config:
+                raise FileExistsError("instance already configured differently")
+        for other in instances.glob("*/instance.json"):
+            if other.parent.resolve() != instance_dir and json.loads(other.read_text()).get("port") == port:
+                raise ValueError(f"harness port {port} already configured for {other.parent}")
+        if mode == "factory":
+            requested = runner or {}
+            Runner(home, port_base=requested.get("port_base", os.getenv("EXO_RUNNER_PORT_BASE")),
+                   member_base=requested.get("member_base", os.getenv("EXO_RUNNER_MEMBER_BASE")))
+        if path.exists():
+            return existing
+        instance_dir.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(config, indent=2, sort_keys=True) + "\n")
+        return config
 
 
 if __name__ == "__main__":
+    import fcntl
+
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["serve"])
     parser.add_argument("--instance-dir", type=Path, required=True)
     args = parser.parse_args()
     config = load_config(args.instance_dir)
-    uvicorn.run(create_app(args.instance_dir), host="127.0.0.1", port=config["port"],
-                log_level="warning")
+    with (args.instance_dir / "harness.lock").open("a+") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise RuntimeError(f"instance already serving: {args.instance_dir}") from error
+        uvicorn.run(create_app(args.instance_dir), host="127.0.0.1", port=config["port"],
+                    log_level="warning")

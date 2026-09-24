@@ -1,0 +1,192 @@
+claim_type: unit-tested
+director_model: fixture
+command_output_begins:
+exception=<AuthoringBudgetExhausted> | event loop cycle failed
+....exception=<AuthoringBudgetExhausted> | event loop cycle failed
+....exception=<AuthoringBudgetExhausted> | event loop cycle failed
+.exception=<AuthoringBudgetExhausted> | event loop cycle failed
+.exception=<AuthoringBudgetExhausted> | event loop cycle failed
+..exception=<AuthoringBudgetExhausted> | event loop cycle failed
+..exception=<AuthoringBudgetExhausted> | event loop cycle failed
+...exception=<AuthoringBudgetExhausted> | event loop cycle failed
+EEE..........................................................................
+======================================================================
+ERROR: test_runaway_mock_stops_at_each_budget (test_authoring_budget.NodeBrokerBudgetTests.test_runaway_mock_stops_at_each_budget) (reason='model_call_limit')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/tests/test_authoring_budget.py", line 419, in test_runaway_mock_stops_at_each_budget
+    rows = mock_rows(folder)
+           ^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/tests/test_authoring_budget.py", line 77, in mock_rows
+    return [json.loads(line) for line in (folder / "mock-requests.jsonl").read_text().splitlines()]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/exo-proto-budget-sb4ij5ex/mock-requests.jsonl'
+
+======================================================================
+ERROR: test_runaway_mock_stops_at_each_budget (test_authoring_budget.NodeBrokerBudgetTests.test_runaway_mock_stops_at_each_budget) (reason='tool_call_limit')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/tests/test_authoring_budget.py", line 414, in test_runaway_mock_stops_at_each_budget
+    **limits).run("keep calling")
+              ^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/src/authoring.py", line 338, in run
+    return self.author.author(brief, approved_bindings=self.approved_bindings,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/src/authoring.py", line 268, in author
+    agent(prompt)
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 832, in __call__
+    return run_async(
+           ^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/_async.py", line 45, in run_async
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/threading/__init__.py", line 161, in wrapped_func
+    return original_func(*func_args, **func_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/_async.py", line 38, in execute
+    return asyncio.run(execute_async())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/_async.py", line 33, in execute_async
+    return await async_func()
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 853, in _invoke_async_and_flush
+    return await self.invoke_async(prompt, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 935, in invoke_async
+    async for event in events:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 1349, in stream_async
+    async for event in events:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 1493, in _run_loop
+    async for event in self._middleware_registry.invoke(
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/_middleware/registry.py", line 167, in invoke
+    async for event in gen:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 1648, in terminal
+    async for event in events:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 1703, in _execute_event_loop_cycle
+    async for event in events:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/event_loop.py", line 302, in event_loop_cycle
+    async for model_event in model_events:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/event_loop.py", line 691, in _handle_model_execution
+    raise e
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/event_loop.py", line 609, in _handle_model_execution
+    async for event in agent._middleware_registry.invoke(
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/_middleware/registry.py", line 167, in invoke
+    async for event in gen:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/event_loop.py", line 740, in terminal
+    async for event in stream_messages(
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/streaming.py", line 572, in stream_messages
+    async for event in process_stream(chunks, start_time, cancel_signal):
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/streaming.py", line 460, in process_stream
+    async for chunk in chunks:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/src/authoring.py", line 117, in stream
+    async for event in self.model.stream(messages, tool_specs=tool_specs,
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/src/model_broker.py", line 328, in stream
+    raise _provider_error(reply["error"])
+RuntimeError: model broker provider
+
+======================================================================
+ERROR: test_runaway_mock_stops_at_each_budget (test_authoring_budget.NodeBrokerBudgetTests.test_runaway_mock_stops_at_each_budget) (reason='round_limit')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/tests/test_authoring_budget.py", line 414, in test_runaway_mock_stops_at_each_budget
+    **limits).run("keep calling")
+              ^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/src/authoring.py", line 338, in run
+    return self.author.author(brief, approved_bindings=self.approved_bindings,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/src/authoring.py", line 268, in author
+    agent(prompt)
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 832, in __call__
+    return run_async(
+           ^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/_async.py", line 45, in run_async
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/threading/__init__.py", line 161, in wrapped_func
+    return original_func(*func_args, **func_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/_async.py", line 38, in execute
+    return asyncio.run(execute_async())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/_async.py", line 33, in execute_async
+    return await async_func()
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 853, in _invoke_async_and_flush
+    return await self.invoke_async(prompt, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 935, in invoke_async
+    async for event in events:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 1349, in stream_async
+    async for event in events:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 1493, in _run_loop
+    async for event in self._middleware_registry.invoke(
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/_middleware/registry.py", line 167, in invoke
+    async for event in gen:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 1648, in terminal
+    async for event in events:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/agent/agent.py", line 1703, in _execute_event_loop_cycle
+    async for event in events:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/event_loop.py", line 302, in event_loop_cycle
+    async for model_event in model_events:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/event_loop.py", line 691, in _handle_model_execution
+    raise e
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/event_loop.py", line 609, in _handle_model_execution
+    async for event in agent._middleware_registry.invoke(
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/_middleware/registry.py", line 167, in invoke
+    async for event in gen:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/event_loop.py", line 740, in terminal
+    async for event in stream_messages(
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/streaming.py", line 572, in stream_messages
+    async for event in process_stream(chunks, start_time, cancel_signal):
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/lib/python3.12/site-packages/strands/event_loop/streaming.py", line 460, in process_stream
+    async for chunk in chunks:
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/src/authoring.py", line 117, in stream
+    async for event in self.model.stream(messages, tool_specs=tool_specs,
+  File "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-b/prototype/temporal-factory/src/model_broker.py", line 328, in stream
+    raise _provider_error(reply["error"])
+RuntimeError: model broker provider
+
+----------------------------------------------------------------------
+Ran 92 tests in 11.203s
+
+FAILED (errors=3)

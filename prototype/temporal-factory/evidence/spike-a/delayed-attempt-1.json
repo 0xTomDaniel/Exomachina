@@ -1,0 +1,195 @@
+{
+  "checks": {},
+  "claim": "observed-real",
+  "commands": [],
+  "director_model": "fixture",
+  "failure": {
+    "at": 1790220980.413646,
+    "message": "HTTP Error 404: Not Found",
+    "type": "HTTPError"
+  },
+  "harness_exit": -15,
+  "home": "/tmp/exo-qual-a-delayed-20260923-a2",
+  "pin": {
+    "a2a_extension": {
+      "contract": "action-idempotent-async@1",
+      "contract_digest": "09c95ad2d3a5196a8b24f26002979418b6bc4dc75d6c26b06d6cab2a0229f5be",
+      "uri": "urn:exomachina:a2a-action-contract:v1"
+    },
+    "a2a_protocol": "0.3.0",
+    "attested": true,
+    "capability": "counter_evidence@1",
+    "card_sha256": "2a821918120b11312bcf157c471db76cba65a59adc03775a52f1505a3d65c68d",
+    "input": {
+      "blocking": false,
+      "fields": [
+        "action_id",
+        "run_id",
+        "definition_digest",
+        "brief"
+      ],
+      "operation": "assign",
+      "transport": "a2a-message/send"
+    },
+    "name": "counter_beta",
+    "operations": {
+      "idempotent_action_id": true,
+      "task_lookup": "tasks/get"
+    },
+    "output": {
+      "artifact": [
+        "revision",
+        "sha256",
+        "author",
+        "content"
+      ]
+    },
+    "reconcile": "a2a-idempotent-resend",
+    "role": "capability"
+  },
+  "publication": {
+    "approval": {
+      "approver": "operator:fixture-operator",
+      "decision": "operator reviewed hand-written template",
+      "package_digest": "eba4a07678be39ea6cdf0f825938a65e4c172287cc064ca86ac27c4052ce76a1",
+      "policy": "human",
+      "status": "approved"
+    },
+    "publication": {
+      "build_id": "b-2fa42bc231ea",
+      "label": "spike-a",
+      "manifest_digest": "62977e435074e8ab65275eed5a924d85140f4cc670fe0112782fe9894cdd73d1",
+      "package_digest": "eba4a07678be39ea6cdf0f825938a65e4c172287cc064ca86ac27c4052ce76a1"
+    },
+    "source": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-qual-a/prototype/temporal-factory/definitions/spike-a-template.json"
+  },
+  "remaining_listeners": [],
+  "runner_stop_final": {
+    "address": "127.0.0.1:44202",
+    "builds": {},
+    "namespace": "exomachina",
+    "pid": null,
+    "pids": {},
+    "rss_kib": {},
+    "running": false,
+    "worker_rss_kib": {}
+  },
+  "started_at": 1790220972.986829,
+  "testbed": {
+    "bindings": {
+      "counter_alpha": {
+        "approved": true,
+        "identity": "bd464e36-a76c-43cd-8be3-8dd3d651e213",
+        "role": "capability",
+        "url": "http://127.0.0.1:45402"
+      },
+      "counter_beta": {
+        "approved": true,
+        "identity": "b663cf3a-90f3-464a-a491-90e7436c2b5e",
+        "role": "capability",
+        "url": "http://127.0.0.1:45403"
+      },
+      "quality": {
+        "approved": true,
+        "identity": "a79ff773-c041-437d-9714-9194e0557bd7",
+        "role": "quality",
+        "url": "http://127.0.0.1:45404"
+      },
+      "release": {
+        "approved": true,
+        "identity": "f063f0f0-1e88-4fdb-8479-478ee905c06a",
+        "role": "release",
+        "url": "http://127.0.0.1:45405"
+      },
+      "source_alpha": {
+        "approved": true,
+        "identity": "81afb6af-9beb-4603-8ce9-bc02be10de1b",
+        "role": "capability",
+        "url": "http://127.0.0.1:45400"
+      },
+      "source_beta": {
+        "approved": true,
+        "identity": "cc48741e-d324-4db5-a0bb-ba679aef3983",
+        "role": "capability",
+        "url": "http://127.0.0.1:45401"
+      }
+    },
+    "health": {
+      "counter_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "bd464e36-a76c-43cd-8be3-8dd3d651e213",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "counter_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "b663cf3a-90f3-464a-a491-90e7436c2b5e",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "quality": {
+        "a2a_protocol": "0.3.0",
+        "identity": "a79ff773-c041-437d-9714-9194e0557bd7",
+        "incarnation": 1,
+        "role": "quality"
+      },
+      "release": {
+        "identity": "f063f0f0-1e88-4fdb-8479-478ee905c06a",
+        "incarnation": 1,
+        "mode": "participating"
+      },
+      "source_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "81afb6af-9beb-4603-8ce9-bc02be10de1b",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "source_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "cc48741e-d324-4db5-a0bb-ba679aef3983",
+        "incarnation": 1,
+        "role": "capability"
+      }
+    },
+    "pids": {
+      "counter_alpha": {
+        "identity": "bd464e36-a76c-43cd-8be3-8dd3d651e213",
+        "pid": 74816,
+        "port": 45402
+      },
+      "counter_beta": {
+        "identity": "b663cf3a-90f3-464a-a491-90e7436c2b5e",
+        "pid": 74817,
+        "port": 45403
+      },
+      "quality": {
+        "identity": "a79ff773-c041-437d-9714-9194e0557bd7",
+        "pid": 74822,
+        "port": 45404
+      },
+      "release": {
+        "identity": "f063f0f0-1e88-4fdb-8479-478ee905c06a",
+        "pid": 74839,
+        "port": 45405
+      },
+      "source_alpha": {
+        "identity": "81afb6af-9beb-4603-8ce9-bc02be10de1b",
+        "pid": 74787,
+        "port": 45400
+      },
+      "source_beta": {
+        "identity": "cc48741e-d324-4db5-a0bb-ba679aef3983",
+        "pid": 74789,
+        "port": 45401
+      }
+    }
+  },
+  "testbed_down": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  }
+}

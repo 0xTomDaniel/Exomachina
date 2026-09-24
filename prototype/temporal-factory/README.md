@@ -87,6 +87,10 @@ $PY -B scenarios/live_authoring.py --home /tmp/exo-proto-live-codex-<fresh> --pr
 
 The integrated scenario uses ports 44000–44012, 32400–32404, 44800 and 45200–45205; live authoring uses runner ports 44100 onward, 32420 onward, harness 44830, testbed 45300–45305 and mock 46100–46149. Both require the pinned local binaries named in `INTERFACES.md`. Use a fresh `/tmp/exo-proto-live-*` home for each authoring run. The live-provider command passed once on attempt 2 at `/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e`; attempt 1 stopped before A2A on the scenario assumption described above. All trial state is preserved: r1 `/tmp/exo-proto-int-r1`, r2 `/tmp/exo-proto-int-r2` (including earlier replay attempts under `replay-attempts/`), and the worker smokes under `/tmp/exo-proto-*`.
 
+## Qualification spikes
+
+Three follow-up spikes tested the delayed external A2A agent, two instances in one home and the broker-backed Director. Their checks were fixed before any code change. Results, preserved failures and remaining limits are in [`QUALIFICATION.md`](QUALIFICATION.md). That file supersedes the Director, second-instance and fixture-only-A2A gaps below.
+
 ## Remaining gaps
 
 - **Live scope is narrow.** One account and one completed live authoring run establish device sign-in, forced refresh, token-endpoint and SSE originator acceptance, and first-pass graph authoring through A2A/Temporal. Rate and quota behavior, entitlement and applicable terms remain unverified. The browser authorize-URL rewrite and callback were not live-tested; the hard-coded `client_id` remains a compatibility and commercial uncertainty.

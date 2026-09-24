@@ -138,9 +138,29 @@ class Runner:
                  member_base: int | None = None):
         self.home = Path(home).resolve()
         self.state = self.home / "runner"
-        self.ports = port_map(
-            int(port_base if port_base is not None else os.getenv("EXO_RUNNER_PORT_BASE", "44000")),
-            int(member_base if member_base is not None else os.getenv("EXO_RUNNER_MEMBER_BASE", "32400")))
+        self.home.mkdir(parents=True, exist_ok=True)
+        config_path = self.home / "runner-config.json"
+        with (self.home / "runner-config.lock").open("a+") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            if config_path.exists():
+                config = json.loads(config_path.read_text())
+                if (set(config) != {"port_base", "member_base"}
+                        or not all(type(config[key]) is int for key in config)):
+                    raise ValueError(f"invalid home runner config: {config_path}")
+                if ((port_base is not None and int(port_base) != config["port_base"])
+                        or (member_base is not None and int(member_base) != config["member_base"])):
+                    raise ValueError(f"runner ports differ from home config: {config_path}")
+            else:
+                config = {
+                    "port_base": int(port_base if port_base is not None else os.getenv("EXO_RUNNER_PORT_BASE", "44000")),
+                    "member_base": int(member_base if member_base is not None else os.getenv("EXO_RUNNER_MEMBER_BASE", "32400")),
+                }
+                port_map(config["port_base"], config["member_base"])
+                with config_path.open("x") as stream:
+                    json.dump(config, stream, sort_keys=True)
+                    stream.write("\n")
+            fcntl.flock(lock, fcntl.LOCK_UN)
+        self.ports = port_map(config["port_base"], config["member_base"])
         self.address = f"127.0.0.1:{self.ports['frontend']}"
         self.namespace = NAMESPACE
         self.runtime = Path(os.getenv("EXO_TEMPORAL_RUNTIME", str(DEFAULT_RUNTIME)))
