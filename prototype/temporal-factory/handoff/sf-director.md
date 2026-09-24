@@ -1,5 +1,13 @@
 # Review 2 checker fixes
 
+## Fix: pure checker replay
+
+24 September 2026. `check_evidence` now evaluates only fields in its argument. G-4 no longer builds a required scan path from the current worktree; it checks the recorded candidate manifest, scan inputs, scanner count, zero real hits, positive control, and (for new evidence) the collector's coverage fields. The collector still lists candidates at run time, hashes each file, scans them, and records the coverage. New repository paths in the manifest, scan inputs, report and history records, synthetic binding, and import audit are relative to the repo root. Preserved `scripted-1.json` through `scripted-7.json` were not changed.
+
+R1-d now checks the report bytes SHA recorded when the collector writes the report; pre-schema evidence uses its saved Task text and report path. G-7 uses the collector's embedded synthetic record and SHA field, without opening the synthetic evidence file at check time. Neither check reads the present checkout, git state, or a report file. The Review 2 tests include a scripted-7 replay with its director-worktree prefix replaced in memory, while patched `Path` methods reject checker file reads.
+
+The full Python suite under `/usr/bin/lockf -k /tmp/exo-qual-suite.lock` passed **163 tests** in this worktree. The focused checker suite passed **12 tests**. The first fresh synthetic attempt at `/tmp/exo-sf-syn-8` produced `scripted-8.json` with 24/24 checks passing, 239 candidate files, 2,600 files scanned, zero hits and a detected positive control. A post-run audit found eight absolute repo paths in its import-audit record. After normalizing that collector field, the preserved final attempt at `/tmp/exo-sf-syn-8-final` produced `scripted-8-final.json`: **24/24 checks pass**, 248 candidate files, 2,608 files scanned, zero hits, positive control detected, and no absolute director-worktree prefix in the evidence. The final evidence's checker SHA matches the current scenario file, and a disk-read-blocked replay reproduces every saved verdict and, after JSON normalization, the saved check records. No live provider was used.
+
 24 September 2026. Fast-forwarded this worktree to integration `32834c2` before the new runs. Changed only `scenarios/single_factory.py`, `tests/test_harness_modes.py`, new `tests/test_sf_checks.py`, this handoff and new evidence. No `src/` edit, commit, push, branch switch or live provider run.
 
 | Finding | Change | Regression probe |

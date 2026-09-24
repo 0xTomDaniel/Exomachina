@@ -38,6 +38,10 @@ CHECK_IDS = ("SF-0", "SF-1", "SF-2", "SF-3", *(f"R1-{x}" for x in "abcde"),
              *(f"G-{x}" for x in (1, 2, 3, 4, 5, 7)))
 AGENTS = ("research_findings", "research_risks", "synthesizer", "quality")
 SERVICES = (*AGENTS, "release")
+REPO = ROOT.parents[1]
+SYNTHETIC_BINDING_KEYS = ("status", "provider", "checks", "git_commit",
+                          "checker_sha256", "interpreter_build", "manifest_digest",
+                          "route_inventory")
 FORBIDDEN_CONTROLS = {"append_claim", "revisions", "planted_text", "stimulus",
                       "stimulus_id", "test_controls"}
 
@@ -65,6 +69,19 @@ def _text(task: dict) -> str | None:
 
 def _sha(value: str) -> str:
     return hashlib.sha256(value.encode()).hexdigest()
+
+
+def _record_path(path: Path) -> str:
+    """Store repository paths independently of the collecting worktree."""
+    try:
+        return str(path.relative_to(REPO))
+    except ValueError:
+        return str(path)
+
+
+def _sha256_field(value: object) -> bool:
+    return (isinstance(value, str) and len(value) == 64 and
+            all(char in "0123456789abcdef" for char in value))
 
 
 def _report(action: dict) -> dict:
@@ -268,8 +285,8 @@ def _redact_history(raw_path: Path, export_path: Path) -> dict:
         raise ValueError("history has no start or child input to redact")
     export_path.parent.mkdir(parents=True, exist_ok=True)
     export_path.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n")
-    return {"raw_path": str(raw_path), "raw_sha256": hashlib.sha256(original).hexdigest(),
-            "history_path": str(export_path),
+    return {"raw_path": _record_path(raw_path), "raw_sha256": hashlib.sha256(original).hexdigest(),
+            "history_path": _record_path(export_path),
             "redacted_sha256": hashlib.sha256(export_path.read_bytes()).hexdigest(),
             "redacted_json_paths": paths}
 
@@ -454,7 +471,8 @@ def check_evidence(e: dict) -> dict[str, dict]:
     cited = len(claims) >= 3 and bool(packet_ids) and all(
         isinstance(claim, dict) and isinstance(claim.get("evidence"), list) and
         bool(claim["evidence"]) and set(claim["evidence"]) <= packet_ids for claim in claims)
-    report_path = Path(r1["report_path"]) if r1.get("report_path") else None
+    report_path = r1.get("report_path")
+    report_sha256 = r1.get("report_sha256")
     markdown = report1.get("markdown")
     release1 = _release_rows(e, 1)
     release_journal1 = [j for j in e.get("journal") or [] if j.get("run_id") == r1.get("child_run_id")
@@ -462,14 +480,16 @@ def check_evidence(e: dict) -> dict[str, dict]:
     c["R1-d"] = verdict(_exact_release(r1, release1, "r1", h1) and
         useful.get("ok") is True and useful.get("sections_present") is True and
         cited and isinstance(markdown, str) and bool(markdown) and
-        _text(t1) == markdown and report_path is not None and report_path.is_file() and
-        report_path.read_bytes() == markdown.encode() and
+        _text(t1) == markdown and isinstance(report_path, str) and bool(report_path) and
+        ((report_sha256 is None and e.get("evidence_schema") != 2) or
+         report_sha256 == _sha(markdown)) and
         len(release_journal1) == 1 and release_journal1[0].get("phase") == "confirmed" and
         release1[0].get("sha256") == _sha((a1.get("artifact") or {}).get("content", "")) and
         (release_journal1[0].get("receipt") or {}).get("sha256") == h1,
         {"release": _release_rows(e, 1), "artifact": t1.get("artifacts"),
          "usefulness": useful, "claim_count": len(claims), "claims_cite_packet": cited,
-         "packet_ids": sorted(packet_ids), "report_path": r1.get("report_path")}, label)
+         "packet_ids": sorted(packet_ids), "report_path": report_path,
+         "report_sha256": report_sha256}, label)
     c["R1-d"]["scope"] = "structural"
     c["R1-d"]["semantic_reading"] = "pending-orchestrator-reading"
     c["R1-e"] = verdict(len(quality1) == 1 and v1.get("accepted") is True and
@@ -669,15 +689,30 @@ def check_evidence(e: dict) -> dict[str, dict]:
     manifest = leak.get("candidate_manifest") or []
     scan_inputs = leak.get("scan_inputs") or []
     raw_scan = leak.get("raw") or {}
-    required_inputs = [e.get("home"), str(ROOT / "evidence" / "single-factory"),
-                       str((Path(e.get("home")) / "model") if not live else DEFAULT_HOME)] if e.get("home") else []
-    c["G-4"] = verdict(leak.get("hit_count") == 0 and control.get("detected") is True and
+    required_inputs = leak.get("required_scan_inputs")
+    if required_inputs is None:  # Preserved pre-schema evidence has absolute paths.
+        required_inputs = ([e["home"], str(Path(r1.get("report_path", "")).parent),
+                            str(Path(e["home"]) / "model")] if e.get("home") else [])
+    coverage = leak.get("coverage") or {}
+    recorded_coverage = (e.get("evidence_schema") != 2 or
+        (coverage.get("manifest_count") == len(manifest) and
+         coverage.get("scanner_file_count") == raw_scan.get("files_scanned") and
+         coverage.get("zero_hits") is True and
+         coverage.get("positive_control_detected") is True and
+         coverage.get("candidate_files_hashed") is True))
+    c["G-4"] = verdict(leak.get("hit_count") == 0 and raw_scan.get("hits") == [] and
+        control.get("detected") is True and
         bool((control.get("scan") or {}).get("hits")) and
-        len(manifest) > 0 and all(row.get("path") and row.get("sha256") for row in manifest) and
+        len(manifest) > 0 and all(isinstance(row, dict) and
+            isinstance(row.get("path"), str) and bool(row["path"]) and
+            _sha256_field(row.get("sha256")) for row in manifest) and
         len({row.get("path") for row in manifest}) == len(manifest) and
+        isinstance(required_inputs, list) and bool(required_inputs) and
+        e.get("home") in required_inputs and
         all(path in scan_inputs for path in required_inputs) and
         all(row["path"] in scan_inputs for row in manifest) and
-        raw_scan.get("files_scanned", 0) >= len(manifest) and
+        isinstance(raw_scan.get("files_scanned"), int) and
+        raw_scan["files_scanned"] >= len(manifest) and recorded_coverage and
         leak.get("director_token_absent") is True and
         leak.get("decoded_payload_token_absent") is True,
         {"leak_scan": leak, "positive_control": control}, label)
@@ -698,22 +733,18 @@ def check_evidence(e: dict) -> dict[str, dict]:
         cleanup.get("stop_results_valid") is True and stop_results_valid and
         e.get("broker_pid_before") == e.get("broker_pid_after"), cleanup, label)
     synthetic = e.get("synthetic_scenario") or {}
-    synthetic_file = Path(synthetic["evidence_path"]) if synthetic.get("evidence_path") else None
-    synthetic_file_bound = (synthetic_file is not None and synthetic_file.is_file() and
-        hashlib.sha256(synthetic_file.read_bytes()).hexdigest() == synthetic.get("evidence_sha256"))
-    try:
-        synthetic_record = json.loads(synthetic_file.read_text()) if synthetic_file_bound else {}
-    except (ValueError, OSError):
-        synthetic_record = {}
-    synthetic_record_bound = all(synthetic_record.get(key) == synthetic.get(key)
-        for key in ("status", "provider", "checks", "git_commit", "checker_sha256",
-                    "interpreter_build", "manifest_digest", "route_inventory"))
+    synthetic_record = synthetic.get("record") or {}
+    synthetic_record_bound = (isinstance(synthetic_record, dict) and
+        all(synthetic_record.get(key) == synthetic.get(key)
+            for key in SYNTHETIC_BINDING_KEYS))
     c["G-7"] = verdict((not live and all(value["pass"] for key, value in c.items() if key != "G-7"))
         or (live and synthetic.get("status") == "structural-pass" and synthetic.get("provider") == "scripted"
             and bool(synthetic.get("checks"))
             and set(synthetic["checks"]) == set(CHECK_IDS) and
             all(v.get("pass") for v in synthetic["checks"].values()) and
-            synthetic_file_bound and synthetic_record_bound and synthetic.get("git_commit") and
+            bool(synthetic.get("evidence_path")) and
+            _sha256_field(synthetic.get("evidence_sha256")) and
+            synthetic_record_bound and synthetic.get("git_commit") and
             synthetic.get("checker_sha256") == e.get("checker_sha256") and
             synthetic.get("interpreter_build") == next(iter(versions), (None, None, None))[2] and
             synthetic.get("manifest_digest") == next(iter(versions), (None, None, None))[0] and
@@ -840,10 +871,10 @@ def _import_audit() -> dict:
     launcher = ROOT / "services" / "testbed.py"
     launcher_imports = sorted(names(launcher) & (src_names | {"model_broker", "agent_roles"}))
     return {"product_clean": not product, "service_clean": not service,
-            "product_violations": [str(p) for p in product],
-            "service_violations": [str(p) for p in service],
-            "running_service_modules": [str(p) for p in running],
-            "launcher_exception": {"path": str(launcher), "imports": launcher_imports,
+            "product_violations": [_record_path(p) for p in product],
+            "service_violations": [_record_path(p) for p in service],
+            "running_service_modules": [_record_path(p) for p in running],
+            "launcher_exception": {"path": _record_path(launcher), "imports": launcher_imports,
                                    "allowed": launcher_imports == ["agent_binding", "agent_roles"]},
             "legacy_not_running": ["quality_server.py", "delayed_agent.py"]}
 
@@ -1008,16 +1039,13 @@ def main() -> int:
     else:
         synthetic = {}
     env_names = ("EXO_MODEL_HOME", "EXO_CODEX_BASE_URL", "OPENAI_API_KEY", "ANTHROPIC_API_KEY")
-    evidence = {"provider": args.provider, "label": label, "home": str(home),
+    evidence = {"evidence_schema": 2, "provider": args.provider, "label": label, "home": str(home),
                 "status": "running", "routes": {}, "checks": {},
-                "synthetic_scenario": ({k: synthetic.get(k) for k in ("status", "provider", "checks")}
-                    | {"evidence_path": str(synthetic_path),
+                "synthetic_scenario": ({k: synthetic.get(k) for k in SYNTHETIC_BINDING_KEYS}
+                    | {"evidence_path": _record_path(synthetic_path),
                        "evidence_sha256": hashlib.sha256(synthetic_path.read_bytes()).hexdigest(),
-                       "git_commit": synthetic.get("git_commit"),
-                       "checker_sha256": synthetic.get("checker_sha256"),
-                       "interpreter_build": synthetic.get("interpreter_build"),
-                       "manifest_digest": synthetic.get("manifest_digest"),
-                       "route_inventory": synthetic.get("route_inventory")}) if synthetic else {},
+                       "record": {k: synthetic.get(k) for k in SYNTHETIC_BINDING_KEYS}})
+                    if synthetic else {},
                 "setup": {"fresh_home": True,
                           "environment": {name: name in os.environ for name in env_names}},
                 "release_label": "http-release (fixture)"}
@@ -1204,7 +1232,7 @@ def main() -> int:
                 raw_path = Path(workflow["history_path"])
                 export_path = evidence_dir / f"{args.provider}-{args.attempt}-route{number}" / f"{role}.json"
                 workflow["redaction"] = _redact_history(raw_path, export_path)
-                workflow["history_path"] = str(export_path)
+                workflow["history_path"] = _record_path(export_path)
             route["child_run_id"] = histories.get("parent_status_query", {}).get("child_id")
             async def final_state():
                 from temporalio.client import Client
@@ -1277,7 +1305,8 @@ def main() -> int:
                 if report:
                     path = evidence_dir / f"{args.provider}-{args.attempt}-route{number}.md"
                     path.write_text(report)
-                    route["report_path"] = str(path)
+                    route["report_path"] = _record_path(path)
+                    route["report_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
                     if number == 1:
                         from agent_roles import REPORT_SECTIONS, usefulness_check
                         route["usefulness"] = usefulness_check(_report(
@@ -1287,7 +1316,7 @@ def main() -> int:
                             section in report for section in REPORT_SECTIONS)
                         evidence["semantic_reading"] = {
                             "status": "pending-orchestrator-reading",
-                            "report_path": str(path), "packet_ids": evidence["packet_ids"]}
+                            "report_path": _record_path(path), "packet_ids": evidence["packet_ids"]}
         step = "leak-scan"
         control = positive_control(home)
         evidence["positive_control"] = {"detected": bool(control.get("scan", {}).get("hits")),
@@ -1300,10 +1329,18 @@ def main() -> int:
         exported = [path for path in evidence_dir.rglob("*") if path.is_file()]
         token_absent = bool(token) and not any(_contains_token(path, token)
             for path in set(exported) | set(candidates))
+        manifest = [{"path": _record_path(path),
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest()} for path in candidates]
         evidence["leak_scan"] = {"hit_count": len(scan.get("hits") or []),
-            "scan_inputs": [str(path) for path in paths],
-            "candidate_manifest": [{"path": str(path),
-                "sha256": hashlib.sha256(path.read_bytes()).hexdigest()} for path in candidates],
+            "scan_inputs": [_record_path(path) for path in paths],
+            "required_scan_inputs": [_record_path(path) for path in (home, evidence_dir, model_home)],
+            "candidate_manifest": manifest,
+            "coverage": {"manifest_count": len(manifest),
+                "scanner_file_count": scan.get("files_scanned"),
+                "zero_hits": scan.get("hits") == [],
+                "positive_control_detected": evidence["positive_control"]["detected"],
+                "candidate_files_hashed": bool(manifest) and all(
+                    _sha256_field(row["sha256"]) for row in manifest)},
             "director_token_absent": token_absent,
             "decoded_payload_token_absent": token_absent, "raw": scan}
         version = evidence["routes"].get("1", {}).get("workflows") or []
