@@ -22,9 +22,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from strands.models import Model
-from authoring import AuthoringSession, StrandsGraphAuthor
+from authoring import (AuthoringBudgetExhausted, AuthoringSession, StrandsGraphAuthor,
+                       _BudgetedModel)
 import admin
-from model_broker import ModelBroker, PiBrokerModel
+from model_broker import (BrokerLost, ModelBroker, PiBrokerModel, SubscriptionAuthRequired,
+                          SubscriptionQuotaExhausted)
+from strands.types.exceptions import ModelThrottledException
 
 PY = "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python"
 MOCK = ROOT / "broker" / "testing" / "mock-codex.mjs"
@@ -142,6 +145,23 @@ class DraftSequenceModel(Model):
             yield {"messageStop": {"stopReason": "end_turn"}}
 
 
+class FailingModel(RunawayModel):
+    def __init__(self, error):
+        super().__init__()
+        self.error = error
+
+    async def stream(self, messages, tool_specs=None, system_prompt=None, **kwargs):
+        self.calls += 1
+        raise self.error
+        yield  # pragma: no cover
+
+
+class SlowStartingBroker(ModelBroker):
+    def ensure_started(self, *, reason: str, timeout: float = 30) -> dict:
+        time.sleep(0.15)
+        raise BrokerLost("startup failed after deadline")
+
+
 def approved_bindings() -> dict:
     names = ("source_alpha", "source_beta", "counter_alpha", "counter_beta", "quality", "release")
     return {name: {"role": "capability" if name.startswith(("source", "counter")) else name,
@@ -194,6 +214,56 @@ class BudgetTests(unittest.TestCase):
         self.assertEqual(outcome.tool_calls[-1]["tool"], "submit_draft")
         self.assertIsNotNone(outcome.approval)
 
+    def test_describe_vocabulary_after_valid_round_limit_aborts(self):
+        valid = json.loads((ROOT / "definitions" / "v1-template.json").read_text())
+        class DescribeAfterDraft(DraftSequenceModel):
+            async def stream(self, messages, tool_specs=None, system_prompt=None, **kwargs):
+                self.calls += 1
+                name = "validate_draft" if self.calls == 1 else "describe_vocabulary"
+                args = {"template_json": json.dumps(valid)} if self.calls == 1 else {}
+                yield {"messageStart": {"role": "assistant"}}
+                yield {"contentBlockStart": {"start": {"toolUse": {
+                    "toolUseId": f"draft-{self.calls}", "name": name}}}}
+                yield {"contentBlockDelta": {"delta": {"toolUse": {"input": json.dumps(args)}}}}
+                yield {"contentBlockStop": {}}
+                yield {"messageStop": {"stopReason": "tool_use"}}
+        outcome = AuthoringSession(StrandsGraphAuthor(DescribeAfterDraft([])),
+                                   approved_bindings=approved_bindings(), max_rounds=1).run("try another tool")
+        self.assertEqual((outcome.status, outcome.abort["reason"]), ("aborted", "round_limit"))
+        self.assertEqual((len(outcome.rounds), outcome.abort["tool_calls"]), (1, 1))
+
+    def test_subscription_errors_fail_without_retry(self):
+        for cls, kind in ((SubscriptionQuotaExhausted, "quota"),
+                          (SubscriptionAuthRequired, "reauth_required")):
+            with self.subTest(kind=kind):
+                error = cls(f"model broker {kind}")
+                error.kind, error.status, error.code = kind, 429, "insufficient_quota"
+                model = FailingModel(error)
+                outcome = self.run_session(model, max_model_calls=1)
+                self.assertEqual(outcome.status, "failed")
+                self.assertEqual(outcome.error, {"kind": kind, "status": 429,
+                                                 "code": "insufficient_quota"})
+                self.assertIsNone(outcome.abort)
+                self.assertEqual(model.calls, 1)
+
+    def test_rate_limit_followed_by_budget_abort_keeps_provider_error(self):
+        error = ModelThrottledException("model broker rate_limit")
+        error.kind, error.status, error.code = "rate_limit", 429, "rate_limit_exceeded"
+        model = FailingModel(error)
+        outcome = self.run_session(model, max_model_calls=1)
+        self.assertEqual((outcome.status, outcome.abort["reason"]), ("aborted", "model_call_limit"))
+        self.assertEqual(outcome.abort["last_provider_error"],
+                         {"kind": "rate_limit", "status": 429, "code": "rate_limit_exceeded"})
+        self.assertEqual(model.calls, 1)
+
+    def test_deadline_bounds_broker_startup(self):
+        folder = Path(tempfile.mkdtemp(prefix="exo-proto-budget-", dir="/tmp"))
+        model = PiBrokerModel(SlowStartingBroker(folder), model_id="gpt-6-sol", session_id="slow")
+        started = time.monotonic()
+        outcome = self.run_session(model, deadline_seconds=0.025)
+        self.assertEqual((outcome.status, outcome.abort["reason"]), ("aborted", "deadline"))
+        self.assertLess(time.monotonic() - started, 0.12)
+
     def test_fifth_distinct_draft_aborts_before_evaluation(self):
         valid = json.loads((ROOT / "definitions" / "v1-template.json").read_text())
         actions = [("validate_draft", {"schema": 1, "variant": index}) for index in range(3)]
@@ -242,10 +312,76 @@ class BudgetTests(unittest.TestCase):
         self.assertEqual(exit_status.exception.code, 2)
         result = json.loads(output.getvalue())
         self.assertEqual(result["outcome"]["abort"]["reason"], "model_call_limit")
+        self.assertIn("selection_seconds", result)
+        self.assertEqual(result["selection_seconds"], result["outcome"]["selection_seconds"])
         self.assertEqual(result["limits"], {"max_rounds": 6, "max_model_calls": 3,
                                              "max_tool_calls": 7, "deadline_seconds": 12.0})
         self.assertEqual(result["outcome"]["limits"], result["limits"])
         self.assertFalse(module.published)
+
+    def test_admin_subscription_failure_is_failed_without_publication(self):
+        folder = Path(tempfile.mkdtemp(prefix="exo-proto-budget-", dir="/tmp"))
+        brief = folder / "brief.txt"
+        brief.write_text("author a draft")
+        class Module:
+            def approved(self):
+                return {}
+            def publish(self, *args, **kwargs):
+                raise AssertionError("failed authoring must not publish")
+        error = SubscriptionQuotaExhausted("model broker quota")
+        error.kind, error.status, error.code = "quota", 429, "insufficient_quota"
+        output = io.StringIO()
+        argv = ["admin.py", "author", "--instance-dir", str(folder),
+                "--brief", str(brief), "--label", "failed-test"]
+        with patch.object(admin, "_instance", return_value=type("DirectorStub", (), {"module": Module()})()), \
+                patch("authoring.model_from_environment", return_value=(FailingModel(error), "test")), \
+                patch.object(sys, "argv", argv), redirect_stdout(output):
+            with self.assertRaises(SystemExit) as exit_status:
+                admin.main()
+        self.assertEqual(exit_status.exception.code, 2)
+        result = json.loads(output.getvalue())
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual(result["outcome"]["error"],
+                         {"kind": "quota", "status": 429, "code": "insufficient_quota"})
+        self.assertIsNone(result["outcome"]["abort"])
+
+
+class DeadlineCancelTests(unittest.IsolatedAsyncioTestCase):
+    async def test_deadline_sends_explicit_broker_cancel(self):
+        folder = Path(tempfile.mkdtemp(prefix="exo-proto-budget-", dir="/tmp"))
+        socket_path = folder / "broker.sock"
+        cancelled = asyncio.Event()
+        observed = []
+
+        async def handle(reader, writer):
+            request = json.loads(await reader.readline())
+            observed.append(request)
+            writer.write((json.dumps({"id": request["id"], "ev": {
+                "type": "text_start", "contentIndex": 0}}) + "\n").encode())
+            await writer.drain()
+            line = await reader.readline()
+            if line:
+                observed.append(json.loads(line))
+                cancelled.set()
+            writer.close()
+            await writer.wait_closed()
+
+        server = await asyncio.start_unix_server(handle, path=str(socket_path))
+        try:
+            broker = SlowStartingBroker(folder)
+            broker.socket = socket_path
+            with patch.object(broker, "ensure_started", return_value={"pid": 1}):
+                model = PiBrokerModel(broker, model_id="gpt-6-sol", session_id="deadline-cancel")
+                budget = _BudgetedModel(model, max_calls=1,
+                                        deadline=time.monotonic() + 0.04,
+                                        state={"reason": None, "last_provider_error": None})
+                with self.assertRaisesRegex(AuthoringBudgetExhausted, "deadline"):
+                    [event async for event in budget.stream([])]
+            await asyncio.wait_for(cancelled.wait(), 2)
+            self.assertEqual(observed[1], {"id": observed[0]["id"], "op": "cancel"})
+        finally:
+            server.close()
+            await server.wait_closed()
 
 
 class NodeBrokerBudgetTests(unittest.TestCase):

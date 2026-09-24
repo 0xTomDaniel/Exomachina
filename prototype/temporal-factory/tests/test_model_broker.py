@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -18,7 +19,7 @@ from strands.types.exceptions import ModelThrottledException
 
 from authoring import model_from_environment
 from model_broker import (BrokerLost, ModelBroker, PiBrokerModel, SIG,
-                          SubscriptionAuthRequired)
+                          SubscriptionAuthRequired, SubscriptionQuotaExhausted)
 
 
 class AttachedBroker(ModelBroker):
@@ -202,20 +203,25 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
     async def test_error_mapping_and_lost_connection(self):
         for kind, expected in [("reauth_required", SubscriptionAuthRequired),
                                ("rate_limit", ModelThrottledException),
-                               ("quota", ModelThrottledException), ("lost", BrokerLost)]:
+                               ("quota", SubscriptionQuotaExhausted), ("lost", BrokerLost)]:
             with self.subTest(kind=kind):
                 path = self.home / f"{kind}.sock"
                 async def script(request, reader, writer, fake):
                     if kind != "lost":
-                        send(writer, request, error={"kind": kind, "message": kind})
+                        send(writer, request, error={"kind": kind, "message": "private provider body",
+                                                     "status": 429, "code": "insufficient_quota"})
                         await writer.drain()
                 fake = FakeSocketBroker(path, script)
                 await fake.start()
                 try:
                     model = PiBrokerModel(AttachedBroker(path.parent), model_id="gpt-6-sol", session_id="s")
                     model.broker.socket = path
-                    with self.assertRaises(expected):
+                    with self.assertRaises(expected) as caught:
                         [chunk async for chunk in model.stream([])]
+                    if kind != "lost":
+                        self.assertEqual((caught.exception.kind, caught.exception.status,
+                                          caught.exception.code), (kind, 429, "insufficient_quota"))
+                        self.assertNotIn("private provider body", str(caught.exception))
                 finally:
                     await fake.close()
 
@@ -262,12 +268,40 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
                 finally:
                     await fake.close()
 
+    async def test_replay_preserves_user_text_and_tool_result_order(self):
+        replay = PiBrokerModel.to_pi([
+            {"role": "assistant", "content": [{"toolUse": {
+                "toolUseId": "call-a", "name": "lookup", "input": {}}}]},
+            {"role": "user", "content": [
+                {"text": "before"},
+                {"toolResult": {"toolUseId": "call-a", "content": [{"text": "result"}]}},
+                {"text": "after"},
+            ]},
+        ])
+        self.assertEqual([message["role"] for message in replay],
+                         ["assistant", "user", "toolResult", "user"])
+        self.assertEqual([replay[1]["content"][0]["text"], replay[3]["content"][0]["text"]],
+                         ["before", "after"])
+
+    async def test_replay_rejects_unrepresentable_blocks(self):
+        for message in (
+            {"role": "user", "content": [{"image": {"format": "png", "source": {}}}]},
+            {"role": "assistant", "content": [{"reasoningContent": {
+                "reasoningText": {"text": "secret", "signature": "unsigned"}}}]},
+            {"role": "user", "content": [{"toolResult": {
+                "toolUseId": "x", "content": [{"image": {"format": "png"}}]}}]},
+            {"role": "user", "content": [{"toolResult": {
+                "toolUseId": "x", "content": [{"json": {"value": 1}}]}}]},
+        ):
+            with self.subTest(message=message["role"]), self.assertRaisesRegex(ValueError, "cannot replay"):
+                PiBrokerModel.to_pi([message])
+
 
 class SelectionTests(unittest.TestCase):
     def test_default_never_falls_back_to_api_keys(self):
-        with patch.dict(os.environ, {"EXO_AUTHOR_PROVIDER": "codex-subscription",
-                                     "OPENAI_API_KEY": "placeholder", "ANTHROPIC_API_KEY": "placeholder"},
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "placeholder", "ANTHROPIC_API_KEY": "placeholder"},
                         clear=True), patch.object(ModelBroker, "ensure_started", return_value={"signed_in": False}):
+            self.assertNotIn("EXO_AUTHOR_PROVIDER", os.environ)
             model, reason = model_from_environment()
         self.assertIsNone(model)
         self.assertEqual(reason, "codex-subscription: not signed in; run node broker/exo-model.mjs login")
@@ -298,6 +332,36 @@ class SelectionTests(unittest.TestCase):
                 ModelBroker().ensure_started(reason="test")
         spawned.assert_not_called()
         health.assert_not_called()
+
+    def test_relative_model_home_resolves_before_node_cwd_changes(self):
+        with patch.dict(os.environ, {"EXO_MODEL_HOME": "relative-model"}):
+            broker = ModelBroker()
+        self.assertTrue(broker.home.is_absolute())
+        self.assertEqual(broker.home, (Path.cwd() / "relative-model").resolve())
+        self.assertEqual(broker.socket, broker.home / "run" / "broker.sock")
+
+    def test_selection_records_broker_startup_time(self):
+        def slow_start(*, reason, timeout=30):
+            time.sleep(0.025)
+            return {"signed_in": True}
+        with patch.dict(os.environ, {"EXO_AUTHOR_PROVIDER": "codex-subscription"}, clear=True), \
+                patch.object(ModelBroker, "ensure_started", side_effect=slow_start):
+            model, _ = model_from_environment()
+        self.assertGreaterEqual(model.selection_seconds, 0.02)
+
+    def test_exited_attacher_keeps_polling_for_winner(self):
+        home = Path(tempfile.mkdtemp(prefix="exo-proto-pybroker-", dir="/tmp"))
+        broker = ModelBroker(home)
+        (home / "run").mkdir()
+        (home / "run" / "broker-ready.json").write_text(json.dumps({"socket": str(broker.socket)}))
+        healthy = {"pid": 42, "signed_in": True}
+        with patch.object(broker, "health", side_effect=[OSError(), OSError(), healthy]) as health, \
+                patch("model_broker.subprocess.Popen") as spawned, \
+                patch("model_broker.time.sleep", return_value=None):
+            spawned.return_value.poll.return_value = 0
+            result = broker.ensure_started(reason="race-test", timeout=1)
+        self.assertEqual(result, healthy)
+        self.assertEqual(health.call_count, 3)
 
 
 class OverrideRefusalTests(unittest.IsolatedAsyncioTestCase):

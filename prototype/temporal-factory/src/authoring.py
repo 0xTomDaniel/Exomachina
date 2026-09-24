@@ -16,9 +16,12 @@ import uuid
 
 from strands import Agent, tool
 from strands.models import Model
+from strands.types.exceptions import ModelThrottledException
 
 from definition import ALLOWED, INPUT_SOURCES, INPUT_TYPES, RESULT_TYPES, ROUTE_VALUES
 from definition import digest, validate
+from model_broker import (BrokerLost, SubscriptionAuthRequired, SubscriptionQuotaExhausted,
+                          provider_error_record)
 
 
 def _json(value: object) -> str:
@@ -74,6 +77,8 @@ class AuthoringOutcome:
     tool_calls: list[dict] = field(default_factory=list)
     abort: dict | None = None
     limits: dict = field(default_factory=dict)
+    error: dict | None = None
+    selection_seconds: float = 0.0
 
 
 class AuthoringBudgetExhausted(RuntimeError):
@@ -114,6 +119,13 @@ class _BudgetedModel(Model):
                     yield event
         except TimeoutError as error:
             raise AuthoringBudgetExhausted("deadline") from error
+        except ModelThrottledException as error:
+            self.state["last_provider_error"] = provider_error_record(error) if hasattr(error, "kind") else {"kind": "rate_limit"}
+            raise
+        except BrokerLost as error:
+            if time.monotonic() >= self.deadline:
+                raise AuthoringBudgetExhausted("deadline") from error
+            raise
 
 
 class GraphAuthor(Protocol):
@@ -160,21 +172,21 @@ class StrandsGraphAuthor:
         calls: list[dict] = []
         seen: dict[str, dict] = {}
         accepted: dict = {}
-        state: dict = {"reason": None, "tool_calls": 0}
+        state: dict = {"reason": None, "tool_calls": 0, "last_provider_error": None}
         tool_lock = threading.RLock()
         limits = {"max_rounds": max_rounds, "max_model_calls": max_model_calls,
                   "max_tool_calls": max_tool_calls, "deadline_seconds": deadline_seconds}
         vocabulary = authoring_vocabulary(approved_bindings)
 
-        def check_tool_call(draft_digest: str | None = None) -> None:
+        def check_tool_call(draft_digest: str | None = None, action: str | None = None) -> None:
             with tool_lock:
                 if state["reason"] is not None:
                     raise AuthoringBudgetExhausted(state["reason"])
                 if time.monotonic() >= deadline:
                     state["reason"] = "deadline"
-                elif len(rounds) >= max_rounds and (
-                        not any(round_record["valid"] for round_record in rounds) or
-                        (draft_digest is not None and draft_digest not in seen)):
+                elif len(rounds) >= max_rounds and not (
+                        action in {"validate_draft", "submit_draft"} and
+                        draft_digest in accepted):
                     state["reason"] = "round_limit"
                 elif state["tool_calls"] >= max_tool_calls:
                     state["reason"] = "tool_call_limit"
@@ -193,7 +205,7 @@ class StrandsGraphAuthor:
             else:
                 parse_error = None
             with tool_lock:
-                check_tool_call(draft_digest)
+                check_tool_call(draft_digest, action)
                 if draft_digest in seen:
                     result = deepcopy(seen[draft_digest])
                 else:
@@ -251,6 +263,7 @@ class StrandsGraphAuthor:
                       callback_handler=None)
         prompt = _json({"brief": brief, "base_template": base_template, "max_rounds": max_rounds})
         abort_reason = None
+        provider_failure = None
         try:
             agent(prompt)
         except Exception as error:
@@ -261,12 +274,16 @@ class StrandsGraphAuthor:
                 if isinstance(current, AuthoringBudgetExhausted):
                     abort_reason = str(current)
                     break
+                if isinstance(current, (SubscriptionAuthRequired, SubscriptionQuotaExhausted,
+                                        ModelThrottledException)):
+                    provider_failure = (provider_error_record(current) if hasattr(current, "kind")
+                                        else {"kind": "rate_limit"})
                 current = current.__cause__ or current.__context__
-            if abort_reason is None:
+            if abort_reason is None and provider_failure is None:
                 raise
         if abort_reason is None and state["reason"] is not None:
             abort_reason = state["reason"]
-        if abort_reason is None and time.monotonic() >= deadline:
+        if abort_reason is None and provider_failure is None and time.monotonic() >= deadline:
             abort_reason = "deadline"
         config = self.model.get_config()
         model_id = config.get("model_id", type(self.model).__name__) if isinstance(config, dict) else type(self.model).__name__
@@ -277,20 +294,27 @@ class StrandsGraphAuthor:
                       "provider": getattr(self.model, "provider", "scripted" if scripted else "custom"),
                       "billing": getattr(self.model, "billing", "none" if scripted else "unknown"),
                       "live": bool(getattr(self.model, "live", False))}
+        selection_seconds = float(getattr(self.model, "selection_seconds", 0.0))
         if abort_reason is not None:
             abort = {"reason": abort_reason, "model_calls": budgeted.calls,
                      "tool_calls": state["tool_calls"],
                      "elapsed_seconds": round(time.monotonic() - started, 3)}
+            if state["last_provider_error"] is not None:
+                abort["last_provider_error"] = state["last_provider_error"]
             return AuthoringOutcome("aborted", None, None, None, rounds, model_info,
-                                    None, calls, abort, limits)
+                                    None, calls, abort, limits, None, selection_seconds)
+        if provider_failure is not None:
+            return AuthoringOutcome("failed", None, None, None, rounds, model_info,
+                                    None, calls, None, limits, provider_failure, selection_seconds)
         if "submitted" in accepted:
             template, package, package_digest = accepted["submitted"]
             approval = approve(package, approver="authoring-session",
                                policy={"mode": "auto", "approved_bindings": approved_bindings})
             return AuthoringOutcome("approved", template, package, package_digest,
-                                    rounds, model_info, approval, calls, None, limits)
+                                    rounds, model_info, approval, calls, None, limits,
+                                    None, selection_seconds)
         return AuthoringOutcome("no_submission", None, None, None, rounds, model_info,
-                                None, calls, None, limits)
+                                None, calls, None, limits, None, selection_seconds)
 
 
 class AuthoringSession:
@@ -440,6 +464,7 @@ def model_from_environment() -> tuple[Model | None, str]:
             if not (Path(explicit_home) / "FIXTURE_STORE").is_file():
                 return None, "synthetic-loopback requires EXO_MODEL_HOME/FIXTURE_STORE"
         broker = ModelBroker()
+        selection_started = time.monotonic()
         if provider == "codex-subscription":
             try:
                 health = broker.ensure_started(reason="authoring-selection")
@@ -452,6 +477,7 @@ def model_from_environment() -> tuple[Model | None, str]:
         model.provider = provider
         model.billing = "subscription" if provider == "codex-subscription" else "none"
         model.live = provider == "codex-subscription" and not bool(base_url)
+        model.selection_seconds = round(time.monotonic() - selection_started, 3)
         return model, f"{provider} broker available"
     if provider == "anthropic":
         if not os.environ.get("ANTHROPIC_API_KEY"):

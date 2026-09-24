@@ -59,7 +59,9 @@ def author_and_publish(instance_dir: Path, brief_path: Path, *, label: str,
     from authoring import (AuthoringSession, ScriptedAuthoringModel, StrandsGraphAuthor,
                            approve, model_from_environment)
     director = _instance(instance_dir)
+    selection_started = time.monotonic()
     model, reason = model_from_environment()
+    selection_seconds = round(time.monotonic() - selection_started, 3)
     provider = getattr(model, "provider", os.environ.get("EXO_AUTHOR_PROVIDER") or "codex-subscription")
     limits = {"max_rounds": max_rounds, "max_model_calls": max_model_calls,
               "max_tool_calls": max_tool_calls, "deadline_seconds": deadline_seconds}
@@ -67,14 +69,17 @@ def author_and_publish(instance_dir: Path, brief_path: Path, *, label: str,
                    "reason": reason, "refusal_reason": reason if model is None else None}
     if model is None:
         if not allow_scripted:
-            return {"status": "untested", "live": live_status, "limits": limits}
+            return {"status": "untested", "live": live_status, "limits": limits,
+                    "selection_seconds": selection_seconds}
         model = ScriptedAuthoringModel()
     session = AuthoringSession(StrandsGraphAuthor(model),
                                approved_bindings=director.module.approved(), **limits)
     base = json.loads(base_template.read_text()) if base_template else None
     started = time.time()
     outcome = session.run(brief_path.read_text(), base_template=base)
+    outcome.selection_seconds = selection_seconds
     record = {"live": live_status, "limits": limits, "outcome": _jsonable(outcome),
+              "selection_seconds": selection_seconds,
               "seconds": round(time.time() - started, 3)}
     if outcome.status != "approved":
         return {**record, "status": outcome.status}
@@ -169,7 +174,7 @@ def main() -> None:
             for r in store.list()]}
         value["active"] = {k: value["active"][k] for k in ("label", "manifest_digest", "build_id")}
     print(json.dumps(value, indent=2, sort_keys=True, default=str))
-    if args.command == "author" and value.get("status") == "aborted":
+    if args.command == "author" and value.get("status") in {"aborted", "failed"}:
         raise SystemExit(2)
 
 

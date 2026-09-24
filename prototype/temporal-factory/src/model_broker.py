@@ -8,9 +8,11 @@ import asyncio
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import socket
 import subprocess
+import threading
 import time
 import uuid
 from typing import Any, AsyncGenerator
@@ -34,9 +36,54 @@ class SubscriptionAuthRequired(RuntimeError):
     """The subscription needs an explicit Exomachina sign-in."""
 
 
+class SubscriptionQuotaExhausted(RuntimeError):
+    """The subscription quota is exhausted; retrying cannot resolve it."""
+
+
+_ERROR_KINDS = {"reauth_required", "rate_limit", "quota", "config", "provider", "aborted", "broker"}
+_ERROR_CODE = re.compile(r"^[a-z0-9_.-]{1,64}$")
+_ALLOWED_CODES = {"usage_limit_reached", "usage_not_included", "rate_limit_exceeded",
+                  "invalid_request_error", "unsupported_originator", "invalid_grant",
+                  "token_expired", "insufficient_quota", "other"}
+
+
+def _provider_error(reply: dict) -> Exception:
+    """Keep only structured, bounded broker fields at the Python boundary."""
+    kind = reply.get("kind") if reply.get("kind") in _ERROR_KINDS else "broker"
+    status = reply.get("status")
+    code = reply.get("code")
+    if type(status) is not int or not 100 <= status <= 599:
+        status = None
+    if code is not None and (not isinstance(code, str) or not _ERROR_CODE.fullmatch(code)
+                             or code not in _ALLOWED_CODES):
+        code = "other"
+    message = f"model broker {kind}"
+    if kind == "reauth_required":
+        error = SubscriptionAuthRequired(message)
+    elif kind == "quota":
+        error = SubscriptionQuotaExhausted(message)
+    elif kind == "rate_limit":
+        error = ModelThrottledException(message)
+    else:
+        error = RuntimeError(message)
+    error.kind = kind
+    error.status = status
+    error.code = code
+    return error
+
+
+def provider_error_record(error: Exception) -> dict:
+    record = {"kind": error.kind}
+    if error.status is not None:
+        record["status"] = error.status
+    if error.code is not None:
+        record["code"] = error.code
+    return record
+
+
 class ModelBroker:
     def __init__(self, home: Path | None = None):
-        self.home = Path(home) if home is not None else Path(os.environ.get("EXO_MODEL_HOME", DEFAULT_HOME))
+        self.home = Path(home if home is not None else os.environ.get("EXO_MODEL_HOME", DEFAULT_HOME)).expanduser().resolve()
         self.socket = self.home / "run" / "broker.sock"
 
     def health(self) -> dict:
@@ -105,8 +152,14 @@ class ModelBroker:
                     return self.health()
             except (OSError, ValueError, BrokerLost):
                 pass
-            if process.poll() is not None:
+            exit_code = process.poll()
+            if exit_code is not None and exit_code != 0:
                 raise BrokerLost("model broker exited before becoming ready")
+            if exit_code == 0:
+                try:
+                    return self.health()
+                except (OSError, ValueError, BrokerLost):
+                    pass
             time.sleep(0.05)
         raise BrokerLost("model broker did not become ready")
 
@@ -141,6 +194,29 @@ class PiBrokerModel(Model):
         raise NotImplementedError("broker structured output is not supported")
         yield  # pragma: no cover
 
+    async def _ensure_started(self) -> None:
+        """Keep broker startup off the event loop and abandon its wait on cancellation."""
+        loop = asyncio.get_running_loop()
+        finished = loop.create_future()
+
+        def complete(error: Exception | None) -> None:
+            if not finished.done():
+                finished.set_exception(error) if error is not None else finished.set_result(None)
+
+        def start() -> None:
+            try:
+                self.broker.ensure_started(reason="model-call")
+                error = None
+            except Exception as caught:
+                error = caught
+            try:
+                loop.call_soon_threadsafe(complete, error)
+            except RuntimeError:
+                pass  # The timed-out session closed its event loop.
+
+        threading.Thread(target=start, name="exo-model-broker-start", daemon=True).start()
+        await finished
+
     @staticmethod
     def to_pi(messages: list) -> list[dict]:
         out, names = [], {}
@@ -157,30 +233,58 @@ class PiBrokerModel(Model):
                                         "name": tool["name"], "arguments": tool["input"]})
                     elif "reasoningContent" in block:
                         signature = block["reasoningContent"].get("reasoningText", {}).get("signature", "")
-                        if signature.startswith(SIG):
+                        if not signature.startswith(SIG):
+                            raise ValueError("cannot replay assistant reasoning without a Pi signature envelope")
+                        try:
                             envelope = json.loads(signature[len(SIG):])
-                            placed.append((envelope["i"], {"type": "thinking", "thinking": envelope["text"],
-                                                           "thinkingSignature": envelope["sig"]}))
+                            if (type(envelope["i"]) is not int or envelope["i"] < 0 or
+                                    not isinstance(envelope["text"], str) or
+                                    not isinstance(envelope["sig"], str) or
+                                    envelope["text"] != block["reasoningContent"]["reasoningText"]["text"]):
+                                raise ValueError
+                        except (KeyError, TypeError, ValueError) as error:
+                            raise ValueError("cannot replay invalid Pi reasoning envelope") from error
+                        placed.append((envelope["i"], {"type": "thinking", "thinking": envelope["text"],
+                                                       "thinkingSignature": envelope["sig"]}))
+                    else:
+                        raise ValueError("cannot replay unsupported assistant content block")
                 for index, block in sorted(placed, key=lambda item: item[0]):
-                    content.insert(min(index, len(content)), block)
+                    if index > len(content):
+                        raise ValueError("cannot replay Pi reasoning index")
+                    content.insert(index, block)
                 stop = "toolUse" if any(block["type"] == "toolCall" for block in content) else "stop"
                 out.append({"role": "assistant", "content": content, "stopReason": stop})
-            else:
-                texts = [{"type": "text", "text": block["text"]} for block in message["content"] if "text" in block]
-                if texts:
-                    out.append({"role": "user", "content": texts})
+            elif message["role"] == "user":
+                texts = []
+                def flush_texts():
+                    if texts:
+                        out.append({"role": "user", "content": list(texts)})
+                        texts.clear()
                 for block in message["content"]:
-                    if "toolResult" in block:
+                    if "text" in block:
+                        texts.append({"type": "text", "text": block["text"]})
+                    elif "toolResult" in block:
+                        flush_texts()
                         result = block["toolResult"]
+                        items = []
+                        for item in result["content"]:
+                            if "text" in item:
+                                items.append({"type": "text", "text": item["text"]})
+                            else:
+                                raise ValueError("cannot replay unsupported tool result content block")
                         out.append({"role": "toolResult", "toolCallId": result["toolUseId"],
                                     "toolName": names.get(result["toolUseId"], ""),
-                                    "content": [{"type": "text", "text": item["text"] if "text" in item
-                                                 else json.dumps(item.get("json"))} for item in result["content"]],
+                                    "content": items,
                                     "isError": result.get("status") == "error"})
+                    else:
+                        raise ValueError("cannot replay unsupported user content block")
+                flush_texts()
+            else:
+                raise ValueError("cannot replay unsupported message role")
         return out
 
     async def stream(self, messages, tool_specs=None, system_prompt=None, **kwargs) -> AsyncGenerator[dict, None]:
-        self.broker.ensure_started(reason="model-call")
+        await self._ensure_started()
         request_id = str(uuid.uuid4())
         request = {"id": request_id, "op": "stream", "model": self.config["model_id"],
                    "session": self.session,
@@ -221,13 +325,7 @@ class PiBrokerModel(Model):
                 if reply.get("id") != request_id:
                     raise BrokerLost("model broker response ID mismatch")
                 if "error" in reply:
-                    error = reply["error"]
-                    kind, message = error.get("kind", "broker"), error.get("message", "model broker error")
-                    if kind == "reauth_required":
-                        raise SubscriptionAuthRequired(message)
-                    if kind in {"rate_limit", "quota"}:
-                        raise ModelThrottledException(message)
-                    raise RuntimeError(f"model broker {kind}: {message}")
+                    raise _provider_error(reply["error"])
                 if "done" in reply:
                     if order:
                         raise RuntimeError("model broker ended with an unfinished content block")
