@@ -5,6 +5,7 @@ import base64
 import copy
 import hashlib
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -13,8 +14,9 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scenarios"))
-from single_factory import (_contains_token, _findings_on_claim, _redact_history,
+from single_factory import (_findings_on_claim, _redact_history,
                             _run_actions, check_evidence)  # noqa: E402
+from sf_attest import verify_redaction, attest, resolve
 
 
 class ReviewTwoCheckerTests(unittest.TestCase):
@@ -24,6 +26,16 @@ class ReviewTwoCheckerTests(unittest.TestCase):
 
     def setUp(self):
         self.e = copy.deepcopy(self.snapshot)
+        self.e["setup"]["preflight_home_lstat"] = {"result": "FileNotFoundError"}
+        card = {"skills": [{"id": "test"}]}
+        self.e["setup"]["served_factory_card"] = {"body": card,
+            "sha256": hashlib.sha256(json.dumps(card, sort_keys=True,
+                separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()}
+        self.e["setup"]["broker_status_fields"] = self.e["setup"]["broker_status"]
+        self.e["binding_names"] = sorted(self.e["testbed"]["bindings"])
+        self.e["leak_scan"]["sensitive_fields_redacted"] = {"pass": True, "files_checked": 9,
+            "decoded_payloads_checked": 0, "redaction_objects_checked": 1}
+        self.e["leak_scan"]["exported_file_count"] = 9
         self.temp = tempfile.TemporaryDirectory(prefix="exo-sf-check-", dir="/tmp")
         self.addCleanup(self.temp.cleanup)
         self.assertTrue(all(v["pass"] for v in check_evidence(self.e).values()))
@@ -71,8 +83,8 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         raw.write_text(json.dumps({"events": events}))
         result = _redact_history(raw, exported)
         self.assertEqual(len(result["redacted_json_paths"]), 3)
-        self.assertTrue(_contains_token(raw, token))
-        self.assertFalse(_contains_token(exported, token))
+        self.assertFalse(verify_redaction([raw])["pass"])
+        self.assertTrue(verify_redaction([exported])["pass"])
         self.assertNotIn(payload, exported.read_text())
 
     def test_f5_report_bytes_and_release_digest(self):
@@ -179,12 +191,13 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.assertFalse(check_evidence(repaired_broker)["G-2"]["pass"])
 
     def test_f9_scan_coverage(self):
+        baseline = copy.deepcopy(self.e)
         self.e["leak_scan"]["candidate_manifest"] = []
         self.fails("G-4")
-        self.e = copy.deepcopy(self.snapshot)
+        self.e = copy.deepcopy(baseline)
         self.e["leak_scan"]["raw"]["files_scanned"] = 0
         self.fails("G-4")
-        self.e = copy.deepcopy(self.snapshot)
+        self.e = copy.deepcopy(baseline)
         leak = self.e["leak_scan"]
         self.e["evidence_schema"] = 2
         leak["required_scan_inputs"] = leak["scan_inputs"][:3]
@@ -198,7 +211,7 @@ class ReviewTwoCheckerTests(unittest.TestCase):
     def test_pure_replay_with_different_worktree_prefix(self):
         original = "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director"
         moved = "/tmp/exo-relocated-checkout"
-        self.e = json.loads(json.dumps(self.snapshot).replace(original, moved))
+        self.e = json.loads(json.dumps(self.e).replace(original, moved))
         with patch.object(Path, "read_bytes", side_effect=AssertionError("checker read bytes")), \
              patch.object(Path, "read_text", side_effect=AssertionError("checker read text")), \
              patch.object(Path, "is_file", side_effect=AssertionError("checker inspected disk")):
@@ -229,6 +242,10 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         synthetic["evidence_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
         synthetic["record"] = {key: self.e[key] for key in ("status", "provider", "checks",
             "git_commit", "checker_sha256", "interpreter_build", "manifest_digest", "route_inventory")}
+        synthetic["attestation_path"] = "test-attestation.json"
+        synthetic["attestation_sha256"] = "a" * 64
+        synthetic["attestation"] = {"evidence_sha256": synthetic["evidence_sha256"],
+            "g4_final": {"pass": True}}
         self.e["synthetic_scenario"] = synthetic
         self.e["provider"] = "codex-subscription"
         return synthetic
@@ -268,6 +285,87 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         synthetic["record"]["checker_sha256"] = synthetic["checker_sha256"]
         self.assertNotEqual(synthetic["checker_sha256"], self.e["checker_sha256"])
         self.fails("G-7")
+
+    def test_review3_no_token_selection_or_credential_path(self):
+        for name in ("single_factory.py", "sf_attest.py"):
+            source = (ROOT / "scenarios" / name).read_text()
+            self.assertNotRegex(source, r'_rows\([^\n]*["\']identity["\']')
+            self.assertNotRegex(source, r'\bSELECT\b[^\n]*\btoken\b')
+            self.assertNotIn('"secrets/', source)
+            self.assertNotIn("'secrets/", source)
+            self.assertNotRegex(source, r'open\([^\n]*credential')
+
+    def test_review3_decoded_sensitive_plaintext_fails(self):
+        path = Path(self.temp.name) / "payload.json"
+        payload = base64.b64encode(json.dumps({"token": "eyJabc.eyJdef.signature"}).encode()).decode()
+        path.write_text(json.dumps({"data": payload}))
+        result = verify_redaction([path])
+        self.assertFalse(result["pass"])
+        self.assertEqual(result["decoded_payloads_checked"], 1)
+
+    def test_review3_export_selector_includes_nested_histories(self):
+        from sf_attest import exported_files
+        evidence = Path(self.temp.name) / "scripted-test.json"
+        evidence.write_text("{}")
+        route = Path(self.temp.name) / "scripted-test-route1"
+        route.mkdir()
+        history = route / "parent.json"
+        history.write_text("{}")
+        self.assertEqual(set(exported_files(evidence)), {evidence, history})
+
+    def test_review3_attestation_rejects_changed_final_evidence_bytes(self):
+        path = Path(self.temp.name) / "scripted-test.json"
+        path.write_text(json.dumps({"provider": "scripted"}))
+        home = Path(self.temp.name) / "home"
+        home.mkdir()
+        def change(*_args):
+            path.write_text(json.dumps({"provider": "scripted", "changed": True}))
+            return {"hits": [], "files_scanned": 10}
+        with patch("sf_attest.candidate_files", return_value=[]), \
+             patch("sf_attest.positive_control", return_value={"scan": {"hits": [{}]}}), \
+             patch("sf_attest.scan_paths", side_effect=change), \
+             patch("sf_attest.packet_provenance", return_value={"observed": False}):
+            result = attest(path, home, "test")
+        self.assertFalse(result["g4_final"]["pass"])
+        self.assertFalse(result["g4_final"]["terms"]["manifest_bound"])
+
+    def test_review3_relative_evidence_manifest_resolves_exact_bytes(self):
+        path = Path(self.temp.name) / "scripted-test.json"
+        path.write_text(json.dumps({"provider": "scripted"}))
+        home = Path(self.temp.name) / "home"
+        home.mkdir()
+        with patch("sf_attest.candidate_files", return_value=[path]), \
+             patch("sf_attest.positive_control", return_value={"scan": {"hits": [{}]}}), \
+             patch("sf_attest.scan_paths", return_value={"hits": [], "files_scanned": 10}), \
+             patch("sf_attest.packet_provenance", return_value={"observed": False}):
+            result = attest(Path(os.path.relpath(path)), home, "test")
+        rows = result["manifest"]
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(resolve(rows[0]["path"]), path.resolve())
+        self.assertEqual(rows[0]["sha256"], hashlib.sha256(path.read_bytes()).hexdigest())
+        self.assertTrue(result["g4_final"]["terms"]["manifest_bound"])
+
+    def test_review3_g7_requires_attestation(self):
+        synthetic = self._live_with_synthetic_prerequisite()
+        self.assertTrue(check_evidence(self.e)["G-7"]["pass"])
+        synthetic.pop("attestation")
+        self.fails("G-7")
+
+    def test_review3_sf0_artifacts_and_labels(self):
+        self.e["setup"]["preflight_home_lstat"] = {"result": "exists"}
+        self.fails("SF-0")
+        self.e["setup"]["preflight_home_lstat"] = {"result": "FileNotFoundError"}
+        self.e["setup"]["served_factory_card"]["sha256"] = "0" * 64
+        self.fails("SF-0")
+        self._live_with_synthetic_prerequisite()
+        checks = check_evidence(self.e)
+        self.assertEqual(checks["R2-b"]["behavior"], "spontaneous verdict on induced defect")
+        self.assertEqual(checks["R3-b"]["behavior"], "spontaneous verdict on induced defect")
+        self.assertEqual(checks["R2-c"]["behavior"], "live repair content on assigned repair")
+        self.assertEqual(checks["R2-d"]["behavior"], "spontaneous verdict")
+        for key in ("R3-d", "R3-e"):
+            self.assertEqual(checks[key]["behavior"],
+                "caller-prompted, model-decided (abort is the only permitted action)")
 
 
 if __name__ == "__main__":
