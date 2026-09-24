@@ -7,10 +7,11 @@ function options(argv) {
 	if (argv.length === 1 && argv[0] === "--self-check") return { selfCheck: true };
 	const opts = {};
 	for (let i = 0; i < argv.length; i += 2) {
-		if (!argv[i]?.startsWith("--") || !argv[i + 1]) throw new Error("usage: mock-codex.mjs --port P --record FILE --script authoring|interleaved|runaway [--draft FILE] [--hold-ms N]");
+		if (!argv[i]?.startsWith("--") || !argv[i + 1]) throw new Error("usage: mock-codex.mjs --port P --record FILE --script authoring|interleaved|runaway|director [--draft FILE] [--hold-ms N]");
 		opts[argv[i].slice(2)] = argv[i + 1];
 	}
-	if (!Number.isInteger(Number(opts.port)) || Number(opts.port) < 46120 || Number(opts.port) > 46149 || !opts.record || !["authoring", "interleaved", "runaway"].includes(opts.script) || (opts.script === "authoring" && !opts.draft) || (opts["hold-ms"] !== undefined && (!Number.isSafeInteger(Number(opts["hold-ms"])) || Number(opts["hold-ms"]) < 0 || opts.script !== "runaway"))) throw new Error("invalid fixture options: port 46120-46149, record, script, authoring draft, or runaway hold-ms");
+	const port = Number(opts.port);
+	if (!Number.isInteger(port) || !(opts.script === "director" ? port >= 46300 && port <= 46349 : port >= 46120 && port <= 46149) || !opts.record || !["authoring", "interleaved", "runaway", "director"].includes(opts.script) || (opts.script === "authoring" && !opts.draft) || (opts["hold-ms"] !== undefined && (!Number.isSafeInteger(Number(opts["hold-ms"])) || Number(opts["hold-ms"]) < 0 || opts.script !== "runaway"))) throw new Error("invalid fixture options");
 	return opts;
 }
 const opts = options(process.argv.slice(2));
@@ -188,6 +189,22 @@ const server = http.createServer((req, res) => {
 		const base = { originator: req.headers.originator, ua: req.headers["user-agent"], session_id: session, tools, input_types: input.map((i) => i.type || `role:${i.role}`), replayed_reasoning: input.filter((i) => i.type === "reasoning").map((i) => i.id), call_ids: input.filter((i) => i.type === "function_call").map((i) => i.call_id) };
 		if (problems.length) return reject(res, base, problems.join("; "));
 		const hasOut = input.some((i) => i.type === "function_call_output");
+		if (opts.script === "director") {
+			if (!["start_research", "inspect_run", "decide_wait"].every((name) => tools.includes(name))) return reject(res, base, "Director tools missing");
+			const brief = input[0]?.content?.map((c) => c.text || "").join("") || "";
+			const inspected = outputOf(input, "inspect_run");
+			const started = outputOf(input, "start_research");
+			const decided = outputOf(input, "decide_wait");
+			if (decided || started) return log({ kind: "director", ...base, reply: turn(res, body.model, session, null, [], "Director tool response received") });
+			if (inspected) {
+				const run = inspected.run || {};
+				return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_decide_${seq + 1}`, name: "decide_wait", args: { action: "abort", revision: run.current_revision || "", sha256: run.current_sha256 || "", rationale: "repair exhausted" } }]) });
+			}
+			if (/answer the director wait|abort the waiting run/i.test(brief)) return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_inspect_${seq + 1}`, name: "inspect_run", args: {} }]) });
+			const question = brief.match(/Research (.*?);/i)?.[1] || brief;
+			const outcome_mode = brief.match(/outcome_mode\s*[:=]\s*["']?([a-z_]+)/i)?.[1] || "never";
+			return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_start_${seq + 1}`, name: "start_research", args: { question, outcome_mode } }]) });
+		}
 		if (opts.script === "runaway") {
 			if (!tools.includes("describe_vocabulary") || !tools.includes("validate_draft")) return reject(res, base, "runaway authoring tools missing");
 			const lastOutput = [...input].reverse().find((i) => i.type === "function_call_output");

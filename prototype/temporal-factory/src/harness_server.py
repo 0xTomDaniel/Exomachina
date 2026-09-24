@@ -22,7 +22,7 @@ from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.tasks import TaskStore
 from a2a.types import (
     AgentCard, AgentCapabilities, AgentSkill, Artifact, DataPart, Message, Part,
-    Task, TaskStatus,
+    Task, TaskStatus, TextPart,
 )
 from strands import Agent, tool
 from strands.models import Model
@@ -250,8 +250,14 @@ class HarnessExecutor(AgentExecutor):
             command = next((part.root.data for part in context.message.parts
                             if isinstance(part.root, DataPart)), None)
             if command is None:
-                raise Rejected("structured data command required")
-            result = await self.harness.invoke(command, context.task_id, context.context_id)
+                brief = next((part.root.text for part in context.message.parts
+                              if isinstance(part.root, TextPart)), None)
+                if brief is None or not hasattr(self.harness, "inspect_bound_run"):
+                    raise Rejected("structured data command required")
+                result = await self.harness.invoke(brief, context.task_id, context.context_id,
+                                                   message_id=context.message.message_id)
+            else:
+                result = await self.harness.invoke(command, context.task_id, context.context_id)
             if "error" in result:
                 await event_queue.enqueue_event(Message(message_id=str(uuid4()), role="agent",
                     parts=[Part(root=DataPart(data=result))]))
