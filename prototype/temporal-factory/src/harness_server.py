@@ -241,12 +241,16 @@ class LedgerTaskStore(TaskStore):
 
 
 class HarnessExecutor(AgentExecutor):
-    def __init__(self, harness, store):
+    def __init__(self, harness, store, *, allow_structured_commands=True):
         self.harness = harness
         self.store = store
+        self.allow_structured_commands = allow_structured_commands
 
     async def execute(self, context, event_queue):
         try:
+            if not self.allow_structured_commands and any(
+                    not isinstance(part.root, TextPart) for part in context.message.parts):
+                raise Rejected("factory caller messages must contain text parts only")
             command = next((part.root.data for part in context.message.parts
                             if isinstance(part.root, DataPart)), None)
             if command is None:

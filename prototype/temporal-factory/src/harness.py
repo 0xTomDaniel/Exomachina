@@ -407,6 +407,8 @@ class Director:
             if not outcome["accepted"]:
                 return {"error": "Director issued no accepted command", "director_turn": outcome}
             return {"accepted_command": outcome["accepted"][-1]}
+        if self.config.get("legacy_structured_commands") is not True:
+            raise Rejected("factory caller messages must contain text parts only")
         agent = Agent(name="Factory Director", model=ToolCallingModelFixture(),
                       plugins=[HarnessPlugin(self, task_id, context_id)], callback_handler=None)
         result = await agent.invoke_async(canonical(command))
@@ -514,14 +516,12 @@ class FactoryTaskStore(TaskStore):
         return Task(id=task_id, context_id=context_id, status=TaskStatus(state=state, message=message),
                     artifacts=artifacts, metadata={
                         "run_id": record["run_id"], "harness_identity": self.director.identity,
-                        "harness_incarnation": self.director.incarnation,
                         "capability": "verified-research@1",
                         "publication_label": record["label"],
                         "manifest_digest": record["manifest_digest"],
                         "package_digest": record["package_digest"],
                         "interpreter_build": record["build_id"],
-                        "run_inputs_digest": record["run_inputs_digest"],
-                        "authorized_input_actor": record["authorized_actor"]})
+                        "run_inputs_digest": record["run_inputs_digest"]})
 
     async def save(self, task, context=None):
         if self.director.task_binding(task.id) is None:
@@ -565,7 +565,9 @@ def create_app(instance_dir: Path):
                            description=capability["description"], tags=capability.get("tags", []))],
         security_schemes={"fixtureBearer": {"type": "http", "scheme": "bearer"}},
         security=[{"fixtureBearer": []}])
-    app = A2AFastAPIApplication(card, DefaultRequestHandler(HarnessExecutor(director, store), store)).build()
+    app = A2AFastAPIApplication(card, DefaultRequestHandler(HarnessExecutor(
+        director, store, allow_structured_commands=config.get("legacy_structured_commands") is True
+    ), store)).build()
     _auth(app)
     startup = {"runner_started_at_startup": False, "recovery": None}
 
@@ -591,7 +593,8 @@ def create_app(instance_dir: Path):
 
 
 def init_instance(instance_dir: Path, *, name: str, mode: str, port: int, home: Path,
-                  runner: dict | None = None, wait_seconds: int = 900) -> dict:
+                  runner: dict | None = None, wait_seconds: int = 900,
+                  legacy_structured_commands: bool = False) -> dict:
     import fcntl
     import os
 
@@ -607,6 +610,10 @@ def init_instance(instance_dir: Path, *, name: str, mode: str, port: int, home: 
                                  "description": "Researches a question with independent counter-evidence "
                                                 "review; returns one accepted report and release receipt.",
                                  "tags": ["research", "verified"]}}
+        if legacy_structured_commands:
+            if mode != "factory":
+                raise ValueError("legacy structured commands require factory mode")
+            config["legacy_structured_commands"] = True
         path = instance_dir / "instance.json"
         if path.exists():
             existing = json.loads(path.read_text())
