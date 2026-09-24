@@ -33,7 +33,7 @@ from a2a.server.apps import A2AFastAPIApplication
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.tasks import TaskStore
 from a2a.types import (AgentCapabilities, AgentCard, AgentSkill, Artifact, DataPart,
-                       Message, Part, Task, TaskStatus)
+                       Message, Part, Task, TaskStatus, TextPart)
 from strands import Agent
 from temporalio.client import Client
 from temporalio.common import PinnedVersioningOverride, WorkerDeploymentVersion
@@ -272,7 +272,7 @@ class Director:
     def perform(self, command: dict, task_id: str, context_id: str) -> dict:
         """Capability contract verified-research@1, as seen by A2A callers.
 
-        start:   {op:"start", action_id, inputs:{question?, outcome_mode}}
+        start:   {op:"start", action_id, inputs:{question}}
         inspect: {op:"inspect"} on the original Task
         abort:   {op:"abort", action_id, revision, sha256} on the original Task,
                  answering its input-required Director wait.
@@ -364,10 +364,13 @@ class Director:
                 return parent
             return await client.get_workflow_handle(parent["child_id"]).query(FactoryRun.status)
         raw = sync(status())
+        verdict = raw.get("quality_verdict") or {}
         return {"phase": raw.get("phase"), "current_revision": raw.get("current_revision"),
                 "current_sha256": raw.get("current_sha256"),
                 "repair_count": raw.get("repair_count"),
-                "wait": raw.get("phase") == "awaiting-director"}
+                "max_repairs": raw.get("max_repairs"),
+                "quality_findings": verdict.get("findings"),
+                "wait_deadline": raw.get("deadline")}
 
     def run_record(self, run_id: str) -> dict:
         with self.connect() as db:
@@ -474,14 +477,34 @@ class FactoryTaskStore(TaskStore):
         state, result, status = projection["state"], projection["result"], projection["status"]
         artifacts = None
         message = None
-        if state == "completed" and result:
-            payload = {"capability": "verified-research@1", "status": result["status"],
-                       "run_id": record["run_id"], "acceptance": result.get("acceptance"),
-                       "release_receipt": result.get("receipt"),
-                       "report": result.get("artifact"),
-                       "interpreter_revision": result.get("interpreter_revision")}
-            artifact_id = hashlib.sha256(canonical(payload).encode()).hexdigest()
-            artifacts = [Artifact(artifact_id=artifact_id, parts=[Part(root=DataPart(data=payload))])]
+        if state == "completed" and result and result.get("status") == "accepted":
+            accepted = result.get("artifact") or {}
+            content = accepted.get("content")
+            report = None
+            if isinstance(content, str):
+                try:
+                    report = json.loads(content)
+                except ValueError:
+                    pass
+            if isinstance(report, dict) and report.get("kind") == "verified_report@1":
+                markdown = report.get("markdown")
+                if not isinstance(markdown, str) or not markdown:
+                    raise ValueError("accepted report has no markdown")
+                payload = {"revision": accepted["revision"], "sha256": accepted["sha256"],
+                           "packet_digest": report["packet_digest"],
+                           "acceptance": result["acceptance"],
+                           "release_receipt": result["receipt"]}
+                artifacts = [Artifact(artifact_id=accepted["sha256"], parts=[
+                    Part(root=TextPart(text=markdown)), Part(root=DataPart(data=payload))])]
+            else:
+                # The legacy structured fixture path still returns its original DataPart.
+                payload = {"capability": "verified-research@1", "status": result["status"],
+                           "run_id": record["run_id"], "acceptance": result.get("acceptance"),
+                           "release_receipt": result.get("receipt"), "report": accepted,
+                           "interpreter_revision": result.get("interpreter_revision")}
+                artifact_id = hashlib.sha256(canonical(payload).encode()).hexdigest()
+                artifacts = [Artifact(artifact_id=artifact_id,
+                                      parts=[Part(root=DataPart(data=payload))])]
         if projection.get("incident"):
             message = Message(message_id=str(uuid4()), role="agent",
                               parts=[Part(root=DataPart(data={"incident": projection["incident"]}))])
