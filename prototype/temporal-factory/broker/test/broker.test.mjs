@@ -6,7 +6,7 @@ import net from 'node:net';
 import http from 'node:http';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { rewriteAuthorizeOriginator } from '../lib/store.mjs';
+import { rewriteAuthorizeOriginator, withPidLock } from '../lib/store.mjs';
 
 const broker = fileURLToPath(new URL('../exo-model.mjs', import.meta.url));
 const preload = fileURLToPath(new URL('../testing/mock-oauth-fetch.mjs', import.meta.url));
@@ -105,6 +105,39 @@ async function transact(home, request, terminal = (r) => Boolean(r.health || r.d
 }
 async function stop(child) {
   if (child.exitCode === null) { child.kill('SIGTERM'); await new Promise((resolve) => child.once('close', resolve)); }
+}
+
+async function startGateOwner(lock, { mainLock = false, old = false } = {}) {
+  const child = spawn(process.execPath, ['--input-type=module', '-e', `
+import fs from 'node:fs';
+const lock = process.env.EXO_TEST_LOCK;
+if (process.env.EXO_TEST_MAIN_LOCK === '1') {
+  fs.mkdirSync(lock, { mode: 0o700 });
+  fs.writeFileSync(lock + '/owner', String(process.pid), { mode: 0o600 });
+}
+const gate = lock + '.recovery';
+fs.mkdirSync(gate, { mode: 0o700 });
+fs.writeFileSync(gate + '/owner', String(process.pid), { mode: 0o600, flag: 'wx' });
+if (process.env.EXO_TEST_OLD_GATE === '1') {
+  const old = new Date(Date.now() - 60000);
+  fs.utimesSync(gate, old, old);
+}
+process.stdout.write('ready\\n');
+setInterval(() => {}, 1000);
+`], { env: { ...process.env, EXO_TEST_LOCK: lock, EXO_TEST_MAIN_LOCK: mainLock ? '1' : '0',
+    EXO_TEST_OLD_GATE: old ? '1' : '0' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  let stderr = '';
+  child.stderr.on('data', (chunk) => { stderr += chunk; });
+  await new Promise((resolve, reject) => {
+    let output = '';
+    const timer = setTimeout(() => reject(new Error('gate owner did not start')), 3000);
+    child.stdout.on('data', (chunk) => {
+      output += chunk;
+      if (output.includes('ready\n')) { clearTimeout(timer); resolve(); }
+    });
+    child.once('close', (code) => { if (!output.includes('ready\n')) { clearTimeout(timer); reject(new Error(`gate owner exit ${code}: ${stderr}`)); } });
+  });
+  return child;
 }
 
 function startMock(port) {
@@ -253,6 +286,29 @@ test('symlinked home, secrets, run, credential and lock are configuration errors
         assert.equal(result.code, 1, home);
         assert.match(result.stderr, /"kind":"config"/, home);
       }
+    }
+    assert.equal(mock.requests.length, 0);
+  } finally { await new Promise((resolve) => mock.server.close(resolve)); }
+});
+
+test('hard-linked credentials are configuration errors before fixture requests', async () => {
+  const mock = await startMock(46111);
+  const url = 'http://127.0.0.1:46111/backend-api';
+  const home = mkhome('hard-linked-credential', true);
+  const file = seed(home);
+  fs.linkSync(file, path.join(trial, 'credential-alias.json'));
+  const syntheticUserHome = path.join(trial, 'synthetic-user-home');
+  const defaultCredential = path.join(syntheticUserHome, '.exomachina', 'model-broker', 'secrets', 'openai-codex.json');
+  fs.mkdirSync(path.dirname(defaultCredential), { recursive: true, mode: 0o700 });
+  fs.writeFileSync(defaultCredential, JSON.stringify(credential()), { mode: 0o600 });
+  const aliasHome = mkhome('default-inode-alias', true);
+  fs.linkSync(defaultCredential, path.join(aliasHome, 'secrets', 'openai-codex.json'));
+  try {
+    for (const [modelHome, override] of [[home, undefined], [home, url], [aliasHome, url]]) {
+      const result = await run(['serve'], { HOME: syntheticUserHome, EXO_MODEL_HOME: modelHome,
+        EXO_CODEX_BASE_URL: override });
+      assert.equal(result.code, 1, result.stdout + result.stderr);
+      assert.match(result.stderr, /"kind":"config"/);
     }
     assert.equal(mock.requests.length, 0);
   } finally { await new Promise((resolve) => mock.server.close(resolve)); }
@@ -438,6 +494,90 @@ test('stale socket and dead-pid credential lock recover; stream fragments stay i
   } finally { await stop(service.child); await new Promise((resolve) => mock.server.close(resolve)); }
 });
 
+test('two stale-lock recoverers preserve the new live lock and serialize callbacks', async () => {
+  const lock = path.join(trial, 'interleaved-dead-owner.lock');
+  fs.mkdirSync(lock, { mode: 0o700 });
+  fs.writeFileSync(path.join(lock, 'owner'), '99999999', { mode: 0o600 });
+  let releaseSecond, releaseFirst;
+  const secondMayProceed = new Promise((resolve) => { releaseSecond = resolve; });
+  const firstMayExit = new Promise((resolve) => { releaseFirst = resolve; });
+  let firstEntered, secondObservedRecovery;
+  const inFirst = new Promise((resolve) => { firstEntered = resolve; });
+  const secondRecovered = new Promise((resolve) => { secondObservedRecovery = resolve; });
+  const entries = [];
+  const first = withPidLock(lock, async () => {
+    entries.push('first-enter');
+    firstEntered();
+    await firstMayExit;
+    entries.push('first-exit');
+  }, 2000);
+  const second = withPidLock(lock, async () => { entries.push('second-enter'); }, 2000, {
+    afterDeadOwnerObserved: () => secondMayProceed,
+    afterRecoveryAttempt: secondObservedRecovery,
+  });
+  try {
+    await inFirst;
+    const live = fs.statSync(lock);
+    assert.equal(fs.readFileSync(path.join(lock, 'owner'), 'utf8'), String(process.pid));
+    releaseSecond();
+    await secondRecovered;
+    assert.equal(fs.statSync(lock).ino, live.ino);
+    assert.deepEqual(entries, ['first-enter']);
+  } finally { releaseSecond(); releaseFirst(); }
+  await Promise.all([first, second]);
+  assert.deepEqual(entries, ['first-enter', 'first-exit', 'second-enter']);
+  assert.equal(fs.existsSync(lock), false);
+});
+
+test('a killed recovery-gate owner is reclaimed and the dead lock proceeds', async () => {
+  const lock = path.join(trial, 'killed-recovery-gate.lock');
+  const child = await startGateOwner(lock, { mainLock: true });
+  child.kill('SIGKILL');
+  await new Promise((resolve) => child.once('close', resolve));
+  let entered = false;
+  await withPidLock(lock, async () => { entered = true; }, 1500);
+  assert.equal(entered, true);
+  assert.equal(fs.existsSync(lock), false);
+  assert.equal(fs.existsSync(`${lock}.recovery`), false);
+});
+
+test('an old recovery gate with a live owner is preserved', async () => {
+  const lock = path.join(trial, 'live-old-recovery-gate.lock');
+  const child = await startGateOwner(lock, { old: true });
+  const gate = `${lock}.recovery`;
+  const inode = fs.lstatSync(gate).ino;
+  try {
+    await assert.rejects(withPidLock(lock, async () => {}, 150), /credential lock unavailable/);
+    assert.equal(fs.lstatSync(gate).ino, inode);
+    assert.equal(fs.readFileSync(path.join(gate, 'owner'), 'utf8'), String(child.pid));
+    assert.equal(fs.existsSync(lock), false);
+  } finally {
+    child.kill('SIGKILL');
+    await new Promise((resolve) => child.once('close', resolve));
+  }
+});
+
+test('malformed recovery-gate owner needs age before reclamation', async () => {
+  const freshLock = path.join(trial, 'fresh-malformed-recovery-gate.lock');
+  const freshGate = `${freshLock}.recovery`;
+  fs.mkdirSync(freshGate, { mode: 0o700 });
+  fs.writeFileSync(path.join(freshGate, 'owner'), 'not-a-pid', { mode: 0o600 });
+  const inode = fs.lstatSync(freshGate).ino;
+  await assert.rejects(withPidLock(freshLock, async () => {}, 150), /credential lock unavailable/);
+  assert.equal(fs.lstatSync(freshGate).ino, inode);
+  assert.equal(fs.readFileSync(path.join(freshGate, 'owner'), 'utf8'), 'not-a-pid');
+  const oldLock = path.join(trial, 'old-malformed-recovery-gate.lock');
+  const oldGate = `${oldLock}.recovery`;
+  fs.mkdirSync(oldGate, { mode: 0o700 });
+  fs.writeFileSync(path.join(oldGate, 'owner'), 'not-a-pid', { mode: 0o600 });
+  const old = new Date(Date.now() - 60000);
+  fs.utimesSync(oldGate, old, old);
+  let entered = false;
+  await withPidLock(oldLock, async () => { entered = true; }, 1500);
+  assert.equal(entered, true);
+  assert.equal(fs.existsSync(oldGate), false);
+});
+
 test('closing a client aborts its in-flight provider stream', async () => {
   const mock = await startMock(46103);
   const home = mkhome('cancel', true); seed(home);
@@ -482,14 +622,59 @@ test('forced refresh rotates atomically through preload and leak scan finds plan
     const bare = path.join(trial, 'bare-token.sqlite3');
     fs.writeFileSync(planted, fs.readFileSync(file));
     fs.writeFileSync(bare, Buffer.concat([Buffer.from('SQLite format 3\0'), Buffer.from(after.access)]));
-    const scan = await run(['leak-scan', home, planted, bare], { EXO_MODEL_HOME: home, ...env });
+    const linkedCopy = path.join(trial, 'linked-copy.json');
+    fs.symlinkSync(planted, linkedCopy);
+    const linkedDirectoryTarget = path.join(trial, 'linked-directory-target');
+    fs.mkdirSync(linkedDirectoryTarget, { mode: 0o700 });
+    fs.writeFileSync(path.join(linkedDirectoryTarget, 'token.txt'), after.access);
+    fs.symlinkSync(linkedDirectoryTarget, path.join(linkedDirectoryTarget, 'cycle'), 'dir');
+    const linkedDirectory = path.join(trial, 'linked-directory');
+    fs.symlinkSync(linkedDirectoryTarget, linkedDirectory, 'dir');
+    const linkedCredential = path.join(trial, 'linked-canonical-credential.json');
+    fs.symlinkSync(file, linkedCredential);
+    const scan = await run(['leak-scan', linkedCredential, linkedCopy, linkedDirectory, home, planted, bare],
+      { EXO_MODEL_HOME: home, ...env });
     assert.equal(scan.code, 0);
     const result = JSON.parse(scan.stdout);
     assert.deepEqual(result.excluded, [fs.realpathSync(file)]);
-    assert.ok(result.hits.some((hit) => hit.path === planted && hit.kind === 'access'));
+    assert.ok(result.hits.some((hit) => hit.path === linkedCopy && hit.kind === 'access'));
+    assert.ok(result.hits.some((hit) => hit.path === path.join(linkedDirectory, 'token.txt') && hit.kind === 'access'));
     assert.ok(result.hits.some((hit) => hit.path === bare && hit.kind === 'access'));
+    assert.ok(!result.hits.some((hit) => hit.path === planted || hit.path === linkedCredential));
+    assert.ok(result.files_scanned >= 3);
     assert.ok(!scan.stdout.includes(after.access));
   } finally { await stop(service.child); }
+});
+
+test('leak scan reports a hard link created after its credential read', async () => {
+  const home = mkhome('inflight-hardlink-scan');
+  const file = seed(home);
+  const linked = path.join(trial, 'inflight-credential-hardlink.json');
+  const linkPreload = path.join(trial, 'link-after-credential-read.mjs');
+  fs.writeFileSync(linkPreload, `
+import fs from 'node:fs';
+const originalRead = fs.readFileSync;
+let linked = false;
+fs.readFileSync = (...args) => {
+  const data = originalRead.apply(fs, args);
+  if (!linked && typeof args[0] === 'number') {
+    const opened = fs.fstatSync(args[0]);
+    const credential = fs.lstatSync(process.env.EXO_SCAN_CREDENTIAL);
+    if (opened.dev === credential.dev && opened.ino === credential.ino) {
+      fs.linkSync(process.env.EXO_SCAN_CREDENTIAL, process.env.EXO_SCAN_LINK);
+      linked = true;
+    }
+  }
+  return data;
+};
+`, { mode: 0o600 });
+  const scan = await run(['leak-scan', linked], { EXO_MODEL_HOME: home, EXO_CODEX_BASE_URL: undefined,
+    NODE_OPTIONS: `--import=${linkPreload}`, EXO_SCAN_CREDENTIAL: file, EXO_SCAN_LINK: linked });
+  assert.equal(scan.code, 0, scan.stderr);
+  assert.equal(fs.lstatSync(file).nlink, 2);
+  const result = JSON.parse(scan.stdout);
+  assert.ok(result.hits.some((hit) => hit.path === linked && hit.kind === 'access'));
+  assert.deepEqual(result.excluded, []);
 });
 
 test('missing or api-key credential never falls back to OPENAI_API_KEY', async () => {

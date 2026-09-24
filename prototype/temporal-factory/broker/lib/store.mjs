@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const RECOVERY_GATE_STALE_MS = 30000;
 
 export function pidAlive(pid) {
   if (!Number.isSafeInteger(pid) || pid <= 0) return false;
@@ -13,7 +15,7 @@ function unsafePath() {
   return Object.assign(new Error('unsafe model broker filesystem path'), { kind: 'config' });
 }
 
-function checkedStat(file, type, missing = false) {
+function checkedStat(file, type, missing = false, singleLink = false) {
   let stat;
   try { stat = fs.lstatSync(file); }
   catch (error) {
@@ -22,7 +24,7 @@ function checkedStat(file, type, missing = false) {
   }
   if (stat.isSymbolicLink() || stat.uid !== process.getuid() ||
       (type === 'directory' ? !stat.isDirectory() : !stat.isFile()) ||
-      (stat.mode & 0o077)) throw unsafePath();
+      (stat.mode & 0o077) || (singleLink && stat.nlink !== 1)) throw unsafePath();
   return stat;
 }
 
@@ -42,17 +44,19 @@ export function ownerOnlyDirectory(dir) {
   } finally { fs.closeSync(fd); }
 }
 
-export function ownerOnlyFile(file) {
+export function ownerOnlyFile(file, singleLink = false) {
   let before;
   try { before = fs.lstatSync(file); }
   catch (error) { if (error.code === 'ENOENT') return; throw error; }
-  if (before.isSymbolicLink() || !before.isFile() || before.uid !== process.getuid()) throw unsafePath();
+  if (before.isSymbolicLink() || !before.isFile() || before.uid !== process.getuid() ||
+      (singleLink && before.nlink !== 1)) throw unsafePath();
   const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
   try {
     const opened = fs.fstatSync(fd);
-    if (opened.ino !== before.ino || opened.dev !== before.dev) throw unsafePath();
+    if (opened.ino !== before.ino || opened.dev !== before.dev ||
+        (singleLink && opened.nlink !== 1)) throw unsafePath();
     fs.fchmodSync(fd, 0o600);
-    const after = checkedStat(file, 'file');
+    const after = checkedStat(file, 'file', false, singleLink);
     if (after.ino !== before.ino || after.dev !== before.dev) throw unsafePath();
   } finally { fs.closeSync(fd); }
 }
@@ -65,18 +69,19 @@ function ownerPid(lock) {
 export function checkCredentialPath(file) {
   checkedStat(path.dirname(path.dirname(file)), 'directory');
   checkedStat(path.dirname(file), 'directory');
-  checkedStat(file, 'file', true);
+  checkedStat(file, 'file', true, true);
   checkedStat(`${file}.lock`, 'directory', true);
 }
 
-export function readOwnerOnlyFile(file) {
-  const before = checkedStat(file, 'file', true);
+export function readOwnerOnlyFile(file, singleLink = false) {
+  const before = checkedStat(file, 'file', true, singleLink);
   if (!before) return undefined;
   const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
   try {
     const after = fs.fstatSync(fd);
     if (!after.isFile() || after.uid !== process.getuid() || (after.mode & 0o077) ||
-        after.ino !== before.ino || after.dev !== before.dev) throw unsafePath();
+        after.ino !== before.ino || after.dev !== before.dev ||
+        (singleLink && after.nlink !== 1)) throw unsafePath();
     return fs.readFileSync(fd, 'utf8');
   } finally { fs.closeSync(fd); }
 }
@@ -86,29 +91,98 @@ export function rewriteAuthorizeOriginator(url) {
   return url.replace(/([?&]originator=)[^&#]*/, '$1exomachina');
 }
 
-export async function withPidLock(lock, fn, timeoutMs = 10000) {
+function recoverAbandonedGate(gate) {
+  const abandoned = (location, stat) => {
+    const pid = ownerPid(location);
+    if (Number.isSafeInteger(pid) && pid > 0) return !pidAlive(pid);
+    // Only a missing or malformed owner uses age: mkdir may have completed
+    // immediately before the process died, before it could write owner.
+    return Date.now() - stat.mtimeMs >= RECOVERY_GATE_STALE_MS;
+  };
+  const observed = checkedStat(gate, 'directory', true);
+  if (!observed || !abandoned(gate, observed)) return false;
+  // The gate holder performs no awaits between mkdir and rmdir. Recheck the
+  // same directory and its owner immediately before moving it.
+  const before = checkedStat(gate, 'directory', true);
+  if (!before || before.dev !== observed.dev || before.ino !== observed.ino ||
+      !abandoned(gate, before)) return false;
+  const tombstone = `${gate}.stale-${process.pid}-${randomUUID()}`;
+  try { fs.renameSync(gate, tombstone); }
+  catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+  const moved = checkedStat(tombstone, 'directory');
+  if (moved.dev !== before.dev || moved.ino !== before.ino || !abandoned(tombstone, moved)) {
+    // Another process replaced the path before the rename. Preserve its gate.
+    if (!fs.lstatSync(gate, { throwIfNoEntry: false })) fs.renameSync(tombstone, gate);
+    throw unsafePath();
+  }
+  if (fs.lstatSync(path.join(tombstone, 'owner'), { throwIfNoEntry: false }))
+    fs.unlinkSync(path.join(tombstone, 'owner'));
+  fs.rmdirSync(tombstone);
+  return true;
+}
+
+// The optional hooks are used only by direct store-level tests. Product
+// callers, including every CLI and socket operation, never supply them.
+export async function withPidLock(lock, fn, timeoutMs = 10000, hooks = {}) {
   const deadline = Date.now() + timeoutMs;
+  const recovery = `${lock}.recovery`;
   for (;;) {
     try {
+      // A recoverer holds this gate while it moves the stale directory away.
+      // A late acquirer may still mkdir after the move; the recoverer then
+      // touches only its tombstone, never the new live lock.
+      if (checkedStat(recovery, 'directory', true)) {
+        if (recoverAbandonedGate(recovery)) continue;
+        if (Date.now() >= deadline) throw new Error('credential lock unavailable');
+        await pause(25);
+        continue;
+      }
       checkedStat(lock, 'directory', true);
       fs.mkdirSync(lock, { mode: 0o700 });
       fs.writeFileSync(path.join(lock, 'owner'), String(process.pid), { mode: 0o600, flag: 'wx' });
       break;
     } catch (error) {
       if (error.code !== 'EEXIST') throw error;
-      checkedStat(lock, 'directory');
+      // Another recoverer can move the directory between our failed mkdir
+      // and this check. That is ordinary contention, not a configuration error.
+      if (!checkedStat(lock, 'directory', true)) {
+        if (Date.now() >= deadline) throw new Error('credential lock unavailable');
+        await pause(25);
+        continue;
+      }
       const pid = ownerPid(lock);
       // A missing or malformed owner is ambiguous during lock creation. Only a
-      // recorded, dead PID proves that removing this lock is safe.
+      // recorded, dead PID proves that recovering this lock is safe.
       if (pid && !pidAlive(pid)) {
+        await hooks.afterDeadOwnerObserved?.();
         try {
-          if (ownerPid(lock) === pid) {
-            fs.unlinkSync(path.join(lock, 'owner'));
-            fs.rmdirSync(lock);
+          fs.mkdirSync(recovery, { mode: 0o700 });
+          fs.writeFileSync(path.join(recovery, 'owner'), String(process.pid), { mode: 0o600, flag: 'wx' });
+        } catch (race) {
+          if (race.code !== 'EEXIST') throw race;
+          if (Date.now() >= deadline) throw new Error('credential lock unavailable');
+          await pause(25);
+          continue;
+        }
+        try {
+          const before = checkedStat(lock, 'directory', true);
+          if (before && ownerPid(lock) === pid && !pidAlive(pid)) {
+            const tombstone = `${lock}.stale-${process.pid}-${randomUUID()}`;
+            fs.renameSync(lock, tombstone);
+            // Only the process that moved this directory owns its tombstone.
+            // A different lock at the original path is never removed here.
+            const moved = checkedStat(tombstone, 'directory');
+            if (moved.dev !== before.dev || moved.ino !== before.ino) throw unsafePath();
+            fs.unlinkSync(path.join(tombstone, 'owner'));
+            fs.rmdirSync(tombstone);
           }
         } catch (race) {
           if (!['ENOENT', 'ENOTEMPTY', 'EEXIST'].includes(race.code)) throw race;
+        } finally {
+          fs.unlinkSync(path.join(recovery, 'owner'));
+          fs.rmdirSync(recovery);
         }
+        await hooks.afterRecoveryAttempt?.();
       }
       if (Date.now() >= deadline) throw new Error('credential lock unavailable');
       await pause(25);
@@ -125,7 +199,7 @@ export class FileCredentialStore {
   constructor(file) { this.file = file; this.chain = Promise.resolve(); }
   readCurrent() {
     checkCredentialPath(this.file);
-    const contents = readOwnerOnlyFile(this.file);
+    const contents = readOwnerOnlyFile(this.file, true);
     return contents === undefined ? undefined : JSON.parse(contents);
   }
   async read(id) {

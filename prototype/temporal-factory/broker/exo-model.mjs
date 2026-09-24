@@ -47,6 +47,13 @@ if (baseUrl !== undefined) {
   const ownSecrets = canonical(secretDir) === path.join(realHome, 'secrets');
   const ownCredential = canonical(credentialFile) === path.join(realHome, 'secrets', 'openai-codex.json');
   if (!isolated || !fixtureMarked || !loopback || !ownSecrets || !ownCredential) configFailure();
+  // Compare metadata only. The default credential is never opened or read.
+  try {
+    const fixture = fs.lstatSync(credentialFile, { throwIfNoEntry: false });
+    const installed = fs.lstatSync(path.join(defaultHome, 'secrets', 'openai-codex.json'),
+      { throwIfNoEntry: false });
+    if (fixture && installed && fixture.dev === installed.dev && fixture.ino === installed.ino) configFailure();
+  } catch { configFailure(); }
 }
 if (commandName === 'login' && fixtureMarked) configFailure();
 if (commandName === 'login' && process.env.PI_OAUTH_CALLBACK_HOST !== undefined &&
@@ -54,7 +61,7 @@ if (commandName === 'login' && process.env.PI_OAUTH_CALLBACK_HOST !== undefined 
 
 try {
   for (const dir of [home, secretDir, runDir]) ownerOnlyDirectory(dir);
-  ownerOnlyFile(credentialFile);
+  ownerOnlyFile(credentialFile, true);
   const credentialLock = `${credentialFile}.lock`;
   if (fs.lstatSync(credentialLock, { throwIfNoEntry: false })) {
     ownerOnlyDirectory(credentialLock);
@@ -378,12 +385,20 @@ function leakScan(paths) {
   const canonicalCredential = canonical(credentialFile);
   return store.read(PROVIDER).then((credential) => {
     const needles = scanTokens(credential);
+    const visited = new Set();
     const visit = (file) => {
-      const stat = fs.lstatSync(file);
-      if (stat.isSymbolicLink()) return;
+      let real;
+      try { real = fs.realpathSync.native(file); }
+      catch (error) {
+        if (['ENOENT', 'ELOOP'].includes(error.code)) return;
+        throw error;
+      }
+      if (visited.has(real)) return;
+      visited.add(real);
+      const stat = fs.statSync(file);
       if (stat.isDirectory()) { for (const name of fs.readdirSync(file)) visit(path.join(file, name)); return; }
       if (!stat.isFile()) return;
-      if (canonical(file) === canonicalCredential) {
+      if (real === canonicalCredential) {
         if (!scanned.excluded.includes(canonicalCredential)) scanned.excluded.push(canonicalCredential);
         return;
       }
