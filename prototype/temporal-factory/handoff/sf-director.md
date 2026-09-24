@@ -27,10 +27,39 @@ Working directory for commands below: `/Users/tomdaniel/Documents/Ember_Cognitio
 
 # Pre-registered verdicts and evidence
 
-SF-0..SF-3, R1-a..R1-e, R2-a..R2-d, R3-a..R3-e, G-1..G-5 and G-7 are **not run**. They have one verdict object each in `check_evidence`, but no observed-real or observed-synthetic scenario result exists on this lane. R1-d's automated verdict is explicitly structural; semantic reading remains pending and is never emitted as a pass. The pure checker assertions are unit-tested in `tests/test_harness_modes.py`. The orchestrator has not requested the synthetic scenario run; the two cross-lane conflicts above would prevent an all-pass result.
+This section describes the state before the preflight assignment. The four scripted attempts and their per-check verdicts are recorded in **Synthetic preflight** below. R1-d's automated verdict is explicitly structural; semantic reading remains pending.
 
 # Gaps and trial state
 
-- No scenario home or evidence attempt was created. Neither the synthetic nor the live provider was run. No broker login, refresh or logout was run, and no live broker request was made.
+- Before this preflight assignment, no scenario home or evidence attempt had been created. The live provider remains unrun. No broker login, refresh or logout was run, and no live broker request was made.
 - The full Python suite and Node broker suite were left to integration under the shared lock because their older tests use ports outside lane D's block. There is no new Node test count to report.
-- The collector was updated against the integrated Lane A/R schema but has not been exercised end to end. Any runtime mismatch must be preserved as a failed attempt before adjustment.
+- The collector was first exercised end to end in the four scripted attempts below; the preserved raw failures precede each correction.
+
+# Synthetic preflight
+
+24 September 2026. Four scripted attempts were run, each with a fresh home. No live provider was used. Raw evidence is retained as written by each attempt; the fourth attempt is **not** an observed all-pass run. `G-6` is the separate orchestrator suite gate and is not emitted by this scenario.
+
+| Attempt, integration | Preserved evidence and home | Raw per-check verdicts |
+| --- | --- | --- |
+| 1, `8023634` | `evidence/single-factory/scripted-1.json`; `/tmp/exo-sf-syn-1` | Pass: G-5. Fail: SF-0, SF-1, SF-2, SF-3, R1-a, R1-b, R1-c, R1-d, R1-e, R2-a, R2-b, R2-c, R2-d, R3-a, R3-b, R3-c, R3-d, R3-e, G-1, G-2, G-3, G-4, G-7. Preflight stopped before provisioning. |
+| 2, `8023634` | `evidence/single-factory/scripted-2.json`, `scripted-2-route1/`; `/tmp/exo-sf-syn-2` | Pass: SF-0, R1-a, R3-e, G-5. Fail: SF-1, SF-2, SF-3, R1-b, R1-c, R1-d, R1-e, R2-a, R2-b, R2-c, R2-d, R3-a, R3-b, R3-c, R3-d, G-1, G-2, G-3, G-4, G-7. Route 1 completed; route 2 stopped at stimulus HTTP 401. |
+| 3, `6b89117` | `evidence/single-factory/scripted-3.json`, `scripted-3-route1/`, `scripted-3-route2/`, `scripted-3-route3/`; `/tmp/exo-sf-syn-3` | Pass: SF-0, R1-a, R3-e, G-5. Fail: SF-1, SF-2, SF-3, R1-b, R1-c, R1-d, R1-e, R2-a, R2-b, R2-c, R2-d, R3-a, R3-b, R3-c, R3-d, G-1, G-2, G-3, G-4, G-7. Routes 1 and 2 completed; route 3's registered follow-up left the original Task waiting. The old collector blocked on `parent.result()` after its 180-second follow-up poll, so I sent SIGINT to the scenario process. Its `finally` stopped all services and wrote the failed evidence. Missing collection makes most raw check failures non-diagnostic. |
+| 4, `172aa1a` | `evidence/single-factory/scripted-4.json`, `scripted-4-route1.md`, `scripted-4-route2.md`, `scripted-4-route1/`, `scripted-4-route2/`, `scripted-4-route3/`; `/tmp/exo-sf-syn-4` | Pass: SF-0, SF-3, R1-a, R1-c, R1-d (structural only; semantic reading pending), R1-e, R2-a, R2-b, R2-c, R2-d, R3-a, R3-b, R3-c, R3-d, R3-e, G-1, G-3, G-4, G-5. Fail: SF-1, SF-2, R1-b, G-2, G-7. All three routes completed with accepted, accepted, aborted outcomes and zero incidents. These five failures came from collector predicates and fields, below. |
+
+Own-file fixes, in `scenarios/single_factory.py`:
+
+- Before attempt 1, a CLI rejection exposed that `/tmp` resolves to `/private/tmp` on macOS. The fresh-home guard now compares resolved parents. Attempt 1 then stopped at broker status because this worktree lacked broker dependencies; `npm --prefix prototype/temporal-factory/broker ci --offline --cache /tmp/exomachina-pi-strands-debate/npm-cache` installed 85 packages before attempt 2.
+- After attempt 2, the stimulus POST and log GET now send the service's fixture bearer header. The missing header caused the observed 401.
+- After attempt 3, a nonterminal route-3 follow-up raises a bounded error and preserves the route snapshot; `parent.result()` is also bounded to 60 seconds. This prevents another indefinite wait.
+- After attempt 4, SF-1 passes the actual synthetic provider to `authoring_acceptance`, counts authoring broker `stream` calls (4 in attempt 4), and records the published package's bindings. The original collector passed `codex-subscription`, set `model_calls: null`, and looked for bindings in catalog metadata rather than the package.
+- After attempt 4, SF-2/R1-b pin verification permits one card/contract verification to precede both the send and the poll in one adapter iteration, while requiring another verification after each prior poll. Attempt 4 recorded matching identity, card and contract digests for every action; the old predicate incorrectly required as many verification log rows as send plus poll rows.
+- After attempt 4, G-2 requires one nonempty broker PID throughout the run and the same before/after PID. Attempt 4 started and stopped the synthetic broker, so both before and after were `null` and all four during samples were PID `20130`. The old collector also lacked the authoring call count.
+
+An in-memory pure `check_evidence` replay of **the preserved attempt-4 observations**, supplying only the four collector corrections above, returned 24/24 passing check predicates, including G-7. This is a derived checker result, **not a fifth scenario run** or an observed structural-pass evidence file. The 4-attempt limit prevents verifying the edited collector in a new home. R1-d semantic reading remains an orchestrator judgment under A1.
+
+Cross-lane diagnoses:
+
+- At `8023634`, `services/release_server.py:21` imported `fixture` from `src`, violating A1's running-service import audit. Observed: `service_clean: false`; expected: no `src` import except `model_broker` for running services. Lane A fixed this in integration `6b89117`; attempt 4 recorded `service_clean: true`.
+- At `8023634` and `6b89117`, `broker/testing/mock-codex.mjs:205` matched only `answer the director wait|abort the waiting run`. Observed in attempt 3: registered follow-up produced a rejected `start_research` call and left the original Task `input-required`; expected: `inspect_run` followed by accepted `decide_wait(abort, r3, sha)`. Lane I fixed the matcher in `172aa1a`; attempt 4 passed R3-d. The harness inspection result uses the `current_revision` and `current_sha256` keys consumed by that mock.
+
+Verification after the collector edits: `python -B -m unittest tests.test_director_agent tests.test_harness_modes` ran 15 tests, OK; `git diff --check` passed. The orchestrator reported the integrated full Python suite at 147 OK on `6b89117`; this lane did not rerun that suite. All four attempts recorded G-5 pass. A final independent scan of all 60 ports in lane D's runner, member, harness, service and mock blocks returned `listeners: []`; a process listing found no process with a path under `/tmp/exo-sf-syn-1` through `-4` (including their `/private/tmp` forms). No commit, push or branch switch was made.

@@ -1,0 +1,2380 @@
+{
+  "active_publication": {
+    "build_id": "b-3e196d3f362c",
+    "closure": {
+      "contracts": {
+        "quality": {
+          "a2a_extension": {
+            "contract": "action-idempotent-async@1",
+            "contract_digest": "ee7063f3c6e7578fa74bb2d056fb7a0c6bf0a9f3b0f87cf743b7604693949971",
+            "uri": "urn:exomachina:a2a-action-contract:v1"
+          },
+          "capability": "report_quality_review@1",
+          "card_sha256": "f7cc8cc934a2902290f9f6caed2e7b1bf12769c0e550dfd30f74d9f6c1abc5fd",
+          "name": "quality",
+          "reconcile": "a2a-idempotent-resend",
+          "role": "quality"
+        },
+        "release": {
+          "a2a_protocol": "0.3.0",
+          "attested": false,
+          "capability": "release@1",
+          "input": {
+            "fields": [
+              "release_id",
+              "run_id",
+              "definition_digest",
+              "revision",
+              "sha256",
+              "content"
+            ],
+            "path": "/release",
+            "transport": "http-post"
+          },
+          "name": "release",
+          "operations": {
+            "idempotent_action_id": true,
+            "lookup": "/receipts/{id}"
+          },
+          "output": {
+            "receipt": [
+              "release_id",
+              "run_id",
+              "definition_digest",
+              "revision",
+              "sha256",
+              "attempts",
+              "accepted_effect_count"
+            ]
+          },
+          "role": "release"
+        },
+        "research_findings": {
+          "a2a_extension": {
+            "contract": "action-idempotent-async@1",
+            "contract_digest": "da825287effc3058ba2efac301a979c1693e86718edf8128e8f35e82c6f3ee8f",
+            "uri": "urn:exomachina:a2a-action-contract:v1"
+          },
+          "capability": "packet_findings@1",
+          "card_sha256": "d02c941dc8ebe903f27086ba7372a53271f2f3f44ac8f2ee8a222d01c794b846",
+          "name": "research_findings",
+          "reconcile": "a2a-idempotent-resend",
+          "role": "capability"
+        },
+        "research_risks": {
+          "a2a_extension": {
+            "contract": "action-idempotent-async@1",
+            "contract_digest": "ada16c7071e4cd3c8efaa67d5c9d401342046c0b0e78ccbb2467145a7ab201e0",
+            "uri": "urn:exomachina:a2a-action-contract:v1"
+          },
+          "capability": "packet_risks@1",
+          "card_sha256": "a8af4b256796267faed155533f4e9e7420071e9bb808fa0f86fb0131fe2ba16b",
+          "name": "research_risks",
+          "reconcile": "a2a-idempotent-resend",
+          "role": "capability"
+        },
+        "synthesizer": {
+          "a2a_extension": {
+            "contract": "action-idempotent-async@1",
+            "contract_digest": "c82b67bec0752da86912ab0a75d210b6e095cc2cec12b43c9074b4aecbe5cfb0",
+            "uri": "urn:exomachina:a2a-action-contract:v1"
+          },
+          "capability": "report_synthesis@1",
+          "card_sha256": "93eb7f1ca3aed4f6fc57155fc4ed2992e6fd64cd949ec7e83058d5175b03681f",
+          "name": "synthesizer",
+          "reconcile": "a2a-idempotent-resend",
+          "role": "capability"
+        }
+      },
+      "manifest": {
+        "child_digests": [
+          "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea"
+        ],
+        "interpreter": {
+          "build_id": "b-3e196d3f362c",
+          "deployment": "exo-factory",
+          "python": "3.12.9",
+          "source_digest": "3e196d3f362c842760ab237f514003c5c9f4e66c5683cabf2a621930294940e4",
+          "temporalio": "1.33.0"
+        },
+        "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+        "quality_policy_digest": "80436a3dc67d65ea7c2721730a27a3e118f3d300f5a485e879fe207610cad9ea",
+        "root_digest": "41b4cf22fe28db2cb081b8d04c2a25bb1590a65d7182a7243bbd1e7c2b755f33",
+        "schema": 1,
+        "services": {
+          "quality": {
+            "binding_digest": "495cc893eea5c53a1d75d10d10ca1ed788f6386e1783abc2bf7466cc9ea9f4ea",
+            "contract_digest": "3ae4d880ba4fc7b9d1cf8619d17e9c56dca3a38dd78cda34fbb1c5ab59e24c9e"
+          },
+          "release": {
+            "binding_digest": "029a07b7ab688bc0ca0865939ffbb0e5e76624bcc1887d6b1b1661912ffb71e3",
+            "contract_digest": "852b20317b000607767566b959d170d147f2d149217458a4b75f08967fca514b"
+          },
+          "research_findings": {
+            "binding_digest": "626b887fc030af26c077d55cf352439870a926c65f4bf7bc192f02d764506b3e",
+            "contract_digest": "baee9ddcc26e4716dbd2dc0f13910d33277d21cd96f01c2265e0b9804ea8c000"
+          },
+          "research_risks": {
+            "binding_digest": "ab947acdd576a401b672556f4ca95eaa483107fc586e5256431b9ef4f2424ff6",
+            "contract_digest": "bb1e6aaf4e9d8f9665fa51653c71606a264ec36177b873a8d7dcca5091211b45"
+          },
+          "synthesizer": {
+            "binding_digest": "eed6b0dcc4b5fc9feb71a18316dd619d1275cd111f9e8434c79168fa02a11352",
+            "contract_digest": "2a9b0704634ffe092a6df43b4da0be63b4cc4e2a86a7b0d855439a1cc44f4ab1"
+          }
+        }
+      },
+      "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+      "quality_policy": {
+        "author_may_not_review": true,
+        "policy": "exact-revision-independent-review@1",
+        "repair_bound_max": 2,
+        "reviewer_binding": "quality",
+        "rubric": "report-quality@1",
+        "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+      }
+    },
+    "label": "report",
+    "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+    "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+    "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c"
+  },
+  "authoring": {
+    "admin_exit_code": 0,
+    "approval": {
+      "approver": "director:3651c879-25c0-4583-a172-b72e2aa300a0",
+      "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+      "policy": "auto",
+      "status": "approved"
+    },
+    "limits": {
+      "deadline_seconds": 600,
+      "max_model_calls": 12,
+      "max_rounds": 4,
+      "max_tool_calls": 24
+    },
+    "live": {
+      "live_model_available": true,
+      "provider": "synthetic-loopback",
+      "reason": "synthetic-loopback broker available",
+      "refusal_reason": null
+    },
+    "model_calls": null,
+    "outcome": {
+      "abort": null,
+      "approval": {
+        "approver": "authoring-session",
+        "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+        "policy": "auto",
+        "status": "approved"
+      },
+      "error": null,
+      "limits": {
+        "deadline_seconds": 600,
+        "max_model_calls": 12,
+        "max_rounds": 4,
+        "max_tool_calls": 24
+      },
+      "model": {
+        "billing": "none",
+        "id": "gpt-6-sol",
+        "kind": "broker",
+        "live": false,
+        "provider": "synthetic-loopback"
+      },
+      "package": {
+        "bindings": {
+          "quality": {
+            "approved": true,
+            "identity": "b0694571-4ad9-4ec1-8183-fff94875e942",
+            "role": "quality",
+            "url": "http://127.0.0.1:45783"
+          },
+          "release": {
+            "approved": true,
+            "identity": "4b51a1b2-71a8-4c0e-9309-6c131761578f",
+            "role": "release",
+            "url": "http://127.0.0.1:45784"
+          },
+          "research_findings": {
+            "approved": true,
+            "identity": "09ae0696-7a1c-4ec9-a2f1-11368e97f2a1",
+            "role": "capability",
+            "url": "http://127.0.0.1:45780"
+          },
+          "research_risks": {
+            "approved": true,
+            "identity": "459ce27b-16b5-4db4-b9a1-9be36a9591e9",
+            "role": "capability",
+            "url": "http://127.0.0.1:45781"
+          },
+          "synthesizer": {
+            "approved": true,
+            "identity": "c04c0285-665d-494b-a9cb-6735ef47e986",
+            "role": "capability",
+            "url": "http://127.0.0.1:45782"
+          }
+        },
+        "children": {
+          "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea": {
+            "name": "verified_report",
+            "nodes": {
+              "abort": {
+                "type": "abort"
+              },
+              "director": {
+                "next": "abort",
+                "reason": "repair_exhausted",
+                "type": "director_wait"
+              },
+              "done": {
+                "type": "complete"
+              },
+              "draft": {
+                "next": "independent_quality",
+                "service": "synthesizer",
+                "type": "synthesize"
+              },
+              "gather": {
+                "branches": {
+                  "research_findings": {
+                    "capability": "packet_findings@1",
+                    "result_type": "packet_findings",
+                    "service": "research_findings"
+                  },
+                  "research_risks": {
+                    "capability": "packet_risks@1",
+                    "result_type": "packet_risks",
+                    "service": "research_risks"
+                  }
+                },
+                "next": "join_evidence",
+                "type": "parallel"
+              },
+              "independent_quality": {
+                "next": "route_verdict",
+                "type": "quality"
+              },
+              "join_evidence": {
+                "branches": [
+                  "research_findings",
+                  "research_risks"
+                ],
+                "next": "draft",
+                "type": "join"
+              },
+              "publish": {
+                "next": "done",
+                "service": "release",
+                "type": "release"
+              },
+              "repair": {
+                "exhausted": "director",
+                "max_repairs": 2,
+                "next": "draft",
+                "type": "repair"
+              },
+              "route_verdict": {
+                "cases": {
+                  "false": "repair",
+                  "true": "publish"
+                },
+                "field": "verdict.accepted",
+                "type": "route"
+              }
+            },
+            "revision": "v1",
+            "start": "gather"
+          }
+        },
+        "evidence_packet": {
+          "default_question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?",
+          "items": [
+            {
+              "id": "E1",
+              "source": "prototype/temporal-factory/QUALIFICATION.md#L18-L20",
+              "text": "- **observed-real** means real processes (harness, A2A, runner, Temporal and, where stated, the live broker);\n- **observed-synthetic** means real code against a mock;\n- **unit-tested** means an isolated test."
+            },
+            {
+              "id": "E2",
+              "source": "prototype/temporal-factory/QUALIFICATION.md#L22-L22",
+              "text": "A passing fixture is never counted as live proof."
+            },
+            {
+              "id": "E3",
+              "source": "prototype/temporal-factory/QUALIFICATION.md#L30-L32",
+              "text": "| A: independent delayed A2A agent | **Pass** A-1..A-5, observed-real (fixture Director) | External nodes are now pinned by **identity + url-less Agent Card digest + served contract digest**, not by URL. A static snapshot resolves the URL at call time. The remote Task id is journaled and polled. A lost response is reconciled by an idempotent resend **only** when the pinned contract document declares it; otherwise it is an incident. |\n| B: two instances in one home | **Pass** B-1..B-6, observed-real (fixture Director); **B-6 failed on the unmodified code** | Runner ports belong to the **install home** (`$H/runner-config.json`), not to `instance.json`. Provisioning rejects port collisions. A per-instance process lock is taken before the Director claims an incarnation. |\n| C: broker-backed Director | **Pass** C-1..C-5, **live** `gpt-6-sol` through the signed-in broker, plus synthetic | A text brief on the normal A2A endpoint reaches a Strands Director with **semantic tools only**. Code owns the action ids, principal, Task/run binding and Temporal authority. Inspect/abort now also require the run owner and the original context. |"
+            },
+            {
+              "id": "E4",
+              "source": "prototype/temporal-factory/QUALIFICATION.md#L74-L74",
+              "text": "- The agent is a local fixture process, the Director is a fixture, and the release receiver is still an HTTP fixture."
+            },
+            {
+              "id": "E5",
+              "source": "prototype/temporal-factory/QUALIFICATION.md#L116-L119",
+              "text": "| C-1 brief \u2192 authorized start | Pass | Pass | One accepted `start_research`; Task observed `working` \u2192 `input-required` at the Director wait after two repairs |\n| C-2 one wait decision on the original Task | Pass | Pass | `inspect_run`, then exactly one accepted `decide_wait(abort, r3, <current sha256>)`; Task `completed`/`aborted`; 0 releases |\n| C-3 invalid inputs rejected by code | Pass | Pass | The live model **did** request `outcome_mode: \"forbidden\"`; `authorize_run_inputs` rejected it. For \"choose graph v99\" and unknown-input briefs, the model folded the request into the question; those runs used the active publication and declared inputs only. Extra fields are rejected structurally, proven **fixture-injected** |\n| C-4 stale/unauthorized rejected | Pass | Pass | Stale r2 digest, the `fixture-observer` principal (tool path and a real A2A bearer) and an unbound Task were all rejected. These probes are **fixture-injected**, not spontaneous model behaviour |"
+            },
+            {
+              "id": "E6",
+              "source": "prototype/temporal-factory/QUALIFICATION.md#L135-L140",
+              "text": "- One account, one model, one decision type (abort).\n- The C-1 brief wrote `outcome_mode: never` literally instead of in prose.\n- The abort was directed by the caller's follow-up, not decided autonomously.\n- Quality, capabilities and release remain fixtures.\n- `message/send` blocks for the whole Director turn.\n- Model reliability across broader briefs is unmeasured."
+            },
+            {
+              "id": "E7",
+              "source": "prototype/temporal-factory/QUALIFICATION.md#L172-L176",
+              "text": "- External agents: no signed or attested cards, no remote authentication, no general directory. Workflow-level polling for long remote Tasks is not built.\n- The Director: live proof covers one account, one model and abort only. The Director token in history is unchanged.\n- Topology: two instances only; embedded `create_app()` has no instance lock; no stress testing.\n- Still fixtures: Quality, capability content and the HTTP release receiver.\n- Carried from the README: old-build retirement, contract attestation, operational hardening, and the memory ceiling are out of scope and unbuilt."
+            },
+            {
+              "id": "E8",
+              "source": "prototype/temporal-factory/QUALIFICATION.md#L150-L152",
+              "text": "| Spike B scenario, `/tmp/exo-qual-b-combined-1` | B-1..B-6 pass | observed-real, fixture Director | `evidence/spike-b/final-combined.json` |\n| Spike C synthetic, `/tmp/exo-qual-c-combined-syn-1` | C-1..C-5 pass | observed-synthetic | `evidence/spike-c/final-combined-synthetic.json` |\n| Spike C **live**, `/tmp/exo-qual-c-combined-live-1` | C-1..C-5 pass | observed-real, **live** `gpt-6-sol`, account `sha256:188b022d6e97` | `evidence/spike-c/final-combined-live.json` |"
+            },
+            {
+              "id": "E9",
+              "source": "prototype/temporal-factory/QUALIFICATION.md#L154-L156",
+              "text": "The combined live run in detail:\n- 5 text turns, **11 model calls and 6 tool calls** in total. The heaviest turn used 3 model calls and 2 tool calls, against a limit of 4/4/90 s.\n- The Task was observed `working` \u2192 `input-required`, followed by exactly one accepted abort and 0 releases."
+            },
+            {
+              "id": "E10",
+              "source": "prototype/temporal-factory/QUALIFICATION.md#L26-L26",
+              "text": "**All three spikes pass their pre-registered checks, on each spike branch and again on the merged tree** (final combined run below). Each spike also exposed one real defect that the checks or the review caught before integration:"
+            }
+          ],
+          "kind": "evidence_packet@1",
+          "packet_id": "exo-qualification-2026-09-23",
+          "title": "Qualification evidence for the Exomachina Temporal factory prototype"
+        },
+        "root": {
+          "name": "parent_verified_report",
+          "nodes": {
+            "done": {
+              "type": "complete"
+            },
+            "invoke_child": {
+              "child": "verified_report",
+              "child_digest": "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea",
+              "next": "done",
+              "type": "nested_factory"
+            }
+          },
+          "revision": "v1",
+          "start": "invoke_child"
+        },
+        "run_inputs": {
+          "question": {
+            "allowed_actors": [
+              "fixture-operator"
+            ],
+            "may_affect_acceptance": false,
+            "required": true,
+            "source": "caller",
+            "type": "string"
+          }
+        },
+        "schema": 1
+      },
+      "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+      "rounds": [
+        {
+          "draft_digest": "bd809ae1e748be3fb7e53212cab1ef6f9a52b9fee581efbce09185cda30357bf",
+          "errors": [
+            {
+              "code": "validation_error",
+              "message": "route must cover each typed value",
+              "missing_cases": [
+                "false"
+              ],
+              "path": "child.nodes.route_verdict.cases"
+            }
+          ],
+          "round": 1,
+          "valid": false
+        },
+        {
+          "draft_digest": "41009c8feb4045cbdffd55ccab93ece189cad81e5d5bf22a21b700edeaa52009",
+          "errors": [],
+          "round": 2,
+          "valid": true
+        }
+      ],
+      "selection_seconds": 0.0,
+      "status": "approved",
+      "template": {
+        "child": {
+          "name": "verified_report",
+          "nodes": {
+            "abort": {
+              "type": "abort"
+            },
+            "director": {
+              "next": "abort",
+              "reason": "repair_exhausted",
+              "type": "director_wait"
+            },
+            "done": {
+              "type": "complete"
+            },
+            "draft": {
+              "next": "independent_quality",
+              "service": "synthesizer",
+              "type": "synthesize"
+            },
+            "gather": {
+              "branches": {
+                "research_findings": {
+                  "capability": "packet_findings@1",
+                  "result_type": "packet_findings",
+                  "service": "research_findings"
+                },
+                "research_risks": {
+                  "capability": "packet_risks@1",
+                  "result_type": "packet_risks",
+                  "service": "research_risks"
+                }
+              },
+              "next": "join_evidence",
+              "type": "parallel"
+            },
+            "independent_quality": {
+              "next": "route_verdict",
+              "type": "quality"
+            },
+            "join_evidence": {
+              "branches": [
+                "research_findings",
+                "research_risks"
+              ],
+              "next": "draft",
+              "type": "join"
+            },
+            "publish": {
+              "next": "done",
+              "service": "release",
+              "type": "release"
+            },
+            "repair": {
+              "exhausted": "director",
+              "max_repairs": 2,
+              "next": "draft",
+              "type": "repair"
+            },
+            "route_verdict": {
+              "cases": {
+                "false": "repair",
+                "true": "publish"
+              },
+              "field": "verdict.accepted",
+              "type": "route"
+            }
+          },
+          "revision": "v1",
+          "start": "gather"
+        },
+        "root": {
+          "name": "parent_verified_report",
+          "nodes": {
+            "done": {
+              "type": "complete"
+            },
+            "invoke_child": {
+              "child": "verified_report",
+              "child_digest": "@child",
+              "next": "done",
+              "type": "nested_factory"
+            }
+          },
+          "revision": "v1",
+          "start": "invoke_child"
+        },
+        "run_inputs": {
+          "question": {
+            "allowed_actors": [
+              "fixture-operator"
+            ],
+            "may_affect_acceptance": false,
+            "required": true,
+            "source": "caller",
+            "type": "string"
+          }
+        },
+        "schema": 1
+      },
+      "tool_calls": [
+        {
+          "result": {
+            "bindings": {
+              "quality": {
+                "approved": true,
+                "role": "quality"
+              },
+              "release": {
+                "approved": true,
+                "role": "release"
+              },
+              "research_findings": {
+                "approved": true,
+                "role": "capability"
+              },
+              "research_risks": {
+                "approved": true,
+                "role": "capability"
+              },
+              "synthesizer": {
+                "approved": true,
+                "role": "capability"
+              }
+            },
+            "bounds": {
+              "max_repairs": [
+                1,
+                2
+              ],
+              "nodes_per_definition": 32,
+              "parallel_branches": [
+                2,
+                4
+              ],
+              "run_input_fields": 16
+            },
+            "input_sources": [
+              "caller",
+              "director",
+              "verified_artifact"
+            ],
+            "input_types": [
+              "boolean",
+              "integer",
+              "number",
+              "string"
+            ],
+            "node_fields": {
+              "abort": [
+                "type"
+              ],
+              "complete": [
+                "type"
+              ],
+              "director_wait": [
+                "next",
+                "reason",
+                "type"
+              ],
+              "join": [
+                "branches",
+                "next",
+                "type"
+              ],
+              "nested_factory": [
+                "child",
+                "child_digest",
+                "next",
+                "type"
+              ],
+              "parallel": [
+                "branches",
+                "next",
+                "type"
+              ],
+              "quality": [
+                "next",
+                "type"
+              ],
+              "release": [
+                "next",
+                "service",
+                "type"
+              ],
+              "repair": [
+                "exhausted",
+                "max_repairs",
+                "next",
+                "type"
+              ],
+              "route": [
+                "cases",
+                "field",
+                "type"
+              ],
+              "synthesize": [
+                "next",
+                "service",
+                "type"
+              ]
+            },
+            "result_types": {
+              "packet_findings": "packet_findings@1",
+              "packet_risks": "packet_risks@1"
+            },
+            "route_values": {
+              "verdict.accepted": [
+                "false",
+                "true"
+              ]
+            },
+            "rules": [
+              "All route cases must cover their typed values.",
+              "Packet findings and risks must meet at a typed join.",
+              "Quality must review a candidate before release.",
+              "Repair must have a bounded exhausted edge to Director wait and abort.",
+              "The root may only invoke its digest-pinned child and complete."
+            ],
+            "schema": 1,
+            "template_fields": [
+              "schema",
+              "root",
+              "child",
+              "run_inputs"
+            ]
+          },
+          "tool": "describe_vocabulary"
+        },
+        {
+          "draft_digest": "bd809ae1e748be3fb7e53212cab1ef6f9a52b9fee581efbce09185cda30357bf",
+          "result": {
+            "draft_digest": "bd809ae1e748be3fb7e53212cab1ef6f9a52b9fee581efbce09185cda30357bf",
+            "errors": [
+              {
+                "code": "validation_error",
+                "message": "route must cover each typed value",
+                "missing_cases": [
+                  "false"
+                ],
+                "path": "child.nodes.route_verdict.cases"
+              }
+            ],
+            "ok": false
+          },
+          "tool": "validate_draft"
+        },
+        {
+          "draft_digest": "41009c8feb4045cbdffd55ccab93ece189cad81e5d5bf22a21b700edeaa52009",
+          "result": {
+            "draft_digest": "41009c8feb4045cbdffd55ccab93ece189cad81e5d5bf22a21b700edeaa52009",
+            "errors": [],
+            "ok": true,
+            "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613"
+          },
+          "tool": "submit_draft"
+        }
+      ]
+    },
+    "publication": {
+      "build_id": "b-3e196d3f362c",
+      "label": "report",
+      "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+      "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613"
+    },
+    "seconds": 1.561,
+    "selection_seconds": 0.0,
+    "status": "published"
+  },
+  "authoring_call_count": null,
+  "broker_pid_after": null,
+  "broker_pid_before": null,
+  "broker_pids_during": [
+    17623,
+    17623
+  ],
+  "checks": {
+    "G-1": {
+      "behavior": null,
+      "decisive_evidence": {
+        "incidents": null,
+        "journal": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "G-2": {
+      "behavior": null,
+      "decisive_evidence": {
+        "authoring_calls": null,
+        "broker_pid_after": null,
+        "broker_pid_before": null,
+        "director_calls": null,
+        "sessions": [],
+        "stream_sessions": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "G-3": {
+      "behavior": null,
+      "decisive_evidence": {
+        "tasks": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "G-4": {
+      "behavior": null,
+      "decisive_evidence": {
+        "leak_scan": {},
+        "positive_control": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "G-5": {
+      "behavior": null,
+      "decisive_evidence": {
+        "errors": [],
+        "harness_exit": -15,
+        "listeners": [],
+        "mock_exit": -15,
+        "processes_stopped": true,
+        "runner": {
+          "address": "127.0.0.1:44542",
+          "builds": {},
+          "namespace": "exomachina",
+          "pid": null,
+          "pids": {},
+          "rss_kib": {},
+          "running": false,
+          "worker_rss_kib": {}
+        },
+        "services": {
+          "quality": "stopped",
+          "release": "stopped",
+          "research_findings": "stopped",
+          "research_risks": "stopped",
+          "synthesizer": "stopped"
+        }
+      },
+      "label": "observed-synthetic",
+      "pass": true
+    },
+    "G-7": {
+      "behavior": null,
+      "decisive_evidence": {
+        "structural_checks": {
+          "G-1": false,
+          "G-2": false,
+          "G-3": false,
+          "G-4": false,
+          "G-5": true,
+          "R1-a": true,
+          "R1-b": false,
+          "R1-c": false,
+          "R1-d": false,
+          "R1-e": false,
+          "R2-a": false,
+          "R2-b": false,
+          "R2-c": false,
+          "R2-d": false,
+          "R3-a": false,
+          "R3-b": false,
+          "R3-c": false,
+          "R3-d": false,
+          "R3-e": true,
+          "SF-0": true,
+          "SF-1": false,
+          "SF-2": false,
+          "SF-3": false
+        },
+        "synthetic_scenario": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R1-a": {
+      "behavior": "scripted",
+      "decisive_evidence": {
+        "calls": [
+          {
+            "accepted": 1,
+            "arguments": {
+              "question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?"
+            },
+            "arguments_json": "{\"question\": \"What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?\"}",
+            "created_at": 1790262473.902658,
+            "id": 1,
+            "message_id": "78c366d1-3b5f-424d-99b1-5ef00c81551d",
+            "model_kind": "synthetic",
+            "result": {
+              "accepted_command": "start",
+              "ok": true
+            },
+            "result_json": "{\"accepted_command\": \"start\", \"ok\": true}",
+            "task_id": "95a8e4a4-2b09-4051-9d7b-91cb7b3bef7a",
+            "tool": "start_research"
+          }
+        ],
+        "states": [
+          "working",
+          "completed"
+        ],
+        "task_state": "completed"
+      },
+      "label": "observed-synthetic",
+      "pass": true
+    },
+    "R1-b": {
+      "behavior": "scripted",
+      "decisive_evidence": {
+        "research": [
+          [],
+          []
+        ]
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R1-c": {
+      "behavior": "scripted route control",
+      "decisive_evidence": {
+        "quality": {},
+        "synthesis": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R1-d": {
+      "behavior": null,
+      "decisive_evidence": {
+        "artifact": [
+          {
+            "artifactId": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "## Live-proven\nThe prior live C run proved a broker-backed Director for the abort route.\n\n## Fixture-only\nThe earlier Quality and capability content were fixtures, as was the HTTP release receiver.\n\n## Remaining gaps\nThe live Director proof covered one account, one model, and abort only.\n\n## Next priority\nThe next priority is to exercise real research, synthesis, and Quality agents while keeping release labeled as a fixture."
+              },
+              {
+                "data": {
+                  "acceptance": {
+                    "attempt": 1,
+                    "definition_digest": "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea",
+                    "quality_task_id": "6760fae0-1913-405b-a27c-794a7958fe24",
+                    "reviewer": "b0694571-4ad9-4ec1-8183-fff94875e942",
+                    "revision": "r1",
+                    "run": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc:child:82c5bfe305ea",
+                    "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e"
+                  },
+                  "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+                  "release_receipt": {
+                    "accepted_effect_count": 1,
+                    "attempts": 1,
+                    "definition_digest": "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea",
+                    "release_id": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc:child:82c5bfe305ea:release:r1",
+                    "revision": "r1",
+                    "run_id": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc:child:82c5bfe305ea",
+                    "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e"
+                  },
+                  "revision": "r1",
+                  "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e"
+                },
+                "kind": "data"
+              }
+            ]
+          }
+        ],
+        "claim_count": 0,
+        "claims_cite_packet": false,
+        "packet_ids": [
+          "E1",
+          "E10",
+          "E2",
+          "E3",
+          "E4",
+          "E5",
+          "E6",
+          "E7",
+          "E8",
+          "E9"
+        ],
+        "release": [],
+        "report_path": null,
+        "usefulness": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false,
+      "scope": "structural",
+      "semantic_reading": "pending-orchestrator-reading"
+    },
+    "R1-e": {
+      "behavior": "scripted route control",
+      "decisive_evidence": {
+        "quality": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R2-a": {
+      "behavior": "induced",
+      "decisive_evidence": {
+        "factory_absence": null,
+        "stimulus": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R2-b": {
+      "behavior": "scripted route control",
+      "decisive_evidence": {
+        "planted": {},
+        "review": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R2-c": {
+      "behavior": "scripted",
+      "decisive_evidence": {
+        "first": {},
+        "repair": {},
+        "stimulus": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R2-d": {
+      "behavior": "scripted route control",
+      "decisive_evidence": {
+        "acceptance": {},
+        "artifact": null,
+        "max_repairs": null,
+        "release": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R3-a": {
+      "behavior": "induced",
+      "decisive_evidence": {
+        "expected": [],
+        "stimulus": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R3-b": {
+      "behavior": "scripted route control",
+      "decisive_evidence": {
+        "child_status": {},
+        "reviews": []
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R3-c": {
+      "behavior": null,
+      "decisive_evidence": {
+        "states": null,
+        "wait_status": null
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R3-d": {
+      "behavior": "caller-prompted scripted abort",
+      "decisive_evidence": {
+        "calls": [],
+        "release": [],
+        "task": {}
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "R3-e": {
+      "behavior": "caller-prompted scripted abort",
+      "decisive_evidence": {
+        "turns": [
+          {
+            "accepted": [
+              "start_research"
+            ],
+            "elapsed_seconds": 16.029,
+            "failure": null,
+            "limits": {
+              "deadline_seconds": 90,
+              "max_model_calls": 4,
+              "max_tool_calls": 4
+            },
+            "model_calls": 2,
+            "model_kind": "synthetic",
+            "tool_calls": 1
+          }
+        ]
+      },
+      "label": "observed-synthetic",
+      "pass": true
+    },
+    "SF-0": {
+      "behavior": null,
+      "decisive_evidence": {
+        "broker_status": {
+          "account": "sha256:5d8719a9b57c",
+          "expired": false,
+          "expires_at": 4102444800000,
+          "signed_in": true
+        },
+        "card_skill_count": 1,
+        "environment": {
+          "ANTHROPIC_API_KEY": false,
+          "EXO_CODEX_BASE_URL": false,
+          "EXO_MODEL_HOME": false,
+          "OPENAI_API_KEY": false
+        },
+        "factory_count": 1,
+        "fresh_home": true,
+        "preflight_listeners": []
+      },
+      "label": "observed-synthetic",
+      "pass": true
+    },
+    "SF-1": {
+      "behavior": null,
+      "decisive_evidence": {
+        "acceptance_reason": "authoring_budget_exceeded_or_missing",
+        "active": {
+          "build_id": "b-3e196d3f362c",
+          "closure": {
+            "contracts": {
+              "quality": {
+                "a2a_extension": {
+                  "contract": "action-idempotent-async@1",
+                  "contract_digest": "ee7063f3c6e7578fa74bb2d056fb7a0c6bf0a9f3b0f87cf743b7604693949971",
+                  "uri": "urn:exomachina:a2a-action-contract:v1"
+                },
+                "capability": "report_quality_review@1",
+                "card_sha256": "f7cc8cc934a2902290f9f6caed2e7b1bf12769c0e550dfd30f74d9f6c1abc5fd",
+                "name": "quality",
+                "reconcile": "a2a-idempotent-resend",
+                "role": "quality"
+              },
+              "release": {
+                "a2a_protocol": "0.3.0",
+                "attested": false,
+                "capability": "release@1",
+                "input": {
+                  "fields": [
+                    "release_id",
+                    "run_id",
+                    "definition_digest",
+                    "revision",
+                    "sha256",
+                    "content"
+                  ],
+                  "path": "/release",
+                  "transport": "http-post"
+                },
+                "name": "release",
+                "operations": {
+                  "idempotent_action_id": true,
+                  "lookup": "/receipts/{id}"
+                },
+                "output": {
+                  "receipt": [
+                    "release_id",
+                    "run_id",
+                    "definition_digest",
+                    "revision",
+                    "sha256",
+                    "attempts",
+                    "accepted_effect_count"
+                  ]
+                },
+                "role": "release"
+              },
+              "research_findings": {
+                "a2a_extension": {
+                  "contract": "action-idempotent-async@1",
+                  "contract_digest": "da825287effc3058ba2efac301a979c1693e86718edf8128e8f35e82c6f3ee8f",
+                  "uri": "urn:exomachina:a2a-action-contract:v1"
+                },
+                "capability": "packet_findings@1",
+                "card_sha256": "d02c941dc8ebe903f27086ba7372a53271f2f3f44ac8f2ee8a222d01c794b846",
+                "name": "research_findings",
+                "reconcile": "a2a-idempotent-resend",
+                "role": "capability"
+              },
+              "research_risks": {
+                "a2a_extension": {
+                  "contract": "action-idempotent-async@1",
+                  "contract_digest": "ada16c7071e4cd3c8efaa67d5c9d401342046c0b0e78ccbb2467145a7ab201e0",
+                  "uri": "urn:exomachina:a2a-action-contract:v1"
+                },
+                "capability": "packet_risks@1",
+                "card_sha256": "a8af4b256796267faed155533f4e9e7420071e9bb808fa0f86fb0131fe2ba16b",
+                "name": "research_risks",
+                "reconcile": "a2a-idempotent-resend",
+                "role": "capability"
+              },
+              "synthesizer": {
+                "a2a_extension": {
+                  "contract": "action-idempotent-async@1",
+                  "contract_digest": "c82b67bec0752da86912ab0a75d210b6e095cc2cec12b43c9074b4aecbe5cfb0",
+                  "uri": "urn:exomachina:a2a-action-contract:v1"
+                },
+                "capability": "report_synthesis@1",
+                "card_sha256": "93eb7f1ca3aed4f6fc57155fc4ed2992e6fd64cd949ec7e83058d5175b03681f",
+                "name": "synthesizer",
+                "reconcile": "a2a-idempotent-resend",
+                "role": "capability"
+              }
+            },
+            "manifest": {
+              "child_digests": [
+                "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea"
+              ],
+              "interpreter": {
+                "build_id": "b-3e196d3f362c",
+                "deployment": "exo-factory",
+                "python": "3.12.9",
+                "source_digest": "3e196d3f362c842760ab237f514003c5c9f4e66c5683cabf2a621930294940e4",
+                "temporalio": "1.33.0"
+              },
+              "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+              "quality_policy_digest": "80436a3dc67d65ea7c2721730a27a3e118f3d300f5a485e879fe207610cad9ea",
+              "root_digest": "41b4cf22fe28db2cb081b8d04c2a25bb1590a65d7182a7243bbd1e7c2b755f33",
+              "schema": 1,
+              "services": {
+                "quality": {
+                  "binding_digest": "495cc893eea5c53a1d75d10d10ca1ed788f6386e1783abc2bf7466cc9ea9f4ea",
+                  "contract_digest": "3ae4d880ba4fc7b9d1cf8619d17e9c56dca3a38dd78cda34fbb1c5ab59e24c9e"
+                },
+                "release": {
+                  "binding_digest": "029a07b7ab688bc0ca0865939ffbb0e5e76624bcc1887d6b1b1661912ffb71e3",
+                  "contract_digest": "852b20317b000607767566b959d170d147f2d149217458a4b75f08967fca514b"
+                },
+                "research_findings": {
+                  "binding_digest": "626b887fc030af26c077d55cf352439870a926c65f4bf7bc192f02d764506b3e",
+                  "contract_digest": "baee9ddcc26e4716dbd2dc0f13910d33277d21cd96f01c2265e0b9804ea8c000"
+                },
+                "research_risks": {
+                  "binding_digest": "ab947acdd576a401b672556f4ca95eaa483107fc586e5256431b9ef4f2424ff6",
+                  "contract_digest": "bb1e6aaf4e9d8f9665fa51653c71606a264ec36177b873a8d7dcca5091211b45"
+                },
+                "synthesizer": {
+                  "binding_digest": "eed6b0dcc4b5fc9feb71a18316dd619d1275cd111f9e8434c79168fa02a11352",
+                  "contract_digest": "2a9b0704634ffe092a6df43b4da0be63b4cc4e2a86a7b0d855439a1cc44f4ab1"
+                }
+              }
+            },
+            "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+            "quality_policy": {
+              "author_may_not_review": true,
+              "policy": "exact-revision-independent-review@1",
+              "repair_bound_max": 2,
+              "reviewer_binding": "quality",
+              "rubric": "report-quality@1",
+              "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+            }
+          },
+          "label": "report",
+          "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+          "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+          "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c"
+        },
+        "authoring": {
+          "admin_exit_code": 0,
+          "approval": {
+            "approver": "director:3651c879-25c0-4583-a172-b72e2aa300a0",
+            "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+            "policy": "auto",
+            "status": "approved"
+          },
+          "limits": {
+            "deadline_seconds": 600,
+            "max_model_calls": 12,
+            "max_rounds": 4,
+            "max_tool_calls": 24
+          },
+          "live": {
+            "live_model_available": true,
+            "provider": "synthetic-loopback",
+            "reason": "synthetic-loopback broker available",
+            "refusal_reason": null
+          },
+          "model_calls": null,
+          "outcome": {
+            "abort": null,
+            "approval": {
+              "approver": "authoring-session",
+              "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+              "policy": "auto",
+              "status": "approved"
+            },
+            "error": null,
+            "limits": {
+              "deadline_seconds": 600,
+              "max_model_calls": 12,
+              "max_rounds": 4,
+              "max_tool_calls": 24
+            },
+            "model": {
+              "billing": "none",
+              "id": "gpt-6-sol",
+              "kind": "broker",
+              "live": false,
+              "provider": "synthetic-loopback"
+            },
+            "package": {
+              "bindings": {
+                "quality": {
+                  "approved": true,
+                  "identity": "b0694571-4ad9-4ec1-8183-fff94875e942",
+                  "role": "quality",
+                  "url": "http://127.0.0.1:45783"
+                },
+                "release": {
+                  "approved": true,
+                  "identity": "4b51a1b2-71a8-4c0e-9309-6c131761578f",
+                  "role": "release",
+                  "url": "http://127.0.0.1:45784"
+                },
+                "research_findings": {
+                  "approved": true,
+                  "identity": "09ae0696-7a1c-4ec9-a2f1-11368e97f2a1",
+                  "role": "capability",
+                  "url": "http://127.0.0.1:45780"
+                },
+                "research_risks": {
+                  "approved": true,
+                  "identity": "459ce27b-16b5-4db4-b9a1-9be36a9591e9",
+                  "role": "capability",
+                  "url": "http://127.0.0.1:45781"
+                },
+                "synthesizer": {
+                  "approved": true,
+                  "identity": "c04c0285-665d-494b-a9cb-6735ef47e986",
+                  "role": "capability",
+                  "url": "http://127.0.0.1:45782"
+                }
+              },
+              "children": {
+                "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea": {
+                  "name": "verified_report",
+                  "nodes": {
+                    "abort": {
+                      "type": "abort"
+                    },
+                    "director": {
+                      "next": "abort",
+                      "reason": "repair_exhausted",
+                      "type": "director_wait"
+                    },
+                    "done": {
+                      "type": "complete"
+                    },
+                    "draft": {
+                      "next": "independent_quality",
+                      "service": "synthesizer",
+                      "type": "synthesize"
+                    },
+                    "gather": {
+                      "branches": {
+                        "research_findings": {
+                          "capability": "packet_findings@1",
+                          "result_type": "packet_findings",
+                          "service": "research_findings"
+                        },
+                        "research_risks": {
+                          "capability": "packet_risks@1",
+                          "result_type": "packet_risks",
+                          "service": "research_risks"
+                        }
+                      },
+                      "next": "join_evidence",
+                      "type": "parallel"
+                    },
+                    "independent_quality": {
+                      "next": "route_verdict",
+                      "type": "quality"
+                    },
+                    "join_evidence": {
+                      "branches": [
+                        "research_findings",
+                        "research_risks"
+                      ],
+                      "next": "draft",
+                      "type": "join"
+                    },
+                    "publish": {
+                      "next": "done",
+                      "service": "release",
+                      "type": "release"
+                    },
+                    "repair": {
+                      "exhausted": "director",
+                      "max_repairs": 2,
+                      "next": "draft",
+                      "type": "repair"
+                    },
+                    "route_verdict": {
+                      "cases": {
+                        "false": "repair",
+                        "true": "publish"
+                      },
+                      "field": "verdict.accepted",
+                      "type": "route"
+                    }
+                  },
+                  "revision": "v1",
+                  "start": "gather"
+                }
+              },
+              "evidence_packet": {
+                "default_question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?",
+                "items": [
+                  {
+                    "id": "E1",
+                    "source": "prototype/temporal-factory/QUALIFICATION.md#L18-L20",
+                    "text": "- **observed-real** means real processes (harness, A2A, runner, Temporal and, where stated, the live broker);\n- **observed-synthetic** means real code against a mock;\n- **unit-tested** means an isolated test."
+                  },
+                  {
+                    "id": "E2",
+                    "source": "prototype/temporal-factory/QUALIFICATION.md#L22-L22",
+                    "text": "A passing fixture is never counted as live proof."
+                  },
+                  {
+                    "id": "E3",
+                    "source": "prototype/temporal-factory/QUALIFICATION.md#L30-L32",
+                    "text": "| A: independent delayed A2A agent | **Pass** A-1..A-5, observed-real (fixture Director) | External nodes are now pinned by **identity + url-less Agent Card digest + served contract digest**, not by URL. A static snapshot resolves the URL at call time. The remote Task id is journaled and polled. A lost response is reconciled by an idempotent resend **only** when the pinned contract document declares it; otherwise it is an incident. |\n| B: two instances in one home | **Pass** B-1..B-6, observed-real (fixture Director); **B-6 failed on the unmodified code** | Runner ports belong to the **install home** (`$H/runner-config.json`), not to `instance.json`. Provisioning rejects port collisions. A per-instance process lock is taken before the Director claims an incarnation. |\n| C: broker-backed Director | **Pass** C-1..C-5, **live** `gpt-6-sol` through the signed-in broker, plus synthetic | A text brief on the normal A2A endpoint reaches a Strands Director with **semantic tools only**. Code owns the action ids, principal, Task/run binding and Temporal authority. Inspect/abort now also require the run owner and the original context. |"
+                  },
+                  {
+                    "id": "E4",
+                    "source": "prototype/temporal-factory/QUALIFICATION.md#L74-L74",
+                    "text": "- The agent is a local fixture process, the Director is a fixture, and the release receiver is still an HTTP fixture."
+                  },
+                  {
+                    "id": "E5",
+                    "source": "prototype/temporal-factory/QUALIFICATION.md#L116-L119",
+                    "text": "| C-1 brief \u2192 authorized start | Pass | Pass | One accepted `start_research`; Task observed `working` \u2192 `input-required` at the Director wait after two repairs |\n| C-2 one wait decision on the original Task | Pass | Pass | `inspect_run`, then exactly one accepted `decide_wait(abort, r3, <current sha256>)`; Task `completed`/`aborted`; 0 releases |\n| C-3 invalid inputs rejected by code | Pass | Pass | The live model **did** request `outcome_mode: \"forbidden\"`; `authorize_run_inputs` rejected it. For \"choose graph v99\" and unknown-input briefs, the model folded the request into the question; those runs used the active publication and declared inputs only. Extra fields are rejected structurally, proven **fixture-injected** |\n| C-4 stale/unauthorized rejected | Pass | Pass | Stale r2 digest, the `fixture-observer` principal (tool path and a real A2A bearer) and an unbound Task were all rejected. These probes are **fixture-injected**, not spontaneous model behaviour |"
+                  },
+                  {
+                    "id": "E6",
+                    "source": "prototype/temporal-factory/QUALIFICATION.md#L135-L140",
+                    "text": "- One account, one model, one decision type (abort).\n- The C-1 brief wrote `outcome_mode: never` literally instead of in prose.\n- The abort was directed by the caller's follow-up, not decided autonomously.\n- Quality, capabilities and release remain fixtures.\n- `message/send` blocks for the whole Director turn.\n- Model reliability across broader briefs is unmeasured."
+                  },
+                  {
+                    "id": "E7",
+                    "source": "prototype/temporal-factory/QUALIFICATION.md#L172-L176",
+                    "text": "- External agents: no signed or attested cards, no remote authentication, no general directory. Workflow-level polling for long remote Tasks is not built.\n- The Director: live proof covers one account, one model and abort only. The Director token in history is unchanged.\n- Topology: two instances only; embedded `create_app()` has no instance lock; no stress testing.\n- Still fixtures: Quality, capability content and the HTTP release receiver.\n- Carried from the README: old-build retirement, contract attestation, operational hardening, and the memory ceiling are out of scope and unbuilt."
+                  },
+                  {
+                    "id": "E8",
+                    "source": "prototype/temporal-factory/QUALIFICATION.md#L150-L152",
+                    "text": "| Spike B scenario, `/tmp/exo-qual-b-combined-1` | B-1..B-6 pass | observed-real, fixture Director | `evidence/spike-b/final-combined.json` |\n| Spike C synthetic, `/tmp/exo-qual-c-combined-syn-1` | C-1..C-5 pass | observed-synthetic | `evidence/spike-c/final-combined-synthetic.json` |\n| Spike C **live**, `/tmp/exo-qual-c-combined-live-1` | C-1..C-5 pass | observed-real, **live** `gpt-6-sol`, account `sha256:188b022d6e97` | `evidence/spike-c/final-combined-live.json` |"
+                  },
+                  {
+                    "id": "E9",
+                    "source": "prototype/temporal-factory/QUALIFICATION.md#L154-L156",
+                    "text": "The combined live run in detail:\n- 5 text turns, **11 model calls and 6 tool calls** in total. The heaviest turn used 3 model calls and 2 tool calls, against a limit of 4/4/90 s.\n- The Task was observed `working` \u2192 `input-required`, followed by exactly one accepted abort and 0 releases."
+                  },
+                  {
+                    "id": "E10",
+                    "source": "prototype/temporal-factory/QUALIFICATION.md#L26-L26",
+                    "text": "**All three spikes pass their pre-registered checks, on each spike branch and again on the merged tree** (final combined run below). Each spike also exposed one real defect that the checks or the review caught before integration:"
+                  }
+                ],
+                "kind": "evidence_packet@1",
+                "packet_id": "exo-qualification-2026-09-23",
+                "title": "Qualification evidence for the Exomachina Temporal factory prototype"
+              },
+              "root": {
+                "name": "parent_verified_report",
+                "nodes": {
+                  "done": {
+                    "type": "complete"
+                  },
+                  "invoke_child": {
+                    "child": "verified_report",
+                    "child_digest": "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea",
+                    "next": "done",
+                    "type": "nested_factory"
+                  }
+                },
+                "revision": "v1",
+                "start": "invoke_child"
+              },
+              "run_inputs": {
+                "question": {
+                  "allowed_actors": [
+                    "fixture-operator"
+                  ],
+                  "may_affect_acceptance": false,
+                  "required": true,
+                  "source": "caller",
+                  "type": "string"
+                }
+              },
+              "schema": 1
+            },
+            "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+            "rounds": [
+              {
+                "draft_digest": "bd809ae1e748be3fb7e53212cab1ef6f9a52b9fee581efbce09185cda30357bf",
+                "errors": [
+                  {
+                    "code": "validation_error",
+                    "message": "route must cover each typed value",
+                    "missing_cases": [
+                      "false"
+                    ],
+                    "path": "child.nodes.route_verdict.cases"
+                  }
+                ],
+                "round": 1,
+                "valid": false
+              },
+              {
+                "draft_digest": "41009c8feb4045cbdffd55ccab93ece189cad81e5d5bf22a21b700edeaa52009",
+                "errors": [],
+                "round": 2,
+                "valid": true
+              }
+            ],
+            "selection_seconds": 0.0,
+            "status": "approved",
+            "template": {
+              "child": {
+                "name": "verified_report",
+                "nodes": {
+                  "abort": {
+                    "type": "abort"
+                  },
+                  "director": {
+                    "next": "abort",
+                    "reason": "repair_exhausted",
+                    "type": "director_wait"
+                  },
+                  "done": {
+                    "type": "complete"
+                  },
+                  "draft": {
+                    "next": "independent_quality",
+                    "service": "synthesizer",
+                    "type": "synthesize"
+                  },
+                  "gather": {
+                    "branches": {
+                      "research_findings": {
+                        "capability": "packet_findings@1",
+                        "result_type": "packet_findings",
+                        "service": "research_findings"
+                      },
+                      "research_risks": {
+                        "capability": "packet_risks@1",
+                        "result_type": "packet_risks",
+                        "service": "research_risks"
+                      }
+                    },
+                    "next": "join_evidence",
+                    "type": "parallel"
+                  },
+                  "independent_quality": {
+                    "next": "route_verdict",
+                    "type": "quality"
+                  },
+                  "join_evidence": {
+                    "branches": [
+                      "research_findings",
+                      "research_risks"
+                    ],
+                    "next": "draft",
+                    "type": "join"
+                  },
+                  "publish": {
+                    "next": "done",
+                    "service": "release",
+                    "type": "release"
+                  },
+                  "repair": {
+                    "exhausted": "director",
+                    "max_repairs": 2,
+                    "next": "draft",
+                    "type": "repair"
+                  },
+                  "route_verdict": {
+                    "cases": {
+                      "false": "repair",
+                      "true": "publish"
+                    },
+                    "field": "verdict.accepted",
+                    "type": "route"
+                  }
+                },
+                "revision": "v1",
+                "start": "gather"
+              },
+              "root": {
+                "name": "parent_verified_report",
+                "nodes": {
+                  "done": {
+                    "type": "complete"
+                  },
+                  "invoke_child": {
+                    "child": "verified_report",
+                    "child_digest": "@child",
+                    "next": "done",
+                    "type": "nested_factory"
+                  }
+                },
+                "revision": "v1",
+                "start": "invoke_child"
+              },
+              "run_inputs": {
+                "question": {
+                  "allowed_actors": [
+                    "fixture-operator"
+                  ],
+                  "may_affect_acceptance": false,
+                  "required": true,
+                  "source": "caller",
+                  "type": "string"
+                }
+              },
+              "schema": 1
+            },
+            "tool_calls": [
+              {
+                "result": {
+                  "bindings": {
+                    "quality": {
+                      "approved": true,
+                      "role": "quality"
+                    },
+                    "release": {
+                      "approved": true,
+                      "role": "release"
+                    },
+                    "research_findings": {
+                      "approved": true,
+                      "role": "capability"
+                    },
+                    "research_risks": {
+                      "approved": true,
+                      "role": "capability"
+                    },
+                    "synthesizer": {
+                      "approved": true,
+                      "role": "capability"
+                    }
+                  },
+                  "bounds": {
+                    "max_repairs": [
+                      1,
+                      2
+                    ],
+                    "nodes_per_definition": 32,
+                    "parallel_branches": [
+                      2,
+                      4
+                    ],
+                    "run_input_fields": 16
+                  },
+                  "input_sources": [
+                    "caller",
+                    "director",
+                    "verified_artifact"
+                  ],
+                  "input_types": [
+                    "boolean",
+                    "integer",
+                    "number",
+                    "string"
+                  ],
+                  "node_fields": {
+                    "abort": [
+                      "type"
+                    ],
+                    "complete": [
+                      "type"
+                    ],
+                    "director_wait": [
+                      "next",
+                      "reason",
+                      "type"
+                    ],
+                    "join": [
+                      "branches",
+                      "next",
+                      "type"
+                    ],
+                    "nested_factory": [
+                      "child",
+                      "child_digest",
+                      "next",
+                      "type"
+                    ],
+                    "parallel": [
+                      "branches",
+                      "next",
+                      "type"
+                    ],
+                    "quality": [
+                      "next",
+                      "type"
+                    ],
+                    "release": [
+                      "next",
+                      "service",
+                      "type"
+                    ],
+                    "repair": [
+                      "exhausted",
+                      "max_repairs",
+                      "next",
+                      "type"
+                    ],
+                    "route": [
+                      "cases",
+                      "field",
+                      "type"
+                    ],
+                    "synthesize": [
+                      "next",
+                      "service",
+                      "type"
+                    ]
+                  },
+                  "result_types": {
+                    "packet_findings": "packet_findings@1",
+                    "packet_risks": "packet_risks@1"
+                  },
+                  "route_values": {
+                    "verdict.accepted": [
+                      "false",
+                      "true"
+                    ]
+                  },
+                  "rules": [
+                    "All route cases must cover their typed values.",
+                    "Packet findings and risks must meet at a typed join.",
+                    "Quality must review a candidate before release.",
+                    "Repair must have a bounded exhausted edge to Director wait and abort.",
+                    "The root may only invoke its digest-pinned child and complete."
+                  ],
+                  "schema": 1,
+                  "template_fields": [
+                    "schema",
+                    "root",
+                    "child",
+                    "run_inputs"
+                  ]
+                },
+                "tool": "describe_vocabulary"
+              },
+              {
+                "draft_digest": "bd809ae1e748be3fb7e53212cab1ef6f9a52b9fee581efbce09185cda30357bf",
+                "result": {
+                  "draft_digest": "bd809ae1e748be3fb7e53212cab1ef6f9a52b9fee581efbce09185cda30357bf",
+                  "errors": [
+                    {
+                      "code": "validation_error",
+                      "message": "route must cover each typed value",
+                      "missing_cases": [
+                        "false"
+                      ],
+                      "path": "child.nodes.route_verdict.cases"
+                    }
+                  ],
+                  "ok": false
+                },
+                "tool": "validate_draft"
+              },
+              {
+                "draft_digest": "41009c8feb4045cbdffd55ccab93ece189cad81e5d5bf22a21b700edeaa52009",
+                "result": {
+                  "draft_digest": "41009c8feb4045cbdffd55ccab93ece189cad81e5d5bf22a21b700edeaa52009",
+                  "errors": [],
+                  "ok": true,
+                  "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613"
+                },
+                "tool": "submit_draft"
+              }
+            ]
+          },
+          "publication": {
+            "build_id": "b-3e196d3f362c",
+            "label": "report",
+            "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+            "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613"
+          },
+          "seconds": 1.561,
+          "selection_seconds": 0.0,
+          "status": "published"
+        },
+        "catalog_count": 1,
+        "facts": {
+          "first_pass_valid": false,
+          "invalid_rounds": [
+            {
+              "draft_digest": "bd809ae1e748be3fb7e53212cab1ef6f9a52b9fee581efbce09185cda30357bf",
+              "errors": [
+                {
+                  "code": "validation_error",
+                  "message": "route must cover each typed value",
+                  "missing_cases": [
+                    "false"
+                  ],
+                  "path": "child.nodes.route_verdict.cases"
+                }
+              ],
+              "round": 1,
+              "valid": false
+            }
+          ],
+          "round_count": 2,
+          "submitted_digest": null
+        }
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "SF-2": {
+      "behavior": null,
+      "decisive_evidence": {
+        "identities": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "import_audit": {
+          "launcher_exception": {
+            "allowed": true,
+            "imports": [
+              "agent_binding",
+              "agent_roles"
+            ],
+            "path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/services/testbed.py"
+          },
+          "legacy_not_running": [
+            "quality_server.py",
+            "delayed_agent.py"
+          ],
+          "product_clean": true,
+          "product_violations": [],
+          "running_service_modules": [
+            "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/services/model_agent.py",
+            "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/services/agent_roles.py",
+            "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/services/release_server.py"
+          ],
+          "service_clean": false,
+          "service_violations": [
+            "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/services/release_server.py"
+          ]
+        },
+        "pins": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "ports": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "release_store": null,
+        "sqlite_copies": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "states": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "stores": [
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    },
+    "SF-3": {
+      "behavior": null,
+      "decisive_evidence": {
+        "caller_messages": [
+          {
+            "kind": "message",
+            "messageId": "78c366d1-3b5f-424d-99b1-5ef00c81551d",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "versions": [
+          [
+            "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+            "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+            "b-3e196d3f362c"
+          ]
+        ],
+        "workflows": [
+          {
+            "build_id": "b-3e196d3f362c",
+            "history_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/evidence/single-factory/scripted-2-route1/parent.json",
+            "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+            "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+            "versioning_behavior": "PINNED"
+          },
+          {
+            "build_id": "b-3e196d3f362c",
+            "history_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/evidence/single-factory/scripted-2-route1/child.json",
+            "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+            "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+            "versioning_behavior": "PINNED"
+          }
+        ]
+      },
+      "label": "observed-synthetic",
+      "pass": false
+    }
+  },
+  "cleanup": {
+    "errors": [],
+    "harness_exit": -15,
+    "listeners": [],
+    "mock_exit": -15,
+    "processes_stopped": true,
+    "runner": {
+      "address": "127.0.0.1:44542",
+      "builds": {},
+      "namespace": "exomachina",
+      "pid": null,
+      "pids": {},
+      "rss_kib": {},
+      "running": false,
+      "worker_rss_kib": {}
+    },
+    "services": {
+      "quality": "stopped",
+      "release": "stopped",
+      "research_findings": "stopped",
+      "research_risks": "stopped",
+      "synthesizer": "stopped"
+    }
+  },
+  "failure": {
+    "message": "HTTP Error 401: Unauthorized",
+    "step": "route-2",
+    "type": "HTTPError"
+  },
+  "home": "/private/tmp/exo-sf-syn-2",
+  "import_audit": {
+    "launcher_exception": {
+      "allowed": true,
+      "imports": [
+        "agent_binding",
+        "agent_roles"
+      ],
+      "path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/services/testbed.py"
+    },
+    "legacy_not_running": [
+      "quality_server.py",
+      "delayed_agent.py"
+    ],
+    "product_clean": true,
+    "product_violations": [],
+    "running_service_modules": [
+      "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/services/model_agent.py",
+      "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/services/agent_roles.py",
+      "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/services/release_server.py"
+    ],
+    "service_clean": false,
+    "service_violations": [
+      "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/services/release_server.py"
+    ]
+  },
+  "label": "observed-synthetic",
+  "mock_authoring_exit": -15,
+  "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+  "packet_ids": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "E7",
+    "E8",
+    "E9",
+    "E10"
+  ],
+  "provider": "scripted",
+  "publications": [
+    {
+      "build_id": "b-3e196d3f362c",
+      "closure": {
+        "contracts": {
+          "quality": {
+            "a2a_extension": {
+              "contract": "action-idempotent-async@1",
+              "contract_digest": "ee7063f3c6e7578fa74bb2d056fb7a0c6bf0a9f3b0f87cf743b7604693949971",
+              "uri": "urn:exomachina:a2a-action-contract:v1"
+            },
+            "capability": "report_quality_review@1",
+            "card_sha256": "f7cc8cc934a2902290f9f6caed2e7b1bf12769c0e550dfd30f74d9f6c1abc5fd",
+            "name": "quality",
+            "reconcile": "a2a-idempotent-resend",
+            "role": "quality"
+          },
+          "release": {
+            "a2a_protocol": "0.3.0",
+            "attested": false,
+            "capability": "release@1",
+            "input": {
+              "fields": [
+                "release_id",
+                "run_id",
+                "definition_digest",
+                "revision",
+                "sha256",
+                "content"
+              ],
+              "path": "/release",
+              "transport": "http-post"
+            },
+            "name": "release",
+            "operations": {
+              "idempotent_action_id": true,
+              "lookup": "/receipts/{id}"
+            },
+            "output": {
+              "receipt": [
+                "release_id",
+                "run_id",
+                "definition_digest",
+                "revision",
+                "sha256",
+                "attempts",
+                "accepted_effect_count"
+              ]
+            },
+            "role": "release"
+          },
+          "research_findings": {
+            "a2a_extension": {
+              "contract": "action-idempotent-async@1",
+              "contract_digest": "da825287effc3058ba2efac301a979c1693e86718edf8128e8f35e82c6f3ee8f",
+              "uri": "urn:exomachina:a2a-action-contract:v1"
+            },
+            "capability": "packet_findings@1",
+            "card_sha256": "d02c941dc8ebe903f27086ba7372a53271f2f3f44ac8f2ee8a222d01c794b846",
+            "name": "research_findings",
+            "reconcile": "a2a-idempotent-resend",
+            "role": "capability"
+          },
+          "research_risks": {
+            "a2a_extension": {
+              "contract": "action-idempotent-async@1",
+              "contract_digest": "ada16c7071e4cd3c8efaa67d5c9d401342046c0b0e78ccbb2467145a7ab201e0",
+              "uri": "urn:exomachina:a2a-action-contract:v1"
+            },
+            "capability": "packet_risks@1",
+            "card_sha256": "a8af4b256796267faed155533f4e9e7420071e9bb808fa0f86fb0131fe2ba16b",
+            "name": "research_risks",
+            "reconcile": "a2a-idempotent-resend",
+            "role": "capability"
+          },
+          "synthesizer": {
+            "a2a_extension": {
+              "contract": "action-idempotent-async@1",
+              "contract_digest": "c82b67bec0752da86912ab0a75d210b6e095cc2cec12b43c9074b4aecbe5cfb0",
+              "uri": "urn:exomachina:a2a-action-contract:v1"
+            },
+            "capability": "report_synthesis@1",
+            "card_sha256": "93eb7f1ca3aed4f6fc57155fc4ed2992e6fd64cd949ec7e83058d5175b03681f",
+            "name": "synthesizer",
+            "reconcile": "a2a-idempotent-resend",
+            "role": "capability"
+          }
+        },
+        "manifest": {
+          "child_digests": [
+            "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea"
+          ],
+          "interpreter": {
+            "build_id": "b-3e196d3f362c",
+            "deployment": "exo-factory",
+            "python": "3.12.9",
+            "source_digest": "3e196d3f362c842760ab237f514003c5c9f4e66c5683cabf2a621930294940e4",
+            "temporalio": "1.33.0"
+          },
+          "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+          "quality_policy_digest": "80436a3dc67d65ea7c2721730a27a3e118f3d300f5a485e879fe207610cad9ea",
+          "root_digest": "41b4cf22fe28db2cb081b8d04c2a25bb1590a65d7182a7243bbd1e7c2b755f33",
+          "schema": 1,
+          "services": {
+            "quality": {
+              "binding_digest": "495cc893eea5c53a1d75d10d10ca1ed788f6386e1783abc2bf7466cc9ea9f4ea",
+              "contract_digest": "3ae4d880ba4fc7b9d1cf8619d17e9c56dca3a38dd78cda34fbb1c5ab59e24c9e"
+            },
+            "release": {
+              "binding_digest": "029a07b7ab688bc0ca0865939ffbb0e5e76624bcc1887d6b1b1661912ffb71e3",
+              "contract_digest": "852b20317b000607767566b959d170d147f2d149217458a4b75f08967fca514b"
+            },
+            "research_findings": {
+              "binding_digest": "626b887fc030af26c077d55cf352439870a926c65f4bf7bc192f02d764506b3e",
+              "contract_digest": "baee9ddcc26e4716dbd2dc0f13910d33277d21cd96f01c2265e0b9804ea8c000"
+            },
+            "research_risks": {
+              "binding_digest": "ab947acdd576a401b672556f4ca95eaa483107fc586e5256431b9ef4f2424ff6",
+              "contract_digest": "bb1e6aaf4e9d8f9665fa51653c71606a264ec36177b873a8d7dcca5091211b45"
+            },
+            "synthesizer": {
+              "binding_digest": "eed6b0dcc4b5fc9feb71a18316dd619d1275cd111f9e8434c79168fa02a11352",
+              "contract_digest": "2a9b0704634ffe092a6df43b4da0be63b4cc4e2a86a7b0d855439a1cc44f4ab1"
+            }
+          }
+        },
+        "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+        "quality_policy": {
+          "author_may_not_review": true,
+          "policy": "exact-revision-independent-review@1",
+          "repair_bound_max": 2,
+          "reviewer_binding": "quality",
+          "rubric": "report-quality@1",
+          "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+        }
+      },
+      "label": "report",
+      "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+      "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613"
+    }
+  ],
+  "release_label": "http-release (fixture)",
+  "routes": {
+    "1": {
+      "caller_messages": [
+        {
+          "kind": "message",
+          "messageId": "78c366d1-3b5f-424d-99b1-5ef00c81551d",
+          "parts": [
+            {
+              "kind": "text",
+              "text": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?"
+            }
+          ],
+          "role": "user"
+        }
+      ],
+      "child_run_id": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc:child:82c5bfe305ea",
+      "child_status": {
+        "authoritative_acceptance": {
+          "attempt": 1,
+          "definition_digest": "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea",
+          "quality_task_id": "6760fae0-1913-405b-a27c-794a7958fe24",
+          "reviewer": "b0694571-4ad9-4ec1-8183-fff94875e942",
+          "revision": "r1",
+          "run": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc:child:82c5bfe305ea",
+          "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e"
+        },
+        "authorized_actor": "fixture-operator",
+        "child_id": null,
+        "completed": [
+          "gather",
+          "join_evidence",
+          "draft:r1",
+          "independent_quality:r1",
+          "route_verdict:true",
+          "publish"
+        ],
+        "current_revision": "r1",
+        "current_sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e",
+        "deadline": null,
+        "definition_digest": "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea",
+        "incident": null,
+        "input_authority": {
+          "question": {
+            "actor": "fixture-operator",
+            "source": "caller"
+          }
+        },
+        "interpreter_build": "b-3e196d3f362c",
+        "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+        "max_repairs": 2,
+        "node": "done",
+        "owner_epoch": 2,
+        "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+        "phase": "accepted",
+        "quality_verdict": {
+          "accepted": true,
+          "candidate": {
+            "author": "c04c0285-665d-494b-a9cb-6735ef47e986",
+            "revision": "r1",
+            "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e"
+          },
+          "decided_by": "model",
+          "findings": [],
+          "kind": "quality_verdict@1",
+          "reviewer": "b0694571-4ad9-4ec1-8183-fff94875e942",
+          "rubric": "report-quality@1",
+          "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+        },
+        "release_receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea",
+          "release_id": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc:child:82c5bfe305ea:release:r1",
+          "revision": "r1",
+          "run_id": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc:child:82c5bfe305ea",
+          "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e"
+        },
+        "repair_count": 0,
+        "run": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc:child:82c5bfe305ea",
+        "run_inputs": {
+          "question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?"
+        },
+        "run_inputs_digest": "fb7e3b6cf857ffead7bce579f24bc2a32b2e0c8688c94faa7ed71e798a0d1d10",
+        "unresolved": null
+      },
+      "context_id": "e1c4f077-ef2d-461b-b9a4-eaae3658fc9d",
+      "director_calls": [
+        {
+          "accepted": 1,
+          "arguments": {
+            "question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?"
+          },
+          "arguments_json": "{\"question\": \"What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?\"}",
+          "created_at": 1790262473.902658,
+          "id": 1,
+          "message_id": "78c366d1-3b5f-424d-99b1-5ef00c81551d",
+          "model_kind": "synthetic",
+          "result": {
+            "accepted_command": "start",
+            "ok": true
+          },
+          "result_json": "{\"accepted_command\": \"start\", \"ok\": true}",
+          "task_id": "95a8e4a4-2b09-4051-9d7b-91cb7b3bef7a",
+          "tool": "start_research"
+        }
+      ],
+      "director_turn_count": 1,
+      "director_turns": [
+        {
+          "accepted": [
+            "start_research"
+          ],
+          "elapsed_seconds": 16.029,
+          "failure": null,
+          "limits": {
+            "deadline_seconds": 90,
+            "max_model_calls": 4,
+            "max_tool_calls": 4
+          },
+          "model_calls": 2,
+          "model_kind": "synthetic",
+          "tool_calls": 1
+        }
+      ],
+      "observed_states": [
+        "working",
+        "completed"
+      ],
+      "result_status": "accepted",
+      "run_id": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc",
+      "sent_state": "working",
+      "task": {
+        "artifacts": [
+          {
+            "artifactId": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "## Live-proven\nThe prior live C run proved a broker-backed Director for the abort route.\n\n## Fixture-only\nThe earlier Quality and capability content were fixtures, as was the HTTP release receiver.\n\n## Remaining gaps\nThe live Director proof covered one account, one model, and abort only.\n\n## Next priority\nThe next priority is to exercise real research, synthesis, and Quality agents while keeping release labeled as a fixture."
+              },
+              {
+                "data": {
+                  "acceptance": {
+                    "attempt": 1,
+                    "definition_digest": "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea",
+                    "quality_task_id": "6760fae0-1913-405b-a27c-794a7958fe24",
+                    "reviewer": "b0694571-4ad9-4ec1-8183-fff94875e942",
+                    "revision": "r1",
+                    "run": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc:child:82c5bfe305ea",
+                    "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e"
+                  },
+                  "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+                  "release_receipt": {
+                    "accepted_effect_count": 1,
+                    "attempts": 1,
+                    "definition_digest": "82c5bfe305eafba88a0be3e366e34ecb35cca068f2f5b11c6f3b601e6e11b2ea",
+                    "release_id": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc:child:82c5bfe305ea:release:r1",
+                    "revision": "r1",
+                    "run_id": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc:child:82c5bfe305ea",
+                    "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e"
+                  },
+                  "revision": "r1",
+                  "sha256": "2ace971eca9e414f0343aee975f5f0347b5dbf15c96b55feba4414879136d22e"
+                },
+                "kind": "data"
+              }
+            ]
+          }
+        ],
+        "contextId": "e1c4f077-ef2d-461b-b9a4-eaae3658fc9d",
+        "id": "95a8e4a4-2b09-4051-9d7b-91cb7b3bef7a",
+        "kind": "task",
+        "metadata": {
+          "authorized_input_actor": "fixture-operator",
+          "capability": "verified-research@1",
+          "harness_identity": "3651c879-25c0-4583-a172-b72e2aa300a0",
+          "harness_incarnation": 2,
+          "interpreter_build": "b-3e196d3f362c",
+          "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+          "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+          "publication_label": "report",
+          "run_id": "3651c879-25c0-4583-a172-b72e2aa300a0.476d89dc27604294a0fc",
+          "run_inputs_digest": "fb7e3b6cf857ffead7bce579f24bc2a32b2e0c8688c94faa7ed71e798a0d1d10"
+        },
+        "status": {
+          "state": "completed"
+        }
+      },
+      "task_id": "95a8e4a4-2b09-4051-9d7b-91cb7b3bef7a",
+      "workflows": [
+        {
+          "build_id": "b-3e196d3f362c",
+          "history_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/evidence/single-factory/scripted-2-route1/parent.json",
+          "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+          "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+          "versioning_behavior": "PINNED"
+        },
+        {
+          "build_id": "b-3e196d3f362c",
+          "history_path": "/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina-sf-director/prototype/temporal-factory/evidence/single-factory/scripted-2-route1/child.json",
+          "manifest_digest": "f6656ceb28333b4b863dfdb0011b780f2fbb2f4ebac773db16aa0e78ef53a022",
+          "package_digest": "d2bc146553d4313148043e8f74fa4a27f6302e007301327b09ca71e7cbe8d613",
+          "versioning_behavior": "PINNED"
+        }
+      ]
+    }
+  },
+  "setup": {
+    "broker_status": {
+      "account": "sha256:5d8719a9b57c",
+      "expired": false,
+      "expires_at": 4102444800000,
+      "signed_in": true
+    },
+    "card_skill_count": 1,
+    "environment": {
+      "ANTHROPIC_API_KEY": false,
+      "EXO_CODEX_BASE_URL": false,
+      "EXO_MODEL_HOME": false,
+      "OPENAI_API_KEY": false
+    },
+    "factory_count": 1,
+    "fresh_home": true,
+    "preflight_listeners": []
+  },
+  "status": "fail",
+  "synthetic_scenario": {},
+  "testbed": {
+    "bindings": {
+      "quality": {
+        "approved": true,
+        "identity": "b0694571-4ad9-4ec1-8183-fff94875e942",
+        "role": "quality",
+        "url": "http://127.0.0.1:45783"
+      },
+      "release": {
+        "approved": true,
+        "identity": "4b51a1b2-71a8-4c0e-9309-6c131761578f",
+        "role": "release",
+        "url": "http://127.0.0.1:45784"
+      },
+      "research_findings": {
+        "approved": true,
+        "identity": "09ae0696-7a1c-4ec9-a2f1-11368e97f2a1",
+        "role": "capability",
+        "url": "http://127.0.0.1:45780"
+      },
+      "research_risks": {
+        "approved": true,
+        "identity": "459ce27b-16b5-4db4-b9a1-9be36a9591e9",
+        "role": "capability",
+        "url": "http://127.0.0.1:45781"
+      },
+      "synthesizer": {
+        "approved": true,
+        "identity": "c04c0285-665d-494b-a9cb-6735ef47e986",
+        "role": "capability",
+        "url": "http://127.0.0.1:45782"
+      }
+    },
+    "health": {
+      "quality": {
+        "a2a_protocol": "0.3.0",
+        "capability": "report_quality_review@1",
+        "identity": "b0694571-4ad9-4ec1-8183-fff94875e942",
+        "incarnation": 1,
+        "role": "quality"
+      },
+      "release": {
+        "identity": "4b51a1b2-71a8-4c0e-9309-6c131761578f",
+        "incarnation": 1,
+        "mode": "participating"
+      },
+      "research_findings": {
+        "a2a_protocol": "0.3.0",
+        "capability": "packet_findings@1",
+        "identity": "09ae0696-7a1c-4ec9-a2f1-11368e97f2a1",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "research_risks": {
+        "a2a_protocol": "0.3.0",
+        "capability": "packet_risks@1",
+        "identity": "459ce27b-16b5-4db4-b9a1-9be36a9591e9",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "synthesizer": {
+        "a2a_protocol": "0.3.0",
+        "capability": "report_synthesis@1",
+        "identity": "c04c0285-665d-494b-a9cb-6735ef47e986",
+        "incarnation": 1,
+        "role": "capability"
+      }
+    },
+    "pids": {
+      "quality": {
+        "identity": "b0694571-4ad9-4ec1-8183-fff94875e942",
+        "pid": 17586,
+        "port": 45783
+      },
+      "release": {
+        "identity": "4b51a1b2-71a8-4c0e-9309-6c131761578f",
+        "pid": 17597,
+        "port": 45784
+      },
+      "research_findings": {
+        "identity": "09ae0696-7a1c-4ec9-a2f1-11368e97f2a1",
+        "pid": 17415,
+        "port": 45780
+      },
+      "research_risks": {
+        "identity": "459ce27b-16b5-4db4-b9a1-9be36a9591e9",
+        "pid": 17420,
+        "port": 45781
+      },
+      "synthesizer": {
+        "identity": "c04c0285-665d-494b-a9cb-6735ef47e986",
+        "pid": 17573,
+        "port": 45782
+      }
+    }
+  }
+}
