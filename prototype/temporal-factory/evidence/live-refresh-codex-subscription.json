@@ -1,0 +1,109 @@
+{
+  "qualification": {
+    "level": "real",
+    "value": "codex-subscription forced refresh"
+  },
+  "refresh_attempts": {
+    "level": "real",
+    "value": 1
+  },
+  "status_before": {
+    "level": "real",
+    "value": {
+      "signed_in": true,
+      "account": "sha256:188b022d6e97",
+      "expires_at": 1791079350578,
+      "expired": false
+    }
+  },
+  "credential_stat": {
+    "level": "real",
+    "value": {
+      "mode": "-rw-------",
+      "links": 1,
+      "owner_uid": 501
+    }
+  },
+  "home_stat": {
+    "level": "real",
+    "value": {
+      "mode": "drwx------",
+      "links": 4,
+      "owner_uid": 501
+    }
+  },
+  "secrets_stat": {
+    "level": "real",
+    "value": {
+      "mode": "drwx------",
+      "links": 3,
+      "owner_uid": 501
+    }
+  },
+  "run_stat": {
+    "level": "real",
+    "value": {
+      "mode": "drwx------",
+      "links": 2,
+      "owner_uid": 501
+    }
+  },
+  "refresh": {
+    "level": "real",
+    "value": {
+      "refreshed": true,
+      "expires_at_before": 1791079350578,
+      "expires_at_after": 1791079397973,
+      "advanced_ms": 47395
+    }
+  },
+  "refresh_error": {
+    "level": "real",
+    "value": {
+      "kind": null,
+      "status": null,
+      "code": null
+    }
+  },
+  "status_after": {
+    "level": "real",
+    "value": {
+      "signed_in": true,
+      "account": "sha256:188b022d6e97",
+      "expires_at": 1791079397973,
+      "expired": false
+    }
+  },
+  "broker_health": {
+    "level": "real",
+    "value": {
+      "pid": 59833,
+      "originator": "exomachina",
+      "pi_ai": "0.87.1",
+      "signed_in": true,
+      "account": "sha256:188b022d6e97"
+    }
+  },
+  "broker_events": {
+    "level": "real",
+    "value": [
+      {
+        "event": "start"
+      },
+      {
+        "event": "refresh"
+      }
+    ]
+  },
+  "leak_scan_home_and_existing_evidence": {
+    "level": "real",
+    "value": {
+      "files_scanned": 23,
+      "bytes_scanned": 707167,
+      "excluded": [
+        "/Users/tomdaniel/.exomachina/model-broker/secrets/openai-codex.json"
+      ],
+      "hits": []
+    }
+  }
+}
