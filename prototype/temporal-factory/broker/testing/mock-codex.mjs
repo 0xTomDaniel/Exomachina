@@ -202,7 +202,7 @@ const server = http.createServer((req, res) => {
 				const run = inspected.run || {};
 				return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_decide_${seq + 1}`, name: "decide_wait", args: { action: "abort", revision: run.current_revision || "", sha256: run.current_sha256 || "", rationale: "repair exhausted" } }]) });
 			}
-			if (/answer the director wait|abort the waiting run/i.test(brief)) return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_inspect_${seq + 1}`, name: "inspect_run", args: {} }]) });
+			if (/answer the director wait|abort the waiting run|waiting for a director decision|review the run and decide/i.test(brief)) return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_inspect_${seq + 1}`, name: "inspect_run", args: {} }]) });
 			const question = brief.match(/Research (.*?);/i)?.[1] || brief;
 			return log({ kind: "director", ...base, reply: turn(res, body.model, session, `rs_director_${seq + 1}`, [{ call_id: `call_start_${seq + 1}`, name: "start_research", args: { question } }]) });
 		}
