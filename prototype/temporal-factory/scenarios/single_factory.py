@@ -148,7 +148,8 @@ def check_evidence(e: dict) -> dict[str, dict]:
         not env["EXO_MODEL_HOME"] and not env["EXO_CODEX_BASE_URL"]), setup, label)
     author = e.get("authoring") or {}
     # The report brief permits a valid first draft for either provider.
-    auth_ok, auth_reason, auth_facts = authoring_acceptance("codex-subscription", author)
+    auth_ok, auth_reason, auth_facts = authoring_acceptance(
+        "codex-subscription" if live else "synthetic-loopback", author)
     publication = author.get("publication") or {}
     active = e.get("active_publication") or {}
     bindings = (e.get("testbed") or {}).get("bindings") or {}
@@ -358,7 +359,8 @@ def check_evidence(e: dict) -> dict[str, dict]:
              for x in a.get("model_calls") or []]
     sessions = [x.get("session_id") for x in calls]
     streams = {x.get("session") for x in e.get("broker_events") or [] if x.get("event") == "stream"}
-    c["G-2"] = verdict(len(set(e.get("broker_pids_during") or [])) == 1 and
+    c["G-2"] = verdict(e.get("broker_pid_before") == e.get("broker_pid_after") and
+        len(set(e.get("broker_pids_during") or [])) == 1 and
         bool((e.get("broker_pids_during") or [None])[0]) and bool(calls) and
         all(x.get("provider") == ("codex-subscription" if live else "scripted") and
             x.get("model_id") == "gpt-6-sol" and x.get("live") is live for x in calls) and
@@ -557,7 +559,16 @@ def _collect_agents(home: Path, testbed: dict, journal: list[dict],
                         and x.get("kind") == "agent-card-verified"]
             interactions = [x for x in activity if x.get("action_id") == task.get("action_id")
                 and x.get("kind") in ("agent-task-journaled", "agent-task-polled")]
-            task["pin_verified"] = bool(pin_logs and len(pin_logs) >= len(interactions) and
+            last_poll_at = float("-inf")
+            ordered_pins = sorted(pin_logs, key=lambda row: row.get("wall_time", 0))
+            interactions_verified = True
+            for interaction in sorted(interactions, key=lambda row: row.get("wall_time", 0)):
+                verified = any(last_poll_at < pin_log.get("wall_time", 0) <=
+                               interaction.get("wall_time", 0) for pin_log in ordered_pins)
+                interactions_verified = interactions_verified and verified
+                if interaction.get("kind") == "agent-task-polled":
+                    last_poll_at = interaction.get("wall_time", 0)
+            task["pin_verified"] = bool(pin_logs and interactions_verified and
                 match.get("pinned_identity") ==
                 pids.get(name, {}).get("identity") and all(
                     x.get("pinned_identity") == pids.get(name, {}).get("identity") and
@@ -630,7 +641,7 @@ def main() -> int:
     if sorted(set(routes)) != routes or any(x not in (1, 2, 3) for x in routes):
         parser.error("routes must be an ordered subset of 1,2,3")
     home = args.home.resolve()
-    if home.parent != Path("/tmp") or not home.name.startswith("exo-sf-") or home.exists():
+    if home.parent != Path("/tmp").resolve() or not home.name.startswith("exo-sf-") or home.exists():
         parser.error("home must be a fresh /tmp/exo-sf-* directory")
     if args.provider == "codex-subscription" and any(
             name in os.environ for name in ("EXO_MODEL_HOME", "EXO_CODEX_BASE_URL")):
@@ -717,13 +728,18 @@ def main() -> int:
         evidence["packet_digest"] = hashlib.sha256(json.dumps(packet, sort_keys=True,
             separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
         step = "author"
+        author_stream_before = sum(event.get("event") == "stream" for event in
+            jsonl((home / "model" if args.provider == "scripted" else DEFAULT_HOME) /
+                  "broker-events.jsonl"))
         started = time.monotonic()
         author = json.loads(run_cli(str(SRC / "admin.py"), "author", "--instance-dir", str(instance),
             "--brief", str(ROOT / "definitions" / "authoring-brief-report.md"),
             "--label", "report", "--base-template", str(ROOT / "definitions" / "report-template.json"),
             timeout=650))
         author["admin_exit_code"] = 0
-        author["model_calls"] = author.get("outcome", {}).get("model_calls")
+        author["model_calls"] = sum(event.get("event") == "stream" for event in
+            jsonl((home / "model" if args.provider == "scripted" else DEFAULT_HOME) /
+                  "broker-events.jsonl")) - author_stream_before
         author["seconds"] = round(time.monotonic() - started, 3)
         evidence["authoring"] = author
         evidence["authoring_call_count"] = author.get("model_calls")
@@ -751,6 +767,7 @@ def main() -> int:
         published_package = json.loads((instance / "catalog" /
             f"{active['package_digest']}.json").read_text())
         evidence["active_publication"] = {**active,
+            "bindings": published_package.get("bindings"),
             "packet_digest": hashlib.sha256(json.dumps(published_package.get("evidence_packet"),
                 sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()}
         evidence["import_audit"] = _import_audit()
@@ -765,8 +782,7 @@ def main() -> int:
             if number in (2, 3):
                 stimuli = json.loads((ROOT / "scenarios" / "sf_stimuli.json").read_text())
                 control = stimuli[f"route{number}"]
-                http(f"http://127.0.0.1:{args.services_port_base + 2}/_test/stimulus", control,
-                     token=False)
+                http(f"http://127.0.0.1:{args.services_port_base + 2}/_test/stimulus", control)
             route = _route(base, instance, question, number)
             evidence["broker_pids_during"].append(_pid(broker))
             if number == 3:
@@ -793,6 +809,9 @@ def main() -> int:
                     if state in ("completed", "failed"):
                         break
                     time.sleep(.25)
+                if route["task"]["status"]["state"] != "completed":
+                    evidence["routes"][str(number)] = route
+                    raise TimeoutError("route 3 Director follow-up did not complete the original Task")
             address = json.loads((home / "runner" / "runner-ready.json").read_text())["address"]
             histories = asyncio.run(export_histories(address, route["run_id"],
                 evidence_dir / f"{args.provider}-{args.attempt}-route{number}"))
@@ -804,7 +823,8 @@ def main() -> int:
                 parent = client.get_workflow_handle(route["run_id"])
                 parent_status = await parent.query(FactoryRun.status)
                 child = client.get_workflow_handle(parent_status["child_id"])
-                return await child.query(FactoryRun.status), await parent.result()
+                return await child.query(FactoryRun.status), await asyncio.wait_for(
+                    parent.result(), timeout=60)
             route["child_status"], final_result = asyncio.run(final_state())
             route["result_status"] = final_result.get("status")
             route["workflows"] = _history_summary(histories, route)
@@ -828,8 +848,7 @@ def main() -> int:
                                                for t in r.get("director_turns") or [])
         evidence["incidents"] = _rows(instance / "director.sqlite3", "incidents")
         evidence["releases"] = _rows(home / "services" / "release" / "release.sqlite3", "releases")
-        raw_stimuli = http(f"http://127.0.0.1:{args.services_port_base + 2}/_test/stimulus-log",
-                           token=False)
+        raw_stimuli = http(f"http://127.0.0.1:{args.services_port_base + 2}/_test/stimulus-log")
         evidence["stimulus_log"] = raw_stimuli if isinstance(raw_stimuli, list) else raw_stimuli.get("applied", [])
         for number in routes:
             route = evidence["routes"][str(number)]
