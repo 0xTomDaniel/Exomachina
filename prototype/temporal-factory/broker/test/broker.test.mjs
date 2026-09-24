@@ -6,10 +6,40 @@ import net from 'node:net';
 import http from 'node:http';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { rewriteAuthorizeOriginator } from '../lib/store.mjs';
 
 const broker = fileURLToPath(new URL('../exo-model.mjs', import.meta.url));
 const preload = fileURLToPath(new URL('../testing/mock-oauth-fetch.mjs', import.meta.url));
 const trial = `/tmp/exo-proto-broker-${process.pid}-${Date.now()}`;
+fs.mkdirSync(trial, { recursive: true, mode: 0o700 });
+const recordingPreload = path.join(trial, 'recording-oauth-fetch.mjs');
+fs.writeFileSync(recordingPreload, `
+import fs from 'node:fs';
+const originalFetch = globalThis.fetch;
+let grants = 0;
+const jwtPart = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
+globalThis.fetch = async (input, init = {}) => {
+  const url = new URL(input instanceof Request ? input.url : input);
+  if (url.hostname === 'auth.openai.com') {
+    const headers = new Headers(init.headers);
+    const body = String(init.body || '');
+    const grant = new URLSearchParams(body).get('grant_type');
+    fs.appendFileSync(process.env.EXO_MOCK_OAUTH_RECORD, JSON.stringify({ path: url.pathname,
+      user_agent: headers.get('user-agent'), originator: headers.get('originator'), grant }) + '\\n');
+    if (url.pathname === '/api/accounts/deviceauth/usercode')
+      return new Response(JSON.stringify({ device_auth_id: 'device_synthetic', user_code: 'CODE-SYNTH', interval: 0 }), { status: 200 });
+    if (url.pathname === '/api/accounts/deviceauth/token')
+      return new Response(JSON.stringify({ authorization_code: 'authorization_synthetic', code_verifier: 'verifier_synthetic' }), { status: 200 });
+    if (url.pathname !== '/oauth/token') throw new Error('unexpected OAuth path');
+    grants++;
+    const access = jwtPart({ alg: 'none' }) + '.' + jwtPart({ 'https://api.openai.com/auth': { chatgpt_account_id: 'acct_synthetic' }, grant: grants }) + '.signature';
+    return new Response(JSON.stringify({ access_token: access, refresh_token: 'synthetic_refresh_' + grants,
+      expires_in: 3600, token_type: 'Bearer' }), { status: 200 });
+  }
+  if (!['127.0.0.1', 'localhost', '::1', '[::1]'].includes(url.hostname)) throw new Error('non-loopback request blocked');
+  return originalFetch(input, init);
+};
+`, { mode: 0o600 });
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const mkhome = (label, fixture = false) => {
   const home = path.join(trial, label, 'model');
@@ -42,18 +72,19 @@ function launch(home, extra = {}) {
   const child = spawn(process.execPath, [broker, 'serve'], {
     env: { ...process.env, EXO_MODEL_HOME: home, ...extra }, stdio: ['ignore', 'pipe', 'pipe'],
   });
+  let errors = '';
+  child.stderr.on('data', (c) => { errors += c; });
   const ready = new Promise((resolve, reject) => {
-    let output = '', errors = '';
+    let output = '';
     const timer = setTimeout(() => reject(new Error('serve timeout')), 6000);
     child.stdout.on('data', (c) => {
       output += c;
       const end = output.indexOf('\n');
       if (end >= 0) { clearTimeout(timer); resolve(JSON.parse(output.slice(0, end))); }
     });
-    child.stderr.on('data', (c) => { errors += c; });
     child.on('close', (code) => { if (!output.includes('\n')) { clearTimeout(timer); reject(new Error(`serve exit ${code}: ${errors}`)); } });
   });
-  return { child, ready };
+  return { child, ready, stderr: () => errors };
 }
 async function transact(home, request, terminal = (r) => Boolean(r.health || r.done || r.error || r.refresh)) {
   return new Promise((resolve, reject) => {
@@ -96,6 +127,19 @@ function startMock(port) {
           message: session === 'quota' ? 'usage limit reached' : 'request refused' } }));
         return;
       }
+      if (req.headers['session-id'] === 'token-error') {
+        res.writeHead(500, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: { message: `provider echoed ${req.headers.authorization}` } }));
+        return;
+      }
+      if (['structured-error', 'unknown-code'].includes(req.headers['session-id'])) {
+        res.writeHead(400, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: {
+          code: req.headers['session-id'] === 'structured-error' ? 'unsupported_originator' : 'unreviewed_secret_code',
+          message: 'originator rejected; diagnostic opaqueSecret_9Qx7v2Lm5pR8',
+        } }));
+        return;
+      }
       if (req.headers['session-id'] === 'hold') {
         res.writeHead(200, { 'content-type': 'text/event-stream' });
         const event = { type: 'response.created', response: { id: 'hold', object: 'response',
@@ -106,7 +150,16 @@ function startMock(port) {
       const model = body.model || 'gpt-6-sol';
       const events = [{ type: 'response.created', response: { id: 'resp_1', object: 'response', model, status: 'in_progress', output: [] } }];
       const items = [];
-      if (req.headers['session-id'] === 'interleaved') {
+      if (req.headers['session-id'] === 'jwt-tool') {
+        const call = { type: 'function_call', id: 'fc_jwt', call_id: 'jwt', name: 'alpha',
+          arguments: JSON.stringify({ value: 'abcdefghijklmnop.qrstuvwxyzABCDEF.ghijklmnopqrstuv' }), status: 'completed' };
+        events.push({ type: 'response.output_item.added', output_index: 0,
+          item: { ...call, arguments: '', status: 'in_progress' } });
+        events.push({ type: 'response.function_call_arguments.delta', item_id: call.id, output_index: 0, delta: call.arguments });
+        events.push({ type: 'response.function_call_arguments.done', item_id: call.id, output_index: 0, arguments: call.arguments });
+        events.push({ type: 'response.output_item.done', output_index: 0, item: call });
+        items.push(call);
+      } else if (req.headers['session-id'] === 'interleaved') {
         const calls = [
           { type: 'function_call', id: 'fc_a', call_id: 'a', name: 'alpha', arguments: '{"value":"one"}', status: 'completed' },
           { type: 'function_call', id: 'fc_b', call_id: 'b', name: 'beta', arguments: '{"value":"two"}', status: 'completed' },
@@ -164,6 +217,139 @@ test('override guard refuses unsafe stores and hosts before HTTP', async () => {
     assert.equal(login.code, 1);
     assert.equal(mock.requests.length, 0);
   } finally { await new Promise((resolve) => mock.server.close(resolve)); }
+});
+
+test('symlinked home, secrets, run, credential and lock are configuration errors before requests', async () => {
+  const mock = await startMock(46108);
+  const url = 'http://127.0.0.1:46108/backend-api';
+  const cases = [];
+  const linkedHomeTarget = mkhome('linked-home-target', true);
+  seed(linkedHomeTarget);
+  const linkedHome = path.join(trial, 'linked-home');
+  fs.symlinkSync(linkedHomeTarget, linkedHome, 'dir');
+  cases.push(linkedHome);
+  const linkedSecrets = mkhome('linked-secrets', true);
+  fs.renameSync(path.join(linkedSecrets, 'secrets'), path.join(linkedSecrets, 'original-secrets'));
+  fs.symlinkSync(path.join(linkedSecrets, 'original-secrets'), path.join(linkedSecrets, 'secrets'), 'dir');
+  cases.push(linkedSecrets);
+  const linkedRun = mkhome('linked-run', true);
+  fs.mkdirSync(path.join(linkedRun, 'run-target'));
+  fs.symlinkSync(path.join(linkedRun, 'run-target'), path.join(linkedRun, 'run'), 'dir');
+  cases.push(linkedRun);
+  const linkedCredential = mkhome('linked-credential', true);
+  const target = path.join(linkedCredential, 'synthetic-credential.json');
+  fs.writeFileSync(target, JSON.stringify(credential()), { mode: 0o600 });
+  fs.symlinkSync(target, path.join(linkedCredential, 'secrets', 'openai-codex.json'));
+  cases.push(linkedCredential);
+  const linkedLock = mkhome('linked-lock', true);
+  const lockTarget = path.join(linkedLock, 'lock-target');
+  fs.mkdirSync(lockTarget, { mode: 0o700 });
+  fs.symlinkSync(lockTarget, path.join(linkedLock, 'secrets', 'openai-codex.json.lock'), 'dir');
+  cases.push(linkedLock);
+  try {
+    for (const home of cases) {
+      for (const override of [undefined, url]) {
+        const result = await run(['status'], { EXO_MODEL_HOME: home, EXO_CODEX_BASE_URL: override });
+        assert.equal(result.code, 1, home);
+        assert.match(result.stderr, /"kind":"config"/, home);
+      }
+    }
+    assert.equal(mock.requests.length, 0);
+  } finally { await new Promise((resolve) => mock.server.close(resolve)); }
+});
+
+test('OAuth callback host is loopback and browser authorize URL changes only originator', async () => {
+  const home = mkhome('callback-host');
+  const record = path.join(trial, 'callback-oauth-record.jsonl');
+  const result = await run(['login', '--browser'], { EXO_MODEL_HOME: home,
+    PI_OAUTH_CALLBACK_HOST: '0.0.0.0', NODE_OPTIONS: `--import=${recordingPreload}`,
+    EXO_MOCK_OAUTH_RECORD: record, EXO_CODEX_BASE_URL: undefined });
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /"kind":"config"/);
+  assert.equal(fs.existsSync(record), false);
+  const original = 'https://auth.openai.com/oauth/authorize?client_id=app_EMoamEEZ73f0CkXaXp7hrann&state=synthetic&originator=pi&scope=openid';
+  assert.equal(rewriteAuthorizeOriginator(original), original.replace('originator=pi', 'originator=exomachina'));
+  assert.equal(new URL(rewriteAuthorizeOriginator(original)).searchParams.get('originator'), 'exomachina');
+});
+
+test('device start, poll, exchange and refresh carry broker identity', async () => {
+  const record = path.join(trial, 'identity-oauth-record.jsonl');
+  const env = { NODE_OPTIONS: `--import=${recordingPreload}`, EXO_MOCK_OAUTH_RECORD: record, EXO_CODEX_BASE_URL: undefined };
+  const loginHome = mkhome('device-login');
+  const login = await run(['login'], { ...env, EXO_MODEL_HOME: loginHome });
+  assert.equal(login.code, 0, login.stderr);
+  assert.equal(JSON.parse(login.stdout).signed_in, true);
+  assert.match(login.stderr, /CODE-SYNTH/);
+  const refreshHome = mkhome('identity-refresh', true); seed(refreshHome, credential(Date.now() - 1000));
+  const service = launch(refreshHome, { ...env, EXO_CODEX_BASE_URL: 'http://127.0.0.1:46109/backend-api' });
+  try {
+    await service.ready;
+    const result = (await transact(refreshHome, { id: 'identity-refresh', op: 'refresh' }))[0];
+    assert.equal(result.refresh?.refreshed, true, JSON.stringify(result));
+    const requests = fs.readFileSync(record, 'utf8').trim().split('\n').map(JSON.parse);
+    assert.deepEqual(requests.map((request) => request.path), [
+      '/api/accounts/deviceauth/usercode', '/api/accounts/deviceauth/token', '/oauth/token', '/oauth/token']);
+    assert.deepEqual(requests.filter((request) => request.path === '/oauth/token').map((request) => request.grant),
+      ['authorization_code', 'refresh_token']);
+    for (const request of requests) {
+      assert.equal(request.originator, 'exomachina');
+      assert.equal(request.user_agent, 'exomachina-model-broker/0.1.0 (pi-ai/0.87.1)');
+    }
+  } finally { await stop(service.child); }
+});
+
+test('JWT-shaped tool arguments survive while provider token errors stay fixed after rotation', async () => {
+  const mock = await startMock(46107);
+  const home = mkhome('redaction', true);
+  const initial = credential(); seed(home, initial);
+  const service = launch(home, { EXO_CODEX_BASE_URL: 'http://127.0.0.1:46107/backend-api' });
+  try {
+    await service.ready;
+    const args = 'abcdefghijklmnop.qrstuvwxyzABCDEF.ghijklmnopqrstuv';
+    const reply = await transact(home, { id: 'jwt-tool', op: 'stream', model: 'gpt-6-sol', session: 'jwt-tool', context });
+    assert.ok(reply.at(-1).done, JSON.stringify(reply.at(-1)));
+    assert.ok(JSON.stringify(reply.filter((line) => line.ev)).includes(args));
+    assert.ok(JSON.stringify(reply.at(-1).done).includes(args));
+    const replacement = credential();
+    replacement.access = `${jwtPart({ alg: 'none' })}.${jwtPart({
+      'https://api.openai.com/auth': { chatgpt_account_id: 'acct_synthetic' }, rotation: 'second',
+    })}.signature`;
+    const temporary = path.join(home, 'secrets', 'replacement.json');
+    fs.writeFileSync(temporary, JSON.stringify(replacement), { mode: 0o600 });
+    fs.renameSync(temporary, path.join(home, 'secrets', 'openai-codex.json'));
+    const failure = (await transact(home, { id: 'token-error', op: 'stream', model: 'gpt-6-sol',
+      session: 'token-error', context })).at(-1);
+    assert.equal(failure.error?.kind, 'provider', JSON.stringify(failure));
+    assert.ok(!JSON.stringify(failure).includes(replacement.access));
+    assert.deepEqual(failure.error, { kind: 'provider', message: 'Codex provider request failed', status: 500, code: 'other' });
+    const events = fs.readFileSync(path.join(home, 'broker-events.jsonl'), 'utf8');
+    assert.ok(!events.includes(initial.access) && !events.includes(replacement.access));
+  } finally { await stop(service.child); await new Promise((resolve) => mock.server.close(resolve)); }
+});
+
+test('provider error replies and logs expose only fixed text, HTTP status and allowlisted code', async () => {
+  const mock = await startMock(46110);
+  const home = mkhome('structured-errors', true); seed(home);
+  const service = launch(home, { EXO_CODEX_BASE_URL: 'http://127.0.0.1:46110/backend-api' });
+  const planted = 'opaqueSecret_9Qx7v2Lm5pR8';
+  try {
+    await service.ready;
+    for (const [session, code] of [['structured-error', 'unsupported_originator'], ['unknown-code', 'other']]) {
+      const reply = (await transact(home, { id: session, op: 'stream', model: 'gpt-6-sol', session, context })).at(-1);
+      assert.deepEqual(reply.error, { kind: 'provider', message: 'Codex provider request failed', status: 400, code });
+      assert.ok(!JSON.stringify(reply).includes(planted));
+    }
+    const events = fs.readFileSync(path.join(home, 'broker-events.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+    const errors = events.filter((event) => event.event === 'error');
+    assert.equal(errors.length, 2);
+    assert.deepEqual(errors.map(({ kind, status, code }) => ({ kind, status, code })), [
+      { kind: 'provider', status: 400, code: 'unsupported_originator' },
+      { kind: 'provider', status: 400, code: 'other' },
+    ]);
+    for (const event of errors) assert.deepEqual(Object.keys(event).sort(), ['at', 'code', 'event', 'kind', 'status']);
+    assert.ok(!JSON.stringify(events).includes(planted));
+    assert.ok(!service.stderr().includes(planted));
+  } finally { await stop(service.child); await new Promise((resolve) => mock.server.close(resolve)); }
 });
 
 test('two independent starts share one broker and retain session separation', async () => {

@@ -6,7 +6,8 @@ import net from 'node:net';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createInterface } from 'node:readline/promises';
-import { FileCredentialStore, ownerOnlyDirectory, pidAlive, withPidLock } from './lib/store.mjs';
+import { FileCredentialStore, checkCredentialPath, ownerOnlyDirectory, ownerOnlyFile, pidAlive,
+  rewriteAuthorizeOriginator, withPidLock } from './lib/store.mjs';
 
 const VERSION = '0.1.0';
 const PI_VERSION = '0.87.1';
@@ -23,7 +24,7 @@ const eventFile = path.join(home, 'broker-events.jsonl');
 const baseUrl = process.env.EXO_CODEX_BASE_URL;
 const commandName = process.argv[2];
 function configFailure() {
-  process.stderr.write(JSON.stringify({ error: { kind: 'config', message: 'invalid model broker fixture configuration' } }) + '\n');
+  process.stderr.write(JSON.stringify({ error: { kind: 'config', message: 'invalid model broker configuration' } }) + '\n');
   process.exit(1);
 }
 function canonical(file) {
@@ -48,8 +49,19 @@ if (baseUrl !== undefined) {
   if (!isolated || !fixtureMarked || !loopback || !ownSecrets || !ownCredential) configFailure();
 }
 if (commandName === 'login' && fixtureMarked) configFailure();
+if (commandName === 'login' && process.env.PI_OAUTH_CALLBACK_HOST !== undefined &&
+    !['127.0.0.1', 'localhost', '::1'].includes(process.env.PI_OAUTH_CALLBACK_HOST)) configFailure();
 
-for (const dir of [home, secretDir, runDir]) ownerOnlyDirectory(dir);
+try {
+  for (const dir of [home, secretDir, runDir]) ownerOnlyDirectory(dir);
+  ownerOnlyFile(credentialFile);
+  const credentialLock = `${credentialFile}.lock`;
+  if (fs.lstatSync(credentialLock, { throwIfNoEntry: false })) {
+    ownerOnlyDirectory(credentialLock);
+    ownerOnlyFile(path.join(credentialLock, 'owner'));
+  }
+  checkCredentialPath(credentialFile);
+} catch { configFailure(); }
 const store = new FileCredentialStore(credentialFile);
 
 function account(credential) {
@@ -64,7 +76,8 @@ async function status() {
     expired: signed_in ? Date.now() >= c.expires : null };
 }
 function log(event, fields = {}) {
-  fs.appendFileSync(eventFile, JSON.stringify({ at: new Date().toISOString(), event, ...fields }) + '\n', { mode: 0o600 });
+  const line = JSON.stringify({ at: new Date().toISOString(), event, ...fields });
+  fs.appendFileSync(eventFile, redact(line, true) + '\n', { mode: 0o600 });
   fs.chmodSync(eventFile, 0o600);
 }
 function partsOf(c) {
@@ -74,12 +87,25 @@ function partsOf(c) {
   }
   return values;
 }
-function redact(value, c) {
-  let output = String(value);
-  for (const [, token] of partsOf(c)) output = output.split(token).join('[redacted]');
-  return output.replace(/\b[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\b/g, '[redacted-jwt]');
+const redactionTokens = new Set();
+let credentialStamp;
+function currentRedactionTokens() {
+  checkCredentialPath(credentialFile);
+  const stat = fs.lstatSync(credentialFile, { throwIfNoEntry: false });
+  const stamp = stat ? `${stat.dev}:${stat.ino}:${stat.mtimeNs ?? stat.mtimeMs}` : 'missing';
+  if (stamp !== credentialStamp) {
+    const credential = store.readCurrent();
+    for (const [, token] of partsOf(credential)) redactionTokens.add(token);
+    credentialStamp = stamp;
+  }
+  return redactionTokens;
 }
-async function safeLine(value) { return redact(JSON.stringify(value), await store.read(PROVIDER)) + '\n'; }
+function redact(value, errorPayload = false) {
+  let output = String(value);
+  for (const token of currentRedactionTokens()) output = output.split(token).join('[redacted]');
+  return errorPayload ? output.replace(/\b[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\b/g, '[redacted-jwt]') : output;
+}
+function safeLine(value) { return redact(JSON.stringify(value), Boolean(value.error)) + '\n'; }
 function allowed(url) {
   const u = new URL(url);
   const loopback = ['127.0.0.1', '::1', '[::1]', 'localhost'].includes(u.hostname);
@@ -90,6 +116,14 @@ const underlyingFetch = globalThis.fetch;
 globalThis.fetch = (input, init = {}) => {
   const target = typeof input === 'string' || input instanceof URL ? input : input.url;
   if (!allowed(target)) throw new Error('egress host refused');
+  const url = new URL(target);
+  if (url.hostname === 'auth.openai.com') {
+    const headers = new Headers(input instanceof Request ? input.headers : undefined);
+    for (const [name, value] of new Headers(init.headers)) headers.set(name, value);
+    headers.set('originator', ORIGINATOR);
+    headers.set('User-Agent', `exomachina-model-broker/${VERSION} (pi-ai/${PI_VERSION})`);
+    return underlyingFetch(input, { ...init, headers, redirect: 'manual' });
+  }
   return underlyingFetch(input, { ...init, redirect: 'manual' });
 };
 function honestFetch(url, init = {}) {
@@ -121,7 +155,23 @@ const publicMessages = {
   quota: 'Codex subscription usage limit reached', config: 'broker configuration error',
   provider: 'Codex provider request failed', aborted: 'model request aborted', broker: 'broker request failed',
 };
-function errReply(id, kind) { return { id, error: { kind, message: publicMessages[kind] || publicMessages.broker } }; }
+const safeProviderCodes = new Set([
+  'usage_limit_reached', 'usage_not_included', 'rate_limit_exceeded', 'invalid_request_error',
+  'unsupported_originator', 'invalid_grant', 'token_expired', 'insufficient_quota',
+]);
+function boundedCode(value) {
+  return typeof value === 'string' && /^[a-z0-9_.-]{1,64}$/.test(value) && safeProviderCodes.has(value)
+    ? value : 'other';
+}
+function structuredCode(value) {
+  return value?.error?.code ?? value?.error?.type ?? value?.code ?? value?.type;
+}
+function errReply(id, kind, status, code) {
+  const error = { kind, message: publicMessages[kind] || publicMessages.broker };
+  if (Number.isInteger(status) && status >= 100 && status <= 599) error.status = status;
+  if (code !== undefined) error.code = boundedCode(code);
+  return { id, error };
+}
 function toPiMessages(messages, model) {
   return messages.map((m) => m.role !== 'assistant' ? { ...m, timestamp: 0 } : {
     ...m, api: model.api, provider: model.provider, model: model.id, timestamp: 0,
@@ -134,6 +184,7 @@ async function handleStream(req, send, owned) {
   const key = `${owned.id}:${String(req.id)}`;
   const started = Date.now();
   let httpStatus;
+  let providerCode;
   const abort = new AbortController();
   active.set(key, abort);
   owned.streams.add(key);
@@ -142,7 +193,11 @@ async function handleStream(req, send, owned) {
     if (terminal) return;
     terminal = true;
     await send(reply);
-    log(event, { id: String(req.id), model: String(req.model || ''), duration_ms: Date.now() - started, ...(kind ? { kind } : {}) });
+    if (event === 'error') {
+      const { kind: errorKind, status, code } = reply.error;
+      log('error', { kind: errorKind, ...(status === undefined ? {} : { status }),
+        ...(code === undefined ? {} : { code }) });
+    } else log(event, { id: String(req.id), model: String(req.model || ''), duration_ms: Date.now() - started });
   };
   try {
     const credential = await store.read(PROVIDER);
@@ -154,7 +209,15 @@ async function handleStream(req, send, owned) {
     const model = { ...catalog, baseUrl: baseUrl || catalog.baseUrl };
     const context = normalizeContext({ systemPrompt: req.context?.systemPrompt,
       messages: toPiMessages(req.context?.messages || [], model), tools: req.context?.tools || [] });
-    const events = stream(model, context, { apiKey: auth.auth.apiKey, transport: 'sse', fetch: honestFetch,
+    const providerFetch = async (url, init) => {
+      const response = await honestFetch(url, init);
+      if (!response.ok) {
+        const payload = await response.clone().json().catch(() => null);
+        providerCode = boundedCode(structuredCode(payload));
+      }
+      return response;
+    };
+    const events = stream(model, context, { apiKey: auth.auth.apiKey, transport: 'sse', fetch: providerFetch,
       sessionId: req.session, maxRetries: 0, signal: abort.signal,
       reasoningEffort: req.options?.reasoningEffort || 'low',
       onResponse: (response) => { httpStatus = response.status; } });
@@ -162,7 +225,7 @@ async function handleStream(req, send, owned) {
       if (ev.type === 'done') { await finish({ id: req.id, done: ev.message }, 'stream'); return; }
       if (ev.type === 'error') {
         const kind = classify(ev.error, httpStatus);
-        await finish(errReply(req.id, kind), 'error', kind); return;
+        await finish(errReply(req.id, kind, httpStatus, providerCode ?? structuredCode(ev.error)), 'error', kind); return;
       }
       const e = { type: ev.type, contentIndex: ev.contentIndex };
       if (ev.delta !== undefined) e.delta = ev.delta;
@@ -175,7 +238,8 @@ async function handleStream(req, send, owned) {
     await finish(errReply(req.id, abort.signal.aborted ? 'aborted' : 'broker'), 'error', abort.signal.aborted ? 'aborted' : 'broker');
   } catch (error) {
     const kind = classify(error, httpStatus);
-    await finish(errReply(req.id, abort.signal.aborted ? 'aborted' : kind), 'error', abort.signal.aborted ? 'aborted' : kind);
+    await finish(errReply(req.id, abort.signal.aborted ? 'aborted' : kind, httpStatus,
+      providerCode ?? structuredCode(error)), 'error', abort.signal.aborted ? 'aborted' : kind);
   } finally { active.delete(key); owned.streams.delete(key); }
 }
 async function forcedRefresh() {
@@ -231,7 +295,7 @@ async function serve() {
       const owned = { id: Math.random().toString(36).slice(2), streams: new Set() };
       let buffer = '';
       const send = async (value) => {
-        try { if (conn.writable) conn.write(await safeLine(value)); }
+        try { if (conn.writable) conn.write(safeLine(value)); }
         catch { conn.destroy(); }
       };
       conn.on('close', () => { for (const key of owned.streams) active.get(key)?.abort(); });
@@ -291,7 +355,7 @@ async function login(browser) {
       },
       notify: (event) => {
         if (event.type === 'device_code') console.error(JSON.stringify({ verification_url: event.verificationUri, user_code: event.userCode }));
-        if (event.type === 'auth_url') console.error(JSON.stringify({ authorization_url: event.url }));
+        if (event.type === 'auth_url') console.error(JSON.stringify({ authorization_url: rewriteAuthorizeOriginator(event.url) }));
       },
     };
     await models.login(PROVIDER, 'oauth', interaction);
