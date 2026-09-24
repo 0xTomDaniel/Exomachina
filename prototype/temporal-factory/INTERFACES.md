@@ -102,7 +102,13 @@ $EXO_MODEL_HOME/                     0700
 - `status` — `{signed_in, account, expires_at, expired}` with no network call and no token material.
 - `refresh` — forces one refresh through the running broker's `refresh` op (starting it if needed); prints `{refreshed, expires_at_before, expires_at_after}`.
 - `logout` — pi-ai `Models.logout`.
-- `leak-scan <path>...` — reads the credential in-process and scans files/directories (binary-safe, including SQLite and JSONL) for the access token, refresh token, and any `id_token`/JWT fragment of them. It excludes **exactly one** file, the canonical credential file (`realpath($EXO_MODEL_HOME/secrets/openai-codex.json)`), and reports it under `excluded`. Every other file is scanned, including other files under `secrets/` and any copy of the credential. Prints `{files_scanned, bytes_scanned, excluded:[path], hits:[{path, kind}]}`, never the matched text. Every scenario run that reports zero hits must also run a **positive control** in the same run: plant a copy of the credential file (and the bare access-token string) outside the canonical path, show `leak-scan` reports both, and record that in evidence.
+- `leak-scan <path>...` — reads the credential in-process and scans files/directories (binary-safe, including SQLite and JSONL) for the access token, refresh token, and any `id_token`/JWT fragment of them. It excludes **exactly one** file, the canonical credential file (`realpath($EXO_MODEL_HOME/secrets/openai-codex.json)`), and reports it under `excluded`. Every other file is scanned, including other files under `secrets/` and any copy of the credential. Prints `{files_scanned, bytes_scanned, excluded:[path], hits:[{path, kind}]}`, never the matched text. Every scenario run that reports zero hits must also run a **positive control** in the same run, and the control **never reads or copies the real store**:
+1. Create a fresh `FIXTURE_STORE`-marked store with a newly generated synthetic credential.
+2. Plant a copy of that synthetic credential file, plus its bare synthetic access token, outside that store's canonical path.
+3. Run `leak-scan` with `EXO_MODEL_HOME` pointing at the fixture store, and show it reports both.
+4. Record the result in evidence.
+
+The real-store scan is separate. It runs against the default home, and its scanned paths include the control directory.
 - **OAuth identity (from `handoff/pi-ai-credential-audit.md`).** Every OAuth call uses pi-ai's hard-coded Codex CLI `client_id` (`app_EMoamEEZ73f0CkXaXp7hrann`). pi-ai has no public override, and it is recorded as a compatibility and commercial uncertainty. The broker adds `originator: exomachina` and its User-Agent to device start, poll, code exchange and refresh calls. pi-ai itself sends no originator on the device flow. `--browser` rewrites only the authorize URL's `originator=pi` query value to `exomachina`. Whether ChatGPT accepts any of this for a Pro subscription, and whether that use is entitled under the applicable terms, is not verified by Exomachina and is recorded, not assumed.
 - Codex SSE requests carry `originator: exomachina` and `User-Agent: exomachina-model-broker/<version> (pi-ai/0.87.1)`, applied through pi-ai's public `fetch` stream option. If the live backend rejects that originator, report it; do not silently switch to another client's originator.
 - Egress: only `chatgpt.com`, `auth.openai.com`, and loopback.
@@ -128,6 +134,19 @@ $EXO_MODEL_HOME/                     0700
 - `authoring.model_from_environment()` selects by `EXO_AUTHOR_PROVIDER`: unset or `codex-subscription` → the broker only (default model `EXO_AUTHOR_MODEL`, else `gpt-6-sol`); if not signed in it returns `(None, "codex-subscription: not signed in; run node broker/exo-model.mjs login")` and **does not look at any API key**. `anthropic`, `bedrock`, `openai-api` are used only when named explicitly. `synthetic-loopback` selects the broker against a loopback `EXO_CODEX_BASE_URL` for tests, and requires an explicit, non-default, fixture-marked `EXO_MODEL_HOME`. `codex-subscription` returns `(None, reason)` without contacting or starting the broker if `EXO_CODEX_BASE_URL` is set at all. The outcome's `model` record is `{kind, id, provider, billing, live}`, where `live: true` only for `codex-subscription` against the real backend.
 
 **Live authoring scenario** (owner tw_director): `scenarios/live_authoring.py --home H --provider {synthetic-loopback,codex-subscription}`. It brings up the testbed, provisions a factory-mode instance, publishes v1, runs `admin.py author` with the selected broker model (no `--allow-scripted`), auto-approves and publishes v2, runs v2 through the harness's normal A2A `message/send` (lazy runner, Temporal, pinned build) to a terminal state, exports the Temporal histories, and runs `leak-scan` over `H`, the evidence files, the model home's logs, and the **actual commit-candidate file set**, with the positive control. The candidate set is every file under `prototype/temporal-factory/` from `git ls-files --cached --others --exclude-standard`, which covers tracked, staged and untracked non-ignored files; the scan records the file count. A `git diff` excerpt alone is not a leak claim. The positive control is defined under `leak-scan`. In `codex-subscription` mode, the scenario exits with an error before sign-in checks, broker start or any request if `EXO_CODEX_BASE_URL` is inherited from the environment, and it never sets one. In `synthetic-loopback` mode, the fixture model home is `H/model` with the `FIXTURE_STORE` marker. The release step is the HTTP fixture exception above; evidence labels it `http-release (fixture)`, not A2A. Evidence: `evidence/live-authoring-<provider>.json` with every claim labelled `real` or `synthetic`.
+
+**Live qualification status (23 Sep 2026, one account, `sha256:188b022d6e97`).** Observed against the real ChatGPT/Codex backend:
+- device-code sign-in into the default store;
+- one forced refresh through the token endpoint, carrying the broker's `originator`/User-Agent (`evidence/live-refresh-codex-subscription.json`);
+- SSE requests with `originator: exomachina` accepted;
+- one `gpt-6-sol` authoring run through the harness, A2A and pinned Temporal (`evidence/live-authoring-codex-subscription.json`, attempt 2).
+
+Not live-tested:
+- the `--browser` authorize-URL rewrite and callback;
+- a live repair round;
+- rate-limit, quota and `reauth_required` handling;
+- entitlement and terms;
+- a broker-backed Director.
 
 **Authoring acceptance by provider (revised after live attempt 1).**
 - **`synthetic-loopback` must exercise the repair loop.** The mock forces an invalid first draft, so round 1 has structured validation errors, a later round is valid, and the corrected draft is derived from those errors. The scenario still fails if that loop is missing.
