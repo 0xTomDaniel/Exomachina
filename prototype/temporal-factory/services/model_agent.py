@@ -112,8 +112,13 @@ class Ledger:
                     armed_at REAL NOT NULL);
                 CREATE TABLE IF NOT EXISTS stimulus_log (id INTEGER PRIMARY KEY AUTOINCREMENT,
                     stimulus_id INTEGER NOT NULL, run_id TEXT NOT NULL, revision TEXT NOT NULL,
-                    task_id TEXT NOT NULL, planted_text TEXT NOT NULL, sha256_after TEXT NOT NULL);
+                    task_id TEXT NOT NULL, planted_text TEXT NOT NULL, sha256_after TEXT NOT NULL,
+                    content_after TEXT,
+                    UNIQUE(stimulus_id, task_id, revision));
             """)
+            if "content_after" not in {column["name"] for column in db.execute("PRAGMA table_info(stimulus_log)")}:
+                db.execute("ALTER TABLE stimulus_log ADD COLUMN content_after TEXT")
+            db.execute("CREATE UNIQUE INDEX IF NOT EXISTS stimulus_log_action_revision ON stimulus_log(stimulus_id, task_id, revision)")
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT id, incarnation FROM identity WHERE singleton=1").fetchone()
             if row:
@@ -179,12 +184,28 @@ class Ledger:
                                         parts=[Part(root=DataPart(data=artifact))])]
                     if artifact else None)
 
-    def finish(self, task_id: str, artifact: dict | None):
+    def finish(self, task_id: str, artifact: dict | None, stimulus: dict | None = None):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            db.execute("UPDATE tasks SET state=?, artifact=?, updated_at=? WHERE task_id=? AND state='working'",
-                       ("completed" if artifact else "failed", canonical(artifact) if artifact else None,
-                        time.time(), task_id))
+            if stimulus is not None:
+                if artifact is None or artifact["sha256"] != stimulus["sha256_after"]:
+                    raise ValueError("stimulus artifact digest mismatch")
+                db.execute("""INSERT OR IGNORE INTO stimulus_log
+                    (stimulus_id,run_id,revision,task_id,planted_text,sha256_after,content_after)
+                    VALUES (?,?,?,?,?,?,?)""", tuple(stimulus[key] for key in (
+                        "stimulus_id", "run_id", "revision", "task_id", "planted_text",
+                        "sha256_after", "content_after")))
+                logged = db.execute("""SELECT sha256_after,content_after FROM stimulus_log
+                    WHERE stimulus_id=? AND task_id=? AND revision=?""",
+                    (stimulus["stimulus_id"], task_id, stimulus["revision"])).fetchone()
+                if (logged["sha256_after"] != artifact["sha256"]
+                        or logged["content_after"] != artifact["content"]):
+                    raise ValueError("recovered stimulus content mismatch")
+            updated = db.execute("UPDATE tasks SET state=?, artifact=?, updated_at=? WHERE task_id=? AND state='working'",
+                                 ("completed" if artifact else "failed", canonical(artifact) if artifact else None,
+                                  time.time(), task_id))
+            if updated.rowcount != 1:
+                raise ValueError("Task is no longer working")
 
     def call_start(self, task_id: str, session_id: str, provider: str, model_id: str,
                    live: bool) -> tuple[int, int]:
@@ -227,15 +248,34 @@ class Ledger:
                                 (canonical(claim), canonical(revisions), time.time()))
         return {"armed": True, "stimulus_id": cursor.lastrowid}
 
-    def apply_stimulus(self, task_id: str, run_id: str, revision: str, content: dict) -> dict:
+    def logged_stimulus(self, task_id: str, revision: str) -> tuple[dict, dict] | None:
+        with self.connect() as db:
+            logged = db.execute("""SELECT * FROM stimulus_log
+                WHERE task_id=? AND revision=?""", (task_id, revision)).fetchone()
+        if logged is None:
+            return None
+        if logged["content_after"] is None:
+            raise ValueError("committed stimulus lacks replay content")
+        rendered = logged["content_after"]
+        if hashlib.sha256(rendered.encode()).hexdigest() != logged["sha256_after"]:
+            raise ValueError("committed stimulus digest mismatch")
+        return json.loads(rendered), {key: logged[key] for key in (
+            "stimulus_id", "run_id", "revision", "task_id", "planted_text",
+            "sha256_after", "content_after")}
+
+    def apply_stimulus(self, task_id: str, run_id: str, revision: str,
+                       content: dict) -> tuple[dict, dict | None]:
+        recovered = self.logged_stimulus(task_id, revision)
+        if recovered is not None:
+            return recovered
         with self.connect() as db:
             row = db.execute("SELECT * FROM stimulus WHERE bound_run_id=? ORDER BY id LIMIT 1",
                              (run_id,)).fetchone()
         if not row:
-            return content
+            return content, None
         revisions = json.loads(row["revisions"])
         if revisions != "all" and revision not in revisions:
-            return content
+            return content, None
         claim = json.loads(row["claim"])
         used = {item.get("id") for item in content["claims"]}
         number = 1
@@ -244,11 +284,12 @@ class Ledger:
         modified = json.loads(canonical(content))
         modified["claims"].append({"id": f"C{number}", **claim})
         modified["markdown"] += "\n\n" + claim["text"]
-        sha256 = hashlib.sha256(canonical(modified).encode()).hexdigest()
-        with self.connect() as db:
-            db.execute("INSERT INTO stimulus_log (stimulus_id,run_id,revision,task_id,planted_text,sha256_after) VALUES (?,?,?,?,?,?)",
-                       (row["id"], run_id, revision, task_id, claim["text"], sha256))
-        return modified
+        rendered = canonical(modified)
+        return modified, {"stimulus_id": row["id"], "run_id": run_id,
+                          "revision": revision, "task_id": task_id,
+                          "planted_text": claim["text"],
+                          "sha256_after": hashlib.sha256(rendered.encode()).hexdigest(),
+                          "content_after": rendered}
 
     def stimulus_log(self) -> list[dict]:
         with self.connect() as db:
@@ -373,45 +414,52 @@ class Service:
             return
         try:
             brief = json.loads(row["brief"])
-            prechecked = self.role.precheck(brief, self.ledger.identity)
-            if prechecked is not None:
-                content = prechecked
+            recovered = (self.ledger.logged_stimulus(task_id, brief["revision"])
+                         if self.test_controls else None)
+            stimulus = None
+            if recovered is not None:
+                content, stimulus = recovered
             else:
-                session_id = f"{self.ledger.identity}:{task_id}"
-                remaining = self.deadline_seconds - (time.time() - row["created_at"])
-                deadline = time.monotonic() + max(0, remaining)
-                content = None
-                while self.ledger.call_count(task_id) < self.max_calls and time.monotonic() < deadline:
-                    if self.provider == "scripted":
-                        inner = ScriptedModel(self.role.scripted_reply(brief, self.ledger.identity), self.model_id)
-                    else:
-                        inner = PiBrokerModel(ModelBroker(), model_id=self.model_id, session_id=session_id)
-                    model = RecordedModel(inner, self.ledger, task_id, session_id, self.provider,
-                                          self.model_id, deadline)
-                    agent = Agent(name=f"{self.role_name} agent", model=model, tools=[],
-                                  system_prompt=self.role.system_prompt(self.capability),
-                                  callback_handler=None)
-                    result = await agent.invoke_async(self.role.user_prompt(brief))
-                    message = result.message
-                    blocks = message.get("content", []) if isinstance(message, dict) else message.content
-                    response = "".join(block.get("text", "") if isinstance(block, dict) else getattr(block, "text", "")
-                                       for block in blocks)
-                    try:
-                        content = self.role.parse(response, brief, self.ledger.identity)
-                        break
-                    except ValueError:
-                        self.ledger.call_end(self._last_call_id(task_id), "validation-error")
-                if content is None:
-                    raise RuntimeError("model output budget exhausted")
-            if self.test_controls:
-                content = self.ledger.apply_stimulus(task_id, row["run_id"], brief["revision"], content)
+                prechecked = self.role.precheck(brief, self.ledger.identity)
+                if prechecked is not None:
+                    content = prechecked
+                else:
+                    session_id = f"{self.ledger.identity}:{task_id}"
+                    remaining = self.deadline_seconds - (time.time() - row["created_at"])
+                    deadline = time.monotonic() + max(0, remaining)
+                    content = None
+                    while self.ledger.call_count(task_id) < self.max_calls and time.monotonic() < deadline:
+                        if self.provider == "scripted":
+                            inner = ScriptedModel(self.role.scripted_reply(brief, self.ledger.identity), self.model_id)
+                        else:
+                            inner = PiBrokerModel(ModelBroker(), model_id=self.model_id, session_id=session_id)
+                        model = RecordedModel(inner, self.ledger, task_id, session_id, self.provider,
+                                              self.model_id, deadline)
+                        agent = Agent(name=f"{self.role_name} agent", model=model, tools=[],
+                                      system_prompt=self.role.system_prompt(self.capability),
+                                      callback_handler=None)
+                        result = await agent.invoke_async(self.role.user_prompt(brief))
+                        message = result.message
+                        blocks = message.get("content", []) if isinstance(message, dict) else message.content
+                        response = "".join(block.get("text", "") if isinstance(block, dict) else getattr(block, "text", "")
+                                           for block in blocks)
+                        try:
+                            content = self.role.parse(response, brief, self.ledger.identity)
+                            break
+                        except ValueError:
+                            self.ledger.call_end(self._last_call_id(task_id), "validation-error")
+                    if content is None:
+                        raise RuntimeError("model output budget exhausted")
+                if self.test_controls:
+                    content, stimulus = self.ledger.apply_stimulus(task_id, row["run_id"],
+                                                                   brief["revision"], content)
             rendered = canonical(content)
             sha256 = hashlib.sha256(rendered.encode()).hexdigest()
             artifact = {"revision": brief["revision"], "sha256": sha256,
                         "author": self.ledger.identity, "content": rendered,
                         "action_id": row["action_id"], "run_id": row["run_id"],
                         "definition_digest": row["definition_digest"]}
-            self.ledger.finish(task_id, artifact)
+            self.ledger.finish(task_id, artifact, stimulus)
         except asyncio.CancelledError:
             # A stopped process leaves the committed Task working for recovery.
             raise

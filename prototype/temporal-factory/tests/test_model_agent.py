@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import sqlite3
 import sys
 import tempfile
 import time
@@ -25,8 +26,9 @@ AUTH = {"Authorization": "Bearer fixture-token"}
 
 
 class FakeRole:
-    def __init__(self, fail=False):
+    def __init__(self, fail=False, claim_text="Normal claim"):
         self.fail = fail
+        self.claim_text = claim_text
 
     def system_prompt(self, capability):
         return "Return the requested JSON."
@@ -36,7 +38,7 @@ class FakeRole:
 
     def scripted_reply(self, brief, identity):
         return canonical({"kind": "verified_report@1", "revision": brief["revision"],
-                          "markdown": "A report.", "claims": [{"id": "C1", "text": "Normal claim", "evidence": ["E1"]}]})
+                          "markdown": "A report.", "claims": [{"id": "C1", "text": self.claim_text, "evidence": ["E1"]}]})
 
     def parse(self, text, brief, identity):
         if self.fail:
@@ -202,6 +204,51 @@ class ModelAgentTests(unittest.TestCase):
             self.assertIn("Next run only.", done["artifacts"][0]["parts"][0]["data"]["content"])
             self.assertEqual([row["run_id"] for row in client.get("/_test/stimulus-log", headers=AUTH).json()],
                              ["new-run"])
+
+    def test_stimulus_log_committed_before_finish_recovers_one_identical_artifact(self):
+        body = {"append_claim": {"text": "Planted defect.", "evidence": ["E1"]},
+                "revisions": ["r1"]}
+        original_finish = model_agent.Ledger.finish
+        interrupted = []
+
+        def die_after_log(ledger, task_id, artifact, stimulus=None):
+            if stimulus is not None and not interrupted:
+                with ledger.connect() as db:
+                    db.execute("""INSERT INTO stimulus_log
+                        (stimulus_id,run_id,revision,task_id,planted_text,sha256_after,content_after)
+                        VALUES (?,?,?,?,?,?,?)""", tuple(stimulus[key] for key in (
+                            "stimulus_id", "run_id", "revision", "task_id", "planted_text",
+                            "sha256_after", "content_after")))
+                interrupted.append(stimulus)
+                raise asyncio.CancelledError("process stopped before Task finish")
+            return original_finish(ledger, task_id, artifact, stimulus)
+
+        with patch.object(model_agent.Ledger, "finish", die_after_log):
+            with TestClient(self.app(test_controls=True)) as client:
+                self.assertTrue(client.post("/_test/stimulus", json=body, headers=AUTH).json()["armed"])
+                task = client.post("/", json=send(command()), headers=AUTH).json()["result"]
+                deadline = time.monotonic() + 5
+                while not interrupted and time.monotonic() < deadline:
+                    time.sleep(0.02)
+                self.assertEqual(len(interrupted), 1)
+                self.assertEqual(client.post("/", json=get(task["id"]), headers=AUTH).json()["result"]["status"]["state"],
+                                 "working")
+
+        self.roles["synthesis"] = FakeRole(claim_text="Different recovered model output")
+        with TestClient(self.app(port=45749, test_controls=True)) as client:
+            done = completed(client, task["id"])
+            artifact = done["artifacts"][0]["parts"][0]["data"]
+            content = json.loads(artifact["content"])
+            self.assertEqual(content["claims"][0]["text"], "Normal claim")
+            self.assertEqual(content["claims"][1], {"id": "C2", "text": "Planted defect.", "evidence": ["E1"]})
+            self.assertEqual(artifact["sha256"], interrupted[0]["sha256_after"])
+            self.assertEqual(client.get("/_test/stimulus-log", headers=AUTH).json(), [
+                {"run_id": "run-1", "revision": "r1", "task_id": task["id"],
+                 "planted_text": "Planted defect.", "sha256_after": artifact["sha256"]}])
+        with sqlite3.connect(self.state / "model-agent.sqlite3") as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM stimulus_log").fetchone()[0], 1)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM model_calls WHERE task_id=?",
+                                        (task["id"],)).fetchone()[0], 1)
 
 
 if __name__ == "__main__":

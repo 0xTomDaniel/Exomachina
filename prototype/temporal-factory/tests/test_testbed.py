@@ -1,5 +1,4 @@
 """Pure testbed metadata and authoring closure checks."""
-import copy
 import json
 import sys
 import tempfile
@@ -11,6 +10,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "services"))
 
+from authoring import materialize  # noqa: E402
 from definition import digest, validate  # noqa: E402
 from testbed import (QUALITY_POLICY, SERVICE_NAMES, REPORT_CAPABILITIES, REPORT_NAMES,
                      REPORT_QUALITY_POLICY, binding_records, contract_records, down,
@@ -56,24 +56,19 @@ class TestbedTests(unittest.TestCase):
                              "/receipts/{id}" if name == "release" else "/fixture/actions/{id}")
 
     def test_template_materializes_and_validates_with_generated_bindings(self):
-        template = json.loads((ROOT / "definitions" / "v1-template.json").read_text())
-        self.assertEqual(template["run_inputs"]["outcome_mode"]["enum"],
-                         ["after_first_repair", "never"])
+        template = json.loads((ROOT / "definitions" / "report-template.json").read_text())
         self.assertEqual(template["run_inputs"]["question"], {
-            "type": "string", "required": False, "source": "caller",
+            "type": "string", "required": True, "source": "caller",
             "allowed_actors": ["fixture-operator"], "may_affect_acceptance": False,
         })
-        child = copy.deepcopy(template["child"])
-        child_digest = digest(child)
-        root = copy.deepcopy(template["root"])
-        for node in root["nodes"].values():
-            if node["type"] == "nested_factory" and node["child_digest"] == "@child":
-                node["child_digest"] = child_digest
-        package = {"schema": template["schema"], "root": root,
-                   "children": {child_digest: child},
-                   "bindings": copy.deepcopy(self.bindings),
-                   "run_inputs": copy.deepcopy(template["run_inputs"])}
-        self.assertEqual(validate(package, self.bindings), digest(package))
+        health = {name: {"identity": "fixture-" + name} for name in REPORT_NAMES}
+        bindings = report_bindings(health, 45740)
+        packet = json.loads((ROOT / "packets" / "exo-qualification-2026-09-23" /
+                             "packet.json").read_text())
+        package = materialize(template, bindings, evidence_packet=packet)
+        self.assertEqual(package["evidence_packet"], packet)
+        self.assertIn(digest(template["child"]), package["children"])
+        self.assertEqual(validate(package, bindings), digest(package))
 
     def test_report_profile_starts_agents_and_writes_pinned_files(self):
         home = Path(tempfile.mkdtemp(prefix="exo-sf-agents-testbed-", dir="/tmp"))
