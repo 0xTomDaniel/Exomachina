@@ -159,7 +159,7 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.e["authoring"]["outcome"]["model"]["live"] = True
         self.fails("SF-1")
 
-    def test_f2_live_synthetic_evidence_binding(self):
+    def _live_with_synthetic_prerequisite(self) -> dict:
         path = ROOT / "evidence" / "single-factory" / "scripted-7.json"
         synthetic = {key: self.e[key] for key in ("status", "provider", "checks",
             "git_commit", "checker_sha256", "interpreter_build", "manifest_digest", "route_inventory")}
@@ -169,13 +169,42 @@ class ReviewTwoCheckerTests(unittest.TestCase):
             "git_commit", "checker_sha256", "interpreter_build", "manifest_digest", "route_inventory")}
         self.e["synthetic_scenario"] = synthetic
         self.e["provider"] = "codex-subscription"
+        return synthetic
+
+    def test_f2_live_synthetic_evidence_binding(self):
+        synthetic = self._live_with_synthetic_prerequisite()
+        valid_sha = synthetic["evidence_sha256"]
         with patch.object(Path, "read_bytes", side_effect=AssertionError("checker read bytes")), \
              patch.object(Path, "read_text", side_effect=AssertionError("checker read text")):
             self.assertTrue(check_evidence(self.e)["G-7"]["pass"])
         synthetic["evidence_sha256"] = "wrong"
         self.fails("G-7")
-        synthetic["evidence_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+        synthetic["evidence_sha256"] = valid_sha
         synthetic["record"]["git_commit"] = "wrong"
+        self.fails("G-7")
+
+    def test_live_g7_accepts_different_manifest(self):
+        synthetic = self._live_with_synthetic_prerequisite()
+        live_manifest = "0" * 64
+        self.assertNotEqual(live_manifest, synthetic["manifest_digest"])
+        self.e["manifest_digest"] = live_manifest
+        for route in self.e["routes"].values():
+            for workflow in route["workflows"]:
+                workflow["manifest_digest"] = live_manifest
+        self.assertEqual(synthetic["record"]["manifest_digest"], synthetic["manifest_digest"])
+        self.assertTrue(check_evidence(self.e)["G-7"]["pass"])
+
+    def test_live_g7_rejects_different_interpreter_build(self):
+        synthetic = self._live_with_synthetic_prerequisite()
+        synthetic["interpreter_build"] = "b-other-interpreter"
+        synthetic["record"]["interpreter_build"] = synthetic["interpreter_build"]
+        self.fails("G-7")
+
+    def test_live_g7_rejects_different_checker_sha(self):
+        synthetic = self._live_with_synthetic_prerequisite()
+        synthetic["checker_sha256"] = "0" * 64
+        synthetic["record"]["checker_sha256"] = synthetic["checker_sha256"]
+        self.assertNotEqual(synthetic["checker_sha256"], self.e["checker_sha256"])
         self.fails("G-7")
 
 
