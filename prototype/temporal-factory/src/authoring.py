@@ -1,13 +1,18 @@
 """Bounded Strands authoring of validated factory graph packages."""
 from __future__ import annotations
 
+import asyncio
 from copy import deepcopy
 from dataclasses import dataclass, field
 import importlib.util
 import json
 import os
 from pathlib import Path
+import threading
+import time
 from typing import Protocol
+from urllib.parse import urlparse
+import uuid
 
 from strands import Agent, tool
 from strands.models import Model
@@ -67,10 +72,53 @@ class AuthoringOutcome:
     model: dict
     approval: dict | None = None
     tool_calls: list[dict] = field(default_factory=list)
+    abort: dict | None = None
+    limits: dict = field(default_factory=dict)
+
+
+class AuthoringBudgetExhausted(RuntimeError):
+    """An author exceeded its hard model-call or elapsed-time allowance."""
+
+
+class _BudgetedModel(Model):
+    def __init__(self, model: Model, *, max_calls: int, deadline: float, state: dict):
+        self.model = model
+        self.max_calls = max_calls
+        self.deadline = deadline
+        self.state = state
+        self.calls = 0
+
+    def update_config(self, **model_config):
+        self.model.update_config(**model_config)
+
+    def get_config(self):
+        return self.model.get_config()
+
+    async def structured_output(self, *args, **kwargs):
+        raise NotImplementedError("authoring uses the bounded tool loop")
+        yield  # pragma: no cover
+
+    async def stream(self, messages, tool_specs=None, system_prompt=None, **kwargs):
+        remaining = self.deadline - time.monotonic()
+        if self.state["reason"] is not None:
+            raise AuthoringBudgetExhausted(self.state["reason"])
+        if remaining <= 0:
+            raise AuthoringBudgetExhausted("deadline")
+        if self.calls >= self.max_calls:
+            raise AuthoringBudgetExhausted("model_call_limit")
+        self.calls += 1
+        try:
+            async with asyncio.timeout(remaining):
+                async for event in self.model.stream(messages, tool_specs=tool_specs,
+                                                      system_prompt=system_prompt, **kwargs):
+                    yield event
+        except TimeoutError as error:
+            raise AuthoringBudgetExhausted("deadline") from error
 
 
 class GraphAuthor(Protocol):
     def author(self, brief: str, *, approved_bindings: dict, max_rounds: int,
+               max_model_calls: int, max_tool_calls: int, deadline_seconds: float,
                base_template: dict | None = None) -> AuthoringOutcome: ...
 
 
@@ -104,54 +152,76 @@ class StrandsGraphAuthor:
         self.model = model
 
     def author(self, brief: str, *, approved_bindings: dict, max_rounds: int,
+               max_model_calls: int, max_tool_calls: int, deadline_seconds: float,
                base_template: dict | None = None) -> AuthoringOutcome:
+        started = time.monotonic()
+        deadline = started + deadline_seconds
         rounds: list[dict] = []
         calls: list[dict] = []
         seen: dict[str, dict] = {}
         accepted: dict = {}
+        state: dict = {"reason": None, "tool_calls": 0}
+        tool_lock = threading.RLock()
+        limits = {"max_rounds": max_rounds, "max_model_calls": max_model_calls,
+                  "max_tool_calls": max_tool_calls, "deadline_seconds": deadline_seconds}
         vocabulary = authoring_vocabulary(approved_bindings)
+
+        def check_tool_call(draft_digest: str | None = None) -> None:
+            with tool_lock:
+                if state["reason"] is not None:
+                    raise AuthoringBudgetExhausted(state["reason"])
+                if time.monotonic() >= deadline:
+                    state["reason"] = "deadline"
+                elif len(rounds) >= max_rounds and (
+                        not any(round_record["valid"] for round_record in rounds) or
+                        (draft_digest is not None and draft_digest not in seen)):
+                    state["reason"] = "round_limit"
+                elif state["tool_calls"] >= max_tool_calls:
+                    state["reason"] = "tool_call_limit"
+                if state["reason"] is not None:
+                    raise AuthoringBudgetExhausted(state["reason"])
+                state["tool_calls"] += 1
 
         def evaluate(template_json: str, action: str) -> str:
             try:
                 template = json.loads(template_json)
                 draft_digest = digest(template)
             except (ValueError, TypeError) as error:
+                template = None
+                parse_error = error
                 draft_digest = digest(template_json)
-                if len(rounds) >= max_rounds:
-                    result = {"ok": False, "draft_digest": draft_digest,
-                              "errors": [{"code": "round_limit", "message": "authoring round cap reached"}]}
-                else:
-                    result = {"ok": False, "draft_digest": draft_digest, "errors": _errors(error)}
-                    rounds.append({"round": len(rounds) + 1, "draft_digest": draft_digest,
-                                   "valid": False, "errors": deepcopy(result["errors"])})
-                calls.append({"tool": action, "draft_digest": draft_digest, "result": result})
-                return _json(result)
-            if draft_digest in seen:
-                result = deepcopy(seen[draft_digest])
-            elif len(rounds) >= max_rounds:
-                result = {"ok": False, "draft_digest": draft_digest,
-                          "errors": [{"code": "round_limit", "message": "authoring round cap reached"}]}
             else:
-                try:
-                    package = materialize(template, approved_bindings)
-                    package_digest = validate(package, approved_bindings)
-                    result = {"ok": True, "draft_digest": draft_digest,
-                              "package_digest": package_digest, "errors": []}
-                    accepted[draft_digest] = (template, package, package_digest)
-                except (ValueError, TypeError, KeyError) as error:
-                    result = {"ok": False, "draft_digest": draft_digest,
-                              "errors": _errors(error, template)}
-                seen[draft_digest] = deepcopy(result)
-                rounds.append({"round": len(rounds) + 1, "draft_digest": draft_digest,
-                               "valid": result["ok"], "errors": deepcopy(result["errors"])})
-            if action == "submit_draft" and result["ok"]:
-                accepted["submitted"] = accepted[draft_digest]
-            calls.append({"tool": action, "draft_digest": draft_digest, "result": deepcopy(result)})
-            return _json(result)
+                parse_error = None
+            with tool_lock:
+                check_tool_call(draft_digest)
+                if draft_digest in seen:
+                    result = deepcopy(seen[draft_digest])
+                else:
+                    if parse_error is not None:
+                        result = {"ok": False, "draft_digest": draft_digest,
+                                  "errors": _errors(parse_error)}
+                    else:
+                        try:
+                            package = materialize(template, approved_bindings)
+                            package_digest = validate(package, approved_bindings)
+                            result = {"ok": True, "draft_digest": draft_digest,
+                                      "package_digest": package_digest, "errors": []}
+                            accepted[draft_digest] = (template, package, package_digest)
+                        except (ValueError, TypeError, KeyError) as error:
+                            result = {"ok": False, "draft_digest": draft_digest,
+                                      "errors": _errors(error, template)}
+                    seen[draft_digest] = deepcopy(result)
+                    rounds.append({"round": len(rounds) + 1, "draft_digest": draft_digest,
+                                   "valid": result["ok"], "errors": deepcopy(result["errors"])})
+                if action == "submit_draft" and result["ok"]:
+                    accepted["submitted"] = accepted[draft_digest]
+                calls.append({"tool": action, "draft_digest": draft_digest, "result": deepcopy(result)})
+                return _json(result)
 
         @tool
         def describe_vocabulary() -> str:
             """Return the allowed graph grammar, bounds, and approved service names."""
+            check_tool_call()
             calls.append({"tool": "describe_vocabulary", "result": vocabulary})
             return _json(vocabulary)
 
@@ -173,39 +243,79 @@ class StrandsGraphAuthor:
             """
             return evaluate(template_json, "submit_draft")
 
-        agent = Agent(model=self.model, tools=[describe_vocabulary, validate_draft, submit_draft],
+        budgeted = _BudgetedModel(self.model, max_calls=max_model_calls, deadline=deadline, state=state)
+        agent = Agent(model=budgeted, tools=[describe_vocabulary, validate_draft, submit_draft],
                       system_prompt=("Author a bounded factory graph. Call describe_vocabulary first. "
                                      "Use validate_draft and revise from its errors. Submit only a valid "
                                      "template. A submission must pass package validation. "),
                       callback_handler=None)
         prompt = _json({"brief": brief, "base_template": base_template, "max_rounds": max_rounds})
-        agent(prompt)
+        abort_reason = None
+        try:
+            agent(prompt)
+        except Exception as error:
+            seen_errors = set()
+            current = error
+            while current is not None and id(current) not in seen_errors:
+                seen_errors.add(id(current))
+                if isinstance(current, AuthoringBudgetExhausted):
+                    abort_reason = str(current)
+                    break
+                current = current.__cause__ or current.__context__
+            if abort_reason is None:
+                raise
+        if abort_reason is None and state["reason"] is not None:
+            abort_reason = state["reason"]
+        if abort_reason is None and time.monotonic() >= deadline:
+            abort_reason = "deadline"
         config = self.model.get_config()
         model_id = config.get("model_id", type(self.model).__name__) if isinstance(config, dict) else type(self.model).__name__
         scripted = isinstance(self.model, ScriptedAuthoringModel)
-        model_info = {"kind": "scripted" if scripted else "strands",
-                      "id": model_id, "live": not scripted}
+        broker = getattr(self.model, "broker", None) is not None
+        model_info = {"kind": "scripted" if scripted else "broker" if broker else "strands",
+                      "id": model_id,
+                      "provider": getattr(self.model, "provider", "scripted" if scripted else "custom"),
+                      "billing": getattr(self.model, "billing", "none" if scripted else "unknown"),
+                      "live": bool(getattr(self.model, "live", False))}
+        if abort_reason is not None:
+            abort = {"reason": abort_reason, "model_calls": budgeted.calls,
+                     "tool_calls": state["tool_calls"],
+                     "elapsed_seconds": round(time.monotonic() - started, 3)}
+            return AuthoringOutcome("aborted", None, None, None, rounds, model_info,
+                                    None, calls, abort, limits)
         if "submitted" in accepted:
             template, package, package_digest = accepted["submitted"]
             approval = approve(package, approver="authoring-session",
                                policy={"mode": "auto", "approved_bindings": approved_bindings})
             return AuthoringOutcome("approved", template, package, package_digest,
-                                    rounds, model_info, approval, calls)
-        status = "round_limit" if len(rounds) >= max_rounds else "no_submission"
-        return AuthoringOutcome(status, None, None, None, rounds, model_info, None, calls)
+                                    rounds, model_info, approval, calls, None, limits)
+        return AuthoringOutcome("no_submission", None, None, None, rounds, model_info,
+                                None, calls, None, limits)
 
 
 class AuthoringSession:
-    def __init__(self, author: GraphAuthor, *, approved_bindings: dict, max_rounds: int = 4):
-        if type(max_rounds) is not int or max_rounds < 1:
-            raise ValueError("max_rounds must be a positive integer")
+    def __init__(self, author: GraphAuthor, *, approved_bindings: dict, max_rounds: int = 4,
+                 max_model_calls: int = 12, max_tool_calls: int = 24,
+                 deadline_seconds: float = 600):
+        for name, value in (("max_rounds", max_rounds), ("max_model_calls", max_model_calls),
+                            ("max_tool_calls", max_tool_calls)):
+            if type(value) is not int or value < 1:
+                raise ValueError(f"{name} must be a positive integer")
+        if not isinstance(deadline_seconds, (int, float)) or deadline_seconds <= 0:
+            raise ValueError("deadline_seconds must be positive")
         self.author = author
         self.approved_bindings = deepcopy(approved_bindings)
         self.max_rounds = max_rounds
+        self.max_model_calls = max_model_calls
+        self.max_tool_calls = max_tool_calls
+        self.deadline_seconds = deadline_seconds
 
     def run(self, brief: str, base_template: dict | None = None) -> AuthoringOutcome:
         return self.author.author(brief, approved_bindings=self.approved_bindings,
-                                  max_rounds=self.max_rounds, base_template=base_template)
+                                  max_rounds=self.max_rounds, max_model_calls=self.max_model_calls,
+                                  max_tool_calls=self.max_tool_calls,
+                                  deadline_seconds=self.deadline_seconds,
+                                  base_template=base_template)
 
 
 def _scripted_first_draft(base: dict | None) -> dict:
@@ -309,29 +419,66 @@ class ScriptedAuthoringModel(Model):
 
 
 def model_from_environment() -> tuple[Model | None, str]:
-    """Select an installed, configured provider without touching the network."""
-    reasons = []
-    if os.environ.get("ANTHROPIC_API_KEY"):
-        if importlib.util.find_spec("anthropic"):
-            from strands.models import AnthropicModel
-            return AnthropicModel(), "Anthropic provider available"
-        reasons.append("anthropic package unavailable")
+    """Select only the requested billing path; default to subscription broker."""
+    provider = os.environ.get("EXO_AUTHOR_PROVIDER") or "codex-subscription"
+    base_url = os.environ.get("EXO_CODEX_BASE_URL")
+    if provider in {"codex-subscription", "synthetic-loopback"}:
+        if provider == "codex-subscription" and "EXO_CODEX_BASE_URL" in os.environ:
+            return None, "codex-subscription: EXO_CODEX_BASE_URL override is fixture-only"
+        if base_url is not None:
+            parsed = urlparse(base_url)
+            if parsed.scheme not in {"http", "https"} or parsed.hostname not in {
+                    "localhost", "127.0.0.1", "::1"} or parsed.username or parsed.password:
+                return None, "EXO_CODEX_BASE_URL must be a loopback URL"
+        if provider == "synthetic-loopback" and not base_url:
+            return None, "synthetic-loopback requires a loopback EXO_CODEX_BASE_URL"
+        from model_broker import DEFAULT_HOME, ModelBroker, PiBrokerModel
+        if provider == "synthetic-loopback":
+            explicit_home = os.environ.get("EXO_MODEL_HOME")
+            if not explicit_home or Path(explicit_home).resolve() == DEFAULT_HOME.resolve():
+                return None, "synthetic-loopback requires an explicit non-default EXO_MODEL_HOME"
+            if not (Path(explicit_home) / "FIXTURE_STORE").is_file():
+                return None, "synthetic-loopback requires EXO_MODEL_HOME/FIXTURE_STORE"
+        broker = ModelBroker()
+        if provider == "codex-subscription":
+            try:
+                health = broker.ensure_started(reason="authoring-selection")
+            except (OSError, RuntimeError, ValueError) as error:
+                return None, f"codex-subscription: broker unavailable ({type(error).__name__})"
+            if not health.get("signed_in"):
+                return None, "codex-subscription: not signed in; run node broker/exo-model.mjs login"
+        model = PiBrokerModel(broker, model_id=os.environ.get("EXO_AUTHOR_MODEL") or "gpt-6-sol",
+                              session_id=str(uuid.uuid4()))
+        model.provider = provider
+        model.billing = "subscription" if provider == "codex-subscription" else "none"
+        model.live = provider == "codex-subscription" and not bool(base_url)
+        return model, f"{provider} broker available"
+    if provider == "anthropic":
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            return None, "anthropic: ANTHROPIC_API_KEY absent"
+        if not importlib.util.find_spec("anthropic"):
+            return None, "anthropic: package unavailable"
+        from strands.models import AnthropicModel
+        model = AnthropicModel()
+    elif provider == "bedrock":
+        aws_configured = any(key.startswith("AWS_") and value for key, value in os.environ.items()) or any(
+            (Path.home() / ".aws" / name).exists() for name in ("credentials", "config"))
+        if not aws_configured:
+            return None, "bedrock: AWS credentials/configuration absent"
+        if not importlib.util.find_spec("boto3"):
+            return None, "bedrock: boto3 package unavailable"
+        from strands.models import BedrockModel
+        model = BedrockModel()
+    elif provider == "openai-api":
+        if not os.environ.get("OPENAI_API_KEY"):
+            return None, "openai-api: OPENAI_API_KEY absent"
+        if not importlib.util.find_spec("openai"):
+            return None, "openai-api: package unavailable"
+        from strands.models import OpenAIModel
+        model = OpenAIModel()
     else:
-        reasons.append("ANTHROPIC_API_KEY absent")
-    aws_configured = any(key.startswith("AWS_") and value for key, value in os.environ.items()) or any(
-        (Path.home() / ".aws" / name).exists() for name in ("credentials", "config"))
-    if aws_configured:
-        if importlib.util.find_spec("boto3"):
-            from strands.models import BedrockModel
-            return BedrockModel(), "Bedrock provider available"
-        reasons.append("boto3 package unavailable")
-    else:
-        reasons.append("AWS credentials/configuration absent")
-    if os.environ.get("OPENAI_API_KEY"):
-        if importlib.util.find_spec("openai"):
-            from strands.models import OpenAIModel
-            return OpenAIModel(), "OpenAI provider available"
-        reasons.append("openai package unavailable")
-    else:
-        reasons.append("OPENAI_API_KEY absent")
-    return None, "; ".join(reasons)
+        return None, f"unknown EXO_AUTHOR_PROVIDER: {provider}"
+    model.provider = provider
+    model.billing = "api"
+    model.live = False
+    return model, f"{provider} provider available"

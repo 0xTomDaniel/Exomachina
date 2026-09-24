@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from unittest.mock import patch
 from pathlib import Path
 import sys
 import unittest
@@ -84,6 +85,8 @@ class AuthoringTests(unittest.TestCase):
         self.assertEqual([call["tool"] for call in outcome.tool_calls],
                          ["describe_vocabulary", "validate_draft", "submit_draft"])
         self.assertFalse(outcome.model["live"])
+        self.assertEqual((outcome.model["kind"], outcome.model["provider"], outcome.model["billing"]),
+                         ("scripted", "scripted", "none"))
         self.assertEqual(outcome.approval["status"], "approved")
         self.assertEqual(outcome.package_digest, validate(outcome.package, self.bindings))
         v1_digest = validate(materialize(self.v1, self.bindings), self.bindings)
@@ -96,11 +99,12 @@ class AuthoringTests(unittest.TestCase):
 
     def test_round_cap_blocks_corrected_submission(self):
         outcome = self.scripted(max_rounds=1)
-        self.assertEqual(outcome.status, "round_limit")
+        self.assertEqual(outcome.status, "aborted")
+        self.assertEqual(outcome.abort["reason"], "round_limit")
         self.assertEqual(len(outcome.rounds), 1)
         self.assertFalse(outcome.rounds[0]["valid"])
         self.assertIsNone(outcome.package)
-        self.assertEqual(outcome.tool_calls[-1]["result"]["errors"][0]["code"], "round_limit")
+        self.assertIsNone(outcome.approval)
 
     def test_submit_rejects_unknown_binding_and_arbitrary_node(self):
         valid = self.scripted().template
@@ -123,7 +127,9 @@ class AuthoringTests(unittest.TestCase):
         vocabulary = authoring_vocabulary(self.bindings)
         self.assertEqual(vocabulary["route_values"]["join.route_status"],
                          ["clear", "requires_scope"])
-        model, reason = model_from_environment()
+        with patch("model_broker.ModelBroker.ensure_started", return_value={"signed_in": False}), \
+                patch.dict("os.environ", {"EXO_AUTHOR_PROVIDER": "codex-subscription"}, clear=True):
+            model, reason = model_from_environment()
         self.assertIsNone(model)
         self.assertTrue(reason)
 
