@@ -523,28 +523,52 @@ def create_app(instance_dir: Path):
 
 def init_instance(instance_dir: Path, *, name: str, mode: str, port: int, home: Path,
                   runner: dict | None = None, wait_seconds: int = 900) -> dict:
-    instance_dir.mkdir(parents=True, exist_ok=True)
-    config = {"name": name, "mode": mode, "port": port, "home": str(home),
-              "runner": runner or {}, "director_wait_seconds": wait_seconds,
-              "capability": {"id": "verified-research@1", "name": "Verified research",
-                             "description": "Researches a question with independent counter-evidence "
-                                            "review; returns one accepted report and release receipt.",
-                             "tags": ["research", "verified"]}}
-    path = instance_dir / "instance.json"
-    if path.exists():
-        existing = json.loads(path.read_text())
-        if existing != config:
-            raise FileExistsError("instance already configured differently")
-        return existing
-    path.write_text(json.dumps(config, indent=2, sort_keys=True) + "\n")
-    return config
+    import fcntl
+    import os
+
+    home = home.resolve()
+    instance_dir = instance_dir.resolve()
+    instances = home / "instances"
+    instances.mkdir(parents=True, exist_ok=True)
+    with (instances / "provision.lock").open("a+") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        config = {"name": name, "mode": mode, "port": port, "home": str(home),
+                  "runner": {}, "director_wait_seconds": wait_seconds,
+                  "capability": {"id": "verified-research@1", "name": "Verified research",
+                                 "description": "Researches a question with independent counter-evidence "
+                                                "review; returns one accepted report and release receipt.",
+                                 "tags": ["research", "verified"]}}
+        path = instance_dir / "instance.json"
+        if path.exists():
+            existing = json.loads(path.read_text())
+            if existing != config:
+                raise FileExistsError("instance already configured differently")
+        for other in instances.glob("*/instance.json"):
+            if other.parent.resolve() != instance_dir and json.loads(other.read_text()).get("port") == port:
+                raise ValueError(f"harness port {port} already configured for {other.parent}")
+        if mode == "factory":
+            requested = runner or {}
+            Runner(home, port_base=requested.get("port_base", os.getenv("EXO_RUNNER_PORT_BASE")),
+                   member_base=requested.get("member_base", os.getenv("EXO_RUNNER_MEMBER_BASE")))
+        if path.exists():
+            return existing
+        instance_dir.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(config, indent=2, sort_keys=True) + "\n")
+        return config
 
 
 if __name__ == "__main__":
+    import fcntl
+
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["serve"])
     parser.add_argument("--instance-dir", type=Path, required=True)
     args = parser.parse_args()
     config = load_config(args.instance_dir)
-    uvicorn.run(create_app(args.instance_dir), host="127.0.0.1", port=config["port"],
-                log_level="warning")
+    with (args.instance_dir / "harness.lock").open("a+") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise RuntimeError(f"instance already serving: {args.instance_dir}") from error
+        uvicorn.run(create_app(args.instance_dir), host="127.0.0.1", port=config["port"],
+                    log_level="warning")
