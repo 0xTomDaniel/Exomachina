@@ -64,7 +64,9 @@ class AgentRoleTests(unittest.TestCase):
         synth = ROLES["synthesis"].system_prompt("report_synthesis@1")
         for section in REPORT_SECTIONS:
             self.assertIn(section, synth)
-        self.assertIn("blocking", ROLES["quality"].system_prompt("report_quality_review@1"))
+        quality = ROLES["quality"].system_prompt("report_quality_review@1")
+        self.assertIn("blocking", quality)
+        self.assertIn("placeholder-only required report section is blocking", quality)
         self.assertEqual(RUBRIC_DIGEST, digest(RUBRIC))
 
     def test_research_scripted_parses_and_fence_is_tolerated(self):
@@ -257,6 +259,51 @@ class AgentRoleTests(unittest.TestCase):
         self.assertIn("at least three claims required", result["reasons"])
         self.assertTrue(any("missing Next priority" in reason for reason in result["reasons"]))
         self.assertFalse(usefulness_check({"claims": [], "markdown": ""}, self.packet)["ok"])
+
+    def test_usefulness_rejects_tbd_under_every_heading(self):
+        report = self.report()
+        report["markdown"] = "\n\n".join(f"## {section}\nTBD" for section in REPORT_SECTIONS)
+        result = usefulness_check(report, self.packet)
+        self.assertFalse(result["ok"])
+        for section in REPORT_SECTIONS:
+            self.assertIn(f"{section}: placeholder text", result["reasons"])
+
+    def test_usefulness_rejects_short_one_line_sections(self):
+        report = self.report()
+        report["markdown"] = "\n\n".join(
+            f"## {section}\nThe packet records a prior result." for section in REPORT_SECTIONS
+        )
+        result = usefulness_check(report, self.packet)
+        self.assertFalse(result["ok"])
+        for section in REPORT_SECTIONS:
+            self.assertTrue(any(reason.startswith(f"{section}: fewer than 25 prose words")
+                                for reason in result["reasons"]))
+
+    def test_usefulness_does_not_count_fenced_code_as_prose(self):
+        report = self.report()
+        report["markdown"] = "\n\n".join(
+            f"## {section}\nThe packet records a prior result.\n```text\n" +
+            ("many code words " * 20) + "\n```" for section in REPORT_SECTIONS
+        )
+        result = usefulness_check(report, self.packet)
+        self.assertFalse(result["ok"])
+        self.assertEqual(sum("fewer than 25 prose words" in reason for reason in result["reasons"]), 4)
+
+    def test_usefulness_accepts_realistic_report(self):
+        report = self.report()
+        report["markdown"] = """## Live-proven
+The packet records a live broker-backed Director on the earlier C route. That run reached a Director wait, chose abort, and completed without a release. Its observations cover the stated account and model.
+
+## Fixture-only
+The earlier Quality reviewer, capability content, and HTTP release receiver were fixtures. Those components exercised the workflow wiring and receipt path under test control. Their use does not establish independent agent behavior in the previous run.
+
+## Remaining gaps
+The packet leaves independent research, synthesis, and Quality agent work unproven. It also identifies remote attestation and operational hardening as unbuilt. These gaps need separate evidence before a broader qualification claim can be supported.
+
+## Next priority
+Run the report graph with separate model-backed research, synthesis, and Quality processes. Compare their outputs with the pinned packet, inspect the accepted report, and retain the HTTP receiver's fixture label throughout the route evidence.
+"""
+        self.assertEqual(usefulness_check(report, self.packet), {"ok": True, "reasons": []})
 
     def test_every_packet_excerpt_is_verbatim_from_pinned_commit(self):
         self.assertTrue(8 <= len(self.packet["items"]) <= 14)

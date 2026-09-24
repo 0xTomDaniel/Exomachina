@@ -193,7 +193,8 @@ class Role:
         return ("You are the independent Quality reviewer. Review the candidate against the packet, not its author. "
                 "Return one JSON object only with accepted (boolean) and findings (array). Each finding has "
                 "claim_id (C-id or null), severity (blocking or minor), problem (specific text), and evidence (packet IDs). "
-                "A factual contradiction, unsupported claim, fixture called live, or missing required report section is blocking. "
+                "A factual contradiction, unsupported claim, fixture called live, or a missing or placeholder-only "
+                "required report section is blocking. "
                 "Style issues may be minor. Inspect every claim and the markdown. "
                 "accepted must be false exactly when any finding is blocking. Rubric: " + _json(RUBRIC))
 
@@ -277,6 +278,7 @@ class Role:
         return None
 
     def scripted_reply(self, brief: dict, identity: str) -> str:
+        """Return synthetic fixture output; scripted Quality is route control, not independent detection."""
         ids = _packet_ids(brief)
         if self.name == "research":
             capability = brief["capability"]
@@ -338,14 +340,27 @@ class Role:
                 seen.add(statement)
                 claims.append({"id": f"C{len(claims) + 1}", "text": statement, "evidence": selected})
             _require(len(claims) >= 3, "scripted synthesis: too few safe claims")
-            lines = ["## Live-proven", claims[0]["text"], "", "## Fixture-only",
-                     claims[1]["text"], "", "## Remaining gaps", claims[2]["text"], "",
-                     "## Next priority", claims[-1]["text"]]
+            lines = [
+                "## Live-proven", claims[0]["text"] + " The packet describes earlier qualification of a "
+                "broker-backed Director in the C route. That run ended with an abort and no release; it does not "
+                "establish independent model-backed research or Quality.", "",
+                "## Fixture-only", claims[1]["text"] + " Those earlier fixtures exercised workflow and release "
+                "wiring under test control. The prior qualification does not turn the Quality reviewer, "
+                "capability outputs, or HTTP receiver into live independent agents.", "",
+                "## Remaining gaps", claims[2]["text"] + " The record still leaves independent agent behavior, "
+                "remote attestation, and operational hardening for this spike to examine. Evidence from the "
+                "earlier run covers only its stated account, model, and route.", "",
+                "## Next priority", claims[-1]["text"] + " Run the report graph with separate research, "
+                "synthesis, and Quality agent processes, then compare their outputs against the pinned packet. "
+                "Keep the release receiver explicitly labeled as an HTTP fixture.",
+            ]
             return _json({"kind": "verified_report@1", "revision": brief["revision"],
                           "packet_digest": brief["packet_digest"], "question": brief["question"],
                           "title": "Qualification report", "markdown": "\n".join(lines), "claims": claims})
         _require(self.name == "quality", "role: unsupported")
         content = _candidate(brief)
+        # Synthetic route control: exact match against the scenario stimulus catalog.
+        # This supports no Quality independence or packet-based detection claim.
         planted = json.loads((Path(__file__).resolve().parents[1] / "scenarios" / "sf_stimuli.json").read_text())
         planted_texts = {route["append_claim"]["text"] for route in planted.values()}
         findings = [{"claim_id": claim["id"], "severity": "blocking",
@@ -357,8 +372,38 @@ class Role:
 ROLES: dict[str, Role] = {name: Role(name) for name in ("research", "synthesis", "quality")}
 
 
+def _prose(body: str) -> str:
+    """Remove Markdown markup and code so only section prose contributes words."""
+    lines = []
+    fence = None
+    for line in re.sub(r"<!--.*?-->", "", body, flags=re.DOTALL).splitlines():
+        marker = re.match(r"^[ \t]*(`{3,}|~{3,})", line)
+        if marker:
+            run = marker.group(1)
+            if fence is None:
+                fence = run
+            elif run[0] == fence[0] and len(run) >= len(fence):
+                fence = None
+            continue
+        if fence is not None or re.match(r"^(?: {4}|\t)", line):
+            continue
+        lines.append(line)
+    prose = "\n".join(lines)
+    prose = re.sub(r"!\[[^\]]*\]\([^)]+\)", " ", prose)
+    prose = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", prose)
+    prose = re.sub(r"\[([^\]]+)\]\[[^\]]*\]", r"\1", prose)
+    prose = re.sub(r"`+[^`]*`+", " ", prose)
+    prose = re.sub(r"<[^>]*>", " ", prose)
+    prose = re.sub(r"https?://\S+", " ", prose)
+    prose = re.sub(r"(?m)^[ \t]*(?:[-*+]|[0-9]+\.)[ \t]+", "", prose)
+    return re.sub(r"[*_~>#|]", " ", prose)
+
+
 def usefulness_check(content: dict, packet: dict) -> dict:
-    """Check report readability and citation coverage without making a model decision."""
+    """Check report structure only; this is not semantic proof of answers or citations.
+
+    Semantic judgment is a separate labelled orchestrator reading of the report.
+    """
     reasons = []
     ids = {item.get("id") for item in packet.get("items", []) if isinstance(item, dict)} if isinstance(packet, dict) else set()
     claims = content.get("claims") if isinstance(content, dict) else None
@@ -373,7 +418,43 @@ def usefulness_check(content: dict, packet: dict) -> dict:
     if not isinstance(markdown, str) or not markdown.strip():
         reasons.append("markdown is empty")
     else:
+        sections = {}
+        current = None
+        body = []
+        fence = None
+        for line in markdown.splitlines(keepends=True):
+            marker = re.match(r"^[ \t]*(`{3,}|~{3,})", line)
+            if marker:
+                run = marker.group(1)
+                if fence is None:
+                    fence = run
+                elif run[0] == fence[0] and len(run) >= len(fence):
+                    fence = None
+            elif fence is None and not line.startswith(("    ", "\t")):
+                heading = re.match(r"^[ \t]*#{1,6}[ \t]+(.+?)[ \t]*$", line.rstrip("\r\n"))
+                if heading:
+                    if current is not None:
+                        sections.setdefault(current, []).append("".join(body))
+                    name = re.sub(r"[ \t]+#+[ \t]*$", "", heading.group(1)).strip()
+                    current = name if name in REPORT_SECTIONS else None
+                    body = []
+                    continue
+            if current is not None:
+                body.append(line)
+        if current is not None:
+            sections.setdefault(current, []).append("".join(body))
         for section in REPORT_SECTIONS:
-            if re.search(rf"(?m)^\s*#{{1,6}}\s+{re.escape(section)}\s*#*\s*$", markdown) is None:
+            bodies = sections.get(section, [])
+            if not bodies:
                 reasons.append(f"missing {section} heading")
+                continue
+            if len(bodies) > 1:
+                reasons.append(f"duplicate {section} heading")
+            prose = _prose(bodies[0])
+            if re.search(r"\b(?:TBD|TODO|N\s*/\s*A|to\s+be\s+determined|placeholder|lorem\s+ipsum)\b",
+                         prose, flags=re.IGNORECASE) or re.fullmatch(r"[\s.\u2026\u22ef*_~-]+", prose):
+                reasons.append(f"{section}: placeholder text")
+            words = re.findall(r"\b[^\W\d_]+(?:['’\-][^\W\d_]+)*\b", prose)
+            if len(words) < 25:
+                reasons.append(f"{section}: fewer than 25 prose words ({len(words)})")
     return {"ok": not reasons, "reasons": reasons}

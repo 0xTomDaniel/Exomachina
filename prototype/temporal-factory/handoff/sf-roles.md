@@ -35,3 +35,16 @@ Before the new test file: 112 tests, pass (after the required offline broker ins
 - These are unit-tested role behaviors. The independent agent service, integrated scripted scenario and live broker routes are owned by the other lanes and were not run here. No live model or credential was used.
 - The usefulness checker verifies claim count, packet citations, headings and non-empty markdown. The human/model review still decides whether the prose actually answers the question and whether each claim is supported by its cited excerpt.
 - No lane service, harness or runner process was started; no trial home was created.
+
+## Fix 2 (review 1)
+
+The worktree was at integration commit `8820d0f`. Review finding 1 is addressed by parsing the four required Markdown sections and requiring at least 25 prose words per section after stripping Markdown markup and code. Placeholder markers (`TBD`, `TODO`, `N/A`, `to be determined`, `placeholder`, `lorem ipsum`, and ellipsis-only bodies) produce reasons and fail the structural check. The checker still requires at least three claims with packet citations and non-empty Markdown. Its docstring states that semantic judgment is a separate labelled orchestrator reading, so `ok` alone is not R1-d semantic evidence. Scripted synthesis now emits sections long enough for this check. Tests cover the review's `TBD` example, short sections, fenced code, and a realistic report.
+
+Review finding 4 remains exact-match synthetic route control. The `scripted_reply` docstring and Quality branch comment identify its scenario stimulus catalog read and state that it supports no independence or detection claim. The Quality system prompt now explicitly blocks a missing or placeholder-only required section; its JSON shape is unchanged.
+
+Commands from `prototype/temporal-factory`, both under `/usr/bin/lockf -k /tmp/exo-qual-suite.lock` with `/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python -B`:
+
+- `-m unittest discover -s tests -p test_agent_roles.py -v`: 16 tests passed.
+- `-m unittest discover -s tests`: 141 tests run, 2 errors, 139 passed. The errors are the known other-lane cases `test_harness_modes.DirectorBoundaryTests.test_publication_activates_without_starting_runner` (missing `materialize(..., evidence_packet=...)`) and `test_testbed.TestbedTests.test_template_materializes_and_validates_with_generated_bindings` (package missing `evidence_packet`). They were not changed here.
+
+`git diff --check` passed. Only `services/agent_roles.py`, `tests/test_agent_roles.py`, and this handoff changed. No live broker, credentials, commit, push, or branch switch was used.
