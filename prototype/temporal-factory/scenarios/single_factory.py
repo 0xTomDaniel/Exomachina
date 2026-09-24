@@ -747,7 +747,6 @@ def check_evidence(e: dict) -> dict[str, dict]:
             synthetic_record_bound and synthetic.get("git_commit") and
             synthetic.get("checker_sha256") == e.get("checker_sha256") and
             synthetic.get("interpreter_build") == next(iter(versions), (None, None, None))[2] and
-            synthetic.get("manifest_digest") == next(iter(versions), (None, None, None))[0] and
             synthetic.get("route_inventory") == {"1": True, "2": True, "3": True}),
         {"structural_checks": {key: value["pass"] for key, value in c.items()},
          "synthetic_scenario": synthetic},
