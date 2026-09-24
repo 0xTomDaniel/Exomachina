@@ -31,15 +31,16 @@ class StubDirector:
 
     def perform(self, command, task_id, context_id):
         self.commands.append((command, task_id, context_id))
-        if command.get("inputs", {}).get("outcome_mode") == "forbidden":
-            raise Rejected("invalid run input enum: outcome_mode")
+        if command.get("inputs", {}).get("question") == "forbidden":
+            raise Rejected("invalid question")
         if command["op"] == "abort" and command["revision"] == "old":
             raise Rejected("stale revision/digest")
         return {"accepted_command": command["op"]}
 
     def inspect_bound_run(self, task_id):
         return {"phase": "awaiting-director", "current_revision": "new",
-                "current_sha256": "a" * 64, "repair_count": 2, "wait": True}
+                "current_sha256": "a" * 64, "repair_count": 2,
+                "max_repairs": 2, "quality_findings": [], "wait_deadline": 123.0}
 
 
 class EmptyModel:
@@ -60,7 +61,7 @@ class DirectorAgentTests(unittest.TestCase):
                                  "fixture-injected")
 
     def test_stable_action_id_and_one_task(self):
-        args = {"question": "evidence?", "outcome_mode": "never"}
+        args = {"question": "evidence?"}
         self.assertTrue(self.turn.call("start_research", args)["ok"])
         self.assertEqual(self.director.commands[0][1:], ("original-task", "context"))
         other = DirectorTurn(self.director, "original-task", "context", "message-1", "fixture-injected")
@@ -68,15 +69,18 @@ class DirectorAgentTests(unittest.TestCase):
         self.assertNotEqual(other.action_id("abort"), self.turn.action_id("start"))
         self.assertFalse(any(key in str(self.turn.calls[0]["result"])
                              for key in ("action_id", "run_id", "token", "epoch")))
+        with self.director.connect() as db:
+            arguments = db.execute("SELECT arguments_json FROM director_tool_calls").fetchone()[0]
+        self.assertEqual(arguments, '{"question": "evidence?"}')
 
     def test_invalid_tool_arguments_and_rejection_row(self):
-        for args in ({"question": "x", "outcome_mode": "never", "graph": "chosen"},
-                     {"question": "x", "outcome_mode": "never", "extra_input": "x"}):
+        for args in ({"question": "x", "graph": "chosen"},
+                     {"question": "x", "extra_input": "x"}):
             self.assertEqual(self.turn.call("start_research", args)["error"]["code"],
                              "invalid_arguments")
         self.assertEqual(len(self.director.commands), 0)
-        self.assertEqual(self.turn.call("start_research", {"question": "x",
-            "outcome_mode": "forbidden"})["error"]["code"], "rejected")
+        self.assertEqual(self.turn.call("start_research", {"question": "forbidden"})
+                         ["error"]["code"], "rejected")
         self.assertEqual(self.turn.call("decide_wait", {"action": "abort", "revision": "old",
             "sha256": "b" * 64, "rationale": "test"})["error"]["message"], "stale revision/digest")
         with self.director.connect() as db:
@@ -88,14 +92,13 @@ class DirectorAgentTests(unittest.TestCase):
                                           "Should we use the package manager's lockfile?")):
             turn = DirectorTurn(self.director, f"task-{index}", "context",
                                 f"message-{index}", "fixture-injected")
-            result = turn.call("start_research", {"question": question,
-                                                 "outcome_mode": "never"})
+            result = turn.call("start_research", {"question": question})
             self.assertEqual(result, {"ok": True, "accepted_command": "start"})
         self.assertEqual(len(self.director.commands), 2)
 
     def test_tool_budget_issues_no_fifth_command(self):
         self.turn.limits["max_tool_calls"] = 1
-        self.assertTrue(self.turn.call("start_research", {"question": "x", "outcome_mode": "never"})["ok"])
+        self.assertTrue(self.turn.call("start_research", {"question": "x"})["ok"])
         self.assertEqual(self.turn.call("inspect_run", {})["error"]["code"], "budget")
         self.assertEqual(len(self.director.commands), 1)
 
