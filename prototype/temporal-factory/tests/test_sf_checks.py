@@ -13,7 +13,8 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scenarios"))
-from single_factory import (_contains_token, _redact_history, check_evidence)  # noqa: E402
+from single_factory import (_contains_token, _findings_on_claim, _redact_history,
+                            _run_actions, check_evidence)  # noqa: E402
 
 
 class ReviewTwoCheckerTests(unittest.TestCase):
@@ -115,6 +116,67 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.e = copy.deepcopy(self.snapshot)
         self.e["broker_events"].append({"event": "start", "pid": 123456})
         self.fails("G-2")
+
+    def test_live_attempt_1_corrected_predicates(self):
+        """Replay preserved live observations without changing the evidence file."""
+        live = json.loads((ROOT / "evidence" / "single-factory" /
+                           "codex-subscription-1.json").read_text())
+        checks = check_evidence(live)
+        for key in ("R2-b", "R3-b", "R3-d", "G-5"):
+            self.assertTrue(checks[key]["pass"], key)
+        self.assertFalse(checks["G-2"]["pass"])
+
+        wrong_claim = copy.deepcopy(live)
+        route2 = wrong_claim["routes"]["2"]["child_run_id"]
+        r1 = next(t for t in wrong_claim["agents"]["quality"]["tasks"]
+                  if t["action_id"].startswith(route2 + ":") and
+                  t["verdict"]["candidate"]["revision"] == "r1")
+        r1["verdict"]["findings"][0]["claim_id"] = "not-the-planted-claim"
+        self.assertFalse(_findings_on_claim(r1["verdict"],
+            wrong_claim["routes"]["2"]["stimulus_log"][0],
+            _run_actions(wrong_claim, 2, "synthesizer")[0]))
+        self.assertFalse(check_evidence(wrong_claim)["R2-b"]["pass"])
+
+        wrong_route3_claim = copy.deepcopy(live)
+        route3 = wrong_route3_claim["routes"]["3"]["child_run_id"]
+        r3 = next(t for t in wrong_route3_claim["agents"]["quality"]["tasks"]
+                  if t["action_id"].startswith(route3 + ":") and
+                  t["verdict"]["candidate"]["revision"] == "r3")
+        r3["verdict"]["findings"][0]["claim_id"] = "not-the-planted-claim"
+        self.assertFalse(_findings_on_claim(r3["verdict"],
+            wrong_route3_claim["routes"]["3"]["stimulus_log"][2],
+            _run_actions(wrong_route3_claim, 3, "synthesizer")[2]))
+        self.assertFalse(check_evidence(wrong_route3_claim)["R3-b"]["pass"])
+
+        no_follow_inspect = copy.deepcopy(live)
+        follow = no_follow_inspect["routes"]["3"]["caller_messages"][-1]["messageId"]
+        no_follow_inspect["routes"]["3"]["director_calls"] = [
+            row for row in no_follow_inspect["routes"]["3"]["director_calls"]
+            if not (row["tool"] == "inspect_run" and row["message_id"] == follow)]
+        self.assertFalse(check_evidence(no_follow_inspect)["R3-d"]["pass"])
+
+        incomplete_ports = copy.deepcopy(live)
+        incomplete_ports["cleanup"]["ports_checked"].pop()
+        self.assertFalse(check_evidence(incomplete_ports)["G-5"]["pass"])
+
+        # Reconstruct the session field that the old installed broker omitted.
+        # The 34 saved streams comprise 4 authoring, 18 agent and 12 Director calls.
+        repaired_broker = copy.deepcopy(live)
+        sessions = [call["session_id"] for name in
+                    ("research_findings", "research_risks", "synthesizer", "quality")
+                    for task in repaired_broker["agents"][name]["tasks"]
+                    for call in task["model_calls"]]
+        streams = [row for row in repaired_broker["broker_events"]
+                   if row.get("event") == "stream"]
+        self.assertEqual((len(streams), len(sessions)), (34, 18))
+        for row, session in zip(streams[4:22], sessions):
+            row["session"] = session
+        repaired_broker["broker_owner_counts"]["director"] = 12
+        self.assertTrue(check_evidence(repaired_broker)["G-2"]["pass"])
+        repaired_broker["broker_events"].extend([
+            {"event": "start", "pid": live["broker_pid_before"]},
+            {"event": "start", "pid": live["broker_pid_before"]}])
+        self.assertFalse(check_evidence(repaired_broker)["G-2"]["pass"])
 
     def test_f9_scan_coverage(self):
         self.e["leak_scan"]["candidate_manifest"] = []
