@@ -99,3 +99,32 @@ env -u EXO_MODEL_HOME -u EXO_CODEX_BASE_URL -u PI_OAUTH_CALLBACK_HOST node broke
 Evidence: `evidence/live-authoring-codex-subscription.json` and `evidence/live-authoring-codex-subscription-scan.json`. Limits were 4 rounds, 12 model calls, 24 tool calls, and 600 seconds. Authoring recorded 1 round (`valid: true`, `errors: []`), 4 model calls, and 3 tools in order: `describe_vocabulary`, `validate_draft`, `submit_draft`. Model evidence says `live: true`, `provider: codex-subscription`, `billing: subscription`, model `gpt-6-sol`. Auto approval and v2 publication were recorded (`build_id: b-05b5760359e6`, package digest `66934029ca324b117f85617ce97a0fd87f2402fd28b424cbf03a25b1c7f2896e`). Broker health recorded signed-in account `sha256:188b022d6e97`, pi-ai `0.87.1`, and `originator: exomachina`; originator acceptance was `success`. The top-level labels remain `director_model: fixture` and `release: http-release (fixture)`, but no run exercised either component.
 
 The scenario leak scan covered 158 files including 102 commit candidates and found zero real-credential hits; its synthetic positive control detected both planted files (9 hits). The final sidecar scan also covered 158 files with zero hits, and its evidence SHA-256 matched the evidence JSON. Cleanup reported no errors; the trial runner and testbed were stopped, while the pre-existing persistent broker remained available.
+
+## Live codex-subscription run: attempt 2
+
+**PASS** on committed code `49b4c449a1b6f3d64ad876b69fc1eeee1fe20e5b`. The scoped status check (`git status --short -- src scenarios broker tests`) was empty before the runs. No budget retry was needed. No login, code edit, deletion, or commit was performed in this phase.
+
+Commands from `prototype/temporal-factory`, with `PY=/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python`:
+
+```sh
+git status --short -- src scenarios broker tests
+# empty
+git rev-parse HEAD
+# 49b4c449a1b6f3d64ad876b69fc1eeee1fe20e5b
+test ! -e /tmp/exo-proto-live-syn-final-49b4c44-8174def4
+# exit 0; fresh home
+$PY -B scenarios/live_authoring.py --home /tmp/exo-proto-live-syn-final-49b4c44-8174def4 --provider synthetic-loopback
+# exit 0; status pass
+test ! -e /tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e
+# exit 0; fresh home
+env -u EXO_MODEL_HOME -u EXO_CODEX_BASE_URL -u PI_OAUTH_CALLBACK_HOST $PY -B scenarios/live_authoring.py --home /tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e --provider codex-subscription
+# exit 0; status pass
+env -u EXO_MODEL_HOME -u EXO_CODEX_BASE_URL -u PI_OAUTH_CALLBACK_HOST node broker/exo-model.mjs leak-scan /tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e evidence/ handoff/live-authoring.md
+# run through a JSON-only capture wrapper; exit 0; 1,928 files, 79,259,825 bytes, 0 hits before this handoff append
+```
+
+The synthetic trial home resolved to `/private/tmp/exo-proto-live-syn-final-49b4c44-8174def4`. Its retained evidence in `evidence/live-authoring-synthetic-loopback.json` and `-scan.json` records acceptance `ok`, `first_pass_valid: false`, 2 rounds (invalid then valid), 4 model calls, 3 tool calls, 104 commit-candidate files scanned, and zero scenario and final-scan hits. Its v2 A2A and Temporal run passed. The synthetic histories under `evidence/live-authoring-synthetic-loopback/` were regenerated and kept.
+
+The live trial home resolved to `/private/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e`. Evidence in `evidence/live-authoring-codex-subscription.json` and `-scan.json` records acceptance `ok`, `first_pass_valid: true`, 1 valid round, 4 model calls, and 3 tool calls within the default 4/12/24/600 budget. The model was `gpt-6-sol`, `live: true`, `provider: codex-subscription`, `billing: subscription`; originator acceptance was `success` with `originator: exomachina`. Auto approval published v2 on build `b-05b5760359e6`.
+
+The A2A task completed on the provisioned instance identity and ran the v2 package on that build. Parent and child Temporal histories were exported under `evidence/live-authoring-codex-subscription/`; both completed and pinned to the build (14 and 44 events, respectively). The Director was labelled `fixture`, and the one release effect was `http-release (fixture)`. The scenario scan covered 2,011 files, including 107 commit candidates, with zero hits; its planted synthetic positive control detected both files. The final sidecar scan had zero hits and its evidence SHA-256 matched. Cleanup recorded no errors; the trial runner stopped. Total scenario time was 65.717 seconds.
