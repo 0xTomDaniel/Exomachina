@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import time
@@ -12,11 +13,157 @@ from pathlib import Path
 from temporalio import activity
 
 from a2a_outcome import (EffectKind, OutcomeJournal, Phase, ReceiverKind, lookup_result,
-                         send_ambiguous, send_completed, submitted)
+                         send_ambiguous, send_completed, submitted, task_started,
+                         task_finished, task_incident, StaleOutcome)
 from quality_authority import QualityKind, decide_quality
 import long_client as a2a
 import fixture
 import receiver_client
+
+
+class PendingTask(Exception):
+    """Retry the Activity; its remote Task id is durable in the journal."""
+
+
+def _async_unresolved(record) -> dict:
+    return {"unresolved": record.reason, "action_id": record.action_id,
+            "task_id": record.task_id}
+
+
+def _invoke_async(binding: dict, contract: dict, command: dict) -> dict:
+    journal_path = os.environ.get("EXO_OUTCOME_DB")
+    if not journal_path:
+        raise RuntimeError("durable A2A outcome journal is not configured")
+    mode = contract.get("reconcile")
+    if mode not in {"a2a-idempotent-resend", "opaque"}:
+        raise ValueError("async receiver reconciliation mode is undeclared")
+    path = Path(journal_path)
+    snapshot = path.parent.parent / "testbed" / "agent_snapshot.json"
+    payload_sha256 = hashlib.sha256(json.dumps(command, sort_keys=True,
+        separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
+    expected = submitted(command["action_id"], command["run_id"],
+        command["definition_digest"],
+        ReceiverKind.PARTICIPATING if mode == "a2a-idempotent-resend" else ReceiverKind.OPAQUE,
+        payload_sha256=payload_sha256, pinned_identity=binding["identity"])
+    journal = OutcomeJournal(path)
+    try:
+        record, created = journal.begin(expected)
+        if record.phase == Phase.CONFIRMED:
+            return record.receipt
+        if record.phase == Phase.INCIDENT:
+            return _async_unresolved(record)
+        if record.task_id is None and not created and mode != "a2a-idempotent-resend":
+            record = task_incident(record, "opaque-effect-unknown")
+            journal.put(record)
+            return _async_unresolved(record)
+        deadline = time.monotonic() + 70
+        while time.monotonic() < deadline:
+            try:
+                url, observed = a2a.resolve_pinned(snapshot, binding["identity"], contract)
+            except (a2a.UncertainSubmission, a2a.UnavailableBinding):
+                time.sleep(0.5)
+                continue
+            except Exception as error:
+                record = task_incident(record, "pinned-agent-verification-failed")
+                journal.put(record)
+                _log("agent-pin-incident", action_id=record.action_id,
+                     pinned_identity=binding["identity"], error_type=type(error).__name__)
+                return _async_unresolved(record)
+            _log("agent-card-verified", action_id=record.action_id,
+                 pinned_identity=binding["identity"], pinned_card_sha256=contract["card_sha256"],
+                 pinned_contract_digest=contract["a2a_extension"]["contract_digest"],
+                 observed={key: value for key, value in observed.items()
+                           if key != "contract_document"})
+            if record.task_id is None:
+                # Both first dispatch and replay use the exact journal-bound payload.
+                try:
+                    task = a2a.send_async(url, command)
+                    state = a2a.validate_async_task(task, command, binding["identity"])
+                    record = task_started(record, task["id"])
+                    journal.put(record)
+                    _log("agent-task-journaled", action_id=record.action_id,
+                         task_id=record.task_id, state=state, url=url,
+                         resend=not created)
+                except a2a.UncertainSubmission:
+                    if record.phase == Phase.SUBMITTED:
+                        record = send_ambiguous(record)
+                        journal.put(record)
+                    if mode != "a2a-idempotent-resend":
+                        record = task_incident(record, "opaque-effect-unknown")
+                        journal.put(record)
+                        return _async_unresolved(record)
+                    created = False
+                    time.sleep(0.5)
+                    continue
+                except Exception as error:
+                    record = task_incident(record, "async-send-binding-inconsistent")
+                    journal.put(record)
+                    _log("agent-task-incident", action_id=record.action_id,
+                         error_type=type(error).__name__)
+                    return _async_unresolved(record)
+                if state == "completed":
+                    try:
+                        receipt = a2a.async_receipt(task, command, binding["identity"])
+                    except Exception:
+                        record = task_incident(record, "async-artifact-inconsistent")
+                    else:
+                        record = task_finished(record, receipt)
+                    journal.put(record)
+                    return record.receipt if record.phase == Phase.CONFIRMED else _async_unresolved(record)
+            try:
+                task = a2a.get_task(url, record.task_id)
+                state = a2a.validate_async_task(task, command, binding["identity"])
+                if task["id"] != record.task_id:
+                    raise ValueError("remote Task id changed")
+            except a2a.UncertainSubmission:
+                time.sleep(0.5)
+                continue
+            except Exception as error:
+                record = task_incident(record, "async-task-binding-inconsistent")
+                journal.put(record)
+                _log("agent-task-incident", action_id=record.action_id,
+                     task_id=record.task_id, error_type=type(error).__name__)
+                return _async_unresolved(record)
+            _log("agent-task-polled", action_id=record.action_id,
+                 task_id=record.task_id, state=state, url=url)
+            if state == "completed":
+                try:
+                    receipt = a2a.async_receipt(task, command, binding["identity"])
+                except Exception as error:
+                    record = task_incident(record, "async-artifact-inconsistent")
+                    _log("agent-artifact-incident", action_id=record.action_id,
+                         task_id=record.task_id, error_type=type(error).__name__)
+                else:
+                    record = task_finished(record, receipt)
+                journal.put(record)
+                return record.receipt if record.phase == Phase.CONFIRMED else _async_unresolved(record)
+            if state not in {"submitted", "working"}:
+                record = task_incident(record, "async-task-terminal-without-artifact")
+                journal.put(record)
+                return _async_unresolved(record)
+            time.sleep(0.5)
+        raise PendingTask("remote Task still working; retry from durable Task id")
+    except StaleOutcome:
+        current = journal.get(command["action_id"])
+        if current.phase == Phase.CONFIRMED:
+            return current.receipt
+        if current.phase == Phase.INCIDENT:
+            return _async_unresolved(current)
+        raise PendingTask("another Activity attempt advanced the outcome journal")
+    finally:
+        journal.close()
+
+
+async def _thread_with_heartbeat(fn, *args):
+    task = asyncio.create_task(asyncio.to_thread(fn, *args))
+    while True:
+        done, _ = await asyncio.wait({task}, timeout=2)
+        if done:
+            return await task
+        try:
+            activity.heartbeat()
+        except RuntimeError:
+            pass  # Direct unit invocation has no Activity context.
 
 
 def _get_json(url: str) -> dict:
@@ -155,8 +302,31 @@ async def assign(input: dict) -> dict:
         result_type=input["result_type"], scope_status=input["scope_status"],
         question=input.get("question"))
     try:
-        result = await asyncio.to_thread(_invoke, input["url"], input["identity"],
-            "capability", command, input["lookup_supported"])
+        contract = input.get("contract") or {}
+        mode = contract.get("reconcile")
+        async_marker = mode in {"a2a-idempotent-resend", "opaque"} or bool(
+            {"card_sha256", "a2a_extension"} & set(contract))
+        if async_marker:
+            extension = contract.get("a2a_extension") or {}
+            if (mode not in {"a2a-idempotent-resend", "opaque"}
+                    or not isinstance(contract.get("card_sha256"), str)
+                    or len(contract["card_sha256"]) != 64
+                    or extension.get("uri") != "urn:exomachina:a2a-action-contract:v1"
+                    or extension.get("contract") != "action-idempotent-async@1"
+                    or not isinstance(extension.get("contract_digest"), str)
+                    or len(extension["contract_digest"]) != 64):
+                return {"unresolved": "async-pin-incomplete",
+                        "action_id": command["action_id"]}
+            result = await _thread_with_heartbeat(_invoke_async, input["binding"],
+                                             input["contract"], command)
+        elif mode in {None, "fixture-lookup"}:
+            result = await _thread_with_heartbeat(_invoke, input["url"], input["identity"],
+                "capability", command, input["lookup_supported"])
+        else:
+            return {"unresolved": "undeclared-reconciliation-mode",
+                    "action_id": command["action_id"]}
+    except PendingTask:
+        raise
     except Exception as error:
         return {"unresolved": "assignment-adapter-incident",
                 "action_id": command["action_id"], "error_type": type(error).__name__}

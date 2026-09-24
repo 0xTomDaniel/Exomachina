@@ -22,8 +22,10 @@ RETRY = RetryPolicy(initial_interval=timedelta(seconds=1), maximum_attempts=12)
 
 
 def _activity(fn, input: dict):
-    return workflow.execute_activity(fn, input, start_to_close_timeout=ACTIVITY_TIMEOUT,
-                                     retry_policy=RETRY)
+    options = {"start_to_close_timeout": ACTIVITY_TIMEOUT, "retry_policy": RETRY}
+    if fn is assign:
+        options["heartbeat_timeout"] = timedelta(seconds=15)
+    return workflow.execute_activity(fn, input, **options)
 
 
 @workflow.defn(versioning_behavior=VersioningBehavior.PINNED)
@@ -145,6 +147,8 @@ class FactoryRun:
                         "instance": instance, "result_type": branch["result_type"],
                         "scope_status": branch["scope_status"],
                         "url": service["url"], "identity": service["identity"],
+                        "binding": service,
+                        "contract": input["closure"]["contracts"][branch["service"]],
                         "lookup_supported": True,
                         "question": self.run_inputs.get("question"),
                     }))

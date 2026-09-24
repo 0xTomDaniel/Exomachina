@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "run_inputs": {
+    "outcome_mode": {
+      "type": "string",
+      "required": true,
+      "enum": ["after_first_repair", "never"],
+      "source": "caller",
+      "allowed_actors": ["fixture-operator"],
+      "may_affect_acceptance": true
+    },
+    "question": {
+      "type": "string",
+      "required": false,
+      "source": "caller",
+      "allowed_actors": ["fixture-operator"],
+      "may_affect_acceptance": false
+    }
+  },
+  "root": {
+    "name": "parent_verified_research",
+    "revision": "v4",
+    "start": "invoke_child",
+    "nodes": {
+      "invoke_child": {
+        "type": "nested_factory",
+        "child": "verified_research",
+        "child_digest": "@child",
+        "next": "done"
+      },
+      "done": {
+        "type": "complete"
+      }
+    }
+  },
+  "child": {
+    "name": "verified_research",
+    "revision": "v4",
+    "start": "gather",
+    "nodes": {
+      "gather": {
+        "type": "parallel",
+        "branches": {
+          "source_alpha": {
+            "result_type": "source_evidence",
+            "capability": "source_evidence@1",
+            "service": "source_alpha",
+            "scope_status": null
+          },
+          "source_beta": {
+            "result_type": "source_evidence",
+            "capability": "source_evidence@1",
+            "service": "source_beta",
+            "scope_status": null
+          },
+          "counter_alpha": {
+            "result_type": "counter_evidence",
+            "capability": "counter_evidence@1",
+            "service": "counter_alpha",
+            "scope_status": "clear"
+          },
+          "counter_beta": {
+            "result_type": "counter_evidence",
+            "capability": "counter_evidence@1",
+            "service": "counter_beta",
+            "scope_status": "requires_scope"
+          }
+        },
+        "next": "join_all"
+      },
+      "join_all": {
+        "type": "join",
+        "branches": [
+          "source_alpha",
+          "source_beta",
+          "counter_alpha",
+          "counter_beta"
+        ],
+        "next": "route_scope"
+      },
+      "route_scope": {
+        "type": "route",
+        "field": "join.requires_scope",
+        "cases": {
+          "true": "draft_unresolved",
+          "false": "draft_clear"
+        }
+      },
+      "draft_unresolved": {
+        "type": "synthesize",
+        "resolved": false,
+        "next": "independent_quality"
+      },
+      "draft_clear": {
+        "type": "synthesize",
+        "resolved": true,
+        "next": "independent_quality"
+      },
+      "independent_quality": {
+        "type": "quality",
+        "next": "route_verdict"
+      },
+      "route_verdict": {
+        "type": "route",
+        "field": "verdict.accepted",
+        "cases": {
+          "true": "publish",
+          "false": "repair"
+        }
+      },
+      "repair": {
+        "type": "repair",
+        "max_repairs": 2,
+        "next": "draft_repair",
+        "exhausted": "director"
+      },
+      "draft_repair": {
+        "type": "synthesize",
+        "resolved": "from_run",
+        "next": "independent_quality"
+      },
+      "director": {
+        "type": "director_wait",
+        "reason": "repair_exhausted",
+        "next": "abort"
+      },
+      "abort": {
+        "type": "abort"
+      },
+      "publish": {
+        "type": "release",
+        "service": "release",
+        "next": "done"
+      },
+      "done": {
+        "type": "complete"
+      }
+    }
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "after_effects": {
+    "effects": {
+      "smoke-lost": 1,
+      "smoke-main": 1
+    },
+    "identity": "8285a1c8-2217-432b-9a46-61890a4e5c66",
+    "total": 2
+  },
+  "after_restart_effects": {
+    "effects": {
+      "smoke-lost": 1,
+      "smoke-main": 1
+    },
+    "identity": "8285a1c8-2217-432b-9a46-61890a4e5c66",
+    "total": 2
+  },
+  "before_effects": {
+    "effects": {},
+    "identity": "8285a1c8-2217-432b-9a46-61890a4e5c66",
+    "total": 0
+  },
+  "card_digest_url_less_after": "059d58dfb9cf9a080265133af1b9863b487ad24b27cf7efbca810f4afb6ed08f",
+  "card_digest_url_less_before": "059d58dfb9cf9a080265133af1b9863b487ad24b27cf7efbca810f4afb6ed08f",
+  "card_extension": {
+    "params": {
+      "contract": "action-idempotent-async@1",
+      "contract_digest": "09c95ad2d3a5196a8b24f26002979418b6bc4dc75d6c26b06d6cab2a0229f5be",
+      "identity": "8285a1c8-2217-432b-9a46-61890a4e5c66"
+    },
+    "required": true,
+    "uri": "urn:exomachina:a2a-action-contract:v1"
+  },
+  "checks": {
+    "card_digest_port_independent": true,
+    "conflicting_payload_json_rpc_error": true,
+    "contract_digest_matches": true,
+    "first_send_working": true,
+    "identity_persisted_on_port_change": true,
+    "lost_response_committed_once": true,
+    "original_tasks_completed_after_restart": true
+  },
+  "classification": "observed-real",
+  "completed_tasks": {
+    "lost": {
+      "artifacts": [
+        {
+          "artifactId": "5d3fd1f2c3e01ce817067c1c811da02ecda74a85b5a274791553e114ae213aed",
+          "parts": [
+            {
+              "data": {
+                "action_id": "smoke-lost",
+                "author": "8285a1c8-2217-432b-9a46-61890a4e5c66",
+                "content": "fixture-result:brief",
+                "definition_digest": "smoke-definition",
+                "revision": "r2",
+                "run_id": "smoke-run",
+                "sha256": "5d3fd1f2c3e01ce817067c1c811da02ecda74a85b5a274791553e114ae213aed"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "9b741945-8916-44d9-9fb9-c609f589ce1e",
+      "id": "5b8d4be4-3826-4306-bef7-03cc2b1cb328",
+      "kind": "task",
+      "metadata": {
+        "action_id": "smoke-lost",
+        "agent_identity": "8285a1c8-2217-432b-9a46-61890a4e5c66",
+        "definition_digest": "smoke-definition",
+        "run_id": "smoke-run"
+      },
+      "status": {
+        "state": "completed"
+      }
+    },
+    "main": {
+      "artifacts": [
+        {
+          "artifactId": "5d3fd1f2c3e01ce817067c1c811da02ecda74a85b5a274791553e114ae213aed",
+          "parts": [
+            {
+              "data": {
+                "action_id": "smoke-main",
+                "author": "8285a1c8-2217-432b-9a46-61890a4e5c66",
+                "content": "fixture-result:brief",
+                "definition_digest": "smoke-definition",
+                "revision": "r2",
+                "run_id": "smoke-run",
+                "sha256": "5d3fd1f2c3e01ce817067c1c811da02ecda74a85b5a274791553e114ae213aed"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "7a5e37e9-2af2-4a32-9605-d31f79520ec3",
+      "id": "3c2201da-3143-47e1-8d25-f0e8bfca754b",
+      "kind": "task",
+      "metadata": {
+        "action_id": "smoke-main",
+        "agent_identity": "8285a1c8-2217-432b-9a46-61890a4e5c66",
+        "definition_digest": "smoke-definition",
+        "run_id": "smoke-run"
+      },
+      "status": {
+        "state": "completed"
+      }
+    }
+  },
+  "conflict_error": {
+    "code": -32602,
+    "message": "action_id reused with different payload"
+  },
+  "contract_digest": "09c95ad2d3a5196a8b24f26002979418b6bc4dc75d6c26b06d6cab2a0229f5be",
+  "director_model": "fixture",
+  "durable_task_mappings": {
+    "smoke-lost": "5b8d4be4-3826-4306-bef7-03cc2b1cb328",
+    "smoke-main": "3c2201da-3143-47e1-8d25-f0e8bfca754b"
+  },
+  "first_send": {
+    "contextId": "7a5e37e9-2af2-4a32-9605-d31f79520ec3",
+    "id": "3c2201da-3143-47e1-8d25-f0e8bfca754b",
+    "kind": "task",
+    "metadata": {
+      "action_id": "smoke-main",
+      "agent_identity": "8285a1c8-2217-432b-9a46-61890a4e5c66",
+      "definition_digest": "smoke-definition",
+      "run_id": "smoke-run"
+    },
+    "status": {
+      "state": "working"
+    }
+  },
+  "health_after": {
+    "a2a_protocol": "0.3.0",
+    "identity": "8285a1c8-2217-432b-9a46-61890a4e5c66",
+    "incarnation": 2,
+    "role": "capability"
+  },
+  "health_before": {
+    "a2a_protocol": "0.3.0",
+    "identity": "8285a1c8-2217-432b-9a46-61890a4e5c66",
+    "incarnation": 1,
+    "role": "capability"
+  },
+  "lost_response_error": "RemoteDisconnected",
+  "processes": [
+    {
+      "exit_code": 23,
+      "log": "/tmp/exo-qual-a-agent-smoke-b475779f/agent-45410.log",
+      "port": 45410
+    },
+    {
+      "log": "/tmp/exo-qual-a-agent-smoke-b475779f/agent-45411.log",
+      "port": 45411
+    }
+  ],
+  "remaining_listeners_45410_45419": [],
+  "resend_task_id": "5b8d4be4-3826-4306-bef7-03cc2b1cb328",
+  "trial_dir": "/tmp/exo-qual-a-agent-smoke-b475779f",
+  "verdict": "pass"
+}
