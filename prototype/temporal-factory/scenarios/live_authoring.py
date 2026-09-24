@@ -83,6 +83,114 @@ def checked(condition: bool, description: str) -> None:
         raise AssertionError(description)
 
 
+def authoring_acceptance(provider: str, record: dict) -> tuple[bool, str, dict]:
+    """Assess the published authoring record without depending on scenario state."""
+    record = record if isinstance(record, dict) else {}
+    outcome = record.get("outcome")
+    outcome = outcome if isinstance(outcome, dict) else {}
+    rounds = outcome.get("rounds")
+    rounds = rounds if isinstance(rounds, list) else []
+    calls = outcome.get("tool_calls")
+    calls = calls if isinstance(calls, list) else []
+    facts = {"first_pass_valid": bool(rounds and isinstance(rounds[0], dict) and
+                                      rounds[0].get("valid") is True),
+             "round_count": len(rounds),
+             "invalid_rounds": [row for row in rounds if isinstance(row, dict) and
+                                row.get("valid") is False],
+             "submitted_digest": None}
+
+    def fail(reason: str) -> tuple[bool, str, dict]:
+        return False, reason, facts
+
+    def structured(result: object) -> bool:
+        return (isinstance(result, dict) and isinstance(result.get("ok"), bool) and
+                isinstance(result.get("draft_digest"), str) and
+                isinstance(result.get("errors"), list) and
+                all(isinstance(error, dict) and isinstance(error.get("code"), str) and
+                    isinstance(error.get("message"), str)
+                    for error in result["errors"]) and
+                (not result["ok"] or not result["errors"]) and
+                (result["ok"] or bool(result["errors"])))
+
+    if provider not in {"synthetic-loopback", "codex-subscription"}:
+        return fail("unsupported_provider")
+    if (record.get("admin_exit_code") != 0 or record.get("status") != "published" or
+            outcome.get("status") != "approved" or outcome.get("abort") or outcome.get("error")):
+        return fail("authoring_not_published")
+    limits = record.get("limits")
+    limits = limits if isinstance(limits, dict) else {}
+    for count, cap in ((len(rounds), "max_rounds"),
+                       (record.get("model_calls"), "max_model_calls"),
+                       (len(calls), "max_tool_calls")):
+        if (not isinstance(count, int) or count < 1 or
+                not isinstance(limits.get(cap), int) or count > limits[cap]):
+            return fail("authoring_budget_exceeded_or_missing")
+    if not all(isinstance(row, dict) and isinstance(row.get("draft_digest"), str) and
+               isinstance(row.get("valid"), bool) and
+               structured({"ok": row["valid"], "draft_digest": row["draft_digest"],
+                           "errors": row.get("errors")}) for row in rounds):
+        return fail("invalid_round_record")
+    if not all(isinstance(call, dict) for call in calls):
+        return fail("invalid_tool_call_record")
+    submissions = [(index, call) for index, call in enumerate(calls)
+                   if call.get("tool") == "submit_draft"]
+    validations = [(index, call) for index, call in enumerate(calls)
+                   if call.get("tool") == "validate_draft"]
+    if not submissions or not validations or validations[0][0] >= submissions[0][0]:
+        return fail("validate_draft_must_precede_submit_draft")
+    if not all(structured(call.get("result")) and
+               call.get("draft_digest") == call["result"]["draft_digest"]
+               for _, call in validations + submissions):
+        return fail("unstructured_validation_result")
+    if not all(any(row["draft_digest"] == call["draft_digest"] and
+                   row["valid"] == call["result"]["ok"] for row in rounds)
+               for _, call in validations + submissions):
+        return fail("tool_result_missing_round")
+    submitted = submissions[-1][1]
+    digest = submitted.get("draft_digest")
+    facts["submitted_digest"] = digest
+    if (submitted["result"]["ok"] is not True or
+            not any(row["draft_digest"] == digest and row["valid"] for row in rounds)):
+        return fail("submitted_digest_not_valid")
+    package_digest = outcome.get("package_digest")
+    approval = record.get("approval")
+    approval = approval if isinstance(approval, dict) else {}
+    publication = record.get("publication")
+    publication = publication if isinstance(publication, dict) else {}
+    if (not isinstance(package_digest, str) or
+            submitted["result"].get("package_digest") != package_digest or
+            approval.get("status") != "approved" or approval.get("policy") != "auto" or
+            approval.get("package_digest") != package_digest or
+            publication.get("package_digest") != package_digest):
+        return fail("approval_or_publication_mismatch")
+    if provider == "synthetic-loopback":
+        first = rounds[0]
+        if first["valid"] or not any(row["valid"] and row["draft_digest"] != first["draft_digest"]
+                                     for row in rounds[1:]):
+            return fail("synthetic_repair_loop_missing")
+        if not any(call["draft_digest"] == first["draft_digest"] and
+                   call["result"]["ok"] is False for _, call in validations):
+            return fail("synthetic_invalid_draft_not_validated")
+        # The fixture's correction is the route case named in round 1 feedback.
+        template = outcome.get("template") or {}
+        if not any(isinstance(error.get("missing_cases"), list) and error["missing_cases"] and
+                   isinstance(error.get("path"), str) and
+                   _feedback_cases_present(template, error["path"], error["missing_cases"])
+                   for error in first["errors"]):
+            return fail("synthetic_correction_not_derived_from_errors")
+    return True, "accepted", facts
+
+
+def _feedback_cases_present(template: dict, path: str, missing_cases: list) -> bool:
+    value = template
+    for part in path.split("."):
+        if not isinstance(value, dict) or part not in value:
+            return False
+        value = value[part]
+    return isinstance(value, dict) and all(isinstance(case, str) and case in value
+                                           for case in missing_cases)
+
+
 def cli_json(*args: str, timeout: float = 300) -> dict:
     return json.loads(run_cli(*args, timeout=timeout))
 
@@ -491,6 +599,12 @@ def main() -> None:
                 len(outcome.get("tool_calls", []))),
             "selection_seconds": selection_seconds,
             "admin_exit_code": completed.returncode}, level)
+        acceptance_ok, acceptance_reason, acceptance_facts = authoring_acceptance(
+            args.provider, {**authored, "model_calls": model_calls,
+                            "admin_exit_code": completed.returncode})
+        evidence["claims"]["authoring"]["value"].update(acceptance_facts)
+        evidence["claims"]["authoring"]["value"]["acceptance"] = {
+            "ok": acceptance_ok, "reason": acceptance_reason}
         if completed.returncode != 0 or authored.get("status") != "published":
             publications = cli_json(str(SRC / "admin.py"), "publications",
                                     "--instance-dir", str(instance))
@@ -507,9 +621,9 @@ def main() -> None:
             raise RuntimeError("authoring failed")
         evidence["claims"]["approval"] = claim(authored.get("approval"), "real")
         evidence["claims"]["v2_publication"] = claim(authored.get("publication"), "real")
-        checked(authored.get("status") == "published", "authoring did not publish")
-        checked(outcome.get("rounds") and not outcome["rounds"][0]["valid"] and
-                any(row["valid"] for row in outcome["rounds"]), "authoring did not revise an invalid draft")
+        if not acceptance_ok:
+            evidence["claims"]["authoring"]["value"]["failure_reason"] = acceptance_reason
+        checked(acceptance_ok, f"authoring acceptance: {acceptance_reason}")
         checked(authored["approval"]["status"] == "approved" and
                 authored["approval"]["policy"] == "auto", "v2 lacked auto approval")
         checked(authored["publication"]["package_digest"] != v1["publication"]["package_digest"],
