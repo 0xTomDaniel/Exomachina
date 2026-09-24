@@ -277,13 +277,13 @@ Lane R delivers `agent_roles.py` stubs with the frozen signatures first, so that
 ### A1, 24 September 2026 (before any scenario run; from lane handoffs and independent review 1, `handoff/sf-review-1.md`)
 
 - **`usefulness_check` return shape.** `agent_roles.usefulness_check(content, packet)` returns `{ok, reasons}`. It is a structural helper only.
-- **R1-d is strengthened.** R1-d now needs all of the following:
-  1. the helper's `ok`, after it is tightened so every `REPORT_SECTIONS` section has substantive, non-placeholder content (lane R);
-  2. at least 3 claims, each citing packet ids;
-  3. a recorded **human reading** by the orchestrator of the saved report markdown. The reading judges whether live/fixture status, remaining gaps and next priority are actually answered and supported by the cited items, and it is recorded in the handoff.
+- **R1-d is strengthened; structural usefulness is not semantic proof.** R1-d is reported in two parts, and both must pass:
+  1. **R1-d structural** (automated): the helper's `ok`, after lane R tightens it so every `REPORT_SECTIONS` section has substantive, non-placeholder content (no `TBD`/`TODO`/`N/A`, above a minimum length), plus at least 3 claims, each citing packet ids. This shows only that the report has the required form.
+  2. **R1-d semantic** (judgment): a recorded reading of the saved report markdown against the packet, by the orchestrator, labelled `orchestrator-reading (AI judgment)`. It must state, for each of live/fixture status, remaining gaps and next priority, whether the report answers it and whether the cited items support it. It must also list any unsupported claim. It is never labelled automated or model-verified proof, and the scenario never emits it.
 
-  The helper's `ok` alone never satisfies R1-d.
+  The Quality model's acceptance is separate evidence (R1-c) and does not substitute for either part.
+
 - **SF-2, G-2 and G-3 observation.** `/_test/observe` stays on the synthesizer only. The scenario reads every agent's SQLite `tasks`/`model_calls` read-only (`mode=ro` URI) and preserves a copy in evidence. This is test observation, not product authority.
 - **R2-a and R3-a atomicity.** The stimulus log is idempotent per `(stimulus_id, task_id, revision)` (lane A). The scenario also requires each log row's `sha256_after` to equal the final artifact sha256 of that Task.
 - **Synthetic Quality.** In the `scripted` provider, Quality recognises planted claims by exact match against `scenarios/sf_stimuli.json`. That is scripted route control. It is labelled so in synthetic evidence and supports no independence or detection claim; only live `decided_by:"model"` verdicts can.
-- **SF-2 import audit scope.** The audit covers the agent processes: `services/model_agent.py` and `services/agent_roles.py` may import only `model_broker` from `src/`. `services/testbed.py` is the directory stand-in launcher, not an agent. It imports `agent_binding.pin` to produce the static snapshot, and that import is reported explicitly in evidence, not waived silently. Legacy fixture services are outside the report profile and are listed as such.
+- **SF-2 import audit scope.** The literal audit runs over every **running service process** of the report profile: `model_agent.py` with `agent_roles.py` (four agents) and `release_server.py`. None may import a `src/` module other than `model_broker`; lane A inlines `release_server.py`'s two trivial `fixture` helpers so this holds. `services/testbed.py` is the directory stand-in **launcher**, not a service. It imports `agent_binding.pin`, as an operator pinning agents into the static snapshot, and imports `agent_roles.RUBRIC_DIGEST` for the Quality policy. Evidence reports both imports explicitly as this stated exception. Legacy fixture services (`quality_server.py`, `delayed_agent.py`) are not started by the report profile and are listed as out of scope.
