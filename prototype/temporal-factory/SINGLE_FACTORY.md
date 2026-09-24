@@ -1,6 +1,6 @@
 # Single factory, real agent work, three core routes
 
-**Spike result, 24 September 2026.** Branch `spike/single-factory-core-routes`, local only (not pushed). It started from `origin/main` `2d609e3`. The pre-registered brief is `briefs/single-factory.md` (`bbc8c03`), with Amendment A1 (`8820d0f`).
+**Spike result, 24 September 2026.** Branch `spike/single-factory-core-routes` started from `origin/main` `2d609e3`. The pre-registered brief is `briefs/single-factory.md` (`bbc8c03`), with Amendment A1 (`8820d0f`).
 
 ## Verdict
 
