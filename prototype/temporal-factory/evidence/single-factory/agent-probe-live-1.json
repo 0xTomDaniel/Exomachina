@@ -1,0 +1,991 @@
+{
+  "label": "pre-integration probe (not counted)",
+  "observation": "observed-real",
+  "provider": "codex-subscription",
+  "model_id": "gpt-6-sol",
+  "home": "/tmp/exo-sf-probe-2",
+  "evidence_file": "agent-probe-live-1.json",
+  "credential_variable_names_set": {
+    "EXO_MODEL_HOME": false,
+    "EXO_CODEX_BASE_URL": false,
+    "OPENAI_API_KEY": false,
+    "ANTHROPIC_API_KEY": false
+  },
+  "started_at": 1790261632.301961,
+  "status": "pass",
+  "tasks": [
+    {
+      "role": "research",
+      "service": "research_findings",
+      "capability": "packet_findings@1",
+      "identity": "b5ad9ea7-9e30-44b8-8128-734c606b1d5b",
+      "task_id": "9e63fee1-7415-4e5c-83a3-cb67cdfde24d",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-codex-subscription-research-e11e0fd7:research_findings:r1",
+        "run_id": "probe-codex-subscription-research-e11e0fd7",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "b5ad9ea7-9e30-44b8-8128-734c606b1d5b"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "b5ad9ea7-9e30-44b8-8128-734c606b1d5b:9e63fee1-7415-4e5c-83a3-cb67cdfde24d",
+          "provider": "codex-subscription",
+          "model_id": "gpt-6-sol",
+          "live": true,
+          "call_no": 1,
+          "started_at": 1790261636.902446,
+          "ended_at": 1790261647.1238341,
+          "outcome_kind": "completed",
+          "duration_s": 10.221,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "cfdafb19de564efff83f8bf64a9b9a7f8b949f786fb45cabe91fd9a515c3ff47",
+        "author": "b5ad9ea7-9e30-44b8-8128-734c606b1d5b",
+        "content": {
+          "items": [
+            {
+              "evidence": [
+                "E1",
+                "E3",
+                "E8",
+                "E10"
+              ],
+              "id": "F1",
+              "statement": "All three spikes passed their pre-registered checks on the merged tree. A and B were observed with real processes but a fixture Director; C also passed with a live broker-backed gpt-6-sol Director."
+            },
+            {
+              "evidence": [
+                "E5",
+                "E6",
+                "E9"
+              ],
+              "id": "F2",
+              "statement": "The live Director proof is narrow: a text brief started an authorized run, the Task reached input-required, and a caller-directed follow-up produced one accepted abort with zero releases. Code rejected a forbidden input requested by the model; stale and unauthorized probes were fixture-injected, not spontaneous model behavior."
+            },
+            {
+              "evidence": [
+                "E2",
+                "E4",
+                "E7"
+              ],
+              "id": "F3",
+              "statement": "Quality, capability content, and the HTTP release receiver remain fixtures; passing fixtures are not live proof."
+            },
+            {
+              "evidence": [
+                "E6",
+                "E7"
+              ],
+              "id": "F4",
+              "statement": "Main gaps include external-agent authentication and attestation, a general directory and workflow-level remote-Task polling; broader Director reliability and decision types; topology stress and embedded-app locking; and operational hardening, old-build retirement, contract attestation, and memory-ceiling work."
+            },
+            {
+              "evidence": [
+                "E2",
+                "E6",
+                "E7"
+              ],
+              "id": "F5",
+              "statement": "The next priority should be an end-to-end qualification that replaces Quality, capability content, and the release receiver fixtures with real integrations, while extending Director coverage beyond the single-account, single-model, caller-directed abort case."
+            }
+          ],
+          "kind": "packet_findings@1",
+          "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c"
+        }
+      }
+    },
+    {
+      "role": "research",
+      "service": "research_risks",
+      "capability": "packet_risks@1",
+      "identity": "c3f3b470-ac8d-4826-a75f-a4345427d96f",
+      "task_id": "65667e72-e52e-49b1-af72-688fff20bd07",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-codex-subscription-research-e11e0fd7:research_risks:r1",
+        "run_id": "probe-codex-subscription-research-e11e0fd7",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "c3f3b470-ac8d-4826-a75f-a4345427d96f"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "c3f3b470-ac8d-4826-a75f-a4345427d96f:65667e72-e52e-49b1-af72-688fff20bd07",
+          "provider": "codex-subscription",
+          "model_id": "gpt-6-sol",
+          "live": true,
+          "call_no": 1,
+          "started_at": 1790261647.5746088,
+          "ended_at": 1790261659.063373,
+          "outcome_kind": "completed",
+          "duration_s": 11.489,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "0ef53f4bbab57526a14dff15237c3c42b3d1be2c4438105eac1c89c37a045215",
+        "author": "c3f3b470-ac8d-4826-a75f-a4345427d96f",
+        "content": {
+          "items": [
+            {
+              "evidence": [
+                "E2",
+                "E3",
+                "E7",
+                "E8"
+              ],
+              "id": "R1",
+              "severity": "high",
+              "statement": "End-to-end production readiness remains unproven: the combined run used a live broker-backed Director, but Quality, capability content, and the HTTP release receiver remain fixtures. Prioritize replacing these fixtures and qualifying the full path; fixture passes are not live proof."
+            },
+            {
+              "evidence": [
+                "E3",
+                "E4",
+                "E7"
+              ],
+              "id": "R2",
+              "severity": "high",
+              "statement": "External-agent trust and recovery remain incomplete: agents lack signed or attested cards and remote authentication, and workflow-level polling for long remote Tasks is unbuilt. The passing external-agent spike used a fixture Director and local fixture agent."
+            },
+            {
+              "evidence": [
+                "E5",
+                "E6",
+                "E8"
+              ],
+              "id": "R3",
+              "severity": "medium",
+              "statement": "Live Director evidence is narrow: one account and model, a caller-directed abort, and no measured reliability across broader briefs; several rejection probes were fixture-injected rather than spontaneous model behavior. Prioritize broader live decisions and briefs."
+            },
+            {
+              "evidence": [
+                "E3",
+                "E7"
+              ],
+              "id": "R4",
+              "severity": "medium",
+              "statement": "Multi-instance proof covers only two instances with a fixture Director; embedded create_app() lacks an instance lock and stress testing is absent. Extend concurrency and lifecycle qualification before relying on broader topology."
+            },
+            {
+              "evidence": [
+                "E7",
+                "E10"
+              ],
+              "id": "R5",
+              "severity": "medium",
+              "statement": "Operational hardening remains unbuilt or out of scope, including old-build retirement, contract attestation, and the memory ceiling; passing pre-registered spikes do not establish those properties."
+            }
+          ],
+          "kind": "packet_risks@1",
+          "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c"
+        }
+      }
+    },
+    {
+      "role": "synthesis",
+      "service": "synthesizer",
+      "capability": "report_synthesis@1",
+      "identity": "002208b4-e59b-4768-be2d-085816bcdb10",
+      "task_id": "dc8e2f09-0faa-4e98-b360-211c4313e44d",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-codex-subscription-clean-600978db:synthesizer:r1",
+        "run_id": "probe-codex-subscription-clean-600978db",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "002208b4-e59b-4768-be2d-085816bcdb10"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "002208b4-e59b-4768-be2d-085816bcdb10:dc8e2f09-0faa-4e98-b360-211c4313e44d",
+          "provider": "codex-subscription",
+          "model_id": "gpt-6-sol",
+          "live": true,
+          "call_no": 1,
+          "started_at": 1790261659.271563,
+          "ended_at": 1790261676.709714,
+          "outcome_kind": "completed",
+          "duration_s": 17.438,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "fc4cfa3b52bba06e21cffd25884b42e32e6518fce1f087c0c8f38741d66caa2a",
+        "author": "002208b4-e59b-4768-be2d-085816bcdb10",
+        "content": {
+          "claims": [
+            {
+              "evidence": [
+                "E3",
+                "E8",
+                "E10"
+              ],
+              "id": "C1",
+              "text": "All three spikes passed their pre-registered merged-tree checks; A and B used real processes with a fixture Director, while C included a live broker-backed gpt-6-sol Director."
+            },
+            {
+              "evidence": [
+                "E5",
+                "E6",
+                "E9"
+              ],
+              "id": "C2",
+              "text": "The live Director started an authorized run that reached input-required, then accepted one caller-directed abort with zero releases; code rejected a forbidden model-requested input, while stale and unauthorized probes were fixture-injected."
+            },
+            {
+              "evidence": [
+                "E2",
+                "E6",
+                "E7"
+              ],
+              "id": "C3",
+              "text": "Quality, capability content, and the HTTP release receiver remain fixtures, so their passing checks are not live proof."
+            },
+            {
+              "evidence": [
+                "E6",
+                "E7"
+              ],
+              "id": "C4",
+              "text": "Remaining gaps include external-agent trust and long-Task polling, broader live Director coverage, topology stress and embedded locking, and operational hardening."
+            },
+            {
+              "evidence": [
+                "E2",
+                "E6",
+                "E7"
+              ],
+              "id": "C5",
+              "text": "The next priority is full-path qualification with real Quality, capability-content, and release-receiver integrations, alongside broader live Director briefs and decisions."
+            }
+          ],
+          "kind": "verified_report@1",
+          "markdown": "## Live-proven\nAll three spikes passed their pre-registered checks on the merged tree. Spikes A and B exercised real processes with a fixture Director; spike C used a live broker-backed `gpt-6-sol` Director. In C, a text brief started an authorized run and the Task reached `input-required`. A caller-directed follow-up produced one accepted abort and zero releases. Code rejected a forbidden input requested by the live model; stale and unauthorized probes were fixture-injected, not spontaneous model behavior. [E3, E5, E8, E9, E10]\n\n## Fixture-only\nQuality, capability content, and the HTTP release receiver remain fixtures. The external agent was a local fixture process, and A and B used a fixture Director. A passing fixture does not establish live proof. [E2, E3, E4, E7]\n\n## Remaining gaps\nExternal-agent cards lack signing or attestation and remote authentication; a general directory and workflow-level polling for long remote Tasks are unbuilt. Live Director coverage is limited to one account, one model, and a caller-directed abort; reliability across broader briefs is unmeasured. Topology proof covers two instances, without embedded `create_app()` locking or stress testing. Old-build retirement, contract attestation, operational hardening, and the memory ceiling remain unbuilt or out of scope. [E6, E7]\n\n## Next priority\nQualify the full path with real Quality, capability-content, and release-receiver integrations, then broaden live Director briefs and decision types. Keep fixture results distinct from live evidence. [E2, E6, E7]",
+          "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+          "question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?",
+          "revision": "r1",
+          "title": "Temporal factory prototype: qualification status"
+        }
+      }
+    },
+    {
+      "role": "quality",
+      "service": "quality",
+      "capability": "report_quality_review@1",
+      "identity": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+      "task_id": "72f13e41-dbe2-486c-9231-83378a6dccb7",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-codex-subscription-clean-600978db:quality:r1",
+        "run_id": "probe-codex-subscription-clean-600978db",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "46d11529-d514-42c6-aa9f-13733cb3eb67"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "46d11529-d514-42c6-aa9f-13733cb3eb67:72f13e41-dbe2-486c-9231-83378a6dccb7",
+          "provider": "codex-subscription",
+          "model_id": "gpt-6-sol",
+          "live": true,
+          "call_no": 1,
+          "started_at": 1790261677.0803132,
+          "ended_at": 1790261682.622763,
+          "outcome_kind": "completed",
+          "duration_s": 5.542,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "340249cc9c0b1ee23fd04c8b36659be14ac12e30867304a1931d28c9f0b3b1d4",
+        "author": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+        "content": {
+          "accepted": true,
+          "candidate": {
+            "author": "002208b4-e59b-4768-be2d-085816bcdb10",
+            "revision": "r1",
+            "sha256": "fc4cfa3b52bba06e21cffd25884b42e32e6518fce1f087c0c8f38741d66caa2a"
+          },
+          "decided_by": "model",
+          "findings": [],
+          "kind": "quality_verdict@1",
+          "reviewer": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+          "rubric": "report-quality@1",
+          "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+        }
+      }
+    },
+    {
+      "role": "synthesis",
+      "service": "synthesizer",
+      "capability": "report_synthesis@1",
+      "identity": "002208b4-e59b-4768-be2d-085816bcdb10",
+      "task_id": "64082998-d80e-490d-bb39-69bd015aecb9",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-codex-subscription-planted-baf373f5:synthesizer:r1",
+        "run_id": "probe-codex-subscription-planted-baf373f5",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "002208b4-e59b-4768-be2d-085816bcdb10"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "002208b4-e59b-4768-be2d-085816bcdb10:64082998-d80e-490d-bb39-69bd015aecb9",
+          "provider": "codex-subscription",
+          "model_id": "gpt-6-sol",
+          "live": true,
+          "call_no": 1,
+          "started_at": 1790261682.7074392,
+          "ended_at": 1790261698.5300028,
+          "outcome_kind": "completed",
+          "duration_s": 15.823,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "9b8153f8f9b2360a021467a2b39170ae6d24a1759785e8599437a42ceeac68b3",
+        "author": "002208b4-e59b-4768-be2d-085816bcdb10",
+        "content": {
+          "claims": [
+            {
+              "evidence": [
+                "E3",
+                "E8",
+                "E10"
+              ],
+              "id": "C1",
+              "text": "All three spikes passed merged-tree checks; A and B used real processes with fixture Directors, while C included a live broker-backed gpt-6-sol Director."
+            },
+            {
+              "evidence": [
+                "E5",
+                "E6",
+                "E9"
+              ],
+              "id": "C2",
+              "text": "The live Director started an authorized run from a text brief, reached input-required, and accepted one caller-directed abort with zero releases; code rejected a forbidden model-requested input."
+            },
+            {
+              "evidence": [
+                "E2",
+                "E4",
+                "E5",
+                "E7"
+              ],
+              "id": "C3",
+              "text": "Quality, capability content, and the HTTP release receiver remain fixtures; the external agent was local, and stale and unauthorized probes were fixture-injected."
+            },
+            {
+              "evidence": [
+                "E6",
+                "E7"
+              ],
+              "id": "C4",
+              "text": "Remaining gaps include external-agent trust and remote-Task polling, broader Director coverage, topology stress and embedded locking, and operational hardening."
+            },
+            {
+              "evidence": [
+                "E2",
+                "E6",
+                "E7"
+              ],
+              "id": "C5",
+              "text": "The next priority is end-to-end qualification with real Quality, capability content, and release-receiver integrations, alongside broader live Director coverage."
+            },
+            {
+              "evidence": [
+                "E7"
+              ],
+              "id": "C6",
+              "text": "The Quality reviewer evaluated the report with a live model in the qualification runs."
+            }
+          ],
+          "kind": "verified_report@1",
+          "markdown": "## Live-proven\nAll three spikes passed their pre-registered checks on the merged tree. The external-agent and two-instance spikes ran with real processes but fixture Directors. A broker-backed `gpt-6-sol` Director took a text brief through an authorized start to an input-required Task; a caller-directed follow-up produced one accepted abort and zero releases. Code rejected a forbidden input requested by the live model. This is narrow proof, not a reliability measurement across briefs or decisions.\n\n## Fixture-only\nQuality, capability content, and the HTTP release receiver remain fixtures. The external agent was a local fixture; stale and unauthorized rejection probes were fixture-injected, not spontaneous model behavior. Fixture passes do not establish a live end-to-end release path.\n\n## Remaining gaps\nExternal agents lack signed or attested cards, remote authentication, a general directory, and workflow-level polling for long remote Tasks. Director evidence covers one account, one model, and abort only. Topology evidence covers two instances; embedded `create_app()` lacks an instance lock, and stress testing is absent. Old-build retirement, contract attestation, operational hardening, and the memory ceiling remain unbuilt or out of scope.\n\n## Next priority\nQualify the complete path with real Quality, capability content, and release-receiver integrations, then expand live Director briefs and decision types. Address external-agent trust and recovery and broader topology before claiming production readiness.\n\nThe Quality reviewer evaluated the report with a live model in the qualification runs.",
+          "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+          "question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?",
+          "revision": "r1",
+          "title": "Exomachina prototype qualification: live proof and gaps"
+        }
+      }
+    },
+    {
+      "role": "quality",
+      "service": "quality",
+      "capability": "report_quality_review@1",
+      "identity": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+      "task_id": "a5719a3c-cdb8-401c-abbf-dcacfcafeae6",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-codex-subscription-planted-baf373f5:quality:r1",
+        "run_id": "probe-codex-subscription-planted-baf373f5",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "46d11529-d514-42c6-aa9f-13733cb3eb67"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "46d11529-d514-42c6-aa9f-13733cb3eb67:a5719a3c-cdb8-401c-abbf-dcacfcafeae6",
+          "provider": "codex-subscription",
+          "model_id": "gpt-6-sol",
+          "live": true,
+          "call_no": 1,
+          "started_at": 1790261698.977182,
+          "ended_at": 1790261706.9051,
+          "outcome_kind": "completed",
+          "duration_s": 7.928,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r1",
+        "sha256": "ca5d542858e847536d7dadb7e2332ffa7e7f4c19cc485aae1cb99a2977ccbec2",
+        "author": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+        "content": {
+          "accepted": false,
+          "candidate": {
+            "author": "002208b4-e59b-4768-be2d-085816bcdb10",
+            "revision": "r1",
+            "sha256": "9b8153f8f9b2360a021467a2b39170ae6d24a1759785e8599437a42ceeac68b3"
+          },
+          "decided_by": "model",
+          "findings": [
+            {
+              "claim_id": "C6",
+              "evidence": [
+                "E6",
+                "E7"
+              ],
+              "problem": "The packet does not say that a Quality reviewer evaluated the report with a live model. This unsupported claim also appears in the markdown.",
+              "severity": "blocking"
+            }
+          ],
+          "kind": "quality_verdict@1",
+          "reviewer": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+          "rubric": "report-quality@1",
+          "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+        }
+      }
+    },
+    {
+      "role": "synthesis",
+      "service": "synthesizer",
+      "capability": "report_synthesis@1",
+      "identity": "002208b4-e59b-4768-be2d-085816bcdb10",
+      "task_id": "b5c1138a-9662-4d3c-8373-d881b96cd949",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-codex-subscription-planted-baf373f5:synthesizer:r2",
+        "run_id": "probe-codex-subscription-planted-baf373f5",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "002208b4-e59b-4768-be2d-085816bcdb10"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "002208b4-e59b-4768-be2d-085816bcdb10:b5c1138a-9662-4d3c-8373-d881b96cd949",
+          "provider": "codex-subscription",
+          "model_id": "gpt-6-sol",
+          "live": true,
+          "call_no": 1,
+          "started_at": 1790261707.117075,
+          "ended_at": 1790261720.5585809,
+          "outcome_kind": "completed",
+          "duration_s": 13.442,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r2",
+        "sha256": "42ef2263cdbd01301bf9b4c7997277d9d53284b7aa60d7e14b29dd0d621611d3",
+        "author": "002208b4-e59b-4768-be2d-085816bcdb10",
+        "content": {
+          "claims": [
+            {
+              "evidence": [
+                "E3",
+                "E8",
+                "E10"
+              ],
+              "id": "C1",
+              "text": "All three spikes passed merged-tree checks; A and B used real processes with fixture Directors, while C included a live broker-backed gpt-6-sol Director."
+            },
+            {
+              "evidence": [
+                "E5",
+                "E6",
+                "E9"
+              ],
+              "id": "C2",
+              "text": "The live Director started an authorized run from a text brief, reached input-required, and accepted one caller-directed abort with zero releases; code rejected a forbidden model-requested input."
+            },
+            {
+              "evidence": [
+                "E2",
+                "E4",
+                "E5",
+                "E7"
+              ],
+              "id": "C3",
+              "text": "Quality, capability content, and the HTTP release receiver remain fixtures; the external agent was local, and stale and unauthorized probes were fixture-injected."
+            },
+            {
+              "evidence": [
+                "E6",
+                "E7"
+              ],
+              "id": "C4",
+              "text": "Remaining gaps include external-agent trust and remote-Task polling, broader Director coverage, topology stress and embedded locking, and operational hardening."
+            },
+            {
+              "evidence": [
+                "E2",
+                "E6",
+                "E7"
+              ],
+              "id": "C5",
+              "text": "The next priority is end-to-end qualification with real Quality, capability content, and release-receiver integrations, alongside broader live Director coverage."
+            }
+          ],
+          "kind": "verified_report@1",
+          "markdown": "## Live-proven\nAll three spikes passed their pre-registered checks on the merged tree. The external-agent and two-instance spikes ran with real processes but fixture Directors. A broker-backed `gpt-6-sol` Director started an authorized run from a text brief; the Task reached input-required, and a caller-directed follow-up produced one accepted abort and zero releases. Code rejected a forbidden input requested by the live model.\n\n## Fixture-only\nQuality, capability content, and the HTTP release receiver remain fixtures. The external agent was local, and stale and unauthorized rejection probes were fixture-injected—not spontaneous model behavior. Fixture passes do not prove a live end-to-end release path.\n\n## Remaining gaps\nExternal agents lack signed or attested cards, remote authentication, a general directory, and workflow-level polling for long remote Tasks. Live Director evidence covers one account, one model, and abort only; reliability across broader briefs is unmeasured. Topology evidence covers two instances, without embedded `create_app()` locking or stress testing. Old-build retirement, contract attestation, operational hardening, and the memory ceiling remain unbuilt or out of scope.\n\n## Next priority\nQualify the complete path with real Quality, capability content, and release-receiver integrations, while expanding live Director briefs and decision types. Address external-agent trust and recovery and broader topology before claiming production readiness.",
+          "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+          "question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?",
+          "revision": "r2",
+          "title": "Exomachina prototype qualification: live proof and gaps"
+        }
+      }
+    },
+    {
+      "role": "quality",
+      "service": "quality",
+      "capability": "report_quality_review@1",
+      "identity": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+      "task_id": "dc2092d7-b453-416f-89bc-ffbe6d547665",
+      "state": "completed",
+      "observed_states": [
+        "working",
+        "working",
+        "completed"
+      ],
+      "metadata": {
+        "action_id": "probe-codex-subscription-planted-baf373f5:quality:r2",
+        "run_id": "probe-codex-subscription-planted-baf373f5",
+        "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+        "agent_identity": "46d11529-d514-42c6-aa9f-13733cb3eb67"
+      },
+      "model_call_count": 1,
+      "model_calls": [
+        {
+          "session_id": "46d11529-d514-42c6-aa9f-13733cb3eb67:dc2092d7-b453-416f-89bc-ffbe6d547665",
+          "provider": "codex-subscription",
+          "model_id": "gpt-6-sol",
+          "live": true,
+          "call_no": 1,
+          "started_at": 1790261720.821516,
+          "ended_at": 1790261726.5328379,
+          "outcome_kind": "completed",
+          "duration_s": 5.711,
+          "tokens": null
+        }
+      ],
+      "artifact": {
+        "revision": "r2",
+        "sha256": "2a1302b1dd6deb23403cc5734c5916122ced34cbf7f18ff7d61ffb86d5774b96",
+        "author": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+        "content": {
+          "accepted": true,
+          "candidate": {
+            "author": "002208b4-e59b-4768-be2d-085816bcdb10",
+            "revision": "r2",
+            "sha256": "42ef2263cdbd01301bf9b4c7997277d9d53284b7aa60d7e14b29dd0d621611d3"
+          },
+          "decided_by": "model",
+          "findings": [],
+          "kind": "quality_verdict@1",
+          "reviewer": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+          "rubric": "report-quality@1",
+          "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+        }
+      }
+    }
+  ],
+  "verdicts": [
+    {
+      "run_id": "probe-codex-subscription-clean-600978db",
+      "accepted": true,
+      "candidate": {
+        "author": "002208b4-e59b-4768-be2d-085816bcdb10",
+        "revision": "r1",
+        "sha256": "fc4cfa3b52bba06e21cffd25884b42e32e6518fce1f087c0c8f38741d66caa2a"
+      },
+      "decided_by": "model",
+      "findings": [],
+      "kind": "quality_verdict@1",
+      "reviewer": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+      "rubric": "report-quality@1",
+      "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+    },
+    {
+      "run_id": "probe-codex-subscription-planted-baf373f5",
+      "accepted": false,
+      "candidate": {
+        "author": "002208b4-e59b-4768-be2d-085816bcdb10",
+        "revision": "r1",
+        "sha256": "9b8153f8f9b2360a021467a2b39170ae6d24a1759785e8599437a42ceeac68b3"
+      },
+      "decided_by": "model",
+      "findings": [
+        {
+          "claim_id": "C6",
+          "evidence": [
+            "E6",
+            "E7"
+          ],
+          "problem": "The packet does not say that a Quality reviewer evaluated the report with a live model. This unsupported claim also appears in the markdown.",
+          "severity": "blocking"
+        }
+      ],
+      "kind": "quality_verdict@1",
+      "reviewer": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+      "rubric": "report-quality@1",
+      "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+    },
+    {
+      "run_id": "probe-codex-subscription-planted-baf373f5",
+      "accepted": true,
+      "candidate": {
+        "author": "002208b4-e59b-4768-be2d-085816bcdb10",
+        "revision": "r2",
+        "sha256": "42ef2263cdbd01301bf9b4c7997277d9d53284b7aa60d7e14b29dd0d621611d3"
+      },
+      "decided_by": "model",
+      "findings": [],
+      "kind": "quality_verdict@1",
+      "reviewer": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+      "rubric": "report-quality@1",
+      "rubric_digest": "797828205ff46dfea537e8fa53f71c0786f4d14cd9ac1f0ba2a7d8d6697489cc"
+    }
+  ],
+  "reports": {
+    "clean_r1": "agent-probe-live-1-clean-r1.md",
+    "planted_r1": "agent-probe-live-1-planted-r1.md",
+    "repair_r2": "agent-probe-live-1-repair-r2.md"
+  },
+  "broker_status_before": {
+    "signed_in": true,
+    "expired": false,
+    "account": "sha256:188b022d6e97"
+  },
+  "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+  "question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?",
+  "definition_digest": "e3d4291c7c6f4982b08323fc273ff752a5da39d1e4d5fc3b3977e36fc5e6672f",
+  "policy_digest": "953071a0aaeef0b7f0dcfeefa54363cfbf69d464b67d1a246e019f5b67680bdb",
+  "services": {
+    "research_findings": {
+      "identity": "b5ad9ea7-9e30-44b8-8128-734c606b1d5b",
+      "port": 45740,
+      "state_dir": "/tmp/exo-sf-probe-2/research_findings",
+      "pid": 12907
+    },
+    "research_risks": {
+      "identity": "c3f3b470-ac8d-4826-a75f-a4345427d96f",
+      "port": 45741,
+      "state_dir": "/tmp/exo-sf-probe-2/research_risks",
+      "pid": 12912
+    },
+    "synthesizer": {
+      "identity": "002208b4-e59b-4768-be2d-085816bcdb10",
+      "port": 45742,
+      "state_dir": "/tmp/exo-sf-probe-2/synthesizer",
+      "pid": 12913
+    },
+    "quality": {
+      "identity": "46d11529-d514-42c6-aa9f-13733cb3eb67",
+      "port": 45743,
+      "state_dir": "/tmp/exo-sf-probe-2/quality",
+      "pid": 12914
+    }
+  },
+  "join": {
+    "kind": "packet_evidence_join@1",
+    "packet_digest": "4973b5f53a9b4736256b56a886591d61cc2b7988eb0df9bb50a0381baec7172c",
+    "findings": [
+      {
+        "evidence": [
+          "E1",
+          "E3",
+          "E8",
+          "E10"
+        ],
+        "id": "F1",
+        "statement": "All three spikes passed their pre-registered checks on the merged tree. A and B were observed with real processes but a fixture Director; C also passed with a live broker-backed gpt-6-sol Director."
+      },
+      {
+        "evidence": [
+          "E5",
+          "E6",
+          "E9"
+        ],
+        "id": "F2",
+        "statement": "The live Director proof is narrow: a text brief started an authorized run, the Task reached input-required, and a caller-directed follow-up produced one accepted abort with zero releases. Code rejected a forbidden input requested by the model; stale and unauthorized probes were fixture-injected, not spontaneous model behavior."
+      },
+      {
+        "evidence": [
+          "E2",
+          "E4",
+          "E7"
+        ],
+        "id": "F3",
+        "statement": "Quality, capability content, and the HTTP release receiver remain fixtures; passing fixtures are not live proof."
+      },
+      {
+        "evidence": [
+          "E6",
+          "E7"
+        ],
+        "id": "F4",
+        "statement": "Main gaps include external-agent authentication and attestation, a general directory and workflow-level remote-Task polling; broader Director reliability and decision types; topology stress and embedded-app locking; and operational hardening, old-build retirement, contract attestation, and memory-ceiling work."
+      },
+      {
+        "evidence": [
+          "E2",
+          "E6",
+          "E7"
+        ],
+        "id": "F5",
+        "statement": "The next priority should be an end-to-end qualification that replaces Quality, capability content, and the release receiver fixtures with real integrations, while extending Director coverage beyond the single-account, single-model, caller-directed abort case."
+      }
+    ],
+    "risks": [
+      {
+        "evidence": [
+          "E2",
+          "E3",
+          "E7",
+          "E8"
+        ],
+        "id": "R1",
+        "severity": "high",
+        "statement": "End-to-end production readiness remains unproven: the combined run used a live broker-backed Director, but Quality, capability content, and the HTTP release receiver remain fixtures. Prioritize replacing these fixtures and qualifying the full path; fixture passes are not live proof."
+      },
+      {
+        "evidence": [
+          "E3",
+          "E4",
+          "E7"
+        ],
+        "id": "R2",
+        "severity": "high",
+        "statement": "External-agent trust and recovery remain incomplete: agents lack signed or attested cards and remote authentication, and workflow-level polling for long remote Tasks is unbuilt. The passing external-agent spike used a fixture Director and local fixture agent."
+      },
+      {
+        "evidence": [
+          "E5",
+          "E6",
+          "E8"
+        ],
+        "id": "R3",
+        "severity": "medium",
+        "statement": "Live Director evidence is narrow: one account and model, a caller-directed abort, and no measured reliability across broader briefs; several rejection probes were fixture-injected rather than spontaneous model behavior. Prioritize broader live decisions and briefs."
+      },
+      {
+        "evidence": [
+          "E3",
+          "E7"
+        ],
+        "id": "R4",
+        "severity": "medium",
+        "statement": "Multi-instance proof covers only two instances with a fixture Director; embedded create_app() lacks an instance lock and stress testing is absent. Extend concurrency and lifecycle qualification before relying on broader topology."
+      },
+      {
+        "evidence": [
+          "E7",
+          "E10"
+        ],
+        "id": "R5",
+        "severity": "medium",
+        "statement": "Operational hardening remains unbuilt or out of scope, including old-build retirement, contract attestation, and the memory ceiling; passing pre-registered spikes do not establish those properties."
+      }
+    ],
+    "branch_artifact_sha256": {
+      "research_findings": "cfdafb19de564efff83f8bf64a9b9a7f8b949f786fb45cabe91fd9a515c3ff47",
+      "research_risks": "0ef53f4bbab57526a14dff15237c3c42b3d1be2c4438105eac1c89c37a045215"
+    }
+  },
+  "clean_review": {
+    "accepted": true,
+    "decided_by": "model",
+    "findings": []
+  },
+  "stimulus_arm": {
+    "armed": true,
+    "stimulus_id": 1
+  },
+  "planted_claim_id": "C6",
+  "stimulus_log": [
+    {
+      "run_id": "probe-codex-subscription-planted-baf373f5",
+      "revision": "r1",
+      "task_id": "64082998-d80e-490d-bb39-69bd015aecb9",
+      "planted_text": "The Quality reviewer evaluated the report with a live model in the qualification runs.",
+      "sha256_after": "9b8153f8f9b2360a021467a2b39170ae6d24a1759785e8599437a42ceeac68b3"
+    }
+  ],
+  "planted_review": {
+    "accepted": false,
+    "decided_by": "model",
+    "findings": [
+      {
+        "claim_id": "C6",
+        "evidence": [
+          "E6",
+          "E7"
+        ],
+        "problem": "The packet does not say that a Quality reviewer evaluated the report with a live model. This unsupported claim also appears in the markdown.",
+        "severity": "blocking"
+      }
+    ],
+    "blocking_names_or_quotes_planted": true
+  },
+  "repair_lacks_planted_text": true,
+  "repair_review": {
+    "accepted": true,
+    "decided_by": "model",
+    "findings": []
+  },
+  "probe_checks": {
+    "clean_accepted_by_model": true,
+    "planted_rejected_with_named_blocker": true,
+    "repair_accepted_by_model": true,
+    "repair_removed_planted_text": true
+  },
+  "process_exits": {
+    "research_findings": -15,
+    "research_risks": -15,
+    "synthesizer": -15,
+    "quality": -15
+  },
+  "remaining_listeners_45740_45759": [],
+  "ended_at": 1790261727.108178,
+  "duration_s": 94.806,
+  "broker_status_after": {
+    "signed_in": true,
+    "expired": false,
+    "account": "sha256:188b022d6e97"
+  },
+  "leak_scan_positive_control": {
+    "canary": "fresh synthetic credential; no live token used",
+    "control_directory": "/tmp/exo-sf-probe-2-leak-control",
+    "fixture_model_home": "/tmp/exo-sf-probe-2-leak-control/model",
+    "copied_credential": "/tmp/exo-sf-probe-2-leak-control/credential-copy.json",
+    "bare_access": "/tmp/exo-sf-probe-2-leak-control/bare-access.txt",
+    "scan": {
+      "files_scanned": 3,
+      "bytes_scanned": 736,
+      "excluded": [
+        "/private/tmp/exo-sf-probe-2-leak-control/model/secrets/openai-codex.json"
+      ],
+      "hits": [
+        {
+          "path": "/tmp/exo-sf-probe-2-leak-control/bare-access.txt",
+          "kind": "access"
+        },
+        {
+          "path": "/tmp/exo-sf-probe-2-leak-control/bare-access.txt",
+          "kind": "access_jwt_fragment_0"
+        },
+        {
+          "path": "/tmp/exo-sf-probe-2-leak-control/bare-access.txt",
+          "kind": "access_jwt_fragment_1"
+        },
+        {
+          "path": "/tmp/exo-sf-probe-2-leak-control/bare-access.txt",
+          "kind": "access_jwt_fragment_2"
+        },
+        {
+          "path": "/tmp/exo-sf-probe-2-leak-control/credential-copy.json",
+          "kind": "access"
+        },
+        {
+          "path": "/tmp/exo-sf-probe-2-leak-control/credential-copy.json",
+          "kind": "access_jwt_fragment_0"
+        },
+        {
+          "path": "/tmp/exo-sf-probe-2-leak-control/credential-copy.json",
+          "kind": "access_jwt_fragment_1"
+        },
+        {
+          "path": "/tmp/exo-sf-probe-2-leak-control/credential-copy.json",
+          "kind": "access_jwt_fragment_2"
+        },
+        {
+          "path": "/tmp/exo-sf-probe-2-leak-control/credential-copy.json",
+          "kind": "refresh"
+        }
+      ]
+    }
+  },
+  "leak_scan": {
+    "files_scanned": 42,
+    "bytes_scanned": 1297112,
+    "excluded": [
+      "/Users/tomdaniel/.exomachina/model-broker/secrets/openai-codex.json"
+    ],
+    "hits": []
+  },
+  "leak_scan_final": {
+    "files_scanned": 42,
+    "bytes_scanned": 1299077,
+    "excluded": [
+      "/Users/tomdaniel/.exomachina/model-broker/secrets/openai-codex.json"
+    ],
+    "hits": []
+  }
+}
