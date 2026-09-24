@@ -9,9 +9,11 @@ from __future__ import annotations
 import argparse
 import asyncio
 import ast
+import base64
 import hashlib
 import json
 import os
+import signal
 import socket
 import sqlite3
 import subprocess
@@ -36,6 +38,8 @@ CHECK_IDS = ("SF-0", "SF-1", "SF-2", "SF-3", *(f"R1-{x}" for x in "abcde"),
              *(f"G-{x}" for x in (1, 2, 3, 4, 5, 7)))
 AGENTS = ("research_findings", "research_risks", "synthesizer", "quality")
 SERVICES = (*AGENTS, "release")
+FORBIDDEN_CONTROLS = {"append_claim", "revisions", "planted_text", "stimulus",
+                      "stimulus_id", "test_controls"}
 
 
 def verdict(ok: bool, evidence: dict, label: str, *, behavior: str | None = None) -> dict:
@@ -130,6 +134,176 @@ def _exact_release(route: dict, releases: list[dict], revision: str, sha: str) -
             releases[0].get("accepted_effect_count") == 1)
 
 
+def _quality_bound(e: dict, route_no: int, synthesis: dict, quality: dict,
+                   *, live: bool) -> bool:
+    """Bind one verdict to its synthesis, remote Task, pin and confirmed outcome."""
+    route = (e.get("routes") or {}).get(str(route_no)) or {}
+    artifact = quality.get("artifact") or {}
+    source = synthesis.get("artifact") or {}
+    verdict_value = quality.get("verdict") or {}
+    reviewer = ((e.get("agents") or {}).get("quality") or {}).get("identity")
+    content = artifact.get("content")
+    try:
+        decoded = json.loads(content) if isinstance(content, str) else None
+    except ValueError:
+        decoded = None
+    candidate = {"revision": source.get("revision"), "sha256": source.get("sha256"),
+                 "author": source.get("author")}
+    matches = [row for row in e.get("journal") or []
+               if row.get("action_id") == quality.get("action_id") and
+               row.get("run_id") == route.get("child_run_id")]
+    calls = quality.get("model_calls") or []
+    return bool(
+        quality.get("state") == "completed" and quality.get("task_id") and
+        len(matches) == 1 and matches[0].get("phase") == "confirmed" and
+        matches[0].get("task_id") == quality.get("task_id") == quality.get("journal_task_id") and
+        matches[0].get("pinned_identity") == reviewer and
+        matches[0].get("definition_digest") == quality.get("definition_digest") and
+        quality.get("exclusive_store") is True and quality.get("pin_verified") is True and
+        artifact.get("action_id") == quality.get("action_id") and
+        artifact.get("run_id") == route.get("child_run_id") and
+        artifact.get("definition_digest") == quality.get("definition_digest") and
+        artifact.get("author") == reviewer == verdict_value.get("reviewer") and
+        artifact.get("revision") == candidate["revision"] and
+        isinstance(content, str) and _sha(content) == artifact.get("sha256") ==
+            quality.get("artifact_id") and decoded == verdict_value and
+        all(candidate.values()) and verdict_value.get("candidate") == candidate and
+        source.get("author") != reviewer and verdict_value.get("decided_by") == "model" and
+        bool(calls) and all(call.get("live") is live and
+            call.get("model_id") == "gpt-6-sol" and
+            call.get("task_id") == quality.get("task_id") for call in calls))
+
+
+def _expected_inventory(e: dict) -> dict:
+    """Derive each expected action from the three observed child routes."""
+    inventory = {}
+    for number in (1, 2, 3):
+        route = (e.get("routes") or {}).get(str(number)) or {}
+        run = route.get("child_run_id")
+        revisions = {_revision(t) for t in _run_actions(e, number, "synthesizer")}
+        revisions.discard(None)
+        rows = [j for j in e.get("journal") or [] if j.get("run_id") == run]
+        expected_names = {"research_findings": 1, "research_risks": 1,
+                          "synthesizer": len(revisions), "quality": len(revisions),
+                          "release": int(number != 3)}
+        action_rows = {name: [j for j in rows if
+            (j.get("effect_kind") == "release" if name == "release" else
+             j.get("effect_kind") == "a2a" and
+             (j.get("receipt") or {}).get("harness_identity") ==
+                ((e.get("agents") or {}).get(name) or {}).get("identity"))]
+                       for name in expected_names}
+        inventory[str(number)] = {"run_id": run, "revisions": sorted(revisions),
+            "expected_counts": expected_names, "actions": action_rows,
+            "complete": bool(run and len(revisions) == (1 if number == 1 else 2 if number == 2 else
+                1 + ((route.get("child_status") or {}).get("max_repairs") or -100))) and
+                all(len(action_rows[name]) == count for name, count in expected_names.items()) and
+                all(j.get("phase") == "confirmed" and j.get("action_id") for j in rows) and
+                len(rows) == sum(expected_names.values())}
+    return inventory
+
+
+def _has_control_key(value: object) -> bool:
+    if isinstance(value, dict):
+        return bool(FORBIDDEN_CONTROLS & set(value)) or any(_has_control_key(v) for v in value.values())
+    if isinstance(value, list):
+        return any(_has_control_key(v) for v in value)
+    return False
+
+
+def _has_any_key(value: object, forbidden: set[str]) -> bool:
+    if isinstance(value, dict):
+        return bool(forbidden & set(value)) or any(_has_any_key(v, forbidden)
+            for v in value.values())
+    if isinstance(value, list):
+        return any(_has_any_key(v, forbidden) for v in value)
+    return False
+
+
+def _decoded_payloads(value: object):
+    if isinstance(value, dict):
+        data = value.get("data")
+        if isinstance(data, str):
+            try:
+                raw = base64.b64decode(data, validate=True)
+                yield raw
+                try:
+                    yield from _decoded_payloads(json.loads(raw))
+                except (ValueError, UnicodeDecodeError):
+                    pass
+            except (ValueError, UnicodeDecodeError):
+                pass
+        for child in value.values():
+            yield from _decoded_payloads(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _decoded_payloads(child)
+
+
+def _redact_history(raw_path: Path, export_path: Path) -> dict:
+    """Digest every Temporal input, including base64 start and update payloads."""
+    original = raw_path.read_bytes()
+    document = json.loads(original)
+    paths = []
+    sensitive = {"token", "actor", "authorized_actor", "owner_epoch", "epoch",
+                 "package", "closure", "bindings"}
+    def walk(value: object, path: str) -> None:
+        if isinstance(value, dict):
+            for key, child in list(value.items()):
+                at = f"{path}.{key}"
+                if key == "input" or key in sensitive:
+                    digest = hashlib.sha256(json.dumps(child, sort_keys=True,
+                        separators=(",", ":")).encode()).hexdigest()
+                    decoded_digests = [hashlib.sha256(raw).hexdigest()
+                        for raw in _decoded_payloads(child)]
+                    value[key] = {"redacted_sha256": digest,
+                                  "decoded_payload_sha256": decoded_digests}
+                    paths.append(at)
+                else:
+                    walk(child, at)
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                walk(child, f"{path}[{index}]")
+    walk(document, "$")
+    if not paths:
+        raise ValueError("history has no start or child input to redact")
+    export_path.parent.mkdir(parents=True, exist_ok=True)
+    export_path.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n")
+    return {"raw_path": str(raw_path), "raw_sha256": hashlib.sha256(original).hexdigest(),
+            "history_path": str(export_path),
+            "redacted_sha256": hashlib.sha256(export_path.read_bytes()).hexdigest(),
+            "redacted_json_paths": paths}
+
+
+def _contains_token(path: Path, token: str) -> bool:
+    if not path.is_file():
+        return False
+    raw = path.read_bytes()
+    if token.encode() in raw:
+        return True
+    if path.suffix == ".json":
+        try:
+            return any(token.encode() in payload for payload in _decoded_payloads(json.loads(raw)))
+        except (ValueError, UnicodeDecodeError):
+            return False
+    return False
+
+
+def _alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+
+
+def _group_alive(pgid: int) -> bool:
+    try:
+        os.killpg(pgid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+
+
 def check_evidence(e: dict) -> dict[str, dict]:
     """Pure SF-0..G-7 checks over observed evidence; absent evidence fails closed."""
     label = "observed-real" if e.get("provider") == "codex-subscription" else "observed-synthetic"
@@ -153,8 +327,16 @@ def check_evidence(e: dict) -> dict[str, dict]:
     publication = author.get("publication") or {}
     active = e.get("active_publication") or {}
     bindings = (e.get("testbed") or {}).get("bindings") or {}
+    author_model = ((author.get("outcome") or {}).get("model") or {})
+    stream_events = [x for x in e.get("broker_events") or [] if x.get("event") == "stream"]
+    author_streams = author.get("broker_streams") or []
     c["SF-1"] = verdict(auth_ok and (author.get("live") or {}).get("provider") ==
         ("codex-subscription" if live else "synthetic-loopback") and
+        author_model.get("kind") == "broker" and
+        author_model.get("provider") == ("codex-subscription" if live else "synthetic-loopback") and
+        author_model.get("id") == "gpt-6-sol" and author_model.get("live") is live and
+        isinstance(author.get("model_calls"), int) and author["model_calls"] > 0 and
+        (not live or len(author_streams) == author["model_calls"]) and
         (author.get("live") or {}).get("live_model_available") is True and
         author.get("seconds", 9999) <=
         (author.get("limits") or {}).get("deadline_seconds", 0) and
@@ -174,10 +356,22 @@ def check_evidence(e: dict) -> dict[str, dict]:
     pins = [agents.get(name, {}).get("pin_verified") for name in AGENTS]
     import_audit = e.get("import_audit") or {}
     sqlite_copies = [agents.get(name, {}).get("sqlite") for name in AGENTS]
+    activity = e.get("activity_log") or []
+    interactions = [x for x in activity if x.get("kind") in
+                    ("agent-task-journaled", "agent-task-polled")]
+    pins_paired = bool(interactions) and all(any(
+        pin.get("kind") == "agent-card-verified" and
+        pin.get("action_id") == row.get("action_id") and
+        pin.get("wall_time", float("inf")) <= row.get("wall_time", float("-inf")) and
+        not any(other.get("kind") == "agent-task-polled" and
+            other.get("action_id") == row.get("action_id") and
+            pin.get("wall_time", 0) < other.get("wall_time", 0) < row.get("wall_time", 0)
+            for other in activity)
+        for pin in activity) for row in interactions)
     c["SF-2"] = verdict(all(identities) and len(set(identities)) == 5 and
         all(ports) and len(set(ports)) == 5 and all(states) and len(set(states)) == 5 and
         all(stores) and len(set(stores)) == 4 and release_store and
-        release_store not in stores and all(pins) and all(
+        release_store not in stores and all(pins) and pins_paired and all(
             isinstance(copy, dict) and all(key in copy for key in
                 ("tasks", "model_calls", "stimulus_log")) for copy in sqlite_copies) and
         import_audit.get("product_clean") is True and
@@ -185,21 +379,35 @@ def check_evidence(e: dict) -> dict[str, dict]:
         (import_audit.get("launcher_exception") or {}).get("allowed") is True,
         {"identities": identities, "ports": ports, "states": states, "stores": stores,
          "release_store": release_store,
-         "pins": pins, "sqlite_copies": sqlite_copies,
+         "pins": pins, "pins_paired": pins_paired, "sqlite_copies": sqlite_copies,
          "import_audit": import_audit}, label)
     routes = e.get("routes") or {}
     workflows = [w for r in routes.values() for w in r.get("workflows", [])]
     versions = {(w.get("manifest_digest"), w.get("package_digest"), w.get("build_id"))
                 for w in workflows}
     caller_messages = [m for r in routes.values() for m in r.get("caller_messages", [])]
-    c["SF-3"] = verdict(len(workflows) == 6 and len(versions) == 1 and
+    ids = [(r.get("task_id"), r.get("run_id"), r.get("child_run_id")) for r in routes.values()]
+    ids_flat = [item for triple in ids for item in triple]
+    route_workflows = all(len(r.get("workflows") or []) == 2 and
+        {w.get("role") for w in r["workflows"]} == {"parent", "child"} and
+        {w.get("workflow_id") for w in r["workflows"]} ==
+            {r.get("run_id"), r.get("child_run_id")} and
+        all(w.get("history_path") and w.get("redacted_sha256") and
+            w.get("raw_sha256") and w.get("redacted_json_paths") for w in r["workflows"])
+        for r in routes.values())
+    c["SF-3"] = verdict(set(routes) == {"1", "2", "3"} and
+        all(ids_flat) and len(set(ids_flat)) == 9 and
+        all(r.get("task", {}).get("id") == r.get("task_id") and
+            r.get("run_id") != r.get("child_run_id") for r in routes.values()) and
+        route_workflows and len(workflows) == 6 and len(versions) == 1 and
         all(all(w.get(k) for k in ("manifest_digest", "package_digest", "build_id"))
             for w in workflows) and
         all(w.get("versioning_behavior") == "PINNED" for w in workflows) and
         bool(caller_messages) and all(len(m.get("parts") or []) == 1 and
         m["parts"][0].get("kind") == "text" and
-        not any(k in m for k in ("graph", "version", "package", "quality"))
+        not _has_any_key(m, {"graph", "version", "package", "quality"})
         for m in caller_messages), {"versions": list(versions), "workflows": workflows,
+                               "route_workflows": route_workflows,
                                "caller_messages": caller_messages}, label)
 
     r1 = routes.get("1") or {}; r2 = routes.get("2") or {}; r3 = routes.get("3") or {}
@@ -237,10 +445,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
     h1 = (a1.get("artifact") or {}).get("sha256")
     c["R1-c"] = verdict(len(synth1) == len(quality1) == 1 and
         _revision(a1) == "r1" and a1.get("live") is live and
-        v1.get("accepted") is True and v1.get("decided_by") == "model" and
-        v1.get("candidate", {}).get("sha256") == h1 and
-        v1.get("reviewer") == agents.get("quality", {}).get("identity") and
-        (a1.get("artifact") or {}).get("author") != v1.get("reviewer"),
+        v1.get("accepted") is True and _quality_bound(e, 1, a1, q1, live=live),
         {"synthesis": a1, "quality": q1}, label, behavior=quality_behavior)
     useful = r1.get("usefulness") or {}
     report1 = _report(a1)
@@ -249,33 +454,67 @@ def check_evidence(e: dict) -> dict[str, dict]:
     cited = len(claims) >= 3 and bool(packet_ids) and all(
         isinstance(claim, dict) and isinstance(claim.get("evidence"), list) and
         bool(claim["evidence"]) and set(claim["evidence"]) <= packet_ids for claim in claims)
-    c["R1-d"] = verdict(_exact_release(r1, _release_rows(e, 1), "r1", h1) and
+    report_path = Path(r1["report_path"]) if r1.get("report_path") else None
+    markdown = report1.get("markdown")
+    release1 = _release_rows(e, 1)
+    release_journal1 = [j for j in e.get("journal") or [] if j.get("run_id") == r1.get("child_run_id")
+                        and j.get("effect_kind") == "release"]
+    c["R1-d"] = verdict(_exact_release(r1, release1, "r1", h1) and
         useful.get("ok") is True and useful.get("sections_present") is True and
-        cited and bool(r1.get("report_path")) and bool(_text(t1)),
+        cited and isinstance(markdown, str) and bool(markdown) and
+        _text(t1) == markdown and report_path is not None and report_path.is_file() and
+        report_path.read_bytes() == markdown.encode() and
+        len(release_journal1) == 1 and release_journal1[0].get("phase") == "confirmed" and
+        release1[0].get("sha256") == _sha((a1.get("artifact") or {}).get("content", "")) and
+        (release_journal1[0].get("receipt") or {}).get("sha256") == h1,
         {"release": _release_rows(e, 1), "artifact": t1.get("artifacts"),
          "usefulness": useful, "claim_count": len(claims), "claims_cite_packet": cited,
          "packet_ids": sorted(packet_ids), "report_path": r1.get("report_path")}, label)
     c["R1-d"]["scope"] = "structural"
     c["R1-d"]["semantic_reading"] = "pending-orchestrator-reading"
-    c["R1-e"] = verdict(bool(quality1) and len([x for x in quality1
-        if (x.get("verdict") or {}).get("accepted") is False]) == 0,
+    c["R1-e"] = verdict(len(quality1) == 1 and v1.get("accepted") is True and
+        _quality_bound(e, 1, a1, q1, live=live),
         {"quality": quality1}, label, behavior=quality_behavior)
 
     stimuli2 = r2.get("stimulus_log") or []
     planted2 = stimuli2[0] if len(stimuli2) == 1 else {}
     s2 = _run_actions(e, 2, "synthesizer"); q2 = _run_actions(e, 2, "quality")
+    global_stimuli = e.get("stimulus_log") or []
+    expected_stimuli = {(route.get("child_run_id"), _revision(task), task.get("task_id"),
+                         (task.get("artifact") or {}).get("sha256"))
+        for number, route in ((2, r2), (3, r3))
+        for task in _run_actions(e, number, "synthesizer")
+        if number == 3 or _revision(task) == "r1"}
+    actual_stimuli = {(x.get("run_id"), x.get("revision"), x.get("task_id"),
+                       x.get("sha256_after")) for x in global_stimuli}
+    stimulus_exact = bool(expected_stimuli) and len(actual_stimuli) == len(global_stimuli) and \
+        actual_stimuli == expected_stimuli
+    sources = (e.get("control_audit") or {}).get("sources") or []
+    control_clean = ((e.get("control_audit") or {}).get("forbidden_found") is False and
+        len(sources) == 15 and all(row.get("clean") is True for row in sources) and
+        {(row.get("route"), row.get("kind")) for row in sources} ==
+            {(n, kind) for n in (1, 2, 3) for kind in
+                ("caller", "run_inputs", "briefs", "director_args", "history_inputs")} and
+        all(not _has_control_key(route.get("caller_messages")) and
+            not _has_control_key((route.get("child_status") or {}).get("run_inputs")) and
+            not _has_control_key([x.get("arguments") for x in route.get("director_calls") or []]) and
+            not _has_control_key([x.get("brief") for name in AGENTS for x in
+                _run_actions(e, n, name)]) and route.get("history_control_clean") is True
+            for n, route in ((1, r1), (2, r2), (3, r3))))
     c["R2-a"] = verdict(len(stimuli2) == 1 and planted2.get("revision") == "r1" and
         planted2.get("run_id") == r2.get("child_run_id") and
         _stimulus_bound(planted2, s2) and
         len({(x.get("task_id"), x.get("revision")) for x in stimuli2}) == len(stimuli2) and
-        r2.get("stimulus_absent_from_factory") is True,
-        {"stimulus": stimuli2, "factory_absence": r2.get("stimulus_absent_from_factory")},
+        stimulus_exact and control_clean,
+        {"stimulus": stimuli2, "all_stimulus": global_stimuli,
+         "expected_stimulus": sorted(expected_stimuli), "control_audit": e.get("control_audit")},
         label, behavior="induced")
     first2 = next((x for x in s2 if _revision(x) == "r1"), {})
     review2 = next((x for x in q2 if (x.get("verdict") or {}).get("candidate", {}).get("revision") == "r1"), {})
     rejected2 = review2.get("verdict") or {}
-    c["R2-b"] = verdict(rejected2.get("accepted") is False and rejected2.get("decided_by") == "model" and
-        review2.get("live") is live and _findings_on_claim(rejected2, planted2),
+    c["R2-b"] = verdict(rejected2.get("accepted") is False and
+        _quality_bound(e, 2, first2, review2, live=live) and
+        _findings_on_claim(rejected2, planted2),
         {"review": review2, "planted": planted2}, label, behavior=quality_behavior)
     repair2 = next((x for x in s2 if _revision(x) == "r2"), {})
     brief2 = repair2.get("brief") or {}
@@ -294,7 +533,8 @@ def check_evidence(e: dict) -> dict[str, dict]:
     ak2 = av2.get("candidate", {}).get("revision")
     max_repairs = (r2.get("child_status") or {}).get("max_repairs")
     c["R2-d"] = verdict(ak2 == "r2" and isinstance(max_repairs, int) and max_repairs >= 1 and
-        av2.get("decided_by") == "model" and accepted2.get("live") is live and
+        _quality_bound(e, 2, repair2, accepted2, live=live) and
+        av2.get("candidate", {}).get("sha256") == h2 and
         _exact_release(r2, _release_rows(e, 2), ak2, h2) and
         all(x.get("sha256") != (first2.get("artifact") or {}).get("sha256") for x in _release_rows(e, 2)),
         {"acceptance": accepted2, "release": _release_rows(e, 2), "artifact": t2.get("artifacts"),
@@ -307,18 +547,20 @@ def check_evidence(e: dict) -> dict[str, dict]:
     planted_revisions = {x.get("revision") for x in stimuli3}
     c["R3-a"] = verdict(bool(expected) and planted_revisions == expected and
         len(stimuli3) == len(expected) and all(x.get("run_id") == r3.get("child_run_id") for x in stimuli3) and
+        stimulus_exact and control_clean and
         len({(x.get("task_id"), x.get("revision")) for x in stimuli3}) == len(stimuli3) and
         all(_stimulus_bound(x, s3) for x in stimuli3) and
         all(any(_revision(a) == x["revision"] and x.get("planted_text") in json.dumps(_report(a))
                 for a in s3) for x in stimuli3), {"stimulus": stimuli3, "expected": sorted(expected)},
         label, behavior="induced")
     reviews3 = {(x.get("verdict") or {}).get("candidate", {}).get("revision"): x for x in q3}
+    synthesis3 = {_revision(x): x for x in s3}
     stimuli3_by_revision = {x.get("revision"): x for x in stimuli3}
     child3 = r3.get("child_status") or {}
-    c["R3-b"] = verdict(bool(expected) and set(reviews3) == expected and
+    c["R3-b"] = verdict(bool(expected) and len(q3) == len(expected) and
+        len(s3) == len(expected) and set(reviews3) == set(synthesis3) == expected and
         all((reviews3[x].get("verdict") or {}).get("accepted") is False and
-            (reviews3[x].get("verdict") or {}).get("decided_by") == "model" and
-            reviews3[x].get("live") is live and
+            _quality_bound(e, 3, synthesis3[x], reviews3[x], live=live) and
             _findings_on_claim(reviews3[x]["verdict"], stimuli3_by_revision.get(x) or {})
             for x in expected) and child3.get("repair_count") == max3 and
         any("repair:exhausted" in x for x in child3.get("completed") or []),
@@ -329,8 +571,17 @@ def check_evidence(e: dict) -> dict[str, dict]:
     calls3 = r3.get("director_calls") or []
     inspected = [i for i, x in enumerate(calls3) if x.get("tool") == "inspect_run" and x.get("accepted")]
     aborted = [i for i, x in enumerate(calls3) if x.get("tool") == "decide_wait" and x.get("accepted")]
+    follow_id = ((r3.get("caller_messages") or [{}])[-1]).get("messageId")
+    follow_turns = [x for x in r3.get("director_turns") or [] if x.get("message_id") == follow_id]
     c["R3-d"] = verdict(r3.get("follow_up_text") == FOLLOW_UP and
-        r3.get("follow_up_original_task") is True and len(inspected) == len(aborted) == 1 and
+        r3.get("follow_up_original_task") is True and follow_id and
+        len(follow_turns) == 1 and len(inspected) == len(aborted) == 1 and
+        all(calls3[i].get("message_id") == follow_id and
+            calls3[i].get("task_id") == r3.get("task_id") for i in inspected + aborted) and
+        (r3.get("caller_messages") or [{}])[-1].get("taskId") == r3.get("task_id") and
+        (r3.get("caller_messages") or [{}])[-1].get("contextId") == r3.get("context_id") and
+        follow_turns[0].get("model_kind") == ("live" if live else "synthetic") and
+        follow_turns[0].get("accepted") == ["inspect_run", "decide_wait"] and
         calls3[aborted[0]].get("model_kind") == ("live" if live else "synthetic") and
         inspected[0] < aborted[0] and calls3[aborted[0]].get("arguments", {}).get("action") == "abort" and
         calls3[aborted[0]].get("arguments", {}).get("revision") == child3.get("current_revision") and
@@ -342,7 +593,10 @@ def check_evidence(e: dict) -> dict[str, dict]:
         behavior="caller-prompted model-decided abort" if live else
                  "caller-prompted scripted abort")
     turns = [x for r in routes.values() for x in r.get("director_turns") or []]
-    c["R3-e"] = verdict(bool(turns) and all(x.get("model_calls", 99) <= 4 and
+    c["R3-e"] = verdict(all(len((routes.get(str(n)) or {}).get("director_turns") or []) == count
+        for n, count in ((1, 1), (2, 1), (3, 2))) and
+        all(x.get("model_kind") == ("live" if live else "synthetic") and
+        1 <= x.get("model_calls", 99) <= 4 and
         x.get("tool_calls", 99) <= 4 and x.get("elapsed_seconds", 999) <= 90 and
         x.get("failure") is None for x in turns),
         {"turns": turns}, label, behavior="caller-prompted model-decided abort" if live else
@@ -352,44 +606,118 @@ def check_evidence(e: dict) -> dict[str, dict]:
     run_ids = {identifier for r in routes.values() for identifier in
                (r.get("run_id"), r.get("child_run_id")) if identifier}
     run_journal = [x for x in journal if x.get("run_id") in run_ids]
-    c["G-1"] = verdict(len(run_ids) == 6 and bool(run_journal) and
+    inventory = _expected_inventory(e)
+    c["G-1"] = verdict(len(run_ids) == 6 and len(inventory) == 3 and
+        all(v["complete"] for v in inventory.values()) and
+        len(run_journal) == sum(sum(v["expected_counts"].values()) for v in inventory.values()) and
         all(x.get("phase") == "confirmed" for x in run_journal) and
-        not e.get("incidents"), {"journal": run_journal, "incidents": e.get("incidents")}, label)
+        e.get("incidents") == [], {"inventory": inventory,
+        "journal": run_journal, "incidents": e.get("incidents")}, label)
     calls = [x for name in AGENTS for a in agents.get(name, {}).get("tasks") or []
              for x in a.get("model_calls") or []]
     sessions = [x.get("session_id") for x in calls]
-    streams = {x.get("session") for x in e.get("broker_events") or [] if x.get("event") == "stream"}
+    streams = {x.get("session") for x in stream_events}
+    stream_counts = {session: sum(x.get("session") == session for x in stream_events)
+                     for session in streams}
+    call_counts = {session: sum(x.get("session_id") == session for x in calls)
+                   for session in sessions}
+    model_inventory = [task for name in AGENTS for task in agents.get(name, {}).get("tasks") or []]
+    expected_task_ids = {(j.get("receipt") or {}).get("task_id") for v in inventory.values()
+        for name in AGENTS for j in v["actions"][name]}
+    observed_task_ids = {task.get("task_id") for task in model_inventory}
+    store_binding = all({(j.get("receipt") or {}).get("task_id") for v in inventory.values()
+        for j in v["actions"][name]} ==
+        {task.get("task_id") for task in (agents.get(name) or {}).get("tasks") or []}
+        for name in AGENTS)
+    broker_records = e.get("broker_events") or []
+    broker_starts = [x for x in broker_records if x.get("event") == "start" and x.get("pid")]
+    broker_attach = [x for x in broker_records if x.get("event") == "attach"]
+    broker_stable = (len(broker_starts) == 1 and bool(broker_attach) and
+        all(pid == broker_starts[0]["pid"] for pid in e.get("broker_pids_during") or []))
+    # Agent sessions are absent from broker streams for the scripted agent provider.
+    stream_reconciled = (not live or all(stream_counts.get(s) == n for s, n in call_counts.items()))
+    author_count = e.get("authoring_call_count")
+    director_count = e.get("director_call_count")
+    broker_owner_counts = e.get("broker_owner_counts") or {}
     c["G-2"] = verdict(e.get("broker_pid_before") == e.get("broker_pid_after") and
         len(set(e.get("broker_pids_during") or [])) == 1 and
-        bool((e.get("broker_pids_during") or [None])[0]) and bool(calls) and
+        bool((e.get("broker_pids_during") or [None])[0]) and broker_stable and
+        expected_task_ids == observed_task_ids and store_binding and bool(calls) and
         all(x.get("provider") == ("codex-subscription" if live else "scripted") and
             x.get("model_id") == "gpt-6-sol" and x.get("live") is live for x in calls) and
         all(sessions) and len(set(sessions)) == len({(a.get("agent"), a.get("task_id")) for name in AGENTS
             for a in agents.get(name, {}).get("tasks") or [] if a.get("model_calls")}) and
-        (not live or set(sessions) <= streams) and bool(e.get("director_call_count")) and
-        bool(e.get("authoring_call_count")),
+        (not live or set(sessions) <= streams) and stream_reconciled and
+        isinstance(director_count, int) and director_count > 0 and
+        isinstance(author_count, int) and author_count > 0 and
+        broker_owner_counts.get("authoring") == author_count and
+        broker_owner_counts.get("director") == director_count,
         {"broker_pid_before": e.get("broker_pid_before"),
          "broker_pid_after": e.get("broker_pid_after"), "sessions": sessions,
          "stream_sessions": sorted(str(x) for x in streams),
-         "director_calls": e.get("director_call_count"),
-         "authoring_calls": e.get("authoring_call_count")}, label)
+         "director_calls": director_count, "authoring_calls": author_count,
+         "broker_owner_counts": broker_owner_counts,
+         "reconciliation_method": "authoring/Director stream windows; agent session call counts",
+         "stream_counts": stream_counts, "call_counts": call_counts,
+         "broker_starts": broker_starts, "broker_attach": broker_attach}, label)
     tasks = [a for name in AGENTS for a in agents.get(name, {}).get("tasks") or []]
-    c["G-3"] = verdict(bool(tasks) and all(1 <= len(a.get("model_calls") or []) <= 3 and
+    c["G-3"] = verdict(expected_task_ids == observed_task_ids and store_binding and bool(tasks) and
+        all(a.get("state") in ("completed", "failed") for a in tasks) and
+        all(1 <= len(a.get("model_calls") or []) <= 3 and
         0 <= a.get("duration_seconds", 999) <= 240 for a in tasks), {"tasks": tasks}, label)
     leak = e.get("leak_scan") or {}; control = e.get("positive_control") or {}
+    manifest = leak.get("candidate_manifest") or []
+    scan_inputs = leak.get("scan_inputs") or []
+    raw_scan = leak.get("raw") or {}
+    required_inputs = [e.get("home"), str(ROOT / "evidence" / "single-factory"),
+                       str((Path(e.get("home")) / "model") if not live else DEFAULT_HOME)] if e.get("home") else []
     c["G-4"] = verdict(leak.get("hit_count") == 0 and control.get("detected") is True and
-        leak.get("covered_home") and leak.get("covered_evidence") and
-        leak.get("covered_model_logs") and leak.get("covered_candidates"),
+        bool((control.get("scan") or {}).get("hits")) and
+        len(manifest) > 0 and all(row.get("path") and row.get("sha256") for row in manifest) and
+        len({row.get("path") for row in manifest}) == len(manifest) and
+        all(path in scan_inputs for path in required_inputs) and
+        all(row["path"] in scan_inputs for row in manifest) and
+        raw_scan.get("files_scanned", 0) >= len(manifest) and
+        leak.get("director_token_absent") is True and
+        leak.get("decoded_payload_token_absent") is True,
         {"leak_scan": leak, "positive_control": control}, label)
     cleanup = e.get("cleanup") or {}
+    stop_results_valid = (isinstance(cleanup.get("services"), dict) and
+        set(cleanup["services"]) == set(SERVICES) and
+        all(value in ("stopped", "already-stopped") for value in cleanup["services"].values()) and
+        isinstance(cleanup.get("runner"), dict) and
+        cleanup["runner"].get("running") is False and cleanup["runner"].get("pid") is None and
+        isinstance(cleanup.get("harness_exit"), int) and
+        (live or isinstance(cleanup.get("mock_exit"), int) and
+            isinstance(e.get("mock_authoring_exit"), int)))
     c["G-5"] = verdict(cleanup.get("errors") == [] and cleanup.get("listeners") == [] and
-        cleanup.get("processes_stopped") is True and
+        cleanup.get("ports_checked") and len(cleanup["ports_checked"]) >= 40 and
+        cleanup.get("started_processes") and all(row.get("exited") is True and
+            row.get("group_exited") is True
+            for row in cleanup["started_processes"]) and
+        cleanup.get("stop_results_valid") is True and stop_results_valid and
         e.get("broker_pid_before") == e.get("broker_pid_after"), cleanup, label)
     synthetic = e.get("synthetic_scenario") or {}
+    synthetic_file = Path(synthetic["evidence_path"]) if synthetic.get("evidence_path") else None
+    synthetic_file_bound = (synthetic_file is not None and synthetic_file.is_file() and
+        hashlib.sha256(synthetic_file.read_bytes()).hexdigest() == synthetic.get("evidence_sha256"))
+    try:
+        synthetic_record = json.loads(synthetic_file.read_text()) if synthetic_file_bound else {}
+    except (ValueError, OSError):
+        synthetic_record = {}
+    synthetic_record_bound = all(synthetic_record.get(key) == synthetic.get(key)
+        for key in ("status", "provider", "checks", "git_commit", "checker_sha256",
+                    "interpreter_build", "manifest_digest", "route_inventory"))
     c["G-7"] = verdict((not live and all(value["pass"] for key, value in c.items() if key != "G-7"))
         or (live and synthetic.get("status") == "structural-pass" and synthetic.get("provider") == "scripted"
             and bool(synthetic.get("checks"))
-            and all(v.get("pass") for v in (synthetic.get("checks") or {}).values())),
+            and set(synthetic["checks"]) == set(CHECK_IDS) and
+            all(v.get("pass") for v in synthetic["checks"].values()) and
+            synthetic_file_bound and synthetic_record_bound and synthetic.get("git_commit") and
+            synthetic.get("checker_sha256") == e.get("checker_sha256") and
+            synthetic.get("interpreter_build") == next(iter(versions), (None, None, None))[2] and
+            synthetic.get("manifest_digest") == next(iter(versions), (None, None, None))[0] and
+            synthetic.get("route_inventory") == {"1": True, "2": True, "3": True}),
         {"structural_checks": {key: value["pass"] for key, value in c.items()},
          "synthetic_scenario": synthetic},
         "observed-synthetic")
@@ -614,14 +942,38 @@ def _journal(home: Path) -> list[dict]:
 
 
 def _history_summary(histories: dict, route: dict) -> list[dict]:
+    from temporalio.api.enums.v1 import VersioningBehavior
     parent = histories.get("parent_status_query") or {}
     child = route.get("child_status") or {}
-    return [{"manifest_digest": (parent if name == "parent" else child).get("manifest_digest"),
+    return [{"role": name, "workflow_id": value.get("workflow_id"),
+             "manifest_digest": (parent if name == "parent" else child).get("manifest_digest"),
              "package_digest": (parent if name == "parent" else child).get("package_digest"),
              "build_id": value.get("versioning", {}).get("build_id"),
-             "versioning_behavior": "PINNED" if value.get("versioning", {}).get("behavior") else None,
+             "versioning_behavior": "PINNED" if value.get("versioning", {}).get("behavior") ==
+                 VersioningBehavior.VERSIONING_BEHAVIOR_PINNED else "OTHER",
+             **(value.get("redaction") or {}),
              "history_path": value.get("history_path")}
             for name, value in histories.get("workflows", {}).items()]
+
+
+def _history_control_audit(path: Path) -> bool:
+    document = json.loads(path.read_text())
+    for event in document.get("events") or []:
+        for key in ("workflowExecutionStartedEventAttributes",
+                    "startChildWorkflowExecutionInitiatedEventAttributes",
+                    "activityTaskScheduledEventAttributes"):
+            value = event.get(key)
+            if not isinstance(value, dict):
+                continue
+            if _has_control_key(value):
+                return False
+            for payload in _decoded_payloads(value):
+                try:
+                    if _has_control_key(json.loads(payload)):
+                        return False
+                except (ValueError, UnicodeDecodeError):
+                    continue
+    return True
 
 
 def main() -> int:
@@ -658,16 +1010,35 @@ def main() -> int:
     env_names = ("EXO_MODEL_HOME", "EXO_CODEX_BASE_URL", "OPENAI_API_KEY", "ANTHROPIC_API_KEY")
     evidence = {"provider": args.provider, "label": label, "home": str(home),
                 "status": "running", "routes": {}, "checks": {},
-                "synthetic_scenario": {k: synthetic.get(k) for k in ("status", "provider", "checks")}
-                    if synthetic else {},
+                "synthetic_scenario": ({k: synthetic.get(k) for k in ("status", "provider", "checks")}
+                    | {"evidence_path": str(synthetic_path),
+                       "evidence_sha256": hashlib.sha256(synthetic_path.read_bytes()).hexdigest(),
+                       "git_commit": synthetic.get("git_commit"),
+                       "checker_sha256": synthetic.get("checker_sha256"),
+                       "interpreter_build": synthetic.get("interpreter_build"),
+                       "manifest_digest": synthetic.get("manifest_digest"),
+                       "route_inventory": synthetic.get("route_inventory")}) if synthetic else {},
                 "setup": {"fresh_home": True,
                           "environment": {name: name in os.environ for name in env_names}},
                 "release_label": "http-release (fixture)"}
+    evidence["git_commit"] = subprocess.check_output(["git", "rev-parse", "HEAD"],
+        cwd=ROOT, text=True).strip()
+    evidence["checker_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     home.mkdir(parents=True)
     instance = home / "instances" / "report-factory"
     broker = ModelBroker() if args.provider == "codex-subscription" else None
     broker_running_before = broker.is_running() if broker is not None else False
+    model_home = home / "model" if args.provider == "scripted" else DEFAULT_HOME
+    broker_event_start = len(jsonl(model_home / "broker-events.jsonl"))
     mock = harness = None
+    started_processes = []
+    def record_process(kind: str, pid: int | None) -> None:
+        if isinstance(pid, int) and pid > 0 and not any(x["pid"] == pid for x in started_processes):
+            try:
+                group = os.getpgid(pid)
+            except ProcessLookupError:
+                group = None
+            started_processes.append({"kind": kind, "pid": pid, "pgid": group})
     step = "preflight"
     try:
         trial_ports = [*range(args.runner_port_base, args.runner_port_base + 13),
@@ -689,6 +1060,7 @@ def main() -> int:
                     "--port", str(args.mock_port), "--record", str(home / "mock-requests.jsonl"),
                     "--script", "authoring"], cwd=ROOT, stdout=log, stderr=log,
                     start_new_session=True)
+            record_process("mock-authoring", mock.pid)
             deadline = time.monotonic() + 20
             while time.monotonic() < deadline and args.mock_port not in _listen([args.mock_port]):
                 if mock.poll() is not None:
@@ -710,6 +1082,8 @@ def main() -> int:
             "--profile", "report", "--model-provider", args.provider,
             "--home", str(home), "--port-base", str(args.services_port_base)))
         evidence["testbed"] = testbed
+        for name, member in (testbed.get("pids") or {}).items():
+            record_process("service-" + name, member.get("pid"))
         step = "provision"
         run_cli(str(SRC / "admin.py"), "provision", "--instance-dir", str(instance),
             "--name", "report-factory", "--port", str(args.harness_port), "--home", str(home),
@@ -728,18 +1102,16 @@ def main() -> int:
         evidence["packet_digest"] = hashlib.sha256(json.dumps(packet, sort_keys=True,
             separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
         step = "author"
-        author_stream_before = sum(event.get("event") == "stream" for event in
-            jsonl((home / "model" if args.provider == "scripted" else DEFAULT_HOME) /
-                  "broker-events.jsonl"))
+        author_event_before = len(jsonl(model_home / "broker-events.jsonl"))
         started = time.monotonic()
         author = json.loads(run_cli(str(SRC / "admin.py"), "author", "--instance-dir", str(instance),
             "--brief", str(ROOT / "definitions" / "authoring-brief-report.md"),
             "--label", "report", "--base-template", str(ROOT / "definitions" / "report-template.json"),
             timeout=650))
         author["admin_exit_code"] = 0
-        author["model_calls"] = sum(event.get("event") == "stream" for event in
-            jsonl((home / "model" if args.provider == "scripted" else DEFAULT_HOME) /
-                  "broker-events.jsonl")) - author_stream_before
+        author["broker_streams"] = [x for x in jsonl(model_home / "broker-events.jsonl")[author_event_before:]
+                                     if x.get("event") == "stream"]
+        author["model_calls"] = len(author["broker_streams"])
         author["seconds"] = round(time.monotonic() - started, 3)
         evidence["authoring"] = author
         evidence["authoring_call_count"] = author.get("model_calls")
@@ -753,6 +1125,7 @@ def main() -> int:
                     "--port", str(args.mock_port), "--record", str(home / "mock-requests.jsonl"),
                     "--script", "director"], cwd=ROOT, stdout=log, stderr=log,
                     start_new_session=True)
+            record_process("mock-director", mock.pid)
             deadline = time.monotonic() + 20
             while time.monotonic() < deadline and args.mock_port not in _listen([args.mock_port]):
                 if mock.poll() is not None:
@@ -773,18 +1146,30 @@ def main() -> int:
         evidence["import_audit"] = _import_audit()
         step = "harness"
         harness = start_harness(instance, args.harness_port)
+        record_process("harness", harness.pid)
         card = http(f"http://127.0.0.1:{args.harness_port}/.well-known/agent-card.json", token=False)
         evidence["setup"]["card_skill_count"] = len(card.get("skills") or [])
         base = f"http://127.0.0.1:{args.harness_port}"
         question = packet["default_question"]
+        director_stream_windows = []
         for number in routes:
             step = f"route-{number}"
+            evidence["broker_pids_during"].append(_pid(broker))
+            route_event_before = len(jsonl(model_home / "broker-events.jsonl"))
             if number in (2, 3):
                 stimuli = json.loads((ROOT / "scenarios" / "sf_stimuli.json").read_text())
                 control = stimuli[f"route{number}"]
                 http(f"http://127.0.0.1:{args.services_port_base + 2}/_test/stimulus", control)
             route = _route(base, instance, question, number)
             evidence["broker_pids_during"].append(_pid(broker))
+            runner_ready = home / "runner" / "runner-ready.json"
+            if runner_ready.exists():
+                ready = json.loads(runner_ready.read_text())
+                record_process("runner", ready.get("pid"))
+                for kind, pid in (ready.get("pids") or {}).items():
+                    record_process("runner-" + kind, pid)
+                for build in (ready.get("builds") or {}).values():
+                    record_process("runner-worker", build.get("pid"))
             if number == 3:
                 route["wait_status"] = None
                 address = json.loads((home / "runner" / "runner-ready.json").read_text())["address"]
@@ -814,7 +1199,12 @@ def main() -> int:
                     raise TimeoutError("route 3 Director follow-up did not complete the original Task")
             address = json.loads((home / "runner" / "runner-ready.json").read_text())["address"]
             histories = asyncio.run(export_histories(address, route["run_id"],
-                evidence_dir / f"{args.provider}-{args.attempt}-route{number}"))
+                home / "evidence-raw" / f"{args.provider}-{args.attempt}-route{number}"))
+            for role, workflow in histories["workflows"].items():
+                raw_path = Path(workflow["history_path"])
+                export_path = evidence_dir / f"{args.provider}-{args.attempt}-route{number}" / f"{role}.json"
+                workflow["redaction"] = _redact_history(raw_path, export_path)
+                workflow["history_path"] = str(export_path)
             route["child_run_id"] = histories.get("parent_status_query", {}).get("child_id")
             async def final_state():
                 from temporalio.client import Client
@@ -832,9 +1222,15 @@ def main() -> int:
             route["director_calls"] = [{**x, "arguments": _json_field(x, "arguments_json"),
                 "result": _json_field(x, "result_json")} for x in calls if x.get("task_id") == route["task_id"]]
             route["director_turns"] = [{**(_json_field(x, "result_json") or {}),
-                "model_kind": x.get("model_kind")} for x in
+                "model_kind": x.get("model_kind"), "message_id": x.get("message_id"),
+                "task_id": x.get("task_id")} for x in
                 _rows(instance / "director.sqlite3", "director_turns") if x.get("task_id") == route["task_id"]]
             route["director_turn_count"] = len(route["director_turns"])
+            route["history_control_clean"] = all(_history_control_audit(Path(w["raw_path"]))
+                for w in route["workflows"])
+            director_stream_windows.extend(x for x in
+                jsonl(model_home / "broker-events.jsonl")[route_event_before:]
+                if x.get("event") == "stream")
             evidence["routes"][str(number)] = route
             evidence_path.write_text(json.dumps(evidence, indent=2, sort_keys=True, default=str) + "\n")
         step = "collect"
@@ -842,10 +1238,15 @@ def main() -> int:
         evidence["activity_log"] = jsonl(home / "runner" / "activities.jsonl")
         evidence["agents"] = _collect_agents(home, testbed, evidence["journal"],
                                               evidence["activity_log"])
-        evidence["broker_events"] = jsonl((home / "model" if args.provider == "scripted"
-            else DEFAULT_HOME) / "broker-events.jsonl")
+        evidence["broker_events"] = jsonl(model_home / "broker-events.jsonl")[broker_event_start:]
         evidence["director_call_count"] = sum(t.get("model_calls", 0) for r in evidence["routes"].values()
                                                for t in r.get("director_turns") or [])
+        agent_sessions = {call.get("session_id") for name in AGENTS
+            for task in evidence["agents"][name]["tasks"] for call in task.get("model_calls") or []}
+        evidence["broker_owner_counts"] = {
+            "authoring": len(author["broker_streams"]),
+            "director": sum(row.get("session") not in agent_sessions
+                for row in director_stream_windows)}
         evidence["incidents"] = _rows(instance / "director.sqlite3", "incidents")
         evidence["releases"] = _rows(home / "services" / "release" / "release.sqlite3", "releases")
         raw_stimuli = http(f"http://127.0.0.1:{args.services_port_base + 2}/_test/stimulus-log")
@@ -854,11 +1255,23 @@ def main() -> int:
             route = evidence["routes"][str(number)]
             route["stimulus_log"] = [x for x in evidence["stimulus_log"]
                                      if x.get("run_id") == route["child_run_id"]]
-            factory_visible = [route.get("caller_messages"),
-                route.get("child_status", {}).get("run_inputs"),
-                [x.get("brief") for name in AGENTS for x in
-                 _run_actions(evidence, number, name)]]
-            route["stimulus_absent_from_factory"] = '"stimulus"' not in json.dumps(factory_visible)
+        control_sources = []
+        for number in routes:
+            route = evidence["routes"][str(number)]
+            for kind, value in (("caller", route.get("caller_messages")),
+                ("run_inputs", (route.get("child_status") or {}).get("run_inputs")),
+                ("briefs", [x.get("brief") for name in AGENTS for x in
+                    _run_actions(evidence, number, name)]),
+                ("director_args", [x.get("arguments") for x in route.get("director_calls") or []])):
+                control_sources.append({"route": number, "kind": kind,
+                                        "clean": not _has_control_key(value)})
+            control_sources.append({"route": number, "kind": "history_inputs",
+                                    "clean": route.get("history_control_clean") is True})
+        evidence["control_audit"] = {"forbidden_keys": sorted(FORBIDDEN_CONTROLS),
+            "sources": control_sources,
+            "forbidden_found": any(not x["clean"] for x in control_sources)}
+        for number in routes:
+            route = evidence["routes"][str(number)]
             if number in (1, 2):
                 report = _text(route["task"])
                 if report:
@@ -878,19 +1291,33 @@ def main() -> int:
         step = "leak-scan"
         control = positive_control(home)
         evidence["positive_control"] = {"detected": bool(control.get("scan", {}).get("hits")),
-                                         "control_directory": control["control_directory"]}
-        paths = [home, evidence_dir, (home / "model" if args.provider == "scripted" else DEFAULT_HOME),
-                 *candidate_files()]
+            "control_directory": control["control_directory"], "scan": control.get("scan")}
+        candidates = candidate_files()
+        paths = [home, evidence_dir, model_home, *candidates]
         scan = scan_paths(paths)
+        director_rows = _rows(instance / "director.sqlite3", "identity")
+        token = director_rows[0]["token"] if len(director_rows) == 1 else None
+        exported = [path for path in evidence_dir.rglob("*") if path.is_file()]
+        token_absent = bool(token) and not any(_contains_token(path, token)
+            for path in set(exported) | set(candidates))
         evidence["leak_scan"] = {"hit_count": len(scan.get("hits") or []),
-            "covered_home": True, "covered_evidence": True, "covered_model_logs": True,
-            "covered_candidates": True, "candidate_file_count": len(candidate_files()), "raw": scan}
+            "scan_inputs": [str(path) for path in paths],
+            "candidate_manifest": [{"path": str(path),
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest()} for path in candidates],
+            "director_token_absent": token_absent,
+            "decoded_payload_token_absent": token_absent, "raw": scan}
+        version = evidence["routes"].get("1", {}).get("workflows") or []
+        evidence["interpreter_build"] = version[0].get("build_id") if version else None
+        evidence["manifest_digest"] = version[0].get("manifest_digest") if version else None
+        inventory = _expected_inventory(evidence)
+        evidence["route_inventory"] = {str(n): bool(inventory[str(n)]["complete"])
+                                        for n in (1, 2, 3)}
         evidence["status"] = "collected"
     except Exception as error:
         evidence["status"] = "failed"
         evidence["failure"] = {"step": step, "type": type(error).__name__, "message": str(error)[:500]}
     finally:
-        cleanup = {"errors": [], "processes_stopped": False, "listeners": None}
+        cleanup = {"errors": [], "listeners": None}
         if harness is not None:
             try:
                 cleanup["harness_exit"] = stop_process(harness)
@@ -898,6 +1325,14 @@ def main() -> int:
                 cleanup["errors"].append("harness:" + type(error).__name__)
         if (home / "runner").exists():
             try:
+                runner_ready = home / "runner" / "runner-ready.json"
+                if runner_ready.exists():
+                    ready = json.loads(runner_ready.read_text())
+                    record_process("runner", ready.get("pid"))
+                    for kind, pid in (ready.get("pids") or {}).items():
+                        record_process("runner-" + kind, pid)
+                    for build in (ready.get("builds") or {}).values():
+                        record_process("runner-worker", build.get("pid"))
                 cleanup["runner"] = json.loads(run_cli(str(SRC / "runner.py"), "stop", "--home", str(home)))
             except Exception as error:
                 cleanup["errors"].append("runner:" + type(error).__name__)
@@ -925,7 +1360,18 @@ def main() -> int:
         if args.provider == "scripted":
             ports.append(args.mock_port)
         cleanup["listeners"] = _listen(ports)
-        cleanup["processes_stopped"] = not cleanup["errors"] and not cleanup["listeners"]
+        cleanup["ports_checked"] = ports
+        cleanup["started_processes"] = [{**row, "exited": not _alive(row["pid"]),
+            "group_exited": not _group_alive(row["pgid"]) if row["pgid"] else False}
+            for row in started_processes]
+        cleanup["stop_results_valid"] = (
+            isinstance(cleanup.get("services"), dict) and
+            set(cleanup["services"]) == set(SERVICES) and
+            all(value in ("stopped", "already-stopped") for value in cleanup["services"].values()) and
+            isinstance(cleanup.get("runner"), dict) and cleanup["runner"].get("running") is False and
+            cleanup["runner"].get("pid") is None and
+            (harness is None or isinstance(cleanup.get("harness_exit"), int)) and
+            (mock is None or isinstance(cleanup.get("mock_exit"), int)))
         evidence["cleanup"] = cleanup
         evidence["checks"] = check_evidence(evidence)
         evidence["status"] = ("structural-pass" if all(x["pass"] for x in

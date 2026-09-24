@@ -271,7 +271,7 @@ class SingleFactoryCheckerTests(unittest.TestCase):
             "agents": {"synthesizer": {"tasks": [{"action_id": "run-2:child:synthesize:r1",
                 "task_id": "synth-task", "artifact": {"revision": "r1", "sha256": "a" * 64,
                     "content": '{"markdown":"unsupported"}'}}]}}}
-        self.assertTrue(check_evidence(evidence)["R2-a"]["pass"])
+        self.assertFalse(check_evidence(evidence)["R2-a"]["pass"])
         route["stimulus_log"][0]["sha256_after"] = "b" * 64
         self.assertFalse(check_evidence(evidence)["R2-a"]["pass"])
         route["stimulus_log"][0]["sha256_after"] = "a" * 64
@@ -293,7 +293,7 @@ class SingleFactoryCheckerTests(unittest.TestCase):
                     {"tool": "decide_wait", "accepted": 1, "model_kind": "synthetic", "arguments":
                         {"action": "abort", "revision": "r3", "sha256": "a" * 64}}]}
         evidence["routes"]["3"] = wait
-        self.assertTrue(check_evidence(evidence)["R3-d"]["pass"])
+        self.assertFalse(check_evidence(evidence)["R3-d"]["pass"])
         wait["director_calls"].reverse()
         self.assertFalse(check_evidence(evidence)["R3-d"]["pass"])
 
@@ -317,7 +317,7 @@ class SingleFactoryCheckerTests(unittest.TestCase):
                                      "content": json.dumps(content)}}]}},
                     "releases": [{"run_id": "child", "revision": "r1", "sha256": sha,
                                   "accepted_effect_count": 1}]}
-        self.assertTrue(check_evidence(evidence)["R1-d"]["pass"])
+        self.assertFalse(check_evidence(evidence)["R1-d"]["pass"])
         self.assertEqual(check_evidence(evidence)["R1-d"]["semantic_reading"],
                          "pending-orchestrator-reading")
         evidence["releases"][0]["sha256"] = "c" * 64
@@ -328,7 +328,7 @@ class SingleFactoryCheckerTests(unittest.TestCase):
         evidence["routes"] = {str(n): {"workflows": [dict(version), dict(version)],
             "caller_messages": [{"parts": [{"kind": "text", "text": "question"}]}]}
             for n in (1, 2, 3)}
-        self.assertTrue(check_evidence(evidence)["SF-3"]["pass"])
+        self.assertFalse(check_evidence(evidence)["SF-3"]["pass"])
         evidence["routes"]["3"]["workflows"][1]["build_id"] = "different"
         self.assertFalse(check_evidence(evidence)["SF-3"]["pass"])
 

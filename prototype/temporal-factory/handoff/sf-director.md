@@ -1,3 +1,66 @@
+# Review 2 checker fixes
+
+24 September 2026. Fast-forwarded this worktree to integration `32834c2` before the new runs. Changed only `scenarios/single_factory.py`, `tests/test_harness_modes.py`, new `tests/test_sf_checks.py`, this handoff and new evidence. No `src/` edit, commit, push, branch switch or live provider run.
+
+| Finding | Change | Regression probe |
+| --- | --- | --- |
+| F1 | `_quality_bound` binds a completed Quality Task and content/artifact SHA to its action, run, definition, pinned reviewer, confirmed journal Task, exact synthesis candidate, model decision and Task model calls. Used in R1-c/e, R2-b/d and every R3-b revision. R1-e requires exactly one accepted Quality verdict. | `test_f1_quality_candidate_task_and_journal` |
+| F2 | SF-3 requires routes 1–3, unique caller/parent/child IDs, two exported histories each, one manifest/package/build, and the actual pinned enum. G-1 requires complete confirmed research, synthesis, Quality and release action counts with no incidents. G-7 hashes and reads the synthetic evidence file, checks its git commit, checker SHA, build, manifest and route inventory. | `test_f2_route_and_journal_completeness`, `test_f2_live_synthetic_evidence_binding` |
+| F3 | Raw histories stay in each trial home's `evidence-raw/`. Exported histories digest every input, including decoded base64 start/child/update payloads, and actor/epoch/token/package/closure/bindings fields. Workflow summaries include raw/exported SHA-256 and redacted JSON paths. G-4 checks the Director token, read in process from its store, against evidence and candidates including decoded payloads; the token is never recorded. | `test_f3_base64_history_redaction_and_decoded_scan` |
+| F4 | Lane I's factory text-only A2A and caller metadata fix arrived in integration `32834c2`; this lane did not edit product code. | Integration suite was reported at 151 OK before this work. |
+| F5 | R1-d compares saved markdown bytes and original Task TextPart to the accepted synthesis markdown, and the release row digest and confirmed journal receipt to the synthesis content digest. A1 semantic reading stays `pending-orchestrator-reading`. | `test_f5_report_bytes_and_release_digest` |
+| F6 | Structural forbidden-key audit covers caller messages, raw Temporal start/activity inputs, briefs, run inputs and Director arguments. R2-a/R3-a compare the whole stimulus log to route-2/r1 and route-3/every-revision Task/hash tuples, with no route-1 row. | `test_f6_structured_controls_and_whole_stimulus_log` |
+| F7 | R3-d binds inspect and abort to the follow-up message, original Task/context, one turn and exact accepted sequence. R3-e requires turn counts 1/1/2 before the 4/4/90 limits. | `test_f7_follow_up_turn_binding_and_counts` |
+| F8 | SF-2 pairs dispatch/poll events with preceding same-action pin verification. G-2/G-3 require the journal Task inventory in the right stores and bounded calls. Broker start/attach events and boundary PID samples show one process. Authoring and Director streams are counted in windows; live agent calls reconcile by session and count. | `test_f8_pin_task_and_broker_inventory` |
+| F9 | G-4 records exact scan inputs, candidate path/SHA manifest, scanner file count and the separate positive-control scan. It requires all scan coverage and zero real hits. | `test_f9_scan_coverage` |
+| F10 | Collector records each started service, harness, runner/worker and mock PID/PGID. G-5 requires each exited, valid stop results, an empty full port block and broker before/after PID equality. | `test_f10_cleanup_process_and_stop_results` |
+| F11 | SF-1 checks author outcome model kind/provider/id/live and its broker stream count. | `test_f11_author_model_record` |
+
+The 24 emitted checks are `SF-0..SF-3`, `R1-a..R1-e`, `R2-a..R2-d`, `R3-a..R3-e`, `G-1..G-5`, and `G-7`. **Every check passed in the saved evidence for each new attempt**; the collector was tightened between attempts, so attempt 7 is the final checker shape. G-6 remains the orchestrator suite gate. R1-d is structural only, with semantic reading pending under A1.
+
+| Check | Attempt 5 | Attempt 6 | Attempt 7 |
+| --- | --- | --- | --- |
+| SF-0 | pass | pass | pass |
+| SF-1 | pass | pass | pass |
+| SF-2 | pass | pass | pass |
+| SF-3 | pass | pass | pass |
+| R1-a | pass | pass | pass |
+| R1-b | pass | pass | pass |
+| R1-c | pass | pass | pass |
+| R1-d structural | pass | pass | pass |
+| R1-e | pass | pass | pass |
+| R2-a | pass | pass | pass |
+| R2-b | pass | pass | pass |
+| R2-c | pass | pass | pass |
+| R2-d | pass | pass | pass |
+| R3-a | pass | pass | pass |
+| R3-b | pass | pass | pass |
+| R3-c | pass | pass | pass |
+| R3-d | pass | pass | pass |
+| R3-e | pass | pass | pass |
+| G-1 | pass | pass | pass |
+| G-2 | pass | pass | pass |
+| G-3 | pass | pass | pass |
+| G-4 | pass | pass | pass |
+| G-5 | pass | pass | pass |
+| G-7 | pass | pass | pass |
+
+These are each attempt's saved verdicts. Replaying attempts 5/6 under the final checker fails G-4 because those earlier evidence files did not retain the positive-control scan object; attempt 7 is the complete final evidence.
+
+| Attempt | Preserved evidence and home | Saved per-check verdicts | Redaction, scan, cleanup |
+| --- | --- | --- | --- |
+| 5 | `evidence/single-factory/scripted-5.json`, `scripted-5-route{1,2,3}/`, route-1/2 reports; `/tmp/exo-sf-syn-5` | All 24 pass | Six histories redacted; decoded token hits 0; 12 recorded processes/groups exited; G-5 pass. |
+| 6 | `evidence/single-factory/scripted-6.json`, `scripted-6-route{1,2,3}/`, route-1/2 reports; `/tmp/exo-sf-syn-6` | All 24 pass | Six histories redacted; decoded token hits 0; 12 recorded processes/groups exited; G-5 pass. |
+| 7 | `evidence/single-factory/scripted-7.json`, `scripted-7-route{1,2,3}/`, route-1/2 reports; `/tmp/exo-sf-syn-7` | **All 24 pass on final checker** | Six histories redacted; decoded token hits 0; 12 recorded processes/groups exited; G-5 pass. |
+
+Attempt 7 scanned 2,591 files, including a 230-file candidate manifest, with zero real credential hits. Its separate positive control detected both planted files. An independent decoded scan of all exported histories in attempts 5–7 also found zero Director-token hits. Use `--synthetic-evidence evidence/single-factory/scripted-7.json` for a later live run; the CLI default still points at old `scripted-1.json` and was not changed after the final run because G-7 binds the checker SHA.
+
+Verification: `/usr/bin/lockf -k /tmp/exo-qual-suite.lock .../.venv/bin/python -B -m unittest tests.test_harness_modes tests.test_director_agent tests.test_sf_checks` → **26 OK**; `git diff --check` → clean. The Review 2 probes start from preserved attempt-7 observations and change one decisive field at a time.
+
+## Cross-lane needs
+
+No new product field is needed for these checkers. The release store persists the validated content digest rather than the HTTP body; F5 compares that digest, the confirmed journal receipt and the synthesis content bytes. A1's semantic R1-d reading remains with the orchestrator.
+
 # Contract questions
 
 - **Cross-lane mock conflict:** Lane I's `--script director` handles old wait wording (`answer the director wait` or `abort the waiting run`), while route 3 must send exactly `The factory is waiting for a Director decision on this request. Please review the run and decide.` The mock would call `start_research` on that follow-up. Lane I owns the mock; the synthetic scenario cannot pass R3-d until its script recognizes the registered text. The scenario starts `--script authoring` for publication, then restarts the loopback mock on the same port with `--script director`; the broker process remains the same.
