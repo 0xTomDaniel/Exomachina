@@ -1,0 +1,16 @@
+orchestrator rerun 2026-09-24T00:59:30Z: node --test broker/test/*.test.mjs (from prototype/temporal-factory)
+✔ override guard refuses unsafe stores and hosts before HTTP (617.311666ms)
+✔ two independent starts share one broker and retain session separation (413.15775ms)
+✔ HTTP auth and usage failures use explicit broker error kinds (428.162709ms)
+✔ stale socket and dead-pid credential lock recover; stream fragments stay indexed (1147.900209ms)
+✔ closing a client aborts its in-flight provider stream (432.512292ms)
+✔ forced refresh rotates atomically through preload and leak scan finds planted copies (1179.23425ms)
+✔ missing or api-key credential never falls back to OPENAI_API_KEY (305.047834ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8160.289709
