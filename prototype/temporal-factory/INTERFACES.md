@@ -183,3 +183,11 @@ These supersede the statements above where they conflict.
   - `inspect` and `abort` require the run's `authorized_actor` and the original `context_id`.
   - A second fixture bearer, `fixture-observer`, authenticates but is not an allowed actor.
   - Tool calls and turns are audited in `director_tool_calls` and `director_turns`.
+
+## Single-factory spike amendments (24 Sep 2026, `briefs/single-factory.md`)
+
+The frozen cross-lane contract for the single-factory core-routes spike is in [`briefs/single-factory.md`](briefs/single-factory.md#cross-lane-contract-frozen). It supersedes the statements above where they conflict. In particular:
+- `synthesize` delegates to an external `report_synthesis@1` agent;
+- Quality is a model-backed async A2A agent;
+- the caller-steered `outcome_mode` is removed;
+- the evidence packet is pinned in the package.
