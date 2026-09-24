@@ -74,3 +74,28 @@ test ! -e /tmp/exo-proto-live-syn-final-20260923-67cbec0-7e2a
 ```
 
 The evidence and sidecar were read and assertions over their recorded values passed: `{"status": "pass", "rounds": 2, "model_calls": 4, "tool_calls": 3, "release_effects": 1, "history_events": {"child": 44, "parent": 14}, "files_scanned": 2007, "candidate_files": 99, "hits": 0, "positive_control_hits": 9, "final_scan_hits": 0, "broker": "stopped", "runner_running": false}`. Limits were 4 rounds, 12 model calls, 24 tool calls, and 600 seconds; the two drafts were invalid then valid. The completed v2 run recorded `director_model: fixture` and one `http-release (fixture)` effect with `accepted_effect_count: 1`. The planted bare access token and copied credential were both detected in the positive control. The final sidecar scan had zero hits, and its evidence SHA-256 matched the JSON file. Cleanup recorded no errors, with the broker, runner, and testbed stopped. The run left its trial state and raw parent/child histories in place.
+
+## Live codex-subscription run
+
+**FAIL** at scenario step `broker authoring and v2 publication` (`AssertionError`). The real subscription provider accepted the request with `originator: exomachina`; there was no provider error (`kind/status/code: none`). The author published v2 after one valid draft, so the scenario's requirement for an invalid draft followed by a corrected draft failed. This was not an authoring budget abort, so the one permitted budget retry was not run. The A2A task, release, Temporal histories, and pinning were not reached.
+
+Code SHA: `e2554c6b6a76a67ada48562d977914dbffd6dc63`. Trial home: `/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1` (resolved to `/private/tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1`). No login, code edit, deletion, or commit was performed.
+
+Commands from `prototype/temporal-factory` (`PY=/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python`):
+
+```sh
+git status --short -- src scenarios broker tests
+# exit 0; no output
+git rev-parse HEAD
+# e2554c6b6a76a67ada48562d977914dbffd6dc63
+test ! -e /tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1
+# exit 0; fresh home
+env -u EXO_MODEL_HOME -u EXO_CODEX_BASE_URL -u PI_OAUTH_CALLBACK_HOST $PY -B scenarios/live_authoring.py --home /tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1 --provider codex-subscription
+# exit 1; status fail; step broker authoring and v2 publication; error_type AssertionError
+env -u EXO_MODEL_HOME -u EXO_CODEX_BASE_URL -u PI_OAUTH_CALLBACK_HOST node broker/exo-model.mjs leak-scan /tmp/exo-proto-live-codex-20260923-e2554c6-4d8a1 evidence/ evidence/live-authoring-codex-subscription-scan.json
+# exit 0; files_scanned 75; bytes_scanned 1121566; hits []
+```
+
+Evidence: `evidence/live-authoring-codex-subscription.json` and `evidence/live-authoring-codex-subscription-scan.json`. Limits were 4 rounds, 12 model calls, 24 tool calls, and 600 seconds. Authoring recorded 1 round (`valid: true`, `errors: []`), 4 model calls, and 3 tools in order: `describe_vocabulary`, `validate_draft`, `submit_draft`. Model evidence says `live: true`, `provider: codex-subscription`, `billing: subscription`, model `gpt-6-sol`. Auto approval and v2 publication were recorded (`build_id: b-05b5760359e6`, package digest `66934029ca324b117f85617ce97a0fd87f2402fd28b424cbf03a25b1c7f2896e`). Broker health recorded signed-in account `sha256:188b022d6e97`, pi-ai `0.87.1`, and `originator: exomachina`; originator acceptance was `success`. The top-level labels remain `director_model: fixture` and `release: http-release (fixture)`, but no run exercised either component.
+
+The scenario leak scan covered 158 files including 102 commit candidates and found zero real-credential hits; its synthetic positive control detected both planted files (9 hits). The final sidecar scan also covered 158 files with zero hits, and its evidence SHA-256 matched the evidence JSON. Cleanup reported no errors; the trial runner and testbed were stopped, while the pre-existing persistent broker remained available.
