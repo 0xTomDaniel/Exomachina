@@ -353,7 +353,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
 .btnrow{display:flex;gap:6px;flex-wrap:wrap}
 
 /* Inspector (job card) */
-.insp{right:12px;top:12px;bottom:12px;width:var(--pwv);display:flex;flex-direction:column;overflow:hidden}
+.insp{right:12px;top:12px;bottom:12px;width:var(--pwv);display:flex;flex-direction:column;overflow:hidden;z-index:4}
 .insp-bar{display:flex;align-items:center;gap:6px;padding:8px 8px 8px 14px;border-bottom:1px solid var(--line)}
 .insp-bar .eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
 .insp-bar button{font-size:12px;color:var(--ink-2);padding:4px 8px;border-radius:6px}
@@ -417,6 +417,84 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
 .att .av.tone-advisory{color:var(--advisory-ink)} .att .av.tone-alarm{color:var(--alarm-ink)} .att .av.tone-normal{color:var(--ink-2)}
 .pw-closed .insp{top:auto;bottom:12px;width:auto}
 .insp-tab{font-size:12px;font-weight:650;color:var(--ink);padding:8px 12px}
+
+/* Your desk on the floor */
+.desktray{pointer-events:none;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:0 12px;border-radius:10px;font-family:var(--font-mono);color:var(--w-icon)}
+.desktray b{font:700 30px/1 var(--font-mono);color:var(--w-icon)}
+.desktray span{font-size:11px;white-space:nowrap}
+/* the desk is a dark machine in both themes, so its lit state uses a fixed light blue */
+.desktray.on b,.desktray.on span{color:#86B3FF}
+/* Director panel */
+.lnk{color:var(--action-ink);font-weight:600;text-decoration:underline;text-decoration-color:color-mix(in srgb, var(--action) 45%, transparent);text-underline-offset:2px;border-radius:3px}
+.lnk:hover{text-decoration-color:currentColor}
+.lnk.strong{font-size:14px;font-weight:700;color:var(--ink);text-decoration:none}
+.dnow{display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:center;margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--panel-2);font-size:12px}
+.dnow .dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ink-3)}
+.dnow.busy .dot{background:var(--ink);border-color:var(--ink)}
+.dnow .nl{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.dnow .nt{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-2);min-width:0;overflow-wrap:anywhere;line-height:1.5}
+.dnow.busy .nt{color:var(--ink)}
+.dmeta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:11.5px;color:var(--ink-3)}
+.tabs{display:flex;gap:4px;margin:14px 0 12px;border-bottom:1px solid var(--line)}
+.tabs button{font-size:12.5px;font-weight:600;color:var(--ink-2);padding:7px 10px;border-bottom:2px solid transparent;margin-bottom:-1px;display:inline-flex;gap:6px;align-items:center}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tabs b{font:700 9.5px/1 var(--font-mono);background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:3px 6px;color:var(--ink-2)}
+.chat{display:flex;flex-direction:column;gap:12px}
+.msg{display:flex;flex-direction:column;gap:4px;max-width:94%}
+.msg.you{align-self:flex-end;align-items:flex-end}
+.msg .who{display:flex;gap:8px;align-items:baseline;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.msg .mt{font-family:var(--font-mono);font-size:9px;letter-spacing:0;text-transform:none;font-weight:400}
+.mb{font-size:12.5px;line-height:1.5;padding:8px 11px;border-radius:10px;background:var(--panel-2);color:var(--ink);overflow-wrap:anywhere}
+.msg.you .mb{background:var(--ink);color:var(--panel)}
+.mb.pending{color:var(--ink-3);font-style:italic;background:transparent;border:1px dashed var(--line)}
+.mcard{display:flex;flex-direction:column;gap:3px;border:1.5px solid var(--action);border-radius:10px;padding:9px 11px;background:var(--panel);font-size:12px;color:var(--ink-2);margin-top:2px}
+.mcard b{font-size:12.5px;color:var(--ink)}
+.mcard .res{font-size:11.5px;color:var(--ink);margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.chip{font-size:11.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink-2);background:var(--panel)}
+.chip:hover{color:var(--ink);background:var(--panel-2)}
+.composer{position:sticky;bottom:-18px;display:flex;gap:6px;padding:10px 0 14px;margin-top:8px;background:var(--glass)}
+.composer input{flex:1;min-width:0;font:inherit;font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.composer input:focus{outline:2px solid var(--focus);outline-offset:-1px}
+.composer button{font-weight:650;font-size:12.5px;padding:8px 13px;border-radius:8px;background:var(--ink);color:var(--panel)}
+.composer button:disabled,.chip:disabled{opacity:.45;cursor:not-allowed}
+.chatoff{font-size:11.5px;color:var(--ink-2);margin-top:6px}
+.actnote{font-size:11.5px;color:var(--ink-3);margin:0 0 8px;line-height:1.45}
+.actl{display:flex;flex-direction:column}
+.act{display:grid;grid-template-columns:54px 1fr auto;gap:8px;align-items:baseline;padding:6px 2px;border-top:1px solid var(--line-2);font-size:12px;color:var(--ink)}
+.act:first-child{border-top:0}
+.act .at{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-3)}
+.act .ab{display:flex;flex-direction:column;gap:2px;min-width:0;overflow-wrap:anywhere}
+.act .tools{font-family:var(--font-mono);font-size:10px;color:var(--ink-2)}
+.act.turn .ab > span:first-child{font-weight:650}
+.act.dim{color:var(--ink-3)}
+.act.esc{color:var(--action-ink)}
+.act .ask{font-size:11px;color:var(--ink-2);padding:2px 7px;border-radius:5px;border:1px solid var(--line);opacity:0}
+.act:hover .ask,.act .ask:focus-visible{opacity:1}
+.act .ask:hover{background:var(--panel-2);color:var(--ink)}
+@media (hover:none){ .act .ask{opacity:1} }
+.empty2{font-size:12px;color:var(--ink-3);padding:10px 0}
+/* Your inbox */
+.ibx{border:1.5px solid var(--action);border-radius:10px;padding:10px 12px 11px;margin-top:12px;background:var(--panel)}
+.ibx .ih{display:flex;align-items:center;gap:8px}
+.ibx .iw{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--action-ink);white-space:nowrap}
+.ibx .is{font-size:11.5px;color:var(--ink-2);margin-top:3px;line-height:1.4}
+.ibx .iwhy{font-size:12.5px;margin-top:8px;line-height:1.45;color:var(--ink)}
+.irec{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--panel-2);font-size:12.5px;display:flex;flex-direction:column;gap:3px;line-height:1.4}
+.irec span:not(.rl){font-size:11.5px;color:var(--ink-2)}
+.irec .rl{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.irec.dim{color:var(--ink-2);font-size:12px}
+.ibx .acts,.mcard .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ibx .acts button,.mcard .acts button,.decision .acts button.ghost{font-weight:650;font-size:12.5px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.ibx .acts button.primary,.mcard .acts button.primary{background:var(--action);border-color:var(--action);color:#fff}
+.ibx .acts button:disabled{opacity:.45;cursor:not-allowed}
+.decision .acts button.ghost{margin-left:auto;color:var(--ink-2)}
+.iexp{font-size:11px;color:var(--ink-3);margin-top:8px}
+.drec{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin:-2px 0 8px;font-size:12px}
+.drec span{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.hud .decb{display:inline-flex;align-items:center;gap:5px;padding:1px 5px;margin:-1px -2px;border-radius:6px;font:inherit;color:inherit}
+.hud .decb:hover{background:var(--panel-2)}
 
 /* Transport */
 .transport{display:flex;align-items:center;gap:14px;padding:9px 16px;background:var(--panel);border-top:1px solid var(--line);min-width:0;flex-wrap:wrap;row-gap:8px}
@@ -491,7 +569,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
     </div>
     <nav class="views" aria-label="Factory views">
       <template x-for="v in ['Floor','Board','Decisions','Outputs','Definition','Agents']" :key="v">
-        <button type="button" :class="{on: v === $store.floor.view}" :aria-current="v === $store.floor.view ? 'page' : null" @click="(v === 'Floor' || v === 'Board') ? $store.floor.setView(v) : $store.floor.soon(v)" x-text="v"></button>
+        <button type="button" :class="{on: v === $store.floor.view}" :aria-current="v === $store.floor.view ? 'page' : null" @click="(v === 'Floor' || v === 'Board') ? $store.floor.setView(v) : (v === 'Decisions' ? $store.floor.select('inbox') : $store.floor.soon(v))" x-text="v"></button>
       </template>
     </nav>
     <div class="grow"></div>
@@ -615,6 +693,8 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
       <ul>
         <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--w-belt-edge)" stroke-width="8" stroke-linecap="round"/><path d="M2 5h26" stroke="var(--w-belt)" stroke-width="5" stroke-linecap="round"/></svg>Work belt</li>
         <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--w-signal)" stroke-width="1.5" stroke-dasharray="4 3"/></svg>Director signal</li>
+        <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h22" stroke="var(--w-signal)" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/><circle cx="26" cy="5" r="2.6" fill="var(--w-signal)"/></svg>Your line</li>
+        <li class="wide"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--action)" stroke-width="2.2" stroke-linecap="round"/></svg>Blue while a decision waits for you</li>
       </ul>
       <h4>State (ISA-101)</h4>
       <ul>
@@ -674,7 +754,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
       </div>
       <div class="m dec" :class="h.dec.level">
         <span class="k">Decisions owed</span>
-        <span class="v"><small>You</small><b x-text="h.dec.you"></b><small>Director</small><b x-text="h.dec.director"></b></span>
+        <span class="v"><button type="button" class="decb" @click="$store.floor.select('inbox')" title="Open your inbox"><small>You</small><b x-text="h.dec.you"></b></button><button type="button" class="decb" @click="$store.floor.select('director')" title="Open the Director"><small>Director</small><b x-text="h.dec.director"></b></button></span>
         <span class="s" x-text="h.dec.sub"></span>
       </div>
     </div>
@@ -696,6 +776,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
           <span class="ds" x-text="d.step"></span>
         </div>
         <p x-text="d.context"></p>
+        <div class="drec" x-show="d.rec"><span>Director recommends</span><b x-text="d.rec"></b></div>
         <div class="meta">
           <span>Responder <b x-text="d.responder"></b></span>
           <span>Allowed by the graph <b x-text="d.allowed.join(', ')"></b></span>
@@ -712,8 +793,9 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
           <div>
             <div class="acts">
               <template x-for="(a, k) in d.allowed" :key="a">
-                <button type="button" :class="{primary: k === 0}" :disabled="!d.atLive || !!d.pending" @click="$store.floor.decide(a)" x-text="a"></button>
+                <button type="button" :class="{primary: d.recAction ? a === d.recAction : k === 0}" :disabled="!d.atLive || !!d.pending" @click="$store.floor.decide(a, d.job)" x-text="a"></button>
               </template>
+              <button type="button" class="ghost" @click="$store.floor.select('inbox')">Open inbox</button>
             </div>
             <div class="turn" x-show="!d.atLive && !d.pending">You're watching a replay. Jump to now to act.</div>
             <template x-if="d.pending">
@@ -734,7 +816,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
       <template x-if="$store.floor.panel">
         <div style="display:contents">
           <div class="insp-bar">
-            <span class="eyebrow" x-text="({run:'Job card', job:'Job card', floor:'Floor', step:'Step', item:'Work item'})[$store.floor.insp && $store.floor.insp.kind] || ''"></span>
+            <span class="eyebrow" x-text="({run:'Job card', job:'Job card', floor:'Floor', step:'Step', item:'Work item', director:'Director', inbox:'Decisions'})[$store.floor.insp && $store.floor.insp.kind] || ''"></span>
             <div class="grow"></div>
             <button type="button" @click="$store.floor.panel = false; $store.floor.refit()">Hide ›</button>
           </div>
@@ -809,6 +891,92 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
                   </template>
                 </ul>
                 <p class="prov" x-text="i.provenance"></p>
+              </div>
+            </template>
+            <template x-if="$store.floor.insp && $store.floor.insp.kind === 'director'">
+              <div class="dirp" x-data="{ get i(){ return $store.floor.insp } }">
+                <button type="button" class="back" @click="$store.floor.back()">‹ Floor</button>
+                <div class="titlerow"><h2>◆ Director</h2><span class="state" x-text="i.state"></span></div>
+                <div class="dnow" :class="{busy: i.now.busy}">
+                  <span class="dot" aria-hidden="true"></span><span class="nl">Now</span>
+                  <span class="nt"><template x-if="i.now.job"><button type="button" class="lnk" @click="$store.floor.pickJob(i.now.job)" x-text="'Job ' + i.now.job"></button></template><span x-text="(i.now.job ? ' · ' : '') + i.now.text"></span></span>
+                </div>
+                <div class="dmeta"><span x-text="i.meta"></span><button type="button" class="lnk" x-show="i.you" @click="$store.floor.select('inbox')" x-text="i.you + ' waiting for you'"></button></div>
+                <div class="tabs" role="tablist" aria-label="Director">
+                  <button type="button" role="tab" :aria-selected="$store.floor.dirTab === 'chat' ? 'true' : 'false'" @click="$store.floor.setDirTab('chat')">Chat</button>
+                  <button type="button" role="tab" :aria-selected="$store.floor.dirTab === 'activity' ? 'true' : 'false'" @click="$store.floor.setDirTab('activity')">Activity <b x-show="i.unread" x-text="i.unread"></b></button>
+                </div>
+                <template x-if="$store.floor.dirTab === 'chat'">
+                  <div>
+                    <div class="chat" aria-live="polite">
+                      <div class="empty2" x-show="!i.chat.length">Ask the Director about this floor. Its own work runs in the background; see Activity.</div>
+                      <template x-for="m in i.chat" :key="m.k">
+                        <div class="msg" :class="m.who">
+                          <div class="who"><span x-text="m.who === 'you' ? 'You' : 'Director'"></span><span class="mt" x-text="m.tl"></span></div>
+                          <template x-if="m.status"><div class="mb pending" x-text="m.status"></div></template>
+                          <template x-if="!m.status">
+                            <div class="mb"><template x-for="(pt, k) in m.parts" :key="k"><span><template x-if="pt.text != null"><span x-text="pt.text"></span></template><template x-if="pt.job"><button type="button" class="lnk" @click="$store.floor.pickJob(pt.job)" x-text="'Job ' + pt.job"></button></template><template x-if="pt.step"><button type="button" class="lnk" @click="$store.floor.select('step', pt.step)" x-text="pt.label"></button></template><template x-if="pt.inbox"><button type="button" class="lnk" @click="$store.floor.select('inbox')" x-text="pt.label || 'Open your inbox'"></button></template></span></template></div>
+                          </template>
+                          <template x-if="m.card">
+                            <div class="mcard">
+                              <b x-text="m.card.title"></b><span x-text="m.card.body"></span>
+                              <div class="acts" x-show="m.card.state === 'ask'"><template x-for="(a, k) in m.card.actions" :key="a"><button type="button" :class="{primary: k === 0}" @click="$store.floor.chatAct(m.k, a)" x-text="a"></button></template></div>
+                              <div class="res" x-show="m.card.state !== 'ask'" x-text="m.card.result"></div>
+                            </div>
+                          </template>
+                        </div>
+                      </template>
+                    </div>
+                    <div class="chips"><template x-for="c in i.chips" :key="c"><button type="button" class="chip" :disabled="!i.canChat" @click="$store.floor.sendChat(c)" x-text="c"></button></template></div>
+                    <form class="composer" @submit.prevent="$store.floor.sendChat($store.floor.chatDraft)">
+                      <input type="text" x-model="$store.floor.chatDraft" :disabled="!i.canChat" :placeholder="i.canChat ? 'Message the Director' : 'Chat is off'" aria-label="Message the Director" autocomplete="off">
+                      <button type="submit" :disabled="!i.canChat || !$store.floor.chatDraft.trim()">Send</button>
+                    </form>
+                    <div class="chatoff" x-show="!i.canChat"><span x-text="i.chatOff"></span> <button type="button" class="lnk" x-show="$store.floor.live" @click="$store.floor.toLive()">Jump to now</button></div>
+                  </div>
+                </template>
+                <template x-if="$store.floor.dirTab === 'activity'">
+                  <div>
+                    <p class="actnote">The Director's own work: one turn at a time. Bright lines are its turns and what they decided; dim lines are floor events it reacted to.</p>
+                    <div class="actl">
+                      <template x-for="a in i.act" :key="a.k">
+                        <div class="act" :class="a.cls"><span class="at" x-text="a.tl"></span><div class="ab"><span x-text="a.text"></span><span class="tools" x-show="a.tools" x-text="a.tools"></span></div><button type="button" class="ask" @click="$store.floor.askAbout(a.q)" :aria-label="'Ask the Director about: ' + a.text">Ask</button></div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+            <template x-if="$store.floor.insp && $store.floor.insp.kind === 'inbox'">
+              <div x-data="{ get i(){ return $store.floor.insp } }">
+                <button type="button" class="back" @click="$store.floor.back()">‹ Floor</button>
+                <div class="titlerow"><h2 x-text="i.title"></h2><span class="state" :class="i.items.length ? 'tone-action' : ''" x-text="i.items.length ? i.items.length + ' waiting' : 'Clear'"></span></div>
+                <p class="brief" style="color:var(--ink-2)" x-text="'Decisions for ' + i.who + '. The Director decides what it can and brings you the rest.'"></p>
+                <template x-for="it in i.items" :key="it.key">
+                  <div class="ibx">
+                    <div class="ih"><span class="isa action" aria-hidden="true">!</span><button type="button" class="lnk strong" @click="it.job ? $store.floor.pickJob(it.job) : $store.floor.select('step', it.step)" x-text="it.title"></button><span class="iw" x-text="'waiting ' + it.waited"></span></div>
+                    <div class="is" x-text="it.sub"></div>
+                    <div class="iwhy"><b x-text="it.why"></b> <span x-text="it.reason"></span></div>
+                    <template x-if="it.rec"><div class="irec"><span class="rl">Director recommends</span><b x-text="it.rec.text"></b><span x-show="it.rec.why" x-text="it.rec.why"></span></div></template>
+                    <template x-if="it.reviewing"><div class="irec dim">The Director is reviewing this now and will attach a recommendation.</div></template>
+                    <div class="acts">
+                      <template x-for="(a, k) in it.allowed" :key="a"><button type="button" :class="{primary: it.rec ? a === it.rec.action : k === 0}" :disabled="!i.atLive || i.busy" @click="$store.floor.decide(a, it.job)" x-text="a"></button></template>
+                    </div>
+                    <template x-if="it.pending">
+                      <div class="lifecycle" aria-live="polite"><template x-for="(st, k) in ['Requested','Validated','Applied']" :key="st"><span :class="{on: k <= it.pending.stage}" x-text="st"></span></template><span style="border:0" x-text="it.pending.action"></span></div>
+                    </template>
+                    <div class="iexp" x-text="it.expires"></div>
+                  </div>
+                </template>
+                <div class="chatoff" x-show="i.items.length && !i.atLive"><span x-text="i.live ? 'You are watching a replay. Jump to now to decide.' : 'This run has finished.'"></span> <button type="button" class="lnk" x-show="i.live" @click="$store.floor.toLive()">Jump to now</button></div>
+                <div class="empty2" x-show="!i.items.length">Nothing needs you right now. The Director handles what it can and escalates the rest here.</div>
+                <template x-if="i.done.length">
+                  <div>
+                    <h3>Decided by you</h3>
+                    <div class="where"><template x-for="d in i.done" :key="d.k"><button type="button" @click="d.job && $store.floor.pickJob(d.job)"><span x-text="d.text"></span><span class="wm" x-text="d.tl"></span></button></template></div>
+                  </div>
+                </template>
+                <div class="note" x-text="i.note"></div>
               </div>
             </template>
             <template x-if="$store.floor.insp && $store.floor.insp.kind === 'step'">
@@ -917,6 +1085,7 @@ function B(){
     scrap:(t,item,at,x={}) => p({t,type:'scrap',item,at,...x}),
     alarm:(t,t1,level,text) => p({t,t1,type:'alarm',level,text}),
     command:(t,by,cmd,outcome) => p({t,type:'command',by,cmd,outcome}),
+    note:(t,parts,x={}) => p({t,type:'note',parts,...x}),
     end:(t,outcome,x={}) => p({t,type:'end',outcome,...x}),
   };
 }
@@ -981,8 +1150,13 @@ function supRun(){ const b = B();
   b.work(101.7,'policy',7.5,{item:'sc1',attempt:1,task:'A2A Task tsk-6d1f02',rev:'r1'});
   b.verdict(109.2,'policy','sc1','accepted',{rev:'r1',sha:'2f7c90ab',findings:0,msg:'Policy check passed r1 · 0 findings'});
   b.move(109.2,'sc1','policy','approve',2.4);
-  b.wait(111.6,null,'approve',{responder:'You · Procurement lead',human:true,allowed:['Approve','Send back'],level:'action',context:'Scorecard r1 ranks supplier B first. The policy check passed with no findings. The graph asks a person to approve before delivery.',msg:'Approval needed from you · scorecard r1',level2:'action'});
+  b.wait(111.6,null,'approve',{responder:'You · Procurement lead',human:true,allowed:['Approve','Send back'],level:'action',context:'Scorecard r1 ranks supplier B first. The policy check passed with no findings. Policy asks a person to approve before delivery.',msg:'Approval needed from you · scorecard r1',level2:'action',
+    expires:111.6 + 259200, onExpiry:'the caller hears that no decision was made',
+    rec:{ t:118.4, action:'Approve', text:'Approve supplier B.', why:'B has the shortest lead time and a clean audit record. Supplier C\'s result was recovered from its Task record and checked before scoring.' }});
   b.alarm(111.6,null,'action','Approval needed from you · scorecard r1');
+  b.director(111.9,6.3,'approve',['inspect_run','compare(assessments)','recommend(approve, supplier B)'],{msg:'The Director is reviewing the approval for you'});
+  b.command(118.2,'Director','recommend(approve, scorecard r1)','attached to your approval');
+  b.note(118.4,['Scorecard r1 is waiting for your approval. I recommend supplier B: shortest lead time and a clean audit record. ',{inbox:true,label:'Open your inbox'}]);
   return b.ev; }
 
 const FACTORIES = [
@@ -1008,14 +1182,15 @@ const FACTORIES = [
       {id:'rr',kind:'assign',name:'Research risks',short:'Risks',agent:'research-risks',dept:'production',out:'risks'},
       {id:'join',kind:'join',name:'Join',short:'Join',sub:'needs 2 of 2',dept:'production',out:'bundle'},
       {id:'synth',kind:'assign',name:'Synthesize report',short:'Synthesis',agent:'synthesizer',dept:'production',out:'report'},
-      {id:'review',kind:'gate',name:'Quality review',short:'Review',agent:'quality-reviewer',dept:'quality',loop:{to:'synth',max:2}},
-      {id:'decide',kind:'wait',name:'Director decision',short:'Decision',sub:'allowed: abort',responder:'Director',allowed:['Abort']},
+      {id:'review',kind:'gate',name:'Quality review',short:'Review',sub:'quality-reviewer · QC',agent:'quality-reviewer',dept:'quality',loop:{to:'synth',max:2}},
+      {id:'decide',kind:'wait',name:'Director decision',short:'Decision',sub:'Director · may escalate to you',responder:'Director',allowed:['Abort','One more repair','Escalate to you'],
+       escalateTo:'You · Research lead',humanAllowed:['One more repair','Abort'],expires:7200,onExpiry:'the job is aborted'},
       {id:'release',kind:'output',name:'Release',sub:'accepted only'},
       {id:'abort',kind:'end',name:'Aborted',sub:'no release'},
     ],
     edges:[
       {from:'intake',to:'rf'},{from:'intake',to:'rr'},{from:'rf',to:'join'},{from:'rr',to:'join'},{from:'join',to:'synth'},{from:'synth',to:'review'},
-      {from:'review',to:'release',label:'accepted'},{from:'review',to:'decide',label:'repair limit'},{from:'review',to:'synth',label:'rejected · repair',loop:true},{from:'decide',to:'abort',label:'abort'},
+      {from:'review',to:'release',label:'accepted'},{from:'review',to:'decide',label:'repair limit'},{from:'review',to:'synth',label:'rejected · repair',loop:true},{from:'decide',to:'abort',label:'abort'},{from:'decide',to:'synth',label:'one more repair',loop:true},
     ],
     signals:['intake','decide'],
     runs:[
@@ -1023,6 +1198,12 @@ const FACTORIES = [
        brief:'Answers research questions with findings and risks, a synthesized report, and an independent quality review.', events:null},
     ],
     defaultRun:'floor',
+    // Your answer to an escalation replays the same seeded floor with that answer applied at "now",
+    // so everything before it stays exactly as it was.
+    onDecide(run, action, now, job){
+      run.answers = { ...run.answers, [job]:{ t:now, action } };
+      run.events = [...simulateFloor(this, { ...run.sim, answers:run.answers }).events, run.publishEv];
+    },
   },
   { id:'evaluate-suppliers', name:'Supplier Evaluation', capability:'evaluate-suppliers@1', version:'v3', digest:'9c20d7aa',
     provenance:'Illustrative factory · not built',
@@ -1046,7 +1227,7 @@ const FACTORIES = [
       {id:'collect',kind:'join',name:'Collect',sub:'needs 3 of 3',dept:'analysis'},
       {id:'score',kind:'assign',name:'Score suppliers',agent:'risk-scorer',dept:'analysis'},
       {id:'policy',kind:'gate',name:'Policy check',agent:'policy-checker',dept:'compliance',loop:{to:'score',max:1}},
-      {id:'approve',kind:'wait',name:'Approval',sub:'responder: you',responder:'You · Procurement lead',allowed:['Approve','Send back'],dept:'compliance'},
+      {id:'approve',kind:'wait',name:'Approval',sub:'you decide · Director advises',responder:'You · Procurement lead',human:true,recommendedBy:'Director',allowed:['Approve','Send back'],dept:'compliance',expires:259200,onExpiry:'the caller hears that no decision was made'},
       {id:'deliver',kind:'output',name:'Deliver',sub:'to the caller'},
     ],
     edges:[
@@ -1054,7 +1235,7 @@ const FACTORIES = [
       {from:'policy',to:'approve',label:'passed'},{from:'approve',to:'deliver',label:'approve'},
       {from:'policy',to:'score',label:'failed · rework',loop:true},{from:'approve',to:'score',label:'send back',loop:true},
     ],
-    signals:['intake'],
+    signals:['intake','approve'],
     runs:[
       {id:'0203',name:'Three suppliers, awaiting approval',outcomeLabel:'Needs you',tone:'action',start:'2026-09-24T09:41:05',startAt:131.6,live:true,now:131.6,
        brief:'Evaluate three shortlisted suppliers for part 7-114 and recommend one.',events:supRun()},
@@ -1086,8 +1267,13 @@ const FACTORIES = [
         b.work(now + 21.7,'policy',7.2,{item:nid,attempt:n,task:'A2A Task tsk-6d1f0' + n,rev:nr});
         b.verdict(now + 28.9,'policy',nid,'accepted',{rev:nr,sha,findings:0,msg:'Policy check passed ' + nr});
         b.move(now + 28.9,nid,'policy','approve',2.4);
-        b.wait(now + 31.3,null,'approve',{responder:'You · Procurement lead',human:true,allowed:['Approve','Send back'],level:'action',context:'Scorecard ' + nr + ' addresses your note. The policy check passed with no findings.',msg:'Approval needed from you · scorecard ' + nr});
+        b.wait(now + 31.3,null,'approve',{responder:'You · Procurement lead',human:true,allowed:['Approve','Send back'],level:'action',context:'Scorecard ' + nr + ' addresses your note. The policy check passed with no findings.',msg:'Approval needed from you · scorecard ' + nr,
+          expires:now + 31.3 + 259200, onExpiry:'the caller hears that no decision was made',
+          rec:{ t:now + 37.6, action:'Approve', text:'Approve supplier B.', why:'Scorecard ' + nr + ' answers your note and still ranks B first.' }});
         b.alarm(now + 31.3,null,'action','Approval needed from you · scorecard ' + nr);
+        b.director(now + 31.6,5.8,'approve',['inspect_run','recommend(approve, supplier B)'],{msg:'The Director is reviewing the approval for you'});
+        b.command(now + 37.4,'Director','recommend(approve, scorecard ' + nr + ')','attached to your approval');
+        b.note(now + 37.6,['Scorecard ' + nr + ' answers your note and still ranks supplier B first. I recommend approving it. ',{inbox:true,label:'Open your inbox'}]);
         run.now = now + 31.3;
       }
       run.events.push(...b.ev);
@@ -1241,10 +1427,11 @@ function simulateFloor(f, o){
           E({ t:t1, type:'work', job:J(j), step:stepId, dur, item, attempt, rev, task:'A2A Task tsk-' + hex8().slice(0, 6), queued:t1 - t });
           at(t1 + dur, t2 => {
             free(r, t2);
-            let v = j.script[attempt - 1] || 'A';
+            // An extra repair granted at the limit usually clears the finding; one in five fails again.
+            let v = j.extra ? ((parseInt(J(j), 10) % 5) ? 'A' : 'R:C5') : (j.script[attempt - 1] || 'A');
             // story beats: the first review to finish after each limitAt time hits the repair limit
             const li = (o.limitAt || []).findIndex(x => x != null && t2 >= x);
-            if (li >= 0){ o.limitAt[li] = null; v = 'R:C5'; j.att[stepId] = attempt; if (s.loop) j.forceLimit = true; }
+            if (li >= 0){ o.limitAt[li] = null; v = 'R:C5'; j.att[stepId] = attempt; if (s.loop) j.forceLimit = true; j.policy = (o.limitPolicy || [])[li] || null; }
             const lp = loopOf(stepId), repairsLeft = s.loop && !j.forceLimit ? attempt <= s.loop.max : false;
             if (v === 'A'){
               E({ t:t2, type:'verdict', job:J(j), step:stepId, item, verdict:'accepted', rev, findings:0 });
@@ -1266,19 +1453,21 @@ function simulateFloor(f, o){
         });
         break; }
       case 'wait': {
-        const w = E({ t, t1:null, type:'wait', job:J(j), step:stepId, responder:s.responder, human:!!s.human, allowed:s.allowed, level:s.human ? 'action' : 'alarm',
-          context:`Job ${J(j)}: every revision was rejected. The caller's Task is input-required. The graph allows one action here.`, msg:`Job ${J(j)} · waiting for the Director`, level2:'alarm' });
+        const gate = Object.keys(j.att).find(k => steps[k].kind === 'gate'), rev = 'r' + (j.att[gate] || 1);
+        const w = E({ t, t1:null, type:'wait', job:J(j), step:stepId, responder:s.responder, human:false, allowed:s.allowed, level:'alarm',
+          context:`Job ${J(j)}: every revision was rejected. The Director decides within its delegated authority, or escalates to you.`, msg:`Job ${J(j)} · waiting for the Director`, level2:'alarm' });
         const al = E({ t, t1:null, type:'alarm', job:J(j), level:'alarm', text:`Job ${J(j)} · repair limit reached · waiting for the Director` });
         const r = res.get('director');
         acquire(r, t, 0, t1 => {
+          const pol = policyFor(j, s);
           const dur = U(...o.dur[stepId]);
-          const rev = 'r' + (j.att[Object.keys(j.att).find(k => steps[k].kind === 'gate')] || 1);
-          E({ t:t1, type:'director', job:J(j), dur, target:stepId, tools:['inspect_run', `decide_wait(abort, ${rev})`] });
+          const act = pol === 'abort' ? `decide_wait(abort, ${rev})` : (pol === 'repair' ? `decide_wait(one_more_repair, ${rev})` : `escalate(${rev}, research lead)`);
+          E({ t:t1, type:'director', job:J(j), dur, target:stepId, tools:['inspect_run', act] });
           at(t1 + dur, t2 => {
             free(r, t2); w.t1 = t2; al.t1 = t2;
-            E({ t:t2, type:'command', job:J(j), by:'Director', cmd:`decide_wait(abort, ${rev})`, outcome:'validated → applied' });
-            E({ t:t2, type:'decide', job:J(j), step:stepId, by:'Director', action:'Abort', stamp:'ABORT · DIRECTOR', rationale:'Each revision still misstates what ran live.', msg:`Job ${J(j)} · the Director aborted it` });
-            send(j, item, outs(stepId)[0], t2);
+            E({ t:t2, type:'command', job:J(j), by:'Director', cmd:act, outcome:pol === 'escalate' ? 'validated → sent to you' : 'validated → applied' });
+            if (pol === 'escalate') escalate(j, item, s, stepId, rev, t2);
+            else resolve(j, item, stepId, pol, 'Director', t2, pol === 'abort' ? 'Each revision still misstates what ran live.' : 'The last finding is narrow. One more pass is within my authority.');
           });
         });
         break; }
@@ -1292,6 +1481,52 @@ function simulateFloor(f, o){
         at(t + .7, t2 => done(j, t2, 'aborted'));
         break; }
     }
+  }
+
+  // The Director's delegated authority at a repair limit: abort, allow one more repair, or escalate to a person.
+  // A second exception for the same job is never its call. Forced story beats name their policy.
+  function policyFor(j, s){
+    if (j.policy){ const p = j.policy; j.policy = null; return p; }
+    if (!s.escalateTo) return 'abort';
+    const h = (parseInt(J(j), 10) * 7) % 10;
+    if (j.extra) return h < 5 ? 'abort' : 'escalate';
+    return h < 4 ? 'abort' : (h < 8 ? 'repair' : 'escalate');
+  }
+  function resolve(j, item, stepId, pol, by, t2, rationale){
+    const you = by !== 'Director';
+    if (pol === 'abort'){
+      E({ t:t2, type:'decide', job:J(j), step:stepId, by, action:'Abort', stamp:`ABORT · ${by.toUpperCase()}`, rationale, msg:`Job ${J(j)} · ${you ? 'you aborted it' : 'the Director aborted it'}` });
+      send(j, item, outs(stepId)[0], t2);
+      return;
+    }
+    j.extra = true;
+    const lp = loopOf(stepId);
+    E({ t:t2, type:'decide', job:J(j), step:stepId, by, action:'One more repair', stamp:`ONE MORE REPAIR · ${by.toUpperCase()}`, rationale, msg:`Job ${J(j)} · ${you ? 'you allowed' : 'the Director allowed'} one more repair` });
+    closeFlags(item, t2);
+    E({ t:t2, t1:null, type:'flag', job:J(j), item, flag:'rejected' });
+    E({ t:t2, type:'move', job:J(j), item, from:stepId, to:lp.to, dur:MOVE + 1.6, loop:true });
+    at(t2 + MOVE + 1.6, t3 => enter(j, item, lp.to, t3, lp));
+  }
+  // Escalation: the Director's wait closes and a durable wait opens for the named person, with its reasons and a recommendation.
+  // Before "now" a simulated person answers; after it, the wait stays open until you answer (o.answers).
+  function escalate(j, item, s, stepId, rev, t2){
+    const second = !!j.extra;
+    const reason = second ? 'This job already had one extra repair. A second exception needs the research lead.' : 'The reviewer and the brief disagree on scope. Changing a brief is outside my authority.';
+    const rec = second ? { action:'Abort', text:'Abort. The extra repair did not clear finding C5.' } : { action:'One more repair', text:'One more repair, with a scope note: report only what ran live.' };
+    E({ t:t2, type:'escalate', job:J(j), step:stepId, by:'Director', to:s.escalateTo, reason, msg:`Job ${J(j)} · the Director escalated it to you`, level2:'action' });
+    const hw = E({ t:t2, t1:null, type:'wait', job:J(j), step:stepId, responder:s.escalateTo, human:true, escalated:true, allowed:s.humanAllowed || s.allowed, level:'action', reason,
+      rec:{ ...rec, t:t2, why:reason }, expires:t2 + (s.expires || 7200), onExpiry:s.onExpiry || 'the job is aborted',
+      context:`${rev} was rejected at the repair limit, and the Director escalated it. ${reason}` });
+    const ha = E({ t:t2, t1:null, type:'alarm', job:J(j), level:'action', text:`Job ${J(j)} · escalated to you · ${second ? 'second exception' : 'scope question'}` });
+    E({ t:t2 + .4, type:'note', job:J(j), parts:['I escalated ', { job:J(j) }, ` to you. ${reason} I recommend: ${rec.text} `, { inbox:true, label:'Open your inbox' }] });
+    const d = U(24, 70), ans = o.answers && o.answers[J(j)], tA = ans ? ans.t : t2 + d;
+    if (!ans && tA >= (o.humanUntil ?? Infinity)) return;
+    at(Math.max(tA, t2 + .5), t3 => {
+      hw.t1 = t3; ha.t1 = t3;
+      const action = ans ? ans.action : ((parseInt(J(j), 10) * 3) % 5 ? rec.action : (rec.action === 'Abort' ? 'One more repair' : 'Abort'));
+      E({ t:t3, type:'command', job:J(j), by:'You', cmd:action === 'Abort' ? `decide_wait(abort, ${rev})` : `decide_wait(one_more_repair, ${rev})`, outcome:'validated → applied' });
+      resolve(j, item, stepId, action === 'Abort' ? 'abort' : 'repair', 'You', t3, action === rec.action ? 'Followed the Director\'s recommendation.' : 'Overrode the Director\'s recommendation.');
+    });
   }
 
   // arrivals
@@ -1316,12 +1551,13 @@ function simulateFloor(f, o){
 (() => {
   const f = FACTORIES[0], run = f.runs[0];
   const V2_AT = 51.29;
-  const out = simulateFloor(f, { seed:36, t0:-260, horizon:1400, limit:f.admission.limit, firstJob:419, every:[9,13], surgeAt:20, surgeEnd:170, surge:.5,
-    v2At:V2_AT, version:'v2', oldVersion:'v1', startTool:'start_research', limitAt:[148, 154],
+  run.sim = { seed:36, t0:-260, horizon:1400, limit:f.admission.limit, firstJob:419, every:[9,13], surgeAt:20, surgeEnd:170, surge:.5,
+    v2At:V2_AT, version:'v2', oldVersion:'v1', startTool:'start_research', limitAt:[148, 154], limitPolicy:['escalate', 'repair'], humanUntil:run.startAt,
     dur:{ rf:[11,17], rr:[12,18], synth:[22,30], 'synth:repair':[15,20], review:[7,11], decide:[14,20] },
-    briefs:['What did the 23 September qualification packet prove, and what remains open?','Which vendor claims in the Q3 pricing sheet are unsupported?','Summarize the evidence on cold-chain failures for part 7-114.','What changed in the EU battery regulation draft this month?','Which of our supplier audits cite the same root cause?'] });
-  run.events = out.events;
-  run.events.push({ t:V2_AT, type:'publish', job:null, version:'v2', tick:true, level:'normal', msg:'Definition v2 published · new jobs bind to v2 · jobs already running stay on v1' });
+    briefs:['What did the 23 September qualification packet prove, and what remains open?','Which vendor claims in the Q3 pricing sheet are unsupported?','Summarize the evidence on cold-chain failures for part 7-114.','What changed in the EU battery regulation draft this month?','Which of our supplier audits cite the same root cause?'] };
+  run.answers = {};
+  run.publishEv = { t:V2_AT, type:'publish', job:null, version:'v2', tick:true, level:'normal', msg:'Definition v2 published · new jobs bind to v2 · jobs already running stay on v1' };
+  run.events = [...simulateFloor(f, run.sim).events, run.publishEv];
 })();
 
 /* ============================================================
@@ -1339,14 +1575,14 @@ const Floor = (() => {
     join:'Waits for the required branches, then passes their results on together.',
     fanout:'Starts one branch per discovered item, within a concurrency limit.',
     gate:'An independent check of one exact revision. Its verdict binds to that revision\'s digest.',
-    wait:'A durable pause for a decision by a named responder. Only actions the graph allows can be chosen.',
+    wait:'A durable pause for a decision by a named responder. The Director decides within its delegated authority and escalates the rest to a person. Only actions the graph allows can be chosen, and every wait names what happens if nobody answers.',
     output:'Releases accepted work to the caller and records the receipt.',
     end:'A terminal outcome with no release.',
   };
   const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
   const EASE = { move: gsap.parseEase('power1.inOut'), slam: gsap.parseEase('back.out(2.4)'), out: gsap.parseEase('power2.out') };
 
-  const S = { f:null, L:null, R:null, P:null, lbl:1, t:0, playing:true, speed:2, wall:0, sel:{type:'run',id:null}, pending:null, itemTap:false, follow:null, track:false, snap:true, liveBusy:false };
+  const S = { f:null, L:null, R:null, P:null, lbl:1, t:0, playing:true, speed:2, wall:0, sel:{type:'run',id:null}, pending:null, itemTap:false, follow:null, track:false, snap:true, liveBusy:false, chat:[], chatSeq:0, chatTurns:[], actSeen:0 };
   const QSP = 27;            // spacing of a queue on a belt
   const RING0 = 10;          // the overcrowding ring starts filling after this many seconds in a queue
   const QADV = () => S.f.queueAdvisory || 30;   // past this, a queue is an advisory
@@ -1537,8 +1773,33 @@ const Floor = (() => {
         pts = adx < 1 ? [s0,R] : (dy > adx+40 ? [s0,{x:sx,y:R.y-20-adx},{x:R.x,y:R.y-20},R] : [s0,R]); }
       G.signals.push({ target:id, recv:R, path:sampler(roundPts(pts, 14)) });
     }
+    // Your desk sits on the same wall as the Director's booth. Decisions that need a person arrive here:
+    // by policy (an approval) or by the Director's escalation. Its wires enter each decision beside the Director's.
+    G.desk = null; G.deskWires = []; G.deskLink = null;
+    const mine = f.steps.filter(s => s.kind === 'wait' && (s.human || s.escalateTo));
+    if (mine.length){
+      const dw = 244, dh = 86, tx = mine.reduce((a, s) => { const g = G.steps.get(s.id); return a + g.x + g.w*.74; }, 0) / mine.length;
+      const desk = { x:Math.max(booth.x + booth.w + 120, tx - dw/2), y:booth.y - 12, w:dw, h:dh }; G.desk = desk;
+      desk.who = (mine[0].escalateTo || mine[0].responder || 'You').replace(/^You · /, '');
+      const ly = booth.y + 22; G.deskLink = { path:sampler([{ x:booth.x + booth.w, y:ly }, { x:desk.x, y:ly }]) };
+      const s0y = desk.y + desk.h, lane = booth.y + booth.h + 34;
+      const clear = (g, x) => ![...G.steps.values()].some(o => o !== g && o.y + o.h <= g.y + 1 && o.y > s0y && o.x < x + 16 && o.x + o.w > x - 16);
+      for (const st of mine){
+        const g = G.steps.get(st.id), sx = clamp(g.x + g.w*.74, desk.x + 26, desk.x + desk.w - 26), s0 = { x:sx, y:s0y };
+        let R = { x:g.x + g.w*.74, y:g.y }, pts;
+        if (clear(g, R.x)) pts = Math.abs(sx - R.x) < 1 ? [s0, R] : [s0, { x:sx, y:lane }, { x:R.x, y:lane }, R];
+        else {
+          // A machine sits above: come down the aisle beside it and enter from the side (right first, then left).
+          const Xr = g.x + g.w + 30, Xl = g.x - 30, right = clear(g, Xr);
+          const X = right ? Xr : Xl; R = right ? { x:g.x + g.w, y:g.y + 16 } : { x:g.x, y:g.y + 34 };
+          pts = [s0, { x:sx, y:lane }, { x:X, y:lane }, { x:X, y:R.y }, R];
+        }
+        G.deskWires.push({ target:st.id, recv:R, path:sampler(roundPts(pts, 14)) });
+      }
+    }
     // bounds
     let x0 = booth.x, y0 = booth.y-56, x1 = booth.x+booth.w+120, y1 = booth.y+booth.h;
+    if (G.desk){ x1 = Math.max(x1, G.desk.x + G.desk.w + 40); y0 = Math.min(y0, G.desk.y - 56); }
     const grow = (x,y) => { x0 = Math.min(x0,x); y0 = Math.min(y0,y); x1 = Math.max(x1,x); y1 = Math.max(y1,y); };
     for (const [,g] of G.steps){ grow(g.x-20, g.y-24); grow(g.x+g.w+30, g.y+g.h+LABEL_REACH); }
     G.zones.forEach(z => { grow(z.x, z.y); grow(z.x+z.w, z.y+z.h); });
@@ -1683,12 +1944,19 @@ const Floor = (() => {
     G.signals.forEach(s => { dashed(sg, s.path, 6, 5); });
     sg.stroke({ width:1.6, color:P.signal, cap:'round' });
     G.signals.forEach(s => { const r = s.recv; sg.poly([r.x, r.y-7, r.x+6, r.y-1, r.x, r.y+5, r.x-6, r.y-1], true).fill(P.signal); });
-    layers.signals.addChild(sg);
+    // your wires: dotted, ending in a round receiver (the Director's end in a diamond)
+    const yg = new PIXI.Graphics();
+    G.deskWires.forEach(w => dashed(yg, w.path, 2, 5));
+    if (G.deskLink) dashed(yg, G.deskLink.path, 2, 5);
+    yg.stroke({ width:2, color:P.signal, cap:'round' });
+    G.deskWires.forEach(w => yg.circle(w.recv.x, w.recv.y, 4.2).fill(P.signal));
+    layers.signals.addChild(sg, yg);
     layers.sigDyn = new PIXI.Graphics(); layers.signals.addChild(layers.sigDyn);
     // shadows
     const addShadow = (x,y,w,h,r) => { const s2 = shadowTex(w,h,r); const sp = new PIXI.Sprite(s2.t); sp.position.set(x-s2.pad, y-s2.pad+8); sp.tint = P.shadow; sp.alpha = P.dark ? .7 : .30; layers.shadows.addChild(sp); };
     for (const [,g] of G.steps) addShadow(g.x, g.y, g.w, g.h, podRadius(g));
     addShadow(G.booth.x, G.booth.y, G.booth.w, G.booth.h, 18);
+    if (G.desk) addShadow(G.desk.x, G.desk.y, G.desk.w, G.desk.h, 16);
     // pods (static)
     const pg = new PIXI.Graphics();
     for (const [,g] of G.steps){
@@ -1720,6 +1988,14 @@ const Floor = (() => {
     pg.roundRect(sc.x-5, sc.y-5, sc.w+10, sc.h+10, 17).fill(0x0A0C0B).stroke({ width:1, color:P.podEdge });
     const kw = sc.w/16;
     for (let k = 0; k < 16; k++) pg.roundRect(sc.x + k*kw + 1.5, bo.y+bo.h-23, kw-3, 10, 2.5).fill({ color:P.bay, alpha:.95 });
+    // Your desk: a person glyph and an inbox tray (the tray's text is DOM, so it stays crisp)
+    if (G.desk){ const d = G.desk;
+      pg.roundRect(d.x, d.y, d.w, d.h, 16).fill(P.pod).stroke({ width:1, color:P.podEdge });
+      pg.roundRect(d.x+3, d.y+3, d.w-6, d.h*.42, 13).fill({ color:P.podTop, alpha:.9 });
+      pg.roundRect(d.x+12, d.y+12, 44, d.h-24, 11).fill(P.bay).stroke({ width:1, color:P.podEdge, alpha:.8 });
+      const px = d.x+34, py = d.y+d.h/2; pg.circle(px, py-7, 6).fill(P.icon); pg.roundRect(px-11, py+2, 22, 12, 6).fill(P.icon);
+      pg.roundRect(d.x+66, d.y+12, d.w-78, d.h-24, 10).fill(P.bay).stroke({ width:1, color:P.podEdge, alpha:.8 });
+    }
     // leader lines to instrument bubbles
     for (const [,g] of G.steps){ if (!g.bubble) continue; pg.moveTo(g.x+g.w-10, g.y+4).lineTo(g.bubble.x-9, g.bubble.y+9).stroke({ width:1, color:P.ink3, alpha:.8 }); }
     layers.pods.addChild(pg);
@@ -1762,10 +2038,21 @@ const Floor = (() => {
     G.exit.forEach(e => { const p = e.path.pts[e.path.pts.length-1]; el('div','wall out',{ left:(p.x+6)+'px', top:(p.y-14)+'px' }, 'TO CALLER'); });
     const bo = G.booth;
     const bt = el('button','booth',{ left:bo.x+'px', top:bo.y+'px', width:bo.w+'px', height:bo.h+'px' });
-    bt.type = 'button'; bt.setAttribute('aria-label','Director console. Zoom in to read it and open the job card.');
-    bt.addEventListener('click', () => { if (!wasDrag()){ select('run'); focusDirector(); } });
+    bt.type = 'button'; bt.setAttribute('aria-label','Director. Open its chat and activity.');
+    bt.addEventListener('click', () => { if (!wasDrag()) select('director'); });
     const bl = el('div','boothlabel',{ left:(bo.x+2)+'px', top:(bo.y-8)+'px' }, `<b>◆ DIRECTOR</b><span class="bs">Idle · watching the floor</span>`);
-    bl.addEventListener('click', () => { if (!wasDrag()){ select('run'); focusDirector(); } });
+    bl.addEventListener('click', () => { if (!wasDrag()) select('director'); });
+    S.desk = null;
+    if (G.desk){ const d = G.desk;
+      const db = el('button','booth',{ left:d.x+'px', top:d.y+'px', width:d.w+'px', height:d.h+'px' });
+      db.type = 'button'; db.setAttribute('aria-label','Your desk. Open your inbox of decisions.');
+      db.addEventListener('click', () => { if (!wasDrag()) select('inbox'); });
+      const dl = el('div','boothlabel',{ left:(d.x+2)+'px', top:(d.y-8)+'px' }, `<b>● YOU</b><span class="bs">${esc(d.who)} · nothing waiting</span>`);
+      dl.addEventListener('click', () => { if (!wasDrag()) select('inbox'); });
+      const ring = el('div','waitring',{ left:(d.x-6)+'px', top:(d.y-6)+'px', width:(d.w+12)+'px', height:(d.h+12)+'px', borderRadius:'22px' });
+      const tray = el('div','desktray',{ left:(d.x+66)+'px', top:(d.y+12)+'px', width:(d.w-78)+'px', height:(d.h-24)+'px' });
+      S.desk = { stat:dl.querySelector('.bs'), ring, tray, key:'\u0000', who:d.who };
+    }
     S.boothStat = bl.querySelector('.bs');
     S.boothLast = null;
     const sc = G.screen;
@@ -1789,7 +2076,7 @@ const Floor = (() => {
   function compile(f, run){
     const G = S.L, multi = !!run.multi;
     const ev = run.events.map((e,i) => { const x = Object.assign({ i }, e); if (x.job === undefined) x.job = multi ? null : run.id; return x; }).sort((a,b) => a.t - b.t || a.i - b.i);
-    const R = { run, multi, ev, times:ev.map(e => e.t), items:new Map(), works:new Map(), verdicts:[], releases:[], scraps:[], waits:[], turns:[], alarms:[], commands:[], msgs:[], readouts:new Map(), decides:[], end:null,
+    const R = { run, multi, ev, times:ev.map(e => e.t), items:new Map(), works:new Map(), verdicts:[], releases:[], scraps:[], waits:[], turns:[], alarms:[], commands:[], msgs:[], readouts:new Map(), decides:[], escalations:[], notes:[], end:null,
       jobs:new Map(), itemWorks:new Map(), itemTurns:new Map(), jobWorks:new Map(), opsCache:new Map() };
     f.steps.forEach(s => { R.works.set(s.id, []); R.readouts.set(s.id, []); });
     const jobOf = id => { if (id == null) return null; let j = R.jobs.get(id); if (!j){ j = { id, version:f.version, arrive:null, admit:null, end:null, outcome:null, items:[], brief:run.brief }; R.jobs.set(id, j); } return j; };
@@ -1817,6 +2104,8 @@ const Floor = (() => {
         case 'director': { const d = { ...e, t0:e.t, t1:e.t+e.dur }; R.turns.push(d); if (e.item) push(R.itemTurns, e.item, d); break; }
         case 'wait': R.waits.push({ ...e, t0:e.t, t1:e.t1 ?? Infinity }); break;
         case 'decide': R.decides.push(e); break;
+        case 'escalate': R.escalations.push(e); break;
+        case 'note': R.notes.push(e); break;
         case 'alarm': R.alarms.push({ id:run.id + ':' + e.i, t0:e.t, t1:e.t1 ?? Infinity, level:e.level, text:e.text, job:e.job }); break;
         case 'command': R.commands.push(e); break;
         case 'end': R.end = e; break;
@@ -1848,6 +2137,7 @@ const Floor = (() => {
     R.ops = multi ? [] : buildOps(f, R, null);
     R.opsFor = id => { if (!R.opsCache.has(id)) R.opsCache.set(id, buildOps(f, R, id)); return R.opsCache.get(id); };
     R.con = buildConsole(f, R);
+    R.act = buildActivity(f, R);
     return R;
   }
   /* The Director's console transcript. Its own turns print bright; floor events it is watching print dim. */
@@ -1871,7 +2161,8 @@ const Floor = (() => {
           case 'director': add(e.t, `== ${e.target === 'intake' ? 'START' : 'DECIDE'} ${e.job} ${'='.repeat(20)} ${fmtT(e.t).slice(2)}`, 'hd2'); e.tools.forEach((tl, k) => add(e.t + .3 + k*(e.dur/e.tools.length), '> ' + tl, 'hi')); break;
           case 'command': if (e.by === 'Director') add(e.t, '  ' + e.outcome.toUpperCase()); break;
           case 'verdict': if (e.verdict !== 'accepted') add(e.t, `. ${e.job} ${e.rev} REJECTED ${e.finding}${e.limit ? ' - LIMIT' : ''}`, e.limit ? '' : 'dim'); break;
-          case 'decide': add(e.t, `  DECIDED ${e.action.toUpperCase()} ${e.job}`, 'hi'); break;
+          case 'decide': if (e.by === 'Director') add(e.t, `  DECIDED ${e.action.toUpperCase()} ${e.job}`, 'hi'); else add(e.t, `. YOU DECIDED ${e.action.toUpperCase()} ${e.job}`, 'dim'); break;
+          case 'escalate': add(e.t, `  ESCALATED ${e.job} -> YOU`, 'hi'); break;
           case 'release': add(e.t, `. ${e.job} RELEASED ${R.items.get(e.item)?.rev || ''} [OK]`, 'dim'); break;
           case 'hold': add(e.t, `. ${e.job} WAITING TO START`, 'dim'); break;
           case 'publish': add(e.t, `. DEFINITION ${e.version} PUBLISHED`, 'hi'); break;
@@ -1895,11 +2186,31 @@ const Floor = (() => {
           else add(e.t, `. ${e.by.toUpperCase()}: ${e.action.toUpperCase()}`, 'dim');
           break;
         case 'release': add(e.t, `. RELEASED ${R.items.get(e.item)?.rev || ''} [OK]`, 'hi'); break;
+        case 'note': add(e.t, '  NOTE SENT TO YOU', 'hi'); break;
         case 'scrap': add(e.t, '. RUN ABORTED - 0 RELEASES'); break;
         case 'flag': if (e.flag === 'unknown') add(e.t, '. OUTCOME UNKNOWN - RECONCILING'); break;
       }
     }
     return L.sort((a,b) => a.t - b.t || a.seq - b.seq);
+  }
+  /* The Director's activity for the panel: its own turns and what they decided, plus the floor events it reacts to. */
+  function buildActivity(f, R){
+    const A = [], nm = id => S.L.steps.get(id)?.s.name || id, J = e => R.multi && e.job ? `Job ${e.job} · ` : '';
+    for (const e of R.ev){
+      switch (e.type){
+        case 'director': A.push({ t:e.t, job:e.job, cls:'turn', text:J(e) + (e.target === 'intake' ? 'Start the job' : (S.L.steps.get(e.target)?.s.kind === 'wait' ? (S.L.steps.get(e.target).s.human ? 'Advise on ' : 'Decide at ') + nm(e.target) : nm(e.target))), tools:e.tools.join(' → ') }); break;
+        case 'command': if (e.by === 'Director' && e.t > 0 && !/^start_/.test(e.cmd)) A.push({ t:e.t, job:e.job, cls:'hi', text:J(e) + e.outcome, tools:e.cmd }); break;
+        case 'decide': A.push({ t:e.t, job:e.job, cls:e.by === 'Director' ? 'hi' : 'dim', text:J(e) + (e.by === 'Director' ? 'Decided: ' : e.by + ' decided: ') + e.action + (e.by === 'Director' && e.rationale ? ` · “${e.rationale}”` : '') }); break;
+        case 'escalate': A.push({ t:e.t, job:e.job, cls:'esc', text:J(e) + 'Escalated to you · ' + e.reason }); break;
+        case 'note': A.push({ t:e.t, job:e.job, cls:'hi', text:J(e) + 'Sent you a note' }); break;
+        case 'verdict': if (e.limit) A.push({ t:e.t, job:e.job, cls:'dim', text:J(e) + `${e.rev} rejected at the repair limit · decision owed` }); break;
+        case 'wait': if (e.human && !e.escalated) A.push({ t:e.t, job:e.job, cls:'dim', text:J(e) + `${nm(e.step)} is waiting on ${e.responder.replace(/^You · /, 'you, ')}` }); break;
+        case 'release': A.push({ t:e.t, job:e.job, cls:'dim', text:(J(e) + 'Released ' + (R.items.get(e.item)?.rev || '')).trim() }); break;
+        case 'scrap': A.push({ t:e.t, job:e.job, cls:'dim', text:J(e) + 'Aborted · no release' }); break;
+        case 'publish': A.push({ t:e.t, job:null, cls:'hi', text:`Definition ${e.version} published · new jobs bind to it` }); break;
+      }
+    }
+    return A.sort((a,b) => a.t - b.t).map((a, k) => ({ ...a, k }));
   }
   function drawConsole(t, turnOn){
     const L = S.R.con; let lo = 0, hi = L.length;
@@ -1995,7 +2306,7 @@ const Floor = (() => {
       const done = (S.R.jobWorks.get(j.id) || []).filter(w => w.step === step && w.t0 <= t).length;
       const attempt = !g.res && g.s.kind !== 'wait' ? 1 : (mode === 'working' ? Math.max(1, done) : done + 1);
       const w = mode === 'decision' ? S.R.waits.find(x => x.job === j.id && x.step === step && t >= x.t0 && t < x.t1) : null;
-      out.push({ it, step, g, mode, since, attempt, human:!!(w && w.human) });
+      out.push({ it, step, g, mode, since, attempt, human:!!(w && w.human), responder:w ? w.responder : null });
     }
     return out;
   }
@@ -2037,6 +2348,7 @@ const Floor = (() => {
   const usdK = v => v >= 10000 ? '$' + (v/1000).toFixed(0) + 'k' : (v >= 1000 ? '$' + (v/1000).toFixed(1) + 'k' : '$' + Math.round(v));
   const fmtAge = s => { s = Math.max(0, s); return s < 60 ? `${Math.floor(s)} s` : `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`; };
   const fmtDur = s => { s = Math.max(0, s); const m = Math.floor(s/60), r = Math.floor(s%60); return m ? `${m}:${String(r).padStart(2,'0')}` : s.toFixed(1); };
+  const fmtSpan = x => x >= 86400 ? `${Math.round(x/86400)} days` : (x >= 3600 ? `${Math.floor(x/3600)} h ${String(Math.floor(x%3600/60)).padStart(2,'0')} min` : `${Math.max(0, Math.ceil(x/60))} min`);
   const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = t - m*60; return `T+${String(m).padStart(2,'0')}:${s.toFixed(1).padStart(4,'0')}`; };
   const fmtClock = (start, t) => { const d = new Date(new Date(start).getTime() + t*1000); return d.toTimeString().slice(0,8) + ' · ' + d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }); };
 
@@ -2191,12 +2503,27 @@ const Floor = (() => {
       sd.stroke({ width:2, color:P.ledOn, alpha:.9 });
       const n = turn.tools.length, step = Math.min(n-1, Math.floor((t - turn.t0)/(turn.t1 - turn.t0) * n));
       const inbox = directorInbox(t);
-      const txt = `${R.multi ? 'Job ' + turn.job + ' · ' : 'Turn · '}${turn.tools.slice(0, step+1).join(' → ')}${inbox > 0 ? ' · inbox ' + inbox : ''}`;
+      const txt = `${turn.target === 'chat' ? 'Replying to you · ' : (R.multi ? 'Job ' + turn.job + ' · ' : 'Turn · ')}${turn.tools.slice(0, step+1).join(' → ')}${inbox > 0 ? ' · inbox ' + inbox : ''}`;
       if (txt !== S.boothLast){ S.boothStat.textContent = txt; S.boothStat.classList.add('on'); S.boothLast = txt; }
     } else {
       const w = R.waits.find(x => t >= x.t0 && t < x.t1 && !x.human), inbox = directorInbox(t);
       const txt = inbox > 0 && R.multi ? `Inbox ${inbox} · next turn starting` : (w ? 'Owns an open decision · waiting for a turn' : 'Idle · watching the floor');
       if (txt !== S.boothLast){ S.boothStat.textContent = txt; S.boothStat.classList.remove('on'); S.boothLast = txt; }
+    }
+    if (S.desk){
+      const mine = R.waits.filter(x => x.human && t >= x.t0 && t < x.t1).sort((a,b) => a.t0 - b.t0), n = mine.length;
+      const key = n + ':' + mine.map(x => x.job).join(',');
+      if (key !== S.desk.key){ S.desk.key = key;
+        S.desk.tray.className = 'desktray' + (n ? ' on' : '');
+        S.desk.tray.innerHTML = `<b>${n}</b><span>${n ? (n === 1 ? 'decision needs you' : 'decisions need you') : 'nothing waiting'}</span>`;
+        S.desk.ring.className = 'waitring' + (n ? ' on action' : '');
+        S.desk.stat.textContent = `${S.desk.who} · ${n ? (R.multi ? mine.map(x => 'Job ' + x.job).join(', ') : 'approval') + ' waiting' : 'nothing waiting'}`;
+        S.desk.stat.classList.toggle('on', n > 0); }
+      // a wire turns blue while its decision waits for you
+      for (const dw of G.deskWires){ if (!mine.some(x => x.step === dw.target)) continue; const q = dw.path.pts; sd.moveTo(q[0].x, q[0].y); for (let k = 1; k < q.length; k++) sd.lineTo(q[k].x, q[k].y); sd.stroke({ width:2.4, color:P.action, alpha:.95, cap:'round', join:'round' }); }
+      // an escalation travels from the Director's booth to your desk
+      for (const e of R.escalations){ const dt = t - e.t; if (dt < 0 || dt > 2.2) continue; S.liveBusy = true;
+        for (let k = 0; k < 3; k++){ const ph = clamp(dt/1.4 - k*.14, 0, 1), p = G.deskLink.path.at(ph * G.deskLink.path.len); sd.circle(p.x, p.y, 3.8).fill({ color:P.action, alpha:.95 * (dt > 1.7 ? 1 - (dt-1.7)/.5 : 1) }); } }
     }
     if (S.startEl){ let n = 0; if (R.multi) for (const j of R.jobs.values()) if (j.arrive != null && j.arrive <= t && (j.admit == null || j.admit > t)) n++; const key = String(n); if (key !== S.startKey){ S.startKey = key; S.startEl.className = 'startq' + (n ? ' on' : ''); S.startEl.textContent = `${n} WAITING TO START`; } }
     // effects
@@ -2275,6 +2602,7 @@ const Floor = (() => {
     x.fillStyle = hex(P.pod);
     for (const [,g] of G.steps){ x.beginPath(); x.roundRect(ox+g.x*sc, oy+g.y*sc, g.w*sc, g.h*sc, 3); x.fill(); }
     x.beginPath(); x.roundRect(ox+G.booth.x*sc, oy+G.booth.y*sc, G.booth.w*sc, G.booth.h*sc, 3); x.fill();
+    if (G.desk){ x.beginPath(); x.roundRect(ox+G.desk.x*sc, oy+G.desk.y*sc, G.desk.w*sc, G.desk.h*sc, 3); x.fill(); if (S.R.waits.some(w => w.human && S.t >= w.t0 && S.t < w.t1)){ x.strokeStyle = hex(P.action); x.lineWidth = 2; x.strokeRect(ox+G.desk.x*sc-2, oy+G.desk.y*sc-2, G.desk.w*sc+4, G.desk.h*sc+4); } }
     for (const [id, st] of states){ if (!st || st.x == null || st.hidden) continue; if (S.follow && st.job !== S.follow) continue; x.fillStyle = st.flag === 'rejected' || st.flag === 'unknown' ? hex(P.advisory) : (st.flag === 'exhausted' ? hex(P.alarm) : hex(P.item)); x.beginPath(); x.arc(ox+st.x*sc, oy+st.y*sc, 3.2, 0, Math.PI*2); x.fill(); x.strokeStyle = hex(P.itemEdge); x.lineWidth = 1; x.stroke(); }
     for (const w of S.R.waits){ if (S.t >= w.t0 && S.t < w.t1){ const g = G.steps.get(w.step); x.strokeStyle = hex(w.level === 'action' ? P.action : P.alarm); x.lineWidth = 2; x.strokeRect(ox+g.x*sc-2, oy+g.y*sc-2, g.w*sc+4, g.h*sc+4); } }
     const sw = stageEl.clientWidth, sh = stageEl.clientHeight;
@@ -2301,15 +2629,15 @@ const Floor = (() => {
     const tk = ts.map(m => m.id).join('|'); if (tk !== lastToastKey){ lastToastKey = tk; st.toasts = ts; }
     // Decision card: the followed job's wait, else the oldest one; the rest are counted as the inbox behind it.
     const open = R.waits.filter(x => t >= x.t0 && t < x.t1).sort((a,b) => a.t0 - b.t0);
-    const w = R.multi ? ((S.follow && open.find(x => x.job === S.follow)) || open.find(x => x.human)) : open[0];
+    const w = S.sel.type === 'inbox' || S.sel.type === 'director' ? null : (R.multi ? ((S.follow && open.find(x => x.job === S.follow)) || open.find(x => x.human)) : open[0]);
     let dec = null;
     if (w){ const turn = R.turns.find(x => t >= x.t0 && t < x.t1 && x.target === w.step && (!R.multi || x.job === w.job));
       const g = S.L.steps.get(w.step), rest = open.length - 1;
-      dec = { key:w.i, title:w.human ? 'Waiting for you' : 'Waiting for the Director', step:g.s.name + (R.multi ? ' · Job ' + w.job : ''), level:w.level, responder:w.responder, allowed:w.allowed, context:w.context, human:!!w.human, atLive:st.atLive, waited:fmtDur(t - w.t0) + (t - w.t0 < 60 ? ' s' : ''),
+      dec = { key:w.i, job:w.job, rec:w.rec && w.rec.t <= t ? w.rec.text : '', recAction:w.rec && w.rec.t <= t ? w.rec.action : '', escalated:!!w.escalated, title:w.human ? (w.escalated ? 'Escalated to you' : 'Waiting for you') : 'Waiting for the Director', step:g.s.name + (R.multi ? ' · Job ' + w.job : ''), level:w.level, responder:w.responder, allowed:w.allowed, context:w.context, human:!!w.human, atLive:st.atLive, waited:fmtDur(t - w.t0) + (t - w.t0 < 60 ? ' s' : ''),
         more:rest > 0 ? `${rest} more ${rest === 1 ? 'decision' : 'decisions'} waiting in the ${w.human ? 'queue' : "Director's inbox"}.` : '',
         turn:turn ? { tools:turn.tools, step:Math.min(turn.tools.length-1, Math.floor((t - turn.t0)/(turn.t1 - turn.t0) * turn.tools.length)) } : null,
         pending:S.pending ? { ...S.pending } : null }; }
-    const dk = dec ? JSON.stringify([dec.key, dec.atLive, dec.turn, dec.pending, dec.waited.split('.')[0], dec.more]) : '';
+    const dk = dec ? JSON.stringify([dec.key, dec.atLive, dec.turn, dec.pending, dec.waited.split('.')[0], dec.more, dec.rec]) : '';
     if (dk !== lastDecKey){ lastDecKey = dk; st.decision = dec; }
     if (force || S.wall - lastRailWall > .25){ lastRailWall = S.wall; const rail = buildRail(t), rk = JSON.stringify(rail); if (rk !== lastRailKey){ lastRailKey = rk; st.rail = rail; } }
     if (force || S.wall - lastHudWall > .5){ lastHudWall = S.wall; const h = buildHud(t), hk = JSON.stringify(h); if (hk !== lastHudKey){ lastHudKey = hk; st.hud = h; st.oldJobs = h.old; drawSpark(h.del.buckets); } }
@@ -2427,6 +2755,7 @@ const Floor = (() => {
       else { ck = 'factory:' + k; col = { key:ck, name:k === 'join' ? 'Waiting on branches' : 'Fanning out', meta:'Factory · no agent', factory:true, res:null }; }
       if (!by.has(ck)){ col.steps = []; by.set(ck, col); cols.push(col); }
       by.get(ck).steps.push(sid);
+      if (group === 'role' && s.escalateTo && !by.has('resp:' + s.escalateTo)){ const c2 = { key:'resp:' + s.escalateTo, name:s.escalateTo, meta:'Person · escalations from the Director', res:null, steps:[] }; by.set(c2.key, c2); cols.push(c2); }
     }
     cols.push({ key:'done', name:'Done', meta:'Delivered or closed · last 5 min', factory:true, steps:[] });
     boardCache = { key, cols }; return cols;
@@ -2437,7 +2766,7 @@ const Floor = (() => {
     const cards = new Map(cols.map(c => [c.key, { working:[], queued:[], waiting:[], done:[] }]));
     const mk = (j, p, extra) => { const pm = placeMode(p, t), al = attemptLabel(p), arrived = `${f.artifacts[p.it.art]?.name || 'Branch'} arrived`;
       return { type:'card', key:`${j.id}:${p.step}:${p.mode}:${p.it.id}`, job:j.id, ver:verLabel(j), age:p.mode === 'moving' ? 'arriving' : fmtAge(t - p.since), since:p.since, lane:j.version,
-        st:p.mode === 'branches' ? arrived : (group === 'role' ? `${p.g.s.name}${al ? ' · ' + al : ''}` : (p.g.s.kind === 'wait' ? (p.human ? 'Needs you' : 'Decision owed') : (p.g.s.kind === 'intake' ? 'Start turn' : (al || 'First pass')))),
+        st:p.mode === 'branches' ? arrived : (p.mode === 'decision' && p.human && group === 'role' ? `Needs you · ${p.g.s.name}` : group === 'role' ? `${p.g.s.name}${al ? ' · ' + al : ''}` : (p.g.s.kind === 'wait' ? (p.human ? 'Needs you' : 'Decision owed') : (p.g.s.kind === 'intake' ? 'Start turn' : (al || 'First pass')))),
         cls:[p.mode === 'working' ? 'working' : '', pm.tone ? 'tone-' + pm.tone : ''].join(' '), ...extra }; };
     let active = 0, waiting = 0;
     for (const j of R.jobs.values()){
@@ -2445,7 +2774,7 @@ const Floor = (() => {
       if (j.end != null && j.end <= t){ if (t - j.end < 300) cards.get('done').done.push({ type:'card', key:j.id + ':done', job:j.id, ver:verLabel(j), age:fmtAge(t - j.end), since:-j.end, lane:j.version, st:j.outcome === 'released' ? 'Delivered' : 'Aborted · no release', cls:j.outcome === 'released' ? 'done-ok' : 'faded' }); continue; }
       if (j.admit == null || j.admit > t){ waiting++; cards.get('start').queued.push({ type:'card', key:j.id + ':start', job:j.id, ver:verLabel(j), age:fmtAge(t - j.arrive), since:j.arrive, lane:j.version, st:'Admission limit reached', cls:'' }); continue; }
       active++;
-      for (const p of jobPlaces(j, t)){ const ck = colOf.get(p.step); if (!ck) continue; const b = cards.get(ck);
+      for (const p of jobPlaces(j, t)){ const ck = p.human && cards.has('resp:' + p.responder) ? 'resp:' + p.responder : colOf.get(p.step); if (!ck) continue; const b = cards.get(ck);
         if (p.mode === 'working') b.working.push(mk(j, p)); else if (p.mode === 'branches' || p.mode === 'waiting') b.waiting.push(mk(j, p)); else b.queued.push(mk(j, p)); }
     }
     const laneList = lanes === 'version' ? [...new Set([f.version, ...[...R.jobs.values()].filter(j => j.arrive != null && j.arrive <= t && (j.end == null || t - j.end < 300)).map(j => j.version)])].map(v => ({ key:v, name:v === f.version ? `${v} · current definition` : `${v} · still running, finishes on ${v}` })) : [{ key:'all', name:'' }];
@@ -2483,6 +2812,8 @@ const Floor = (() => {
     if (S.sel.type === 'step' && S.L.steps.has(S.sel.id)) return inspStep(S.sel.id);
     if (S.sel.type === 'item' && S.R.items.has(S.sel.id)) return inspItem(S.sel.id);
     if (S.sel.type === 'job' && S.R.multi && S.R.jobs.has(S.sel.id)) return inspJob(S.sel.id);
+    if (S.sel.type === 'director') return inspDirector();
+    if (S.sel.type === 'inbox') return inspInbox();
     return S.R.multi ? inspFloor() : inspRun();
   }
   const backLabel = () => S.follow ? 'Job ' + S.follow : (S.R.multi ? 'Floor' : 'Job card');
@@ -2528,6 +2859,127 @@ const Floor = (() => {
       capNote:'Capacity belongs to each agent binding in the catalog, not to this factory. Every factory on this installation draws from one task queue per agent, so the slots and the line you see are the ones the engine runs. Weighted fairness keeps one factory from starving another. The Director takes one turn at a time; decisions go before new starts.',
       provenance:`${f.provenance}. Pick a ticket or any shape on the floor to follow one job.` };
   }
+  /* ---------- Director panel and your inbox ---------- */
+  const turnNow = t => S.R.turns.find(x => t >= x.t0 && t < x.t1);
+  const clockOf = t => fmtClock(S.R.run.start, t).split(' · ')[0];
+  const normParts = ps => ps.map(p => typeof p === 'string' ? { text:p } : p);
+  function inspDirector(){
+    const R = S.R, t = S.t, turn = turnNow(t), inbox = directorInbox(t);
+    const you = R.waits.filter(w => w.human && t >= w.t0 && t < w.t1).length;
+    let now;
+    if (turn){ const n = turn.tools.length, k = Math.min(n-1, Math.floor((t - turn.t0)/(turn.t1 - turn.t0) * n));
+      const kind = turn.target === 'chat' ? 'Replying to you' : (turn.target === 'intake' ? 'Starting' : (S.L.steps.get(turn.target)?.s.human ? 'Advising on' : 'Deciding'));
+      now = { busy:true, job:R.multi && turn.job ? turn.job : null, text:`${kind} · ${turn.tools.slice(0, k+1).join(' → ')}` }; }
+    else now = { busy:false, job:null, text:inbox ? `${inbox} in its inbox · next turn starting` : 'Idle · watching the floor' };
+    // Activity, newest first. Its own turns and what they decided; the floor events it reacts to are dim.
+    const A = R.act; let lo = 0, hi = A.length; while (lo < hi){ const m = (lo+hi) >> 1; if (A[m].t <= t) lo = m+1; else hi = m; }
+    const chatTurns = S.chatTurns.filter(c => c.t <= t).map((c, k) => ({ t:c.t, k:'c' + k, job:null, cls:'turn', text:'Reply to you', tools:c.tools }));
+    const act = [...A.slice(Math.max(0, lo - 90), lo), ...chatTurns].sort((a,b) => b.t - a.t).slice(0, 90)
+      .map(a => ({ k:String(a.k), cls:a.cls, text:a.text, tools:a.tools || '', tl:clockOf(a.t), q:`About ${a.job ? 'Job ' + a.job : 'this'}: “${a.text.replace(/^Job \d+ · /, '')}”. Why?` }));
+    if (store.dirTab === 'activity') S.actSeen = t;
+    let unread = 0; if (store.dirTab !== 'activity') for (let k = lo - 1; k >= 0 && A[k].t > S.actSeen; k--) if (A[k].cls === 'turn' || A[k].cls === 'esc') unread++;
+    const notes = R.notes.filter(n => n.t <= t).slice(-30).map(n => ({ k:'n' + n.i, who:'director', t:n.t, parts:normParts(n.parts), card:null, status:null }));
+    const chat = [...notes, ...S.chat.filter(m => m.t <= t + .05)].sort((a,b) => a.t - b.t).map(m => ({ ...m, tl:clockOf(m.t) }));
+    const hw = R.waits.find(w => w.human && t >= w.t0 && t < w.t1), dw = R.waits.find(w => !w.human && t >= w.t0 && t < w.t1);
+    const jq = S.follow || hw?.job || dw?.job;
+    const live = R.run.live, canChat = live && t >= R.tMax - .05;
+    return { kind:'director', title:'Director', now, you, inbox, act, unread, chat, canChat,
+      chips:["What's slow right now?", jq ? `Why is Job ${jq} waiting?` : null, 'How is spend today?', 'What needs me?', 'Pause intake'].filter(Boolean),
+      chatOff:!live ? 'This run has finished. Chat opens on a live floor.' : 'You are watching a replay. Jump to now to chat.',
+      state:turn ? 'Working' : (inbox ? `Inbox ${inbox}` : 'Idle'),
+      meta:'One turn at a time · decisions go before new starts' };
+  }
+  function inspInbox(){
+    const R = S.R, f = S.f, t = S.t, nm = id => S.L.steps.get(id)?.s.name || id;
+    const open = R.waits.filter(w => w.human && t >= w.t0 && t < w.t1).sort((a,b) => a.t0 - b.t0);
+    const items = open.map(w => {
+      const rec = w.rec && w.rec.t <= t ? w.rec : null, st = f.steps.find(x => x.id === w.step);
+      const turn = R.turns.find(x => t >= x.t0 && t < x.t1 && x.target === w.step && (!R.multi || x.job === w.job));
+      return { key:String(w.i), job:R.multi ? w.job : null, step:w.step, title:R.multi ? `Job ${w.job}` : nm(w.step),
+        sub:R.multi ? `${nm(w.step)} · ${R.jobs.get(w.job)?.brief || ''}` : (R.run.brief || ''),
+        escalated:!!w.escalated, why:w.escalated ? 'Escalated by the Director.' : 'Policy: a person approves this step.', reason:w.escalated ? w.reason : (w.context || ''),
+        rec:rec ? { action:rec.action, text:rec.text, why:w.escalated ? '' : (rec.why || '') } : null,
+        reviewing:!rec && !!turn, allowed:w.allowed || [], waited:fmtAge(t - w.t0),
+        expires:w.expires != null ? `Expires in ${fmtSpan(w.expires - t)} · then ${w.onExpiry || st?.onExpiry || 'it closes'}` : '',
+        pending:S.pending && (S.pending.job ?? null) === (R.multi ? w.job : null) ? { ...S.pending } : null };
+    });
+    const done = R.decides.filter(d => d.by === 'You' && d.t <= t).slice(-5).reverse().map(d => ({ k:String(d.i), job:R.multi ? d.job : null, text:`${R.multi ? 'Job ' + d.job + ' · ' : ''}${d.action}`, tl:fmtAge(t - d.t) + ' ago' }));
+    const who = [...new Set(f.steps.filter(x => x.kind === 'wait' && (x.human || x.escalateTo)).map(x => (x.escalateTo || x.responder).replace(/^You · /, '')))].join(' · ');
+    return { kind:'inbox', title:'Your inbox', who, items, done, atLive:!!R.run.live && t >= R.tMax - .05, live:!!R.run.live, busy:!!S.pending,
+      note:'Every decision here waits durably. It names who may answer, the actions the graph allows, and what happens if nobody answers before it expires.' };
+  }
+  // Mocked replies, read from the simulated floor at the moment you ask.
+  function directorReply(q){
+    const R = S.R, f = S.f, t = S.t, s = q.toLowerCase(), h = buildHud(t), T = x => ({ text:x });
+    const idm = q.match(/\b(\d{3,4})\b/), jid = idm ? idm[1].padStart(4, '0') : null;
+    if (/\bpause\b|stop (taking|intake|new)|hold (new|intake)|\bhalt\b/.test(s))
+      return { intent:'pause_intake', parts:[T(`Pausing intake stops new jobs from starting. The ${h.jobs.active} running ${h.jobs.active === 1 ? 'job finishes' : 'jobs finish'} normally. Pause it?`)],
+        card:{ title:'Pause intake', body:'New jobs wait at the door until you resume. Nothing running is cancelled.', actions:['Pause intake','Cancel'], state:'ask', result:'' } };
+    if (/spend|budget|cost|money|\$/.test(s)){
+      const sp = spendAt(t); if (!sp) return { intent:'spend', parts:[T('This factory has no budget set, so I only track what each job spends.')] };
+      let top = null; for (const a of Object.keys(f.agents)){ const v = R.accrued(t, c => c.agent === a) - R.accrued(t - 300, c => c.agent === a); if (!top || v > top.v) top = { a, v }; }
+      return { intent:'spend', parts:[T(`Spent ${usd(sp.spent, 0)} of ${usd(sp.day, 0)} today. At ${usd(sp.burn, 0)} an hour the day ends near ${usd(sp.projected, 0)}, ${sp.projected > sp.day ? 'over budget, so new jobs start only while their estimate still fits.' : 'inside the budget.'} ${usd(sp.held, sp.held < 10 ? 2 : 0)} is held for running jobs.${top && top.v > 0 ? ` The biggest cost in the last 5 minutes is ${f.agents[top.a].name}, at ${usd(top.v)}.` : ''}`)] };
+    }
+    if (!jid && /slow|bottleneck|backlog|queue|behind|stuck|capacity/.test(s)){
+      let worst = null; for (const [id, g] of S.L.steps) if (g.res && g.s.kind !== 'intake' && g.qn && (!worst || g.qOld > worst.g.qOld)) worst = { id, g };
+      if (!worst) return { intent:'bottleneck', parts:[T('Nothing is queued right now. Every station is keeping up.')] };
+      const g = worst.g, si = slotInfo(g, t), a = f.agents[g.res];
+      return { intent:'bottleneck', parts:[{ step:worst.id, label:g.s.name }, T(` is the bottleneck: ${g.qn} queued, the oldest for ${fmtAge(g.qOld)}. ` + (si.oth ? `${a.name} gives this factory ${si.cap - si.oth} of its ${si.cap} slots; ${si.oth} ${si.oth === 1 ? 'is' : 'are'} held by ${(a.sharedWith || ['other factories']).join(' and ')}. ` : `${a.name} has ${si.cap} slots and all are busy. `) + `I can't add capacity myself. You could ask its provider for more slots, or lower admission from ${h.jobs.limit} so queues stay short.`)] };
+    }
+    if (!jid && /need|inbox|waiting on me|for me|escalat|decision|approv/.test(s)){
+      const mine = R.waits.filter(w => w.human && t >= w.t0 && t < w.t1), dir = directorInbox(t);
+      if (!mine.length) return { intent:'inbox', parts:[T(`Nothing needs you right now. ${dir ? `I'm holding ${dir} decision${dir === 1 ? '' : 's'} of my own.` : 'My inbox is empty too.'}`)] };
+      const parts = [T(`${mine.length} ${mine.length === 1 ? 'decision needs' : 'decisions need'} you: `)];
+      mine.forEach((w, k) => { parts.push(R.multi ? { job:w.job } : { step:w.step, label:S.L.steps.get(w.step).s.name }); parts.push(T(` (${w.escalated ? 'escalated; I recommend: ' + (w.rec?.text || '').replace(/\.$/, '') : (w.rec && w.rec.t <= t ? 'I recommend: ' + w.rec.text.replace(/\.$/, '') : 'a policy approval')})${k < mine.length - 1 ? '; ' : '. '}`)); });
+      if (dir) parts.push(T(`I'm holding ${dir} of my own. `));
+      parts.push({ inbox:true, label:'Open your inbox' });
+      return { intent:'inbox', parts };
+    }
+    const id = jid || (/why|status|where|this job|waiting/.test(s) ? (S.follow || R.waits.find(w => t >= w.t0 && t < w.t1)?.job || (R.multi ? null : R.run.id)) : null);
+    if (id){
+      const j = R.jobs.get(id), J1 = { job:id };
+      if (!j || j.arrive == null || j.arrive > t) return { intent:'job', parts:[T(`I don't see Job ${id} on this floor.`)] };
+      if (j.end != null && j.end <= t) return { intent:'job', parts:[J1, T(j.outcome === 'released' ? ` was delivered ${fmtAge(t - j.end)} ago.` : ` was aborted ${fmtAge(t - j.end)} ago, with no release.`)] };
+      if (j.admit == null || j.admit > t) return { intent:'job', parts:[J1, T(` hasn't started: the floor is at its admission limit of ${h.jobs.limit}. It has waited ${fmtAge(t - j.arrive)}.`)] };
+      const hw = R.waits.find(w => w.job === id && w.human && t >= w.t0 && t < w.t1);
+      if (hw) return { intent:'job', parts:[J1, T(` is waiting on you. ${hw.escalated ? 'I escalated it. ' + hw.reason + ' ' : 'Policy asks a person to approve it. '}${hw.rec && hw.rec.t <= t ? 'I recommend: ' + hw.rec.text + ' ' : ''}`), { inbox:true, label:'Open your inbox' }] };
+      const dw = R.waits.find(w => w.job === id && !w.human && t >= w.t0 && t < w.t1);
+      if (dw){ const tn = turnNow(t); return { intent:'job', parts:[J1, T(tn && tn.job === id ? ` hit the repair limit and I'm deciding it now: ${tn.tools.join(' → ')}.` : ` hit the repair limit and is in my inbox. I take one turn at a time, and decisions go before new starts.`)] }; }
+      const ps = jobPlaces(j, t), where = ps.map(p => `${p.g.s.name}${attemptLabel(p) ? ' (' + attemptLabel(p).toLowerCase() + ')' : ''}, ${placeMode(p, t).text}`).join('; ');
+      const ex = R.decides.filter(d => d.job === id && d.t <= t).map(d => `${d.by === 'Director' ? 'I' : 'you'} chose ${d.action.toLowerCase()}`).join(', then ');
+      return { intent:'job', parts:[J1, T(` is running: ${where || 'between stations'}.${ex ? ' Earlier ' + ex + '.' : ''}`)] };
+    }
+    if (/^(hi|hello|hey)\b/.test(s)) return { intent:'hello', parts:[T('Hi. I run this floor: I start jobs, decide at the repair limit within my authority, and bring you what I can\'t decide. Ask me what\'s slow, about a job by number, about spend, or what needs you.')] };
+    return { intent:'unknown', parts:[T('I can answer about this floor: what\'s slow, a job by number, today\'s spend, or what needs you. Replies in this mockup are generated from the simulated floor.')] };
+  }
+  // Chat is a turn like any other: if the Director is mid-turn, your message waits for it to finish.
+  function sendChat(text){
+    text = String(text || '').trim(); const R = S.R;
+    if (!text || !R.run.live || S.t < R.tMax - .05) return;
+    const t = S.t, k = ++S.chatSeq, fid = S.f.id, busy = turnNow(t);
+    const queued = busy && busy.target !== 'chat';
+    S.chat.push({ k:'u' + k, who:'you', parts:[{ text }], t, card:null, status:null });
+    const reply = { k:'d' + k, who:'director', parts:[], t:t + .01, card:null, status:queued ? `Queued · after ${busy.target === 'intake' ? 'starting' : 'its decision on'} ${R.multi && busy.job ? 'Job ' + busy.job : 'the current job'}` : 'Thinking…' };
+    S.chat.push(reply); store.chatDraft = ''; syncHUD(0, true);
+    setTimeout(() => {
+      if (S.f.id !== fid) return;
+      const think = 1.1 + Math.min(1.2, text.length * .015);
+      reply.status = 'Thinking…';
+      S.R.turns.push({ t0:S.t, t1:S.t + think, job:null, target:'chat', tools:['read_floor', 'answer_you'] });
+      S.chatTurns.push({ t:S.t, tools:'read_floor → answer_you' });
+      syncHUD(0, true);
+      setTimeout(() => { if (S.f.id !== fid) return;
+        const r = directorReply(text); Object.assign(reply, { parts:r.parts, card:r.card || null, status:null });
+        S.chatTurns[S.chatTurns.length - 1].tools = `read_floor → answer_you(${r.intent})`; syncHUD(0, true); }, think * 1000);
+    }, queued ? Math.min(8, busy.t1 - t) * 1000 : 0);
+  }
+  function chatAct(k, action){
+    const m = S.chat.find(x => x.k === k); if (!m || !m.card || m.card.state !== 'ask') return;
+    if (action === 'Cancel'){ m.card.state = 'done'; m.card.result = 'Cancelled. Intake stays open.'; }
+    else { m.card.state = 'done'; m.card.result = 'Applied · mocked';
+      S.chat.push({ k:'d' + (++S.chatSeq), who:'director', parts:[{ text:'Intake is paused. New jobs wait at the door until you tell me to resume. (Mocked: the recorded floor keeps its arrivals.)' }], t:S.t + .01, card:null, status:null }); }
+    syncHUD(0, true);
+  }
   function revFacts(it, t){
     const R = S.R, gate = S.f.steps.find(s => s.kind === 'gate');
     const produced = it.born <= t, stored = it.born + .3 <= t;
@@ -2572,6 +3024,9 @@ const Floor = (() => {
       if (R.multi) facts.push(['Queue', g.qn ? `${g.qn} waiting · oldest ${fmtAge(g.qOld)}` : 'Empty']); }
     if (s.loop) facts.push(['Loop', `back to ${S.L.steps.get(s.loop.to).s.name} · at most ${s.loop.max} repair${s.loop.max === 1 ? '' : 's'}`]);
     if (s.responder){ facts.push(['Responder', s.responder]); facts.push(['Allowed', (s.allowed || []).join(', ')]); }
+    if (s.escalateTo) facts.push(['Escalates to', `${s.escalateTo} · may choose ${(s.humanAllowed || s.allowed).join(' or ')}`]);
+    if (s.recommendedBy) facts.push(['Advised by', `${s.recommendedBy} · attaches a recommendation; the decision stays yours`]);
+    if (s.expires) facts.push(['Expiry', `${fmtSpan(s.expires)} · then ${s.onExpiry}`]);
     if (g.bubble) facts.push([g.bubble.tag === 'KI' ? 'Time (KI)' : 'Count (QI)', readoutAt(g, t)]);
     const outs = f.edges.filter(e => e.from === id).map(e => (e.label ? e.label + ' → ' : '') + S.L.steps.get(e.to).s.name);
     if (outs.length) facts.push(['Routes', outs.join(' · ')]);
@@ -2676,6 +3131,8 @@ const Floor = (() => {
     cam.s = s;
     cam.x = clamp(W/2 - p.x*s, W - pad - b.x1*s, pad - b.x0*s);
     cam.y = w ? H*.34 - p.y*s : ((b.y1 - b.y0)*s < H - pad*2 ? pad + (H - pad*2 - (b.y1 - b.y0)*s)/2 - b.y0*s : H/2 - p.y*s);
+    // A decision that waits for you: keep your desk in the first view too.
+    if (w && w.human && S.L.desk) cam.y = Math.max(cam.y, 72 - (S.L.desk.y - 36)*s);
     applyCam();
   }
   // Clicking the console leans in so its text is readable; clicking again steps back out.
@@ -2760,6 +3217,7 @@ const Floor = (() => {
     const run = S.f.runs.find(r => r.id === id) || S.f.runs[0];
     S.R = compile(S.f, run); S.sel = { type:'run', id:null }; S.pending = null; S.follow = null; S.track = false; store.follow = null;
     buildItems(); buildStamps();
+    S.actSeen = S.t = run.startAt || 0;
     S.crtHdL.textContent = `DIRECTOR  ${S.f.capability}`; S.crtHdR.textContent = run.multi ? 'ALL JOBS' : `JOB ${run.id}`; S.crtKey = '';
     S.t = run.startAt || 0; S.playing = true;
     store.runId = run.id; store.multi = !!run.multi;
@@ -2770,20 +3228,20 @@ const Floor = (() => {
   }
   async function loadFactory(id){
     const f = FACTORIES.find(x => x.id === id) || FACTORIES[0];
-    store.ready = false; S.f = f; store.factoryId = f.id;
+    store.ready = false; S.f = f; store.factoryId = f.id; S.chat = []; S.chatTurns = []; store.chatDraft = '';
     S.L = await layoutFactory(f); assignBubbles();
     buildScene(); buildOverlay();
     store.capability = f.capability; store.versionLabel = `${f.version} · ${f.digest}`; store.provenance = f.provenance;
     setRun(f.defaultRun || f.runs[0].id, true);
     initialView(); store.ready = true;
   }
-  function decide(action){
-    const R = S.R, run = R.run; if (!run.live || S.pending || S.t < R.tMax - .05) return;
-    S.pending = { action, stage:0 }; syncHUD(0, true);
+  function decide(action, job = null){
+    const R = S.R, run = R.run; if (!run.live || S.pending || S.t < R.tMax - .05 || !S.f.onDecide) return;
+    S.pending = { action, stage:0, job:R.multi ? job : null }; syncHUD(0, true);
     setTimeout(() => { S.pending.stage = 1; syncHUD(0, true); }, 420);
     setTimeout(() => { S.pending.stage = 2; syncHUD(0, true); }, 900);
     setTimeout(() => {
-      const now = R.tMax; S.f.onDecide(run, action, now);
+      const now = R.tMax; S.f.onDecide(run, action, now, job);
       const keepT = S.t, sel = S.sel;
       S.R = compile(S.f, run); buildItems(); buildStamps();
       S.t = keepT; S.sel = sel; S.pending = null; S.playing = true;
@@ -2829,7 +3287,7 @@ const Floor = (() => {
     new ResizeObserver(() => { if (store.ready) invalidate(3); }).observe(stageEl);
   }
 
-  return { boot, loadFactory, setRun, toggle, jump, setSpeed, seek, nudge, toLive, select, pickJob, track, back, setView, setBoard, decide, fit, zoom, focusDirector, wasDrag };
+  return { boot, loadFactory, setRun, toggle, jump, setSpeed, seek, nudge, toLive, select, pickJob, track, back, setView, setBoard, decide, fit, zoom, focusDirector, wasDrag, sendChat, chatAct, refresh:() => syncHUD(0, true) };
 })();
 
 document.addEventListener('alpine:init', () => {
@@ -2843,7 +3301,7 @@ document.addEventListener('alpine:init', () => {
     board:{ group:'role', lanes:'none', cols:[], rows:[], sub:'' },
     playing:true, speed:2, t:0, tMax:1, tLabel:'T+00:00.0', clock:'', live:false, atLive:false,
     calm:false, legend:false, panel:true, wide:true,
-    alarms:[], toasts:[], ticks:[], decision:null, insp:null, acked:{},
+    alarms:[], toasts:[], ticks:[], decision:null, insp:null, acked:{}, dirTab:'chat', chatDraft:'',
     setFactory(id){ Floor.loadFactory(id); },
     setRun(id){ Floor.setRun(id); },
     toggle(){ Floor.toggle(); }, jump(d){ Floor.jump(d); }, setSpeed(s){ Floor.setSpeed(s); },
@@ -2852,7 +3310,10 @@ document.addEventListener('alpine:init', () => {
     pickJob(id){ Floor.pickJob(id); }, track(){ Floor.track(); }, back(){ Floor.back(); },
     setView(v){ Floor.setView(v); }, setBoard(k, v){ Floor.setBoard(k, v); },
     ack(id){ this.acked = { ...this.acked, [id]:true }; },
-    decide(a){ Floor.decide(a); },
+    decide(a, job){ Floor.decide(a, job); },
+    sendChat(txt){ Floor.sendChat(txt); }, chatAct(k, a){ Floor.chatAct(k, a); },
+    setDirTab(tab){ this.dirTab = tab; Floor.refresh(); },
+    askAbout(q){ this.dirTab = 'chat'; this.chatDraft = q; Floor.refresh(); setTimeout(() => { const el = document.querySelector('.composer input'); if (el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 60); },
     zoom(d){ Floor.zoom(d); }, fit(){ Floor.fit(); }, refit(){ setTimeout(() => Floor.fit(), 30); },
     soon(v){ this.notice = `${v} is not part of this mockup yet`; clearTimeout(this._nt); this._nt = setTimeout(() => { this.notice = ''; }, 2600); },
   });
