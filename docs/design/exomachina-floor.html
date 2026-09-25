@@ -1,0 +1,1862 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Exomachina Floor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Martian+Mono:wght@400;500;700&family=Michroma&display=swap">
+<style>
+:root{
+  --bg:#E2E5E8; --panel:#F6F7F8; --panel-2:#ECEEF1; --glass:rgba(246,247,248,.86); --line:#C9CED4; --line-2:#DCE0E4;
+  --ink:#1A1E22; --ink-2:#545C64; --ink-3:#848C94; --halo:rgba(227,229,232,.92);
+  --advisory:#D9A400; --advisory-ink:#765600; --advisory-bg:#FAF0CC;
+  --alarm:#D0342C; --alarm-ink:#A5211A; --alarm-bg:#FADFDC;
+  --action:#2A66D9; --action-ink:#1C4FB0; --action-bg:#DCE7FB;
+  --focus:#2A66D9; --vignette:rgba(30,36,42,.10); --shadow:0 10px 30px rgba(20,26,32,.14), 0 1px 3px rgba(20,26,32,.10);
+  --w-floor:#E3E5E8; --w-floor-hi:#F6F7F8; --w-seam:#CBCFD4; --w-inlay:#AEB6BE;
+  --w-zone:#D6DADE; --w-zone-line:#98A0A8; --w-bracket:#646D76;
+  --w-belt-edge:#959DA5; --w-belt:#B9BFC5; --w-belt-mark:#89919A; --w-belt-on:#3B4249;
+  --w-signal:#6F7881; --w-signal-on:#1A1E22;
+  --w-pod:#2A3035; --w-pod-top:#353C42; --w-pod-edge:#4B545C; --w-bay:#1A1E22; --w-icon:#A8B0B8;
+  --w-item:#F5F6F7; --w-item-edge:#1F2429; --w-item-text:#1A1E22;
+  --w-led:#59616A; --w-led-on:#F1F4F7; --w-shadow:#0A0C0E;
+  --font-ui:"Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:"Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-mark:"Michroma", "Eurostile", "Arial Black", ui-sans-serif, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#101215; --panel:#171A1E; --panel-2:#1E2226; --glass:rgba(22,25,29,.84); --line:#2B3137; --line-2:#23282D;
+    --ink:#E3E6E9; --ink-2:#A0A8B0; --ink-3:#6C747C; --halo:rgba(22,25,28,.9);
+    --advisory:#E6B422; --advisory-ink:#F2C94C; --advisory-bg:#3A300F;
+    --alarm:#F0544C; --alarm-ink:#FF8079; --alarm-bg:#3D1715;
+    --action:#4F8CF7; --action-ink:#83AEFF; --action-bg:#15264A;
+    --focus:#6FA0FF; --vignette:rgba(0,0,0,.5); --shadow:0 14px 40px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.4);
+    --w-floor:#16191C; --w-floor-hi:#262B30; --w-seam:#0D0F11; --w-inlay:#6F8BA3;
+    --w-zone:#1B1F23; --w-zone-line:#39414A; --w-bracket:#5B656F;
+    --w-belt-edge:#0C0E10; --w-belt:#2A3035; --w-belt-mark:#434B53; --w-belt-on:#AAB3BC;
+    --w-signal:#5C656E; --w-signal-on:#E3E6E9;
+    --w-pod:#2D3339; --w-pod-top:#383F46; --w-pod-edge:#4F5962; --w-bay:#131619; --w-icon:#99A2AB;
+    --w-item:#E9ECEF; --w-item-edge:#0C0E10; --w-item-text:#14171A;
+    --w-led:#465059; --w-led-on:#F4F7FA; --w-shadow:#000000;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101215; --panel:#171A1E; --panel-2:#1E2226; --glass:rgba(22,25,29,.84); --line:#2B3137; --line-2:#23282D;
+  --ink:#E3E6E9; --ink-2:#A0A8B0; --ink-3:#6C747C; --halo:rgba(22,25,28,.9);
+  --advisory:#E6B422; --advisory-ink:#F2C94C; --advisory-bg:#3A300F;
+  --alarm:#F0544C; --alarm-ink:#FF8079; --alarm-bg:#3D1715;
+  --action:#4F8CF7; --action-ink:#83AEFF; --action-bg:#15264A;
+  --focus:#6FA0FF; --vignette:rgba(0,0,0,.5); --shadow:0 14px 40px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.4);
+  --w-floor:#16191C; --w-floor-hi:#262B30; --w-seam:#0D0F11; --w-inlay:#6F8BA3;
+  --w-zone:#1B1F23; --w-zone-line:#39414A; --w-bracket:#5B656F;
+  --w-belt-edge:#0C0E10; --w-belt:#2A3035; --w-belt-mark:#434B53; --w-belt-on:#AAB3BC;
+  --w-signal:#5C656E; --w-signal-on:#E3E6E9;
+  --w-pod:#2D3339; --w-pod-top:#383F46; --w-pod-edge:#4F5962; --w-bay:#131619; --w-icon:#99A2AB;
+  --w-item:#E9ECEF; --w-item-edge:#0C0E10; --w-item-text:#14171A;
+  --w-led:#465059; --w-led-on:#F4F7FA; --w-shadow:#000000;
+}
+
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:13px;line-height:1.4;overflow:hidden;-webkit-font-smoothing:antialiased}
+[x-cloak]{display:none!important}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+.app{height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto}
+
+/* Top bar */
+.topbar{display:flex;align-items:center;gap:18px;padding:9px 16px;background:var(--panel);border-bottom:1px solid var(--line);min-width:0;flex-wrap:wrap;row-gap:8px}
+.brand{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
+.brand-mark{font-family:var(--font-mark);font-size:11px;letter-spacing:.24em;color:var(--ink)}
+.brand-sub{font-size:12px;color:var(--ink-3);letter-spacing:.02em}
+.fpick{display:flex;align-items:center;gap:10px;min-width:0}
+.fpick select{appearance:none;-webkit-appearance:none;font:600 14px/1.2 var(--font-ui);color:var(--ink);background:var(--panel-2) no-repeat right 9px center/10px 6px;background-image:linear-gradient(45deg,transparent 50%,var(--ink-2) 50%),linear-gradient(135deg,var(--ink-2) 50%,transparent 50%);background-size:5px 5px,5px 5px;background-position:right 13px center,right 8px center;border:1px solid var(--line);border-radius:8px;padding:6px 30px 6px 11px}
+.fmeta{display:flex;flex-direction:column;gap:1px;min-width:0}
+.fmeta .cap{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-2);white-space:nowrap}
+.fmeta .prov{font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;padding:2px 7px;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);white-space:nowrap}
+.views{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.views button{font-size:12.5px;color:var(--ink-2);padding:5px 9px;border-radius:6px;white-space:nowrap}
+.views button:hover{color:var(--ink);background:var(--panel-2)}
+.views button.on{color:var(--ink);background:var(--panel-2);box-shadow:inset 0 -2px 0 var(--ink)}
+.grow{flex:1 1 auto}
+.mockchip{font-size:11px;color:var(--ink-2);border:1px dashed var(--ink-3);border-radius:999px;padding:3px 9px;white-space:nowrap}
+.toggle{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.toggle .sw{width:28px;height:16px;border-radius:999px;background:var(--line);position:relative;transition:background .2s}
+.toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--panel);box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
+.toggle[aria-pressed="true"] .sw{background:var(--ink-2)}
+.toggle[aria-pressed="true"] .sw::after{transform:translateX(12px)}
+
+/* Run bar + ISA-101 alarm banner */
+.runbar{display:flex;align-items:stretch;gap:14px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line);min-width:0;flex-wrap:wrap;row-gap:8px}
+.runs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.runtab{display:grid;grid-template-columns:auto auto;column-gap:8px;align-items:baseline;text-align:left;padding:5px 10px 6px;border:1px solid var(--line);border-radius:8px;background:transparent;white-space:nowrap}
+.runtab .rid{font-family:var(--font-mono);font-size:10px;color:var(--ink-3)}
+.runtab .rout{font-size:10.5px;justify-self:end;color:var(--ink-2)}
+.runtab .rname{grid-column:1/-1;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.runtab.on{background:var(--panel-2);border-color:var(--ink-3)}
+.runtab.on .rname{color:var(--ink)}
+.rout.tone-action{color:var(--action-ink);font-weight:600}
+.alarms{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;flex:1 1 320px;justify-content:flex-end}
+.alarms .quiet{font-size:12px;color:var(--ink-3);display:inline-flex;align-items:center;gap:7px}
+.alarms .quiet::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--line)}
+.apill{display:inline-flex;align-items:center;gap:8px;padding:4px 6px 4px 7px;border-radius:7px;border:1px solid;font-size:12px;max-width:100%}
+.apill .txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.apill .tl{font-family:var(--font-mono);font-size:10px;opacity:.75}
+.apill.alarm{background:var(--alarm-bg);border-color:var(--alarm);color:var(--alarm-ink)}
+.apill.advisory{background:var(--advisory-bg);border-color:var(--advisory);color:var(--advisory-ink)}
+.apill.action{background:var(--action-bg);border-color:var(--action);color:var(--action-ink)}
+.apill .ack{font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:5px;border:1px solid currentColor;opacity:.85}
+.isa{display:inline-grid;place-items:center;flex:none;width:16px;height:16px;font:700 9px/1 var(--font-mono);color:#fff}
+.isa.alarm{background:var(--alarm);border-radius:2px}
+.isa.advisory{background:var(--advisory);clip-path:polygon(50% 2%,100% 98%,0 98%);color:#221a00;padding-top:5px}
+.isa.action{background:var(--action);border-radius:50%}
+.apill.unacked .isa{animation:isa-blink 1.1s steps(2,jump-none) infinite}
+.calm .apill.unacked .isa{animation:none}
+@keyframes isa-blink{0%{opacity:1}100%{opacity:.25}}
+
+/* Stage */
+.stage{position:relative;overflow:hidden;background:var(--bg);min-height:0;touch-action:none;user-select:none;-webkit-user-select:none}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 70% at 45% 45%,transparent 55%,var(--vignette) 100%)}
+#pixi{position:absolute;inset:0}
+#pixi canvas{display:block}
+#ov{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;--lbl:1}
+#ov > *{position:absolute}
+.mach{pointer-events:auto;border:0;background:transparent;border-radius:16px;padding:0}
+.mach:focus-visible{outline:2px solid var(--focus);outline-offset:6px}
+.mlabel{pointer-events:auto;cursor:pointer;transform:translateX(-50%);text-align:center;font-size:calc(12px * var(--lbl));line-height:1.18;color:var(--ink);text-shadow:0 0 3px var(--halo),0 0 6px var(--halo),0 0 10px var(--halo)}
+.mlabel b{font-weight:650;display:block}
+.mlabel span{display:block;font-size:.8em;color:var(--ink-2);margin-top:1px}
+.zlabel{font-family:var(--font-mark);font-size:calc(10px * var(--lbl));letter-spacing:.22em;color:var(--ink-2);opacity:.8;white-space:nowrap}
+.zlabel i{font-style:normal;letter-spacing:0;margin-right:.6em}
+.bubble{width:36px;height:36px;border-radius:50%;border:1.3px solid var(--ink-2);background:var(--panel);display:grid;grid-template-rows:1fr 1fr;place-items:center;font-family:var(--font-mono);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.15);transform:scale(var(--lbl));transform-origin:50% 50%}
+.bubble::after{content:"";position:absolute;left:3px;right:3px;top:50%;border-top:1px solid var(--ink-3)}
+.bubble .tag{font-size:7.5px;letter-spacing:.06em;color:var(--ink-2);align-self:end;padding-bottom:1px}
+.bubble .val{font-size:9px;font-weight:700;align-self:start;padding-top:1px;white-space:nowrap}
+.lod-far .bubble,.lod-far .elabel{display:none}
+.elabel.at-port{transform:translate(-100%,-50%)}
+.wall.in{transform:translate(-100%,-100%)}
+.wall.out{transform:translate(0,-100%)}
+.elabel{transform:translate(-50%,-50%);font-family:var(--font-mono);font-size:calc(9.5px * var(--lbl));color:var(--ink-2);background:var(--panel);border:1px solid var(--line);padding:1px 7px;border-radius:999px;white-space:nowrap}
+.wall{font-family:var(--font-mark);font-size:calc(7.5px * var(--lbl));letter-spacing:.2em;color:var(--ink-3);white-space:nowrap;transform:translate(-50%,-100%)}
+.booth{pointer-events:auto;border:0;background:transparent;border-radius:14px;padding:0}
+.booth:focus-visible{outline:2px solid var(--focus);outline-offset:5px}
+.boothlabel{pointer-events:auto;cursor:pointer;transform:translateY(-100%);font-size:calc(12px * var(--lbl));line-height:1.2;color:var(--ink);white-space:nowrap;text-shadow:0 0 3px var(--halo),0 0 6px var(--halo),0 0 10px var(--halo)}
+.boothlabel b{display:block;font-family:var(--font-mark);font-weight:400;font-size:.92em;letter-spacing:.2em}
+.boothlabel .bs{display:block;font-family:var(--font-mono);font-size:.78em;color:var(--ink-2);margin-top:3px}
+.boothlabel .bs.on{color:var(--ink)}
+.stamp{left:0;top:0;opacity:0;font-family:var(--font-mark);font-size:11px;letter-spacing:.14em;padding:5px 9px 4px;border:2px solid currentColor;border-radius:4px;background:var(--panel);white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.18);will-change:transform,opacity}
+.stamp.normal{color:var(--ink)}
+.stamp.advisory{color:var(--advisory-ink);border-color:var(--advisory)}
+.stamp.alarm{color:var(--alarm-ink);border-color:var(--alarm)}
+.stamp.action{color:var(--action-ink);border-color:var(--action)}
+
+/* HUD floats */
+.float{position:absolute;background:var(--glass);-webkit-backdrop-filter:blur(12px) saturate(1.15);backdrop-filter:blur(12px) saturate(1.15);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.tl-btns{position:absolute;left:12px;top:12px;display:flex;gap:6px}
+.tl-btns .float{position:relative}
+.fbtn{font-size:12px;font-weight:600;color:var(--ink);padding:6px 10px;border-radius:9px}
+.fbtn:hover{background:var(--panel-2)}
+.legend{left:12px;top:52px;width:292px;max-height:calc(100% - 200px);overflow:auto;padding:12px 14px;font-size:12px}
+.legend h4{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:10px 0 6px;font-weight:600}
+.legend h4:first-child{margin-top:0}
+.legend ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:5px 10px}
+.legend li{display:flex;align-items:center;gap:7px;color:var(--ink-2)}
+.legend svg{flex:none}
+.legend .wide{grid-column:1/-1}
+.toasts{right:calc(var(--pw) + 24px);top:12px;display:flex;flex-direction:column;gap:6px;width:min(340px,calc(100% - var(--pw) - 48px));pointer-events:none;position:absolute}
+.toasts .float{position:relative}
+.toast{padding:8px 11px;font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:2px 9px;align-items:start}
+.toast .tl{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-3);grid-column:2}
+.toast .dot{width:7px;height:7px;border-radius:2px;background:var(--ink-3);margin-top:5px;grid-row:1/3}
+.toast.advisory .dot{background:var(--advisory)} .toast.alarm .dot{background:var(--alarm)} .toast.action .dot{background:var(--action);border-radius:50%}
+.mini{left:12px;bottom:12px;padding:6px;display:flex;flex-direction:column;gap:6px}
+.mini canvas{display:block;width:176px;height:108px;border-radius:7px;cursor:crosshair}
+.zoom{display:flex;gap:4px}
+.zoom button{flex:1;font:600 13px/1 var(--font-ui);color:var(--ink);padding:6px 0;border-radius:7px;background:var(--panel-2)}
+.zoom button:hover{background:var(--line-2)}
+.decision{left:50%;transform:translateX(calc(-50% - var(--pw) / 2));bottom:14px;width:min(460px,calc(100% - var(--pw) - 48px));padding:12px 14px 13px;border-width:1.5px}
+.decision.alarm{border-color:var(--alarm)} .decision.action{border-color:var(--action)}
+.decision .dh{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px}
+.decision .ds{font-size:11.5px;color:var(--ink-2);margin-left:auto;font-weight:500}
+.decision p{margin:6px 0 8px;font-size:12.5px;color:var(--ink)}
+.decision .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11.5px;color:var(--ink-2)}
+.decision .meta b{color:var(--ink);font-weight:600}
+.decision .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.decision .acts button{font-weight:650;font-size:12.5px;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
+.decision .acts button.primary{background:var(--action);border-color:var(--action);color:#fff}
+.decision .acts button:disabled{opacity:.45;cursor:not-allowed}
+.decision .turn{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--ink-2)}
+.tool{font-family:var(--font-mono);font-size:10.5px;padding:2px 7px;border-radius:5px;border:1px solid var(--line);color:var(--ink-3)}
+.tool.on{color:var(--ink);border-color:var(--ink-2);background:var(--panel-2)}
+.lifecycle{display:flex;gap:4px;margin-top:10px;align-items:center;font-size:11.5px}
+.lifecycle span{padding:2px 8px;border-radius:5px;border:1px solid var(--line);color:var(--ink-3)}
+.lifecycle span.on{color:var(--ink);border-color:var(--ink-2);background:var(--panel-2)}
+.boot{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-2);font-size:13px;pointer-events:none}
+.boot .err{max-width:420px;text-align:center;padding:16px;pointer-events:auto}
+
+/* Inspector (job card) */
+.insp{right:12px;top:12px;bottom:12px;width:var(--pwv);display:flex;flex-direction:column;overflow:hidden}
+.insp-bar{display:flex;align-items:center;gap:6px;padding:8px 8px 8px 14px;border-bottom:1px solid var(--line)}
+.insp-bar .eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.insp-bar button{font-size:12px;color:var(--ink-2);padding:4px 8px;border-radius:6px}
+.insp-bar button:hover{background:var(--panel-2);color:var(--ink)}
+.insp-body{overflow:auto;padding:14px 16px 18px;flex:1 1 auto;overscroll-behavior:contain}
+.insp h2{font-size:19px;font-weight:700;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.insp h3{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:18px 0 8px}
+.titlerow{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.state{font-size:11px;font-weight:650;padding:3px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
+.state.tone-alarm{color:var(--alarm-ink);border-color:var(--alarm);background:var(--alarm-bg)}
+.state.tone-action{color:var(--action-ink);border-color:var(--action);background:var(--action-bg)}
+.state.tone-advisory{color:var(--advisory-ink);border-color:var(--advisory);background:var(--advisory-bg)}
+.brief{margin:8px 0 0;font-size:13px;color:var(--ink);line-height:1.45}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:12px 0 0;font-size:12px}
+.kv dt{color:var(--ink-3)}
+.kv dd{margin:0;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.ops{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.op{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:baseline;padding:6px 6px;border-radius:6px;cursor:pointer;border-top:1px solid var(--line-2)}
+.op:first-child{border-top:0}
+.op:hover{background:var(--panel-2)}
+.op .n{font-family:var(--font-mono);font-size:10px;color:var(--ink-3)}
+.op .l{font-size:12.5px;color:var(--ink)}
+.op .d{font-family:var(--font-mono);font-size:10px;color:var(--ink-2);text-align:right;white-space:nowrap}
+.op.st-active .l::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ink);margin-left:7px;vertical-align:middle;animation:breathe 1.4s ease-in-out infinite}
+.calm .op.st-active .l::after{animation:none}
+@keyframes breathe{50%{opacity:.25}}
+.op.tone-advisory .d{color:var(--advisory-ink);font-weight:700}
+.op.tone-alarm .d{color:var(--alarm-ink);font-weight:700}
+.op.tone-action .d{color:var(--action-ink);font-weight:700}
+.rev{display:grid;grid-template-columns:auto auto 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;padding:7px 8px;border-radius:7px;border:1px solid var(--line-2);margin-bottom:5px;background:transparent}
+.rev:hover{background:var(--panel-2)}
+.rev .rn{font-family:var(--font-mono);font-weight:700;font-size:11.5px}
+.rev .rs{font-family:var(--font-mono);font-size:10px;color:var(--ink-2)}
+.facts{display:flex;gap:3px}
+.fact{width:14px;height:6px;border-radius:2px;background:var(--line)}
+.fact.on{background:var(--ink-2)}
+.fact.no{background:var(--advisory)}
+.fact.na{background:transparent;border:1px dashed var(--line)}
+.rev .rv{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--ink-2);white-space:nowrap}
+.rev .rv.tone-advisory{color:var(--advisory-ink)} .rev .rv.tone-alarm{color:var(--alarm-ink)}
+.factlegend{font-size:10.5px;color:var(--ink-3);margin-top:4px}
+.cmds{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.cmds li{display:grid;grid-template-columns:58px 1fr;gap:1px 8px;font-size:12px}
+.cmds .ct{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-3);padding-top:2px;grid-row:1/3}
+.cmds .cc{color:var(--ink)}
+.cmds .cc b{font-weight:650}
+.cmds .co{font-size:11px;color:var(--ink-2)}
+.note{margin-top:14px;font-size:11.5px;color:var(--ink-2);padding:9px 11px;border-radius:8px;background:var(--panel-2);line-height:1.45}
+.prov{margin-top:16px;font-size:11px;color:var(--ink-3);line-height:1.45}
+.back{font-size:12px;color:var(--ink-2);padding:3px 0;margin-bottom:8px;display:inline-flex;gap:6px}
+.back:hover{color:var(--ink)}
+.eyebrow2{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:4px}
+.deptchip{display:inline-flex;gap:6px;align-items:center;font-size:11.5px;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:2px 9px;margin-top:8px}
+.att{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;padding:7px 0;border-top:1px solid var(--line-2);font-size:12px}
+.att:first-child{border-top:0}
+.att .an{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3)}
+.att .aw{color:var(--ink)}
+.att .ad{font-family:var(--font-mono);font-size:10px;color:var(--ink-2);text-align:right}
+.att .at{grid-column:2/-1;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-3)}
+.att .av{grid-column:2/-1;font-size:11px;font-weight:700;letter-spacing:.03em}
+.att .av.tone-advisory{color:var(--advisory-ink)} .att .av.tone-alarm{color:var(--alarm-ink)} .att .av.tone-normal{color:var(--ink-2)}
+.pw-closed .insp{top:auto;bottom:12px;width:auto}
+.insp-tab{font-size:12px;font-weight:650;color:var(--ink);padding:8px 12px}
+
+/* Transport */
+.transport{display:flex;align-items:center;gap:14px;padding:9px 16px;background:var(--panel);border-top:1px solid var(--line);min-width:0;flex-wrap:wrap;row-gap:8px}
+.tbtns{display:flex;gap:4px}
+.tbtns button{width:32px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--ink);border:1px solid var(--line);background:var(--panel)}
+.tbtns button:hover{background:var(--panel-2)}
+.tbtns button.play{width:40px;background:var(--ink);border-color:var(--ink);color:var(--panel)}
+.speeds{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.speeds button{font:600 11px/1 var(--font-mono);padding:8px 9px;color:var(--ink-2)}
+.speeds button.on{background:var(--panel-2);color:var(--ink)}
+.scrub{position:relative;flex:1 1 260px;height:30px;cursor:pointer;min-width:160px;touch-action:none}
+.scrub .track{position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;border-radius:3px;background:var(--line)}
+.scrub .fill{position:absolute;left:0;top:50%;height:4px;margin-top:-2px;border-radius:3px;background:var(--ink-2)}
+.scrub .thumb{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--panel);border:2px solid var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.scrub .tick{position:absolute;top:4px;width:2px;height:7px;margin-left:-1px;border-radius:1px;background:var(--ink-3)}
+.scrub .tick.advisory{background:var(--advisory);height:9px} .scrub .tick.alarm{background:var(--alarm);height:10px} .scrub .tick.action{background:var(--action);height:10px}
+.tread{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.tread .tt{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--ink)}
+.tread .tc{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3)}
+.livechip{font-size:10.5px;font-weight:700;letter-spacing:.08em;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--ink-2)}
+.livechip.live{border-color:var(--action);color:var(--action-ink);background:var(--action-bg)}
+.kbd{font-size:10.5px;color:var(--ink-3)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+@media (max-width: 900px){
+  .views,.kbd{display:none}
+  .fmeta .prov{max-width:180px}
+}
+@media (max-width: 760px){
+  .insp{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:58%}
+  .toasts{right:12px;width:calc(100% - 24px)}
+  .decision{transform:translateX(-50%);width:calc(100% - 24px);bottom:auto;top:12px}
+  .mini{display:none}
+  .tl-btns{top:auto;bottom:12px}
+  .legend{top:auto;bottom:52px;max-height:50%}
+  .brand-sub{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  .apill.unacked .isa,.op.st-active .l::after{animation:none}
+}
+</style>
+<style type="text/tailwindcss">
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-panel: var(--panel);
+  --color-line: var(--line);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-mono);
+}
+</style>
+
+</head>
+<body>
+<div id="app" class="app" x-data :class="{calm: $store.floor.calm}">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">EXOMACHINA</span><span class="brand-sub">Factory floor</span></div>
+    <div class="fpick">
+      <label class="sr-only" for="factorySel">Factory</label>
+      <select id="factorySel" @change="$store.floor.setFactory($event.target.value)">
+        <template x-for="f in $store.floor.factories" :key="f.id">
+          <option :value="f.id" :selected="f.id === $store.floor.factoryId" x-text="f.name"></option>
+        </template>
+      </select>
+      <div class="fmeta">
+        <span class="cap"><span x-text="$store.floor.capability"></span> · <span x-text="$store.floor.versionLabel"></span></span>
+        <span class="prov" x-text="$store.floor.provenance"></span>
+      </div>
+    </div>
+    <nav class="views" aria-label="Factory views">
+      <template x-for="v in ['Floor','Runs','Decisions','Outputs','Definition','Agents']" :key="v">
+        <button type="button" :class="{on: v === 'Floor'}" :aria-current="v === 'Floor' ? 'page' : null" @click="v !== 'Floor' && $store.floor.soon(v)" x-text="v"></button>
+      </template>
+    </nav>
+    <div class="grow"></div>
+    <span class="mockchip" x-text="$store.floor.notice || 'Mockup · illustrative data'"></span>
+    <button type="button" class="toggle" :aria-pressed="$store.floor.calm ? 'true' : 'false'" @click="$store.floor.calm = !$store.floor.calm" title="Stop background motion. Work items still move.">
+      <span class="sw"></span>Calm mode
+    </button>
+  </header>
+
+  <div class="runbar">
+    <div class="runs" role="tablist" aria-label="Runs">
+      <template x-for="r in $store.floor.runs" :key="r.id">
+        <button type="button" role="tab" class="runtab" :class="{on: r.id === $store.floor.runId}" :aria-selected="r.id === $store.floor.runId ? 'true' : 'false'" @click="$store.floor.setRun(r.id)">
+          <span class="rid" x-text="'RUN ' + r.id"></span>
+          <span class="rout" :class="'tone-' + r.tone" x-text="r.outcomeLabel"></span>
+          <span class="rname" x-text="r.name"></span>
+        </button>
+      </template>
+    </div>
+    <div class="alarms" aria-live="polite">
+      <template x-if="!$store.floor.alarms.length"><span class="quiet">No active alarms</span></template>
+      <template x-for="a in $store.floor.alarms" :key="a.id">
+        <div class="apill" :class="[a.level, !$store.floor.acked[a.id] && 'unacked']">
+          <span class="isa" :class="a.level" x-text="a.level === 'alarm' ? '1' : (a.level === 'advisory' ? '2' : '!')" aria-hidden="true"></span>
+          <span class="sr-only" x-text="a.level === 'alarm' ? 'Alarm' : (a.level === 'advisory' ? 'Advisory' : 'Action required')"></span>
+          <span class="txt" x-text="a.text"></span>
+          <span class="tl" x-text="a.tl"></span>
+          <button type="button" class="ack" x-show="!$store.floor.acked[a.id]" @click="$store.floor.ack(a.id)">Ack</button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <main id="stage" class="stage" :class="{'pw-closed': !$store.floor.panel}" :style="'--pw:' + ($store.floor.panel && $store.floor.wide ? 'var(--pwv)' : '0px') + ';--pwv:min(372px, 40vw)'">
+    <div id="pixi"></div>
+    <div id="ov"></div>
+    <div class="boot" x-show="!$store.floor.ready">
+      <div class="err" x-show="$store.floor.error" x-text="$store.floor.error"></div>
+      <div x-show="!$store.floor.error">Laying out the floor…</div>
+    </div>
+
+    <div class="tl-btns float-ui">
+      <button type="button" class="float fbtn" @click="$store.floor.legend = !$store.floor.legend" :aria-expanded="$store.floor.legend ? 'true' : 'false'">Legend</button>
+      <button type="button" class="float fbtn" @click="$store.floor.fit()">Fit</button>
+    </div>
+    <div class="float legend float-ui" x-show="$store.floor.legend" x-cloak>
+      <h4>Steps</h4>
+      <ul>
+        <li><svg width="18" height="14" viewBox="0 0 18 14"><rect x="1" y="1" width="16" height="12" rx="4" fill="var(--w-pod)"/><circle cx="9" cy="7" r="3" fill="none" stroke="var(--w-icon)" stroke-width="1.3"/></svg>Assignment</li>
+        <li><svg width="18" height="14" viewBox="0 0 18 14"><rect x="1" y="1" width="16" height="12" rx="4" fill="var(--w-pod)"/><path d="M5 4v6l4-3zM13 4v6L9 7z" fill="var(--w-icon)"/></svg>Gate (valve)</li>
+        <li><svg width="18" height="14" viewBox="0 0 18 14"><rect x="1" y="1" width="16" height="12" rx="6" fill="var(--w-pod)"/><path d="M6.5 3.5h5L9 7zM6.5 10.5h5L9 7z" fill="var(--w-icon)"/></svg>Decision wait</li>
+        <li><svg width="18" height="14" viewBox="0 0 18 14"><circle cx="9" cy="7" r="6" fill="var(--w-pod)"/><path d="M6 4.5L9 7l-3 2.5M9 7h4" stroke="var(--w-icon)" stroke-width="1.2" fill="none"/></svg>Join</li>
+        <li><svg width="18" height="14" viewBox="0 0 18 14"><rect x="1" y="1" width="16" height="12" rx="4" fill="var(--w-pod)"/><path d="M4 7h4l4-3M8 7h4M8 7l4 3" stroke="var(--w-icon)" stroke-width="1.2" fill="none"/></svg>Fan-out</li>
+        <li><svg width="18" height="14" viewBox="0 0 18 14"><rect x="1" y="1" width="16" height="12" rx="4" fill="var(--w-pod)"/><rect x="5.5" y="3.5" width="7" height="7" fill="none" stroke="var(--w-icon)" stroke-width="1.2"/><rect x="7.5" y="5.5" width="3" height="3" fill="var(--w-icon)"/></svg>Nested factory</li>
+      </ul>
+      <h4>Work items</h4>
+      <ul>
+        <li class="wide"><svg width="120" height="16" viewBox="0 0 120 16"><circle cx="8" cy="8" r="6" fill="var(--w-item)" stroke="var(--w-item-edge)"/><rect x="21" y="2" width="12" height="12" rx="2" fill="var(--w-item)" stroke="var(--w-item-edge)"/><path d="M46 2l6 12h-12z" fill="var(--w-item)" stroke="var(--w-item-edge)"/><path d="M66 2l6 3.5v7L66 16l-6-3.5v-7z" fill="var(--w-item)" stroke="var(--w-item-edge)"/><path d="M86 2l6 4.4-2.3 7.1h-7.4L80 6.4z" fill="var(--w-item)" stroke="var(--w-item-edge)"/><rect x="99" y="4" width="18" height="9" rx="4.5" fill="var(--w-item)" stroke="var(--w-item-edge)"/></svg></li>
+        <li class="wide">Shape = kind of artifact. The label is its revision.</li>
+      </ul>
+      <h4>Lines</h4>
+      <ul>
+        <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--w-belt-edge)" stroke-width="8" stroke-linecap="round"/><path d="M2 5h26" stroke="var(--w-belt)" stroke-width="5" stroke-linecap="round"/></svg>Work belt</li>
+        <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--w-signal)" stroke-width="1.5" stroke-dasharray="4 3"/></svg>Director signal</li>
+      </ul>
+      <h4>State (ISA-101)</h4>
+      <ul>
+        <li><span class="isa" style="background:var(--line);color:var(--ink-2);border-radius:2px">·</span>Normal is grey</li>
+        <li><span class="isa advisory">2</span>Advisory</li>
+        <li><span class="isa alarm">1</span>Alarm</li>
+        <li><span class="isa action">!</span>You need to act</li>
+        <li class="wide">Motion shows work. Healthy work moves; stalled work stops.</li>
+        <li class="wide"><span class="mono" style="font-size:10px">KI</span> time in s · <span class="mono" style="font-size:10px">QI</span> count</li>
+      </ul>
+    </div>
+
+    <div class="toasts" aria-live="polite">
+      <template x-for="m in $store.floor.toasts" :key="m.id">
+        <div class="float toast" :class="m.level"><span class="dot"></span><span x-text="m.text"></span><span class="tl" x-text="m.tl"></span></div>
+      </template>
+    </div>
+
+    <div class="float mini float-ui" x-show="$store.floor.ready">
+      <canvas id="minimap" width="352" height="216" aria-label="Minimap. Click to move the view."></canvas>
+      <div class="zoom">
+        <button type="button" @click="$store.floor.zoom(-1)" aria-label="Zoom out">−</button>
+        <button type="button" @click="$store.floor.fit()" aria-label="Fit factory">▢</button>
+        <button type="button" @click="$store.floor.zoom(1)" aria-label="Zoom in">+</button>
+      </div>
+    </div>
+
+    <template x-if="$store.floor.decision">
+      <div class="float decision float-ui" :class="$store.floor.decision.level" x-data="{ get d(){ return $store.floor.decision } }">
+        <div class="dh">
+          <span class="isa" :class="d.level" x-text="d.level === 'alarm' ? '1' : '!'" aria-hidden="true"></span>
+          <span x-text="d.title"></span>
+          <span class="ds" x-text="d.step"></span>
+        </div>
+        <p x-text="d.context"></p>
+        <div class="meta">
+          <span>Responder <b x-text="d.responder"></b></span>
+          <span>Allowed by the graph <b x-text="d.allowed.join(', ')"></b></span>
+          <span x-show="d.waited">Waiting <b x-text="d.waited"></b></span>
+        </div>
+        <template x-if="d.turn">
+          <div class="turn"><span>Director turn:</span>
+            <template x-for="(tl, k) in d.turn.tools" :key="k"><span class="tool" :class="{on: k <= d.turn.step}" x-text="tl"></span></template>
+          </div>
+        </template>
+        <template x-if="!d.human && !d.turn"><div class="turn">The Director answers this wait. You can watch its turn here.</div></template>
+        <template x-if="d.human">
+          <div>
+            <div class="acts">
+              <template x-for="(a, k) in d.allowed" :key="a">
+                <button type="button" :class="{primary: k === 0}" :disabled="!d.atLive || !!d.pending" @click="$store.floor.decide(a)" x-text="a"></button>
+              </template>
+            </div>
+            <div class="turn" x-show="!d.atLive && !d.pending">You're watching a replay. Jump to now to act.</div>
+            <template x-if="d.pending">
+              <div class="lifecycle" aria-live="polite">
+                <template x-for="(s, k) in ['Requested','Validated','Applied']" :key="s"><span :class="{on: k <= d.pending.stage}" x-text="s"></span></template>
+                <span style="border:0" x-text="d.pending.action"></span>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <aside class="float insp float-ui" aria-label="Job card">
+      <template x-if="!$store.floor.panel">
+        <button type="button" class="insp-tab" @click="$store.floor.panel = true; $store.floor.refit()">Job card ‹</button>
+      </template>
+      <template x-if="$store.floor.panel">
+        <div style="display:contents">
+          <div class="insp-bar">
+            <span class="eyebrow" x-text="$store.floor.insp && $store.floor.insp.kind === 'run' ? 'Job card' : ($store.floor.insp && $store.floor.insp.kind === 'step' ? 'Step' : 'Work item')"></span>
+            <div class="grow"></div>
+            <button type="button" @click="$store.floor.panel = false; $store.floor.refit()">Hide ›</button>
+          </div>
+          <div class="insp-body">
+            <template x-if="$store.floor.insp && $store.floor.insp.kind === 'run'">
+              <div x-data="{ get i(){ return $store.floor.insp } }">
+                <div class="titlerow"><h2 x-text="i.title"></h2><span class="state" :class="'tone-' + i.outcome.tone" x-text="i.outcome.label"></span></div>
+                <p class="brief" x-text="i.brief"></p>
+                <dl class="kv">
+                  <dt>Bound to</dt><dd class="mono" style="font-size:11px" x-text="i.bound"></dd>
+                  <dt>Started</dt><dd x-text="i.started"></dd>
+                  <dt>Departments</dt><dd x-text="i.depts"></dd>
+                  <dt>Programs</dt><dd x-text="i.programs"></dd>
+                </dl>
+                <h3>Operations</h3>
+                <ol class="ops">
+                  <template x-for="op in i.ops" :key="op.k">
+                    <li class="op" :class="['st-' + op.status, op.tone ? 'tone-' + op.tone : '']" @click="op.step && $store.floor.select('step', op.step)">
+                      <span class="n" x-text="op.n"></span><span class="l" x-text="op.label"></span><span class="d" x-text="op.detail"></span>
+                    </li>
+                  </template>
+                </ol>
+                <template x-if="i.revs.length">
+                  <div>
+                    <h3 x-text="'Revisions · ' + i.artName"></h3>
+                    <template x-for="r in i.revs" :key="r.id">
+                      <button type="button" class="rev" @click="$store.floor.select('item', r.id)">
+                        <span class="rn" x-text="r.rev"></span><span class="rs" x-text="r.sha"></span>
+                        <span class="facts" :aria-label="r.factsText"><template x-for="(fx, k) in r.facts" :key="k"><span class="fact" :class="fx"></span></template></span>
+                        <span class="rv" :class="'tone-' + r.tone" x-text="r.verdict"></span>
+                      </button>
+                    </template>
+                    <div class="factlegend">Bars: produced · stored · sent to reviewer · accepted</div>
+                  </div>
+                </template>
+                <h3>Commands</h3>
+                <ul class="cmds">
+                  <template x-for="c in i.commands" :key="c.k">
+                    <li><span class="ct" x-text="c.tl"></span><span class="cc"><b x-text="c.by"></b> · <span x-text="c.cmd"></span></span><span class="co" x-text="c.outcome"></span></li>
+                  </template>
+                </ul>
+                <p class="prov" x-text="i.provenance"></p>
+              </div>
+            </template>
+            <template x-if="$store.floor.insp && $store.floor.insp.kind === 'step'">
+              <div x-data="{ get i(){ return $store.floor.insp } }">
+                <button type="button" class="back" @click="$store.floor.select('run')">‹ Job card</button>
+                <div class="eyebrow2" x-text="i.kindName"></div>
+                <h2 x-text="i.title"></h2>
+                <template x-if="i.dept"><span class="deptchip" x-text="i.dept"></span></template>
+                <p class="brief" style="color:var(--ink-2)" x-text="i.desc"></p>
+                <dl class="kv"><template x-for="(fx, k) in i.facts" :key="k"><div style="display:contents"><dt x-text="fx[0]"></dt><dd x-text="fx[1]"></dd></div></template></dl>
+                <template x-if="i.note"><div class="note" x-text="i.note"></div></template>
+                <h3 x-show="i.attempts.length">Attempts in this run</h3>
+                <div>
+                  <template x-for="a in i.attempts" :key="a.k">
+                    <div class="att"><span class="an" x-text="a.n"></span><span class="aw" x-text="a.what"></span><span class="ad" x-text="a.dur"></span><span class="at" x-text="a.task"></span><template x-if="a.verdict"><span class="av" :class="'tone-' + a.tone" x-text="a.verdict"></span></template></div>
+                  </template>
+                </div>
+              </div>
+            </template>
+            <template x-if="$store.floor.insp && $store.floor.insp.kind === 'item'">
+              <div x-data="{ get i(){ return $store.floor.insp } }">
+                <button type="button" class="back" @click="$store.floor.select('run')">‹ Job card</button>
+                <div class="eyebrow2" x-text="i.eyebrow"></div>
+                <h2 x-text="i.title"></h2>
+                <dl class="kv"><template x-for="(fx, k) in i.facts" :key="k"><div style="display:contents"><dt x-text="fx[0]"></dt><dd x-text="fx[1]"></dd></div></template></dl>
+                <template x-if="i.lineage.length">
+                  <div>
+                    <h3>Lineage</h3>
+                    <template x-for="r in i.lineage" :key="r.id">
+                      <button type="button" class="rev" @click="$store.floor.select('item', r.id)">
+                        <span class="rn" x-text="r.rev"></span><span class="rs" x-text="r.sha"></span><span></span>
+                        <span class="rv" :class="'tone-' + r.tone" x-text="r.verdict"></span>
+                      </button>
+                    </template>
+                  </div>
+                </template>
+                <template x-if="i.note"><div class="note" x-text="i.note"></div></template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+    </aside>
+  </main>
+
+  <footer class="transport">
+    <div class="tbtns">
+      <button type="button" @click="$store.floor.restart()" aria-label="Replay from the start" title="Replay from the start"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2v10M12 2L5 7l7 5z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button>
+      <button type="button" @click="$store.floor.jump(-1)" aria-label="Previous event" title="Previous event (←)"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 3L4 7l5 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button type="button" class="play" @click="$store.floor.toggle()" :aria-label="$store.floor.playing ? 'Pause' : 'Play'" title="Play or pause (Space)">
+        <svg x-show="!$store.floor.playing" width="14" height="14" viewBox="0 0 14 14"><path d="M3.5 2l8 5-8 5z" fill="currentColor"/></svg>
+        <svg x-show="$store.floor.playing" width="14" height="14" viewBox="0 0 14 14"><path d="M3.5 2h2.5v10H3.5zM8 2h2.5v10H8z" fill="currentColor"/></svg>
+      </button>
+      <button type="button" @click="$store.floor.jump(1)" aria-label="Next event" title="Next event (→)"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5 3l5 4-5 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="speeds" role="group" aria-label="Replay speed">
+      <template x-for="s in [1,2,4,8]" :key="s"><button type="button" :class="{on: $store.floor.speed === s}" @click="$store.floor.setSpeed(s)" x-text="s + '×'"></button></template>
+    </div>
+    <div id="scrub" class="scrub" role="slider" tabindex="0" aria-label="Run timeline" :aria-valuenow="Math.round($store.floor.t)" aria-valuemin="0" :aria-valuemax="Math.round($store.floor.tMax)" @keydown.left.prevent="$store.floor.nudge(-2)" @keydown.right.prevent="$store.floor.nudge(2)">
+      <div class="track"></div>
+      <template x-for="tk in $store.floor.ticks" :key="tk.id"><div class="tick" :class="tk.level" :style="'left:' + tk.left + '%'" :title="tk.text"></div></template>
+      <div class="fill" id="scrubFill"></div>
+      <div class="thumb" id="scrubThumb"></div>
+    </div>
+    <div class="tread">
+      <span class="tt" x-text="$store.floor.tLabel"></span>
+      <span class="tc" x-text="$store.floor.clock"></span>
+      <button type="button" class="livechip" :class="{live: $store.floor.live}" @click="$store.floor.live && $store.floor.toLive()" x-text="$store.floor.live ? ($store.floor.atLive ? 'LIVE · NOW' : 'JUMP TO NOW') : 'REPLAY'"></button>
+    </div>
+    <span class="kbd">Space play · ←/→ events · drag to pan · scroll to zoom</span>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3/dist/index.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@8.21.0/dist/pixi.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/elkjs@0.12.0/lib/elk.bundled.js"></script>
+<script>
+/* ============================================================
+   Mock data. Everything below is illustrative. The Verified Research
+   runs follow the three routes observed in the 24 Sep live run; digests,
+   durations and some wording are invented for the mockup.
+   ============================================================ */
+function B(){
+  const ev = []; const p = o => (ev.push(o), o);
+  return { ev,
+    spawn:(t,item,art,at,label,x={}) => p({t,type:'spawn',item,art,at,label,...x}),
+    move:(t,item,from,to,dur,x={}) => p({t,type:'move',item,from,to,dur,...x}),
+    consume:(t,item,at) => p({t,type:'consume',item,at}),
+    work:(t,step,dur,x={}) => p({t,type:'work',step,dur,...x}),
+    verdict:(t,step,item,verdict,x={}) => p({t,type:'verdict',step,item,verdict,...x}),
+    flag:(t,t1,item,flag) => p({t,t1,type:'flag',item,flag}),
+    readout:(t,step,value) => p({t,type:'readout',step,value}),
+    director:(t,dur,target,tools,x={}) => p({t,dur,type:'director',target,tools,...x}),
+    wait:(t,t1,step,x={}) => p({t,t1,type:'wait',step,...x}),
+    decide:(t,step,x={}) => p({t,type:'decide',step,...x}),
+    release:(t,item,at,x={}) => p({t,type:'release',item,at,...x}),
+    scrap:(t,item,at,x={}) => p({t,type:'scrap',item,at,...x}),
+    alarm:(t,t1,level,text) => p({t,t1,type:'alarm',level,text}),
+    command:(t,by,cmd,outcome) => p({t,type:'command',by,cmd,outcome}),
+    end:(t,outcome,x={}) => p({t,type:'end',outcome,...x}),
+  };
+}
+
+const C5 = 'Says the release receiver and capability content were validated against live production services, but both remain fixtures.';
+const C6 = 'The packet does not say that a Quality reviewer evaluated the report with a live model.';
+
+function vrPrefix(b, sha1){
+  b.readout(0,'review','0/2'); b.readout(0,'release','0'); b.readout(0,'join','0/2');
+  b.spawn(0,'b0','brief','intake','Q',{msg:'Caller Task received · verified-research@1'});
+  b.command(0.1,'Caller','message/send · research question','accepted · Task working');
+  b.director(0.4,5.6,'intake',['start_research','inspect_run'],{msg:'Director turn 1 · start_research, then inspect_run'});
+  b.command(2.6,'Director','start_research(question)','validated → applied');
+  b.command(5.4,'Director','inspect_run','applied · read only');
+  b.consume(6.2,'b0','intake');
+  b.spawn(6.2,'a1','brief','intake','F'); b.spawn(6.2,'a2','brief','intake','R');
+  b.move(6.2,'a1','intake','rf',2.0); b.move(6.3,'a2','intake','rr',2.2);
+  b.work(8.2,'rf',14.2,{item:'a1',attempt:1,task:'A2A Task tsk-3f1c07'});
+  b.work(8.5,'rr',15.8,{item:'a2',attempt:1,task:'A2A Task tsk-8a02d4'});
+  b.consume(22.4,'a1','rf'); b.spawn(22.4,'f1','findings','rf','F',{msg:'Findings returned · stored and digest-bound'});
+  b.move(22.4,'f1','rf','join',2.0);
+  b.consume(24.3,'a2','rr'); b.spawn(24.3,'k1','risks','rr','R');
+  b.move(24.3,'k1','rr','join',2.0);
+  b.readout(24.4,'join','1/2'); b.readout(26.3,'join','2/2');
+  b.work(26.3,'join',0.8);
+  b.consume(27.1,'f1','join'); b.consume(27.1,'k1','join');
+  b.spawn(27.1,'bn','bundle','join','2');
+  b.move(27.1,'bn','join','synth',2.0);
+  b.work(29.1,'synth',17.0,{item:'bn',attempt:1,task:'A2A Task tsk-c71d95',rev:'r1'});
+  b.consume(46.1,'bn','synth');
+  b.spawn(46.1,'r1','report','synth','r1',{rev:'r1',sha:sha1,msg:'Synthesizer produced report r1 · ' + sha1});
+  b.move(46.1,'r1','synth','review',2.0);
+  b.work(48.1,'review',9.0,{item:'r1',attempt:1,task:'A2A Task tsk-5e0a41',rev:'r1'});
+}
+
+function vrRun1(){ const b = B(); vrPrefix(b,'7df919cd');
+  b.verdict(57.1,'review','r1','accepted',{rev:'r1',sha:'7df919cd',findings:0,msg:'Quality accepted r1 · 0 findings · bound to 7df919cd'});
+  b.move(57.1,'r1','review','release',2.2);
+  b.release(59.3,'r1','release',{msg:'Released r1 · receipt matches the accepted revision'});
+  b.readout(59.6,'release','1');
+  b.end(61.5,'released');
+  return b.ev; }
+
+function vrRun2(){ const b = B(); vrPrefix(b,'a91c2e07');
+  b.verdict(57.1,'review','r1','rejected',{rev:'r1',sha:'a91c2e07',finding:'C6',findingText:C6,level:'advisory',msg:'Quality rejected r1 · blocking finding C6'});
+  b.readout(57.1,'review','1/2');
+  b.alarm(57.1,87.4,'advisory','Quality rejected r1 · finding C6 · repair 1 of 2 in progress');
+  b.flag(57.1,76.7,'r1','rejected');
+  b.move(57.1,'r1','review','synth',3.5);
+  b.work(60.6,'synth',16.1,{item:'r1',attempt:2,task:'A2A Task tsk-e2b810',rev:'r2',repair:1,msg:'Repair brief sent · carries r1 digest a91c2e07 and finding C6'});
+  b.consume(76.7,'r1','synth');
+  b.spawn(76.7,'r2','report','synth','r2',{rev:'r2',sha:'74d6d919',msg:'Synthesizer produced r2 · 74d6d919'});
+  b.move(76.7,'r2','synth','review',2.0);
+  b.work(78.7,'review',8.7,{item:'r2',attempt:2,task:'A2A Task tsk-91d3c6',rev:'r2'});
+  b.verdict(87.4,'review','r2','accepted',{rev:'r2',sha:'74d6d919',findings:0,msg:'Quality accepted r2 · the exact repaired revision'});
+  b.move(87.4,'r2','review','release',2.2);
+  b.release(89.6,'r2','release',{msg:'Released r2 · r1 was never released'});
+  b.readout(89.9,'release','1');
+  b.end(91.8,'released');
+  return b.ev; }
+
+function vrRun3(){ const b = B(); vrPrefix(b,'e3b8d140');
+  b.verdict(57.1,'review','r1','rejected',{rev:'r1',sha:'e3b8d140',finding:'C5',findingText:C5,level:'advisory',msg:'Quality rejected r1 · blocking finding C5'});
+  b.readout(57.1,'review','1/2');
+  b.alarm(57.1,87.4,'advisory','Quality rejected r1 · finding C5 · repair 1 of 2 in progress');
+  b.flag(57.1,76.7,'r1','rejected');
+  b.move(57.1,'r1','review','synth',3.5);
+  b.work(60.6,'synth',16.1,{item:'r1',attempt:2,task:'A2A Task tsk-e2b810',rev:'r2',repair:1,msg:'Repair brief sent · carries r1 digest and finding C5'});
+  b.consume(76.7,'r1','synth');
+  b.spawn(76.7,'r2','report','synth','r2',{rev:'r2',sha:'0c4f9a21',msg:'Synthesizer produced r2 · 0c4f9a21'});
+  b.move(76.7,'r2','synth','review',2.0);
+  b.work(78.7,'review',8.7,{item:'r2',attempt:2,task:'A2A Task tsk-91d3c6',rev:'r2'});
+  b.verdict(87.4,'review','r2','rejected',{rev:'r2',sha:'0c4f9a21',finding:'C5',findingText:C5,level:'advisory',msg:'Quality rejected r2 · C5 again'});
+  b.readout(87.4,'review','2/2');
+  b.alarm(87.4,117.7,'advisory','Quality rejected r2 · C5 · repair 2 of 2, the last one allowed');
+  b.flag(87.4,106.4,'r2','rejected');
+  b.move(87.4,'r2','review','synth',3.5);
+  b.work(90.9,'synth',15.5,{item:'r2',attempt:3,task:'A2A Task tsk-4b7719',rev:'r3',repair:2});
+  b.consume(106.4,'r2','synth');
+  b.spawn(106.4,'r3','report','synth','r3',{rev:'r3',sha:'5d21b7e9',msg:'Synthesizer produced r3 · 5d21b7e9'});
+  b.move(106.4,'r3','synth','review',2.0);
+  b.work(108.4,'review',9.3,{item:'r3',attempt:3,task:'A2A Task tsk-0e93aa',rev:'r3'});
+  b.verdict(117.7,'review','r3','rejected',{rev:'r3',sha:'5d21b7e9',finding:'C5',findingText:C5,limit:true,level:'alarm',msg:'Quality rejected r3 · repair limit reached'});
+  b.flag(117.7,999,'r3','exhausted');
+  b.alarm(117.7,139.2,'alarm','Repair limit reached · r3 rejected (C5) · waiting for the Director');
+  b.move(117.7,'r3','review','decide',2.4);
+  b.wait(120.1,139.2,'decide',{responder:'Director',human:false,allowed:['Abort'],level:'alarm',context:'r1, r2 and r3 were each rejected for C5. The caller\'s Task is input-required. The graph allows one action here.',msg:'Caller Task is now input-required · Director decision pending',level2:'alarm'});
+  b.command(128.2,'Caller','Neutral follow-up on the original Task','accepted');
+  b.director(128.5,10.4,'decide',['inspect_run','decide_wait(abort, r3)'],{msg:'Director turn 2 · inspect_run, then decide_wait'});
+  b.command(131.8,'Director','inspect_run','applied · read only');
+  b.command(138.9,'Director','decide_wait(abort, r3, 5d21b7e9)','validated → applied');
+  b.decide(139.2,'decide',{by:'Director',action:'Abort',stamp:'ABORT · DIRECTOR',rationale:'r3 still says the release receiver and capability content ran live; both are fixtures.',msg:'Director aborted the run · its rationale names the fixture/live misstatement'});
+  b.move(139.2,'r3','decide','abort',2.0);
+  b.scrap(141.2,'r3','abort',{msg:'Run aborted · 0 releases · no artifact published'});
+  b.readout(141.8,'abort','1');
+  b.end(143.2,'aborted');
+  return b.ev; }
+
+function trRun(){ const b = B();
+  b.readout(0,'deliver','0');
+  b.spawn(0,'d0','source','intake','EN',{msg:'Caller Task received · translate-document@2'});
+  b.command(0.1,'Caller','message/send · translate to German','accepted · Task working');
+  b.director(0.3,3.4,'intake',['start_translation'],{msg:'Director turn 1 · start_translation'});
+  b.command(2.9,'Director','start_translation(document)','validated → applied');
+  b.move(3.8,'d0','intake','translate',2.2);
+  b.work(6.0,'translate',21.6,{item:'d0',attempt:1,task:'A2A Task tsk-40aa19',rev:'r1'});
+  b.consume(27.6,'d0','translate');
+  b.spawn(27.6,'t1','translation','translate','DE',{rev:'r1',sha:'b83e0f5a',msg:'Translation r1 produced · b83e0f5a'});
+  b.move(27.6,'t1','translate','deliver',2.2);
+  b.release(29.8,'t1','deliver',{msg:'Delivered r1 · this factory declares no gate'});
+  b.readout(30.1,'deliver','1');
+  b.end(32,'released');
+  return b.ev; }
+
+function supRun(){ const b = B();
+  b.readout(0,'split','0/3'); b.readout(0,'collect','0/3'); b.readout(0,'policy','0/1'); b.readout(0,'deliver','0');
+  b.spawn(0,'q0','brief','intake','Q',{msg:'Caller Task received · evaluate-suppliers@1'});
+  b.command(0.1,'Caller','message/send · evaluate 3 suppliers for part 7-114','accepted · Task working');
+  b.director(0.3,4.2,'intake',['start_evaluation'],{msg:'Director turn 1 · start_evaluation'});
+  b.command(3.6,'Director','start_evaluation(request)','validated → applied');
+  b.move(4.6,'q0','intake','shortlist',2.2);
+  b.work(6.8,'shortlist',19.6,{item:'q0',attempt:1,task:'A2A Task tsk-77ab01'});
+  b.consume(26.4,'q0','shortlist');
+  b.spawn(26.4,'L','list','shortlist','3',{msg:'Shortlist returned · 3 suppliers'});
+  b.move(26.4,'L','shortlist','split',2.2);
+  b.work(28.6,'split',1.0,{item:'L'});
+  b.consume(29.6,'L','split');
+  b.readout(29.6,'split','3/3');
+  b.spawn(29.6,'sA','supplier','split','A'); b.spawn(29.6,'sB','supplier','split','B'); b.spawn(29.6,'sC','supplier','split','C');
+  b.move(29.6,'sA','split','dd',2.0); b.move(30.2,'sB','split','dd',2.0); b.move(30.8,'sC','split','dd',2.0);
+  b.work(31.6,'dd',36.0,{item:'sA',attempt:1,task:'Nested factory run vr-0421',label:'Supplier A',msg:'3 nested Verified Research runs started'});
+  b.work(32.2,'dd',44.5,{item:'sB',attempt:1,task:'Nested factory run vr-0422',label:'Supplier B'});
+  b.work(32.8,'dd',24.0,{item:'sC',attempt:1,task:'Nested factory run vr-0423',label:'Supplier C'});
+  b.flag(56.8,69.4,'sC','unknown');
+  b.alarm(56.8,69.4,'advisory','Supplier C · nested Task response lost · outcome unknown, reconciling');
+  b.command(56.9,'Factory','Record outcome unknown for vr-0423 · no resubmission','recorded');
+  b.command(69.3,'Factory','Reconcile vr-0423 (tasks/get)','found completed · result recovered');
+  b.readout(56.8,'split','2/3');
+  b.consume(67.6,'sA','dd'); b.spawn(67.6,'aA','assessment','dd','A',{msg:'Supplier A assessment accepted by the nested factory'});
+  b.move(67.6,'aA','dd','collect',2.0);
+  b.consume(69.4,'sC','dd'); b.spawn(69.4,'aC','assessment','dd','C',{msg:'Supplier C · remote Task found completed · result recovered'});
+  b.move(69.4,'aC','dd','collect',2.0);
+  b.readout(69.6,'collect','1/3'); b.readout(71.4,'collect','2/3');
+  b.consume(76.7,'sB','dd'); b.spawn(76.7,'aB','assessment','dd','B');
+  b.readout(76.7,'split','0/3');
+  b.move(76.7,'aB','dd','collect',2.0);
+  b.readout(78.7,'collect','3/3');
+  b.work(78.7,'collect',0.8);
+  b.consume(79.5,'aA','collect'); b.consume(79.5,'aB','collect'); b.consume(79.5,'aC','collect');
+  b.spawn(79.5,'D','dossier','collect','3');
+  b.move(79.5,'D','collect','score',2.0);
+  b.work(81.5,'score',18.2,{item:'D',attempt:1,task:'A2A Task tsk-2c9e40',rev:'r1'});
+  b.consume(99.7,'D','score');
+  b.spawn(99.7,'sc1','scorecard','score','r1',{rev:'r1',sha:'2f7c90ab',msg:'Scorecard r1 produced · 2f7c90ab'});
+  b.move(99.7,'sc1','score','policy',2.0);
+  b.work(101.7,'policy',7.5,{item:'sc1',attempt:1,task:'A2A Task tsk-6d1f02',rev:'r1'});
+  b.verdict(109.2,'policy','sc1','accepted',{rev:'r1',sha:'2f7c90ab',findings:0,msg:'Policy check passed r1 · 0 findings'});
+  b.move(109.2,'sc1','policy','approve',2.4);
+  b.wait(111.6,null,'approve',{responder:'You · Procurement lead',human:true,allowed:['Approve','Send back'],level:'action',context:'Scorecard r1 ranks supplier B first. The policy check passed with no findings. The graph asks a person to approve before delivery.',msg:'Approval needed from you · scorecard r1',level2:'action'});
+  b.alarm(111.6,null,'action','Approval needed from you · scorecard r1');
+  return b.ev; }
+
+const FACTORIES = [
+  { id:'verified-research', name:'Verified Research', capability:'verified-research@1', version:'v1', digest:'6cbb2bd8',
+    provenance:'Shape observed in the 24 Sep live run · values illustrative',
+    departments:[{id:'production',name:'Production',glyph:'▲'},{id:'quality',name:'Quality',glyph:'●'}],
+    programs:[],
+    mainArt:'report',
+    agents:{
+      'research-findings':{name:'research-findings',contract:'research.findings@1',rev:'svc 2026.09.24-a'},
+      'research-risks':{name:'research-risks',contract:'research.risks@1',rev:'svc 2026.09.24-a'},
+      'synthesizer':{name:'synthesizer',contract:'report.synthesis@1',rev:'svc 2026.09.24-b'},
+      'quality-reviewer':{name:'quality-reviewer',contract:'report.review@1',rev:'svc 2026.09.24-c',note:'Separate identity and Task store from the author.'},
+    },
+    artifacts:{brief:{name:'Assignment brief',shape:'circle'},findings:{name:'Findings',shape:'square'},risks:{name:'Risks',shape:'triangle'},bundle:{name:'Joined inputs',shape:'capsule'},report:{name:'Report',shape:'hexagon'}},
+    steps:[
+      {id:'intake',kind:'intake',name:'Caller Task',sub:'A2A entry'},
+      {id:'rf',kind:'assign',name:'Research findings',agent:'research-findings',dept:'production'},
+      {id:'rr',kind:'assign',name:'Research risks',agent:'research-risks',dept:'production'},
+      {id:'join',kind:'join',name:'Join',sub:'needs 2 of 2',dept:'production'},
+      {id:'synth',kind:'assign',name:'Synthesize report',agent:'synthesizer',dept:'production'},
+      {id:'review',kind:'gate',name:'Quality review',agent:'quality-reviewer',dept:'quality',loop:{to:'synth',max:2}},
+      {id:'decide',kind:'wait',name:'Director decision',sub:'allowed: abort',responder:'Director',allowed:['Abort']},
+      {id:'release',kind:'output',name:'Release',sub:'accepted only'},
+      {id:'abort',kind:'end',name:'Aborted',sub:'no release'},
+    ],
+    edges:[
+      {from:'intake',to:'rf'},{from:'intake',to:'rr'},{from:'rf',to:'join'},{from:'rr',to:'join'},{from:'join',to:'synth'},{from:'synth',to:'review'},
+      {from:'review',to:'release',label:'accepted'},{from:'review',to:'decide',label:'repair limit'},{from:'review',to:'synth',label:'rejected · repair',loop:true},{from:'decide',to:'abort',label:'abort'},
+    ],
+    signals:['intake','decide'],
+    runs:[
+      {id:'0416',name:'Accepted first pass',outcomeLabel:'Released',tone:'normal',start:'2026-09-24T14:02:10',startAt:0,
+       brief:'What did the 23 September qualification packet prove, what remains open, and what should come next?',events:vrRun1()},
+      {id:'0417',name:'Rejected, repaired, accepted',outcomeLabel:'Released r2',tone:'normal',start:'2026-09-24T14:05:40',startAt:38,
+       brief:'What did the 23 September qualification packet prove, what remains open, and what should come next?',events:vrRun2()},
+      {id:'0418',name:'Repair limit reached',outcomeLabel:'Aborted',tone:'normal',start:'2026-09-24T14:09:30',startAt:0,
+       brief:'What did the 23 September qualification packet prove, what remains open, and what should come next?',events:vrRun3()},
+    ],
+    defaultRun:'0417',
+  },
+  { id:'evaluate-suppliers', name:'Supplier Evaluation', capability:'evaluate-suppliers@1', version:'v3', digest:'9c20d7aa',
+    provenance:'Illustrative factory · not built',
+    departments:[{id:'sourcing',name:'Sourcing',glyph:'▲'},{id:'analysis',name:'Analysis',glyph:'■'},{id:'compliance',name:'Compliance',glyph:'●'}],
+    programs:[{name:'Maintenance',on:true},{name:'Improvement',on:true},{name:'Research',on:false}],
+    mainArt:'scorecard',
+    agents:{
+      'sourcing-scout':{name:'sourcing-scout',contract:'sourcing.shortlist@2',rev:'svc 2026.09.20'},
+      'verified-research':{name:'Verified Research (factory)',contract:'verified-research@1',rev:'factory v1 · 6cbb2bd8',nested:true},
+      'risk-scorer':{name:'risk-scorer',contract:'supplier.score@1',rev:'svc 2026.09.18'},
+      'policy-checker':{name:'policy-checker',contract:'procurement.policy@3',rev:'svc 2026.09.22',note:'Separate identity from the scorer.'},
+    },
+    artifacts:{brief:{name:'Request',shape:'circle'},list:{name:'Shortlist',shape:'capsule'},supplier:{name:'Supplier',shape:'pentagon'},assessment:{name:'Assessment',shape:'square'},dossier:{name:'Dossier',shape:'capsule'},scorecard:{name:'Scorecard',shape:'hexagon'}},
+    steps:[
+      {id:'intake',kind:'intake',name:'Caller Task',sub:'A2A entry'},
+      {id:'shortlist',kind:'assign',name:'Build shortlist',agent:'sourcing-scout',dept:'sourcing'},
+      {id:'split',kind:'fanout',name:'One per supplier',sub:'max 3 at once',dept:'analysis'},
+      {id:'dd',kind:'nested',name:'Due diligence',agent:'verified-research',dept:'analysis'},
+      {id:'collect',kind:'join',name:'Collect',sub:'needs 3 of 3',dept:'analysis'},
+      {id:'score',kind:'assign',name:'Score suppliers',agent:'risk-scorer',dept:'analysis'},
+      {id:'policy',kind:'gate',name:'Policy check',agent:'policy-checker',dept:'compliance',loop:{to:'score',max:1}},
+      {id:'approve',kind:'wait',name:'Approval',sub:'responder: you',responder:'You · Procurement lead',allowed:['Approve','Send back'],dept:'compliance'},
+      {id:'deliver',kind:'output',name:'Deliver',sub:'to the caller'},
+    ],
+    edges:[
+      {from:'intake',to:'shortlist'},{from:'shortlist',to:'split'},{from:'split',to:'dd'},{from:'dd',to:'collect'},{from:'collect',to:'score'},{from:'score',to:'policy'},
+      {from:'policy',to:'approve',label:'passed'},{from:'approve',to:'deliver',label:'approve'},
+      {from:'policy',to:'score',label:'failed · rework',loop:true},{from:'approve',to:'score',label:'send back',loop:true},
+    ],
+    signals:['intake'],
+    runs:[
+      {id:'0203',name:'Three suppliers, awaiting approval',outcomeLabel:'Needs you',tone:'action',start:'2026-09-24T09:41:05',startAt:131.6,live:true,now:131.6,
+       brief:'Evaluate three shortlisted suppliers for part 7-114 and recommend one.',events:supRun()},
+    ],
+    defaultRun:'0203',
+    onDecide(run, action, now){
+      const b = B();
+      const itemId = currentItemAt(run, 'approve');
+      const rev = itemRev(run, itemId);
+      closeOpen(run, now + 0.6);
+      if (action === 'Approve'){
+        b.command(now,'You','approve(scorecard ' + rev + ')','validated → applied');
+        b.decide(now + 0.6,'approve',{by:'You',action:'Approve',stamp:'APPROVED · YOU',msg:'You approved scorecard ' + rev});
+        b.move(now + 0.6,itemId,'approve','deliver',2.2);
+        b.release(now + 2.8,itemId,'deliver',{msg:'Delivered scorecard ' + rev + ' to the caller'});
+        b.readout(now + 3.1,'deliver','1');
+        b.end(now + 4.6,'released');
+        run.live = false; run.outcomeLabel = 'Delivered'; run.tone = 'normal';
+      } else {
+        const n = Number(rev.slice(1)) + 1, nr = 'r' + n, nid = 'sc' + n, sha = (0x1a2b3c4d + n * 0x9e3779b1 >>> 0).toString(16).padStart(8,'0').slice(0,8);
+        b.command(now,'You','send_back(scorecard ' + rev + ')','validated → applied');
+        b.decide(now + 0.6,'approve',{by:'You',action:'Send back',stamp:'SENT BACK · YOU',msg:'You sent scorecard ' + rev + ' back for rework'});
+        b.flag(now + 0.6, now + 19.7, itemId, 'rejected');
+        b.move(now + 0.6,itemId,'approve','score',3.6);
+        b.work(now + 4.2,'score',15.5,{item:itemId,attempt:n,task:'A2A Task tsk-2c9e4' + n,rev:nr,msg:'Rework brief sent to the scorer · carries ' + rev + ' and your note'});
+        b.consume(now + 19.7,itemId,'score');
+        b.spawn(now + 19.7,nid,'scorecard','score',nr,{rev:nr,sha,msg:'Scorecard ' + nr + ' produced · ' + sha});
+        b.move(now + 19.7,nid,'score','policy',2.0);
+        b.work(now + 21.7,'policy',7.2,{item:nid,attempt:n,task:'A2A Task tsk-6d1f0' + n,rev:nr});
+        b.verdict(now + 28.9,'policy',nid,'accepted',{rev:nr,sha,findings:0,msg:'Policy check passed ' + nr});
+        b.move(now + 28.9,nid,'policy','approve',2.4);
+        b.wait(now + 31.3,null,'approve',{responder:'You · Procurement lead',human:true,allowed:['Approve','Send back'],level:'action',context:'Scorecard ' + nr + ' addresses your note. The policy check passed with no findings.',msg:'Approval needed from you · scorecard ' + nr});
+        b.alarm(now + 31.3,null,'action','Approval needed from you · scorecard ' + nr);
+        run.now = now + 31.3;
+      }
+      run.events.push(...b.ev);
+    },
+  },
+  { id:'translate-document', name:'Document Translation', capability:'translate-document@2', version:'v2', digest:'1b7e40c2',
+    provenance:'Illustrative factory · the smallest possible shape',
+    departments:[], programs:[{name:'Maintenance',on:true}],
+    mainArt:'translation',
+    agents:{'translator':{name:'translator',contract:'document.translate@2',rev:'svc 2026.09.12'}},
+    artifacts:{source:{name:'Source document',shape:'circle'},translation:{name:'Translation',shape:'hexagon'}},
+    steps:[
+      {id:'intake',kind:'intake',name:'Caller Task',sub:'A2A entry'},
+      {id:'translate',kind:'assign',name:'Translate',agent:'translator'},
+      {id:'deliver',kind:'output',name:'Deliver',sub:'to the caller'},
+    ],
+    edges:[{from:'intake',to:'translate'},{from:'translate',to:'deliver'}],
+    signals:['intake'],
+    runs:[{id:'0091',name:'One document, EN → DE',outcomeLabel:'Delivered',tone:'normal',start:'2026-09-24T11:17:44',startAt:0,
+      brief:'Translate the attached supplier contract from English to German.',events:trRun()}],
+    defaultRun:'0091',
+  },
+];
+
+function currentItemAt(run, step){
+  let id = null; for (const e of run.events) if (e.type === 'move' && e.to === step) id = e.item; return id;
+}
+function itemRev(run, id){ const s = run.events.find(e => e.type === 'spawn' && e.item === id); return (s && s.rev) || 'r1'; }
+function closeOpen(run, t){ for (const e of run.events) if ((e.type === 'wait' || e.type === 'alarm') && e.t1 == null) e.t1 = t; }
+
+/* ============================================================
+   Floor engine: ELK layout → octilinear belts → Pixi world,
+   with a DOM overlay for labels, instruments and stamps.
+   ============================================================ */
+const Floor = (() => {
+  const TILE = 80, LABEL_H = 48, LABEL_REACH = 62, PERIOD = TILE * 8;
+  const KIND_SIZE = {intake:[112,78],assign:[144,78],nested:[164,86],join:[78,78],fanout:[104,78],gate:[132,78],wait:[132,78],output:[112,78],end:[100,70]};
+  const KIND_NAME = {intake:'Entry',assign:'Assignment',nested:'Nested factory',join:'Join',fanout:'Fan-out',gate:'Gate',wait:'Decision wait',output:'Output',end:'End'};
+  const KIND_DESC = {
+    intake:'Where the caller\'s A2A Task enters. The factory advertises one capability through its normal A2A identity.',
+    assign:'Sends a scoped assignment to one agent over A2A and waits for its Task to return an artifact.',
+    nested:'Calls another published factory through its public A2A contract, like any other agent.',
+    join:'Waits for the required branches, then passes their results on together.',
+    fanout:'Starts one branch per discovered item, within a concurrency limit.',
+    gate:'An independent check of one exact revision. Its verdict binds to that revision\'s digest.',
+    wait:'A durable pause for a decision by a named responder. Only actions the graph allows can be chosen.',
+    output:'Releases accepted work to the caller and records the receipt.',
+    end:'A terminal outcome with no release.',
+  };
+  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+  const EASE = { move: gsap.parseEase('power1.inOut'), slam: gsap.parseEase('back.out(2.4)'), out: gsap.parseEase('power2.out') };
+
+  const S = { f:null, L:null, R:null, P:null, lbl:1, t:0, playing:true, speed:2, wall:0, sel:{type:'run',id:null}, pending:null, itemTap:false };
+  let app = null, world = null, layers = {}, ov = null, stageEl = null, store = null, mini = null, miniCtx = null;
+  let itemViews = new Map(), stampEls = [], textures = [];
+  const cam = { x:0, y:0, s:1 };
+
+  /* ---------- palette ---------- */
+  const TOK = {floor:'--w-floor',floorHi:'--w-floor-hi',seam:'--w-seam',inlay:'--w-inlay',zone:'--w-zone',zoneLine:'--w-zone-line',bracket:'--w-bracket',beltEdge:'--w-belt-edge',belt:'--w-belt',beltMark:'--w-belt-mark',beltOn:'--w-belt-on',signal:'--w-signal',signalOn:'--w-signal-on',pod:'--w-pod',podTop:'--w-pod-top',podEdge:'--w-pod-edge',bay:'--w-bay',icon:'--w-icon',item:'--w-item',itemEdge:'--w-item-edge',itemText:'--w-item-text',led:'--w-led',ledOn:'--w-led-on',shadow:'--w-shadow',advisory:'--advisory',alarm:'--alarm',action:'--action',focus:'--focus',ink:'--ink',ink2:'--ink-2',ink3:'--ink-3',line:'--line',panel:'--panel'};
+  function isDark(){ const a = document.documentElement.getAttribute('data-theme'); if (a === 'dark') return true; if (a === 'light') return false; return matchMedia('(prefers-color-scheme: dark)').matches; }
+  function readPalette(){
+    const cs = getComputedStyle(document.documentElement); const P = { dark:isDark(), css:{} };
+    for (const [k,v] of Object.entries(TOK)){ const s = cs.getPropertyValue(v).trim(); P.css[k] = s; P[k] = /^#[0-9a-f]{6}$/i.test(s) ? parseInt(s.slice(1),16) : 0x888888; }
+    return P;
+  }
+  const hex = n => '#' + n.toString(16).padStart(6,'0');
+  const rgba = (n,a) => `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;
+  const mix = (a,b,t) => { const r=(a>>16&255)+(((b>>16&255)-(a>>16&255))*t), g=(a>>8&255)+(((b>>8&255)-(a>>8&255))*t), bl=(a&255)+(((b&255)-(a&255))*t); return (Math.round(r)<<16)|(Math.round(g)<<8)|Math.round(bl); };
+
+  /* ---------- geometry helpers ---------- */
+  function dedupe(pts){ const out = []; for (const p of pts){ const q = out[out.length-1]; if (!q || Math.abs(q.x-p.x) > .01 || Math.abs(q.y-p.y) > .01) out.push(p); } return out; }
+  function roundPts(pts, r){
+    pts = dedupe(pts); if (pts.length < 3) return pts.slice();
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length - 1; i++){
+      const A = pts[i-1], Bp = pts[i], Cp = pts[i+1];
+      const d1 = Math.hypot(Bp.x-A.x, Bp.y-A.y), d2 = Math.hypot(Cp.x-Bp.x, Cp.y-Bp.y);
+      const rr = Math.min(r, d1/2, d2/2);
+      const P1 = {x:Bp.x+(A.x-Bp.x)/d1*rr, y:Bp.y+(A.y-Bp.y)/d1*rr}, P2 = {x:Bp.x+(Cp.x-Bp.x)/d2*rr, y:Bp.y+(Cp.y-Bp.y)/d2*rr};
+      out.push(P1);
+      for (let k = 1; k < 8; k++){ const t = k/8, u = 1-t; out.push({x:u*u*P1.x+2*u*t*Bp.x+t*t*P2.x, y:u*u*P1.y+2*u*t*Bp.y+t*t*P2.y}); }
+      out.push(P2);
+    }
+    out.push(pts[pts.length-1]);
+    return dedupe(out);
+  }
+  function sampler(pts){
+    pts = dedupe(pts); if (pts.length < 2) pts = [pts[0], {x:pts[0].x+.01, y:pts[0].y}];
+    const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i-1] + Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y));
+    const len = cum[cum.length-1];
+    return { pts, len, at(d){
+      d = clamp(d, 0, len); let lo = 0, hi = cum.length-1;
+      while (hi - lo > 1){ const m = (lo+hi) >> 1; if (cum[m] <= d) lo = m; else hi = m; }
+      const seg = (cum[hi]-cum[lo]) || 1, t = (d-cum[lo])/seg, A = pts[lo], Bq = pts[hi];
+      return { x:A.x+(Bq.x-A.x)*t, y:A.y+(Bq.y-A.y)*t, a:Math.atan2(Bq.y-A.y, Bq.x-A.x) };
+    }};
+  }
+  // Mini Metro style: horizontal, one 45° diagonal, horizontal.
+  function routeH(a, b, bias){
+    const S2 = 22, dx = b.x-a.x, dy = b.y-a.y, ady = Math.abs(dy), sg = Math.sign(dy);
+    if (dx <= 2*S2){
+      if (dx > 4){ const xm = a.x+dx/2; return [a,{x:xm,y:a.y},{x:xm,y:b.y},b]; }
+      const ym = Math.max(a.y,b.y)+70; return [a,{x:a.x+S2,y:a.y},{x:a.x+S2,y:ym},{x:b.x-S2,y:ym},{x:b.x-S2,y:b.y},b];
+    }
+    if (ady < .5) return [a,b];
+    if (dx >= ady + 2*S2){ const free = dx-ady-2*S2, xa = a.x+S2+free*bias; return [a,{x:xa,y:a.y},{x:xa+ady,y:b.y},b]; }
+    const d = dx-2*S2; return [a,{x:a.x+S2,y:a.y},{x:a.x+S2,y:b.y-sg*d},{x:b.x-S2,y:b.y},b];
+  }
+  // Return lane for loops: leave the source's lower left, run under the labels, come back up.
+  // fromBelow: enter the target through its underside (used when another loop already takes its side port).
+  function routeLoop(a, b, laneY, idx, fromBelow){
+    const K = 22, e1 = a.x-14-idx*12;
+    if (fromBelow){
+      if (e1 - 2*K < b.x + K) return [a,{x:a.x-10,y:a.y},{x:a.x-10,y:laneY},{x:b.x,y:laneY},b];
+      return [a,{x:e1,y:a.y},{x:e1-K,y:a.y+K},{x:e1-K,y:laneY-K},{x:e1-2*K,y:laneY},{x:b.x+K,y:laneY},{x:b.x,y:laneY-K},b];
+    }
+    const e2 = b.x+14+idx*12;
+    if (e1 - 2*K < e2 + 2*K) return [a,{x:a.x-10,y:a.y},{x:a.x-10,y:laneY},{x:b.x+10,y:laneY},{x:b.x+10,y:b.y},b];
+    return [a,{x:e1,y:a.y},{x:e1-K,y:a.y+K},{x:e1-K,y:laneY-K},{x:e1-2*K,y:laneY},{x:e2+2*K,y:laneY},{x:e2+K,y:laneY-K},{x:e2+K,y:b.y+K},{x:e2,y:b.y},b];
+  }
+  function labelSpot(pts){
+    let best = null, bl = -1;
+    for (let i = 1; i < pts.length; i++){ const A = pts[i-1], Bq = pts[i], l = Math.hypot(Bq.x-A.x, Bq.y-A.y); const horiz = Math.abs(Bq.y-A.y) < .5; const score = l * (horiz ? 1.4 : 1); if (score > bl){ bl = score; best = { x:(A.x+Bq.x)/2, y:(A.y+Bq.y)/2 }; } }
+    return best;
+  }
+
+  /* ---------- layout ---------- */
+  async function elkLayout(f, sizes){
+    const spacing = {'elk.spacing.nodeNode':'60','elk.layered.spacing.nodeNodeBetweenLayers':'124','elk.layered.spacing.edgeNodeBetweenLayers':'30','elk.layered.nodePlacement.strategy':'BRANDES_KOEPF','elk.layered.nodePlacement.bk.fixedAlignment':'BALANCED'};
+    const root = { id:'root', layoutOptions:{'elk.algorithm':'layered','elk.direction':'RIGHT','elk.hierarchyHandling':'INCLUDE_CHILDREN','elk.padding':'[top=40,left=40,bottom=40,right=40]','elk.spacing.componentComponent':'90',...spacing}, children:[], edges:[] };
+    const depts = new Map();
+    for (const s of f.steps){
+      const node = { id:s.id, width:sizes[s.id].w, height:sizes[s.id].h + LABEL_H };
+      if (s.dept){
+        if (!depts.has(s.dept)){ const dn = { id:'dept:'+s.dept, layoutOptions:{'elk.padding':'[top=64,left=36,bottom=30,right=36]',...spacing}, children:[], edges:[] }; depts.set(s.dept, dn); root.children.push(dn); }
+        depts.get(s.dept).children.push(node);
+      } else root.children.push(node);
+    }
+    const stepById = Object.fromEntries(f.steps.map(s => [s.id, s]));
+    f.edges.forEach((e,i) => { if (e.loop) return; const a = stepById[e.from], b = stepById[e.to];
+      const c = (a.dept && a.dept === b.dept) ? depts.get(a.dept) : root; c.edges.push({ id:'e'+i, sources:[e.from], targets:[e.to] }); });
+    const res = await new ELK().layout(root);
+    const pos = {}, zones = [];
+    for (const c of res.children){
+      if (c.id.startsWith('dept:')){ zones.push({ id:c.id.slice(5), x:c.x, y:c.y, w:c.width, h:c.height }); for (const k of c.children) pos[k.id] = { x:c.x+k.x, y:c.y+k.y }; }
+      else pos[c.id] = { x:c.x, y:c.y };
+    }
+    return { pos, zones };
+  }
+  function fallbackLayout(f, sizes){
+    const fwd = f.edges.filter(e => !e.loop), layer = {}; f.steps.forEach(s => layer[s.id] = 0);
+    for (let k = 0; k < f.steps.length; k++) for (const e of fwd) layer[e.to] = Math.max(layer[e.to], layer[e.from]+1);
+    const cols = []; f.steps.forEach(s => (cols[layer[s.id]] ||= []).push(s));
+    const pos = {}; let x = 60;
+    cols.forEach(col => { let y = 60; let wmax = 0; col.forEach(s => { pos[s.id] = {x, y}; y += sizes[s.id].h + LABEL_H + 60; wmax = Math.max(wmax, sizes[s.id].w); }); x += wmax + 140; });
+    const zones = f.departments.map(d => { const ss = f.steps.filter(s => s.dept === d.id); if (!ss.length) return null;
+      const x0 = Math.min(...ss.map(s => pos[s.id].x))-36, y0 = Math.min(...ss.map(s => pos[s.id].y))-64, x1 = Math.max(...ss.map(s => pos[s.id].x+sizes[s.id].w))+36, y1 = Math.max(...ss.map(s => pos[s.id].y+sizes[s.id].h+LABEL_H))+30;
+      return { id:d.id, x:x0, y:y0, w:x1-x0, h:y1-y0 }; }).filter(Boolean);
+    return { pos, zones };
+  }
+  function bayRect(kind, g){
+    const cy = g.y + g.h/2 + 5, bh = 40;
+    const w = {join:44, nested:g.w-58, gate:58, wait:g.w-44, output:60, intake:56, end:46, fanout:52}[kind] ?? Math.min(g.w-60, 84);
+    let cx = g.x + g.w/2 + 4; if (kind === 'gate') cx = g.x + g.w/2 - 10; if (kind === 'join') cx = g.x + g.w/2;
+    const h = kind === 'join' ? 44 : bh;
+    return { x:cx-w/2, y:cy-h/2, w, h };
+  }
+  async function layoutFactory(f){
+    const sizes = {}; f.steps.forEach(s => { const [w,h] = KIND_SIZE[s.kind] || [140,78]; sizes[s.id] = {w,h}; });
+    let L;
+    try { L = await elkLayout(f, sizes); } catch (err){ console.warn('ELK layout failed; using the fallback layout.', err); L = fallbackLayout(f, sizes); }
+    const G = { steps:new Map(), zones:[], edges:[], signals:[], entry:new Map(), exit:new Map(), booth:null };
+    for (const s of f.steps){ const p = L.pos[s.id], {w,h} = sizes[s.id]; const g = { s, x:p.x, y:p.y, w, h }; g.bay = bayRect(s.kind, g); g.c = { x:g.bay.x+g.bay.w/2, y:g.bay.y+g.bay.h/2 }; G.steps.set(s.id, g); }
+    // zones, snapped to the tile grid when that does not create overlaps
+    const raw = L.zones.map(z => ({...z, d:f.departments.find(d => d.id === z.id)}));
+    const snapped = raw.map(z => ({ ...z, x:Math.floor(z.x/TILE)*TILE, y:Math.floor(z.y/TILE)*TILE, w:Math.ceil((z.x+z.w)/TILE)*TILE - Math.floor(z.x/TILE)*TILE, h:Math.ceil((z.y+z.h)/TILE)*TILE - Math.floor(z.y/TILE)*TILE }));
+    const hit = (a,b) => a.x < b.x+b.w && b.x < a.x+a.w && a.y < b.y+b.h && b.y < a.y+a.h;
+    G.zones = snapped.map((z,i) => snapped.some((o,j) => j !== i && hit(z,o)) ? raw[i] : z);
+    // forward belts with distributed ports
+    const fwd = f.edges.filter(e => !e.loop);
+    const sy = id => G.steps.get(id).c.y;
+    for (const [id,g] of G.steps){
+      const outs = fwd.filter(e => e.from === id).sort((p,q) => sy(p.to)-sy(q.to));
+      outs.forEach((e,i) => { e._a = { x:g.x+g.w-6, y:g.c.y+(i-(outs.length-1)/2)*20 }; e._nOut = outs.length; });
+      const ins = fwd.filter(e => e.to === id).sort((p,q) => sy(p.from)-sy(q.from));
+      ins.forEach((e,i) => { e._b = { x:g.x+6, y:g.c.y+(i-(ins.length-1)/2)*20 }; e._nIn = ins.length; });
+    }
+    f.edges.forEach((e,i) => {
+      const A = G.steps.get(e.from), Bg = G.steps.get(e.to);
+      let pts;
+      if (!e.loop){ const bias = e._nOut > 1 ? 0 : (e._nIn > 1 ? 1 : .5); pts = routeH(e._a, e._b, bias); }
+      else {
+        const idx = f.edges.filter((o,j) => o.loop && j < i).length;
+        const sameTarget = f.edges.filter((o,j) => o.loop && j < i && o.to === e.to).length;
+        const fromBelow = sameTarget > 0;
+        const a = { x:A.x+6, y:A.y+A.h-11 }, b = fromBelow ? { x:Bg.x+Bg.w*.72, y:Bg.y+Bg.h-6 } : { x:Bg.x+Bg.w-6, y:Bg.y+Bg.h-11 };
+        let bottom = Math.max(A.y+A.h, Bg.y+Bg.h) + LABEL_REACH;
+        for (const [,g] of G.steps){ if (g === A || g === Bg) continue; if (g.x < a.x && g.x+g.w > Bg.x+Bg.w) bottom = Math.max(bottom, g.y+g.h+LABEL_REACH); }
+        pts = routeLoop(a, b, bottom + idx*30, idx, fromBelow);
+      }
+      const rounded = roundPts(pts, 16);
+      const edge = { id:'e'+i, def:e, loop:!!e.loop, raw:dedupe(pts), path:sampler(rounded), move:sampler(roundPts([A.c, ...pts, Bg.c], 12)) };
+      G.edges.push(edge); e._geom = edge;
+    });
+    // entry and exit stubs
+    for (const [id,g] of G.steps){
+      if (g.s.kind === 'intake'){ const pts = [{x:g.x-104,y:g.c.y},{x:g.x+6,y:g.c.y}]; G.entry.set(id, { path:sampler(pts), move:sampler([{x:g.x-104,y:g.c.y}, g.c]) }); }
+      if (g.s.kind === 'output'){ const pts = [{x:g.x+g.w-6,y:g.c.y},{x:g.x+g.w+116,y:g.c.y}]; G.exit.set(id, { path:sampler(pts), move:sampler([g.c, {x:g.x+g.w+116,y:g.c.y}]) }); }
+    }
+    // Director booth and dashed signal lines
+    let minX = Infinity, minY = Infinity;
+    for (const [,g] of G.steps){ minX = Math.min(minX, g.x); minY = Math.min(minY, g.y); }
+    G.zones.forEach(z => { minX = Math.min(minX, z.x); minY = Math.min(minY, z.y); });
+    const booth = { x:minX, y:minY-150, w:176, h:72 }; G.booth = booth;
+    for (const id of (f.signals || [])){
+      const g = G.steps.get(id); if (!g) continue;
+      let R = { x:g.x+g.w/2, y:g.y };
+      let pts;
+      const blocked = [...G.steps.values()].some(o => o !== g && o.y + o.h <= g.y && o.y > booth.y + booth.h && o.x < R.x + 14 && o.x + o.w > R.x - 14);
+      if (blocked){
+        // Another machine sits above the target: drop down the aisle to its left and enter from the side.
+        R = { x:g.x, y:g.y + 14 }; const s0 = { x:booth.x+booth.w, y:booth.y+booth.h/2 }, X = g.x - 30;
+        pts = [s0, {x:X-24, y:s0.y}, {x:X, y:s0.y+24}, {x:X, y:R.y-30}, R];
+      }
+      else if (R.x - 30 > booth.x + booth.w){ const s0 = { x:booth.x+booth.w, y:booth.y+booth.h/2 }; const dv = Math.min(46, (R.y-s0.y)/2); pts = [s0,{x:R.x-dv,y:s0.y},{x:R.x,y:s0.y+dv},R]; }
+      else { const sx = clamp(R.x, booth.x+30, booth.x+booth.w-30), s0 = { x:sx, y:booth.y+booth.h }, adx = Math.abs(R.x-sx), dy = R.y-s0.y;
+        pts = adx < 1 ? [s0,R] : (dy > adx+40 ? [s0,{x:sx,y:R.y-20-adx},{x:R.x,y:R.y-20},R] : [s0,R]); }
+      G.signals.push({ target:id, recv:R, path:sampler(roundPts(pts, 14)) });
+    }
+    // bounds
+    let x0 = booth.x, y0 = booth.y-56, x1 = booth.x+booth.w+120, y1 = booth.y+booth.h;
+    const grow = (x,y) => { x0 = Math.min(x0,x); y0 = Math.min(y0,y); x1 = Math.max(x1,x); y1 = Math.max(y1,y); };
+    for (const [,g] of G.steps){ grow(g.x-20, g.y-24); grow(g.x+g.w+30, g.y+g.h+LABEL_REACH); }
+    G.zones.forEach(z => { grow(z.x, z.y); grow(z.x+z.w, z.y+z.h); });
+    G.edges.forEach(e => e.path.pts.forEach(p => grow(p.x, p.y+18)));
+    G.entry.forEach(e => e.path.pts.forEach(p => grow(p.x-170, p.y)));
+    G.exit.forEach(e => e.path.pts.forEach(p => grow(p.x+170, p.y)));
+    G.content = { x0:x0-30, y0:y0-20, x1:x1+30, y1:y1+30 };
+    return G;
+  }
+
+  /* ---------- textures ---------- */
+  function floorTexture(P, zone){
+    const T = TILE, N = 8, K = 2, c = document.createElement('canvas'); c.width = c.height = T*N*K;
+    const x = c.getContext('2d'); x.scale(K,K);
+    const base = zone ? P.zone : P.floor; let seed = zone ? 97 : 13; const rnd = () => ((seed = (seed*16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < N; i++) for (let j = 0; j < N; j++){
+      const X = i*T, Y = j*T, v = rnd();
+      x.fillStyle = hex(mix(base, v < .5 ? 0x000000 : 0xffffff, rnd() * (P.dark ? .02 : .022))); x.fillRect(X,Y,T,T);
+      const gr = x.createLinearGradient(X,Y,X+T,Y+T); gr.addColorStop(0, rgba(P.floorHi, P.dark ? .10 : .6)); gr.addColorStop(.55, rgba(P.floorHi, 0)); x.fillStyle = gr; x.fillRect(X,Y,T,T);
+      if (zone){ x.fillStyle = rgba(P.zoneLine, P.dark ? .28 : .2); for (let a = 5; a < T; a += 8) for (let b = 5; b < T; b += 8) x.fillRect(X+a, Y+b, 1, 1); }
+    }
+    x.lineWidth = 1;
+    for (let k = 0; k <= N; k++){
+      x.strokeStyle = hex(P.seam); x.beginPath(); x.moveTo(k*T+.5,0); x.lineTo(k*T+.5,N*T); x.moveTo(0,k*T+.5); x.lineTo(N*T,k*T+.5); x.stroke();
+      x.strokeStyle = rgba(P.floorHi, P.dark ? .06 : .7); x.beginPath(); x.moveTo(k*T+1.5,0); x.lineTo(k*T+1.5,N*T); x.moveTo(0,k*T+1.5); x.lineTo(N*T,k*T+1.5); x.stroke();
+    }
+    for (let i = 0; i <= N; i += 2) for (let j = 0; j <= N; j += 2){
+      x.fillStyle = hex(P.seam); x.beginPath(); x.arc(i*T+1, j*T+1, 2.6, 0, Math.PI*2); x.fill();
+      x.fillStyle = rgba(P.floorHi, P.dark ? .18 : .8); x.beginPath(); x.arc(i*T+.4, j*T+.4, 1, 0, Math.PI*2); x.fill();
+    }
+    if (!zone){
+      x.save(); if (P.dark){ x.shadowColor = rgba(P.inlay, .8); x.shadowBlur = 6; }
+      x.strokeStyle = rgba(P.inlay, P.dark ? .3 : .6); x.lineWidth = 1.1;
+      for (const k of [0,4]){ x.beginPath(); x.moveTo(k*T+5,0); x.lineTo(k*T+5,N*T); x.moveTo(0,k*T+5); x.lineTo(N*T,k*T+5); x.stroke(); }
+      x.restore();
+    }
+    const t = PIXI.Texture.from(c); textures.push(t); return t;
+  }
+  function radialTexture(){
+    const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d');
+    const g = x.createRadialGradient(256,256,0,256,256,256); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0,0,512,512);
+    const t = PIXI.Texture.from(c); textures.push(t); return t;
+  }
+  const shadowCache = new Map();
+  function shadowTex(w, h, r){
+    const key = `${w}x${h}x${r}`; if (shadowCache.has(key)) return shadowCache.get(key);
+    const blur = 16, pad = blur*2, c = document.createElement('canvas'); c.width = Math.ceil(w+pad*2); c.height = Math.ceil(h+pad*2);
+    const x = c.getContext('2d'); x.shadowColor = 'rgba(0,0,0,1)'; x.shadowBlur = blur; x.fillStyle = '#000'; x.beginPath(); x.roundRect(pad, pad, w, h, r); x.fill();
+    const v = { t:PIXI.Texture.from(c), pad }; shadowCache.set(key, v); return v;
+  }
+
+  /* ---------- drawing primitives ---------- */
+  function podRadius(g){ return g.s.kind === 'join' ? g.h/2 : (g.s.kind === 'wait' ? g.h/2 : 16); }
+  function icon(gr, kind, x, y, col){
+    const st = { width:1.6, color:col, cap:'round', join:'round' };
+    switch (kind){
+      case 'intake': gr.moveTo(x-6,y).lineTo(x+3,y).stroke(st); gr.moveTo(x,y-3.5).lineTo(x+3.5,y).lineTo(x,y+3.5).stroke(st); gr.moveTo(x+6,y-5).lineTo(x+6,y+5).stroke(st); break;
+      case 'assign': gr.circle(x,y,5).stroke(st); gr.circle(x,y,1.8).fill(col); break;
+      case 'nested': gr.rect(x-5.5,y-5.5,11,11).stroke(st); gr.rect(x-2.2,y-2.2,4.4,4.4).fill(col); break;
+      case 'join': gr.moveTo(x-6,y-5).lineTo(x,y).lineTo(x-6,y+5).stroke(st); gr.moveTo(x,y).lineTo(x+6,y).stroke(st); break;
+      case 'fanout': gr.moveTo(x-6,y).lineTo(x,y).stroke(st); gr.moveTo(x+6,y-5).lineTo(x,y).lineTo(x+6,y+5).stroke(st); gr.moveTo(x,y).lineTo(x+6,y).stroke(st); break;
+      case 'gate': gr.poly([x-6,y-4,x-6,y+4,x,y], true).fill(col); gr.poly([x+6,y-4,x+6,y+4,x,y], true).fill(col); break;
+      case 'wait': gr.poly([x-4.5,y-5.5,x+4.5,y-5.5,x,y], true).stroke(st); gr.poly([x-4.5,y+5.5,x+4.5,y+5.5,x,y], true).fill(col); break;
+      case 'output': gr.moveTo(x-6,y-5).lineTo(x-6,y+5).stroke(st); gr.moveTo(x-3,y).lineTo(x+6,y).stroke(st); gr.moveTo(x+2.5,y-3.5).lineTo(x+6,y).lineTo(x+2.5,y+3.5).stroke(st); break;
+      case 'end': gr.circle(x,y,5).stroke(st); gr.moveTo(x-3.5,y+3.5).lineTo(x+3.5,y-3.5).stroke(st); break;
+    }
+  }
+  function drawBelt(gr, path, P, w){
+    const pts = path.pts; const line = () => { gr.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) gr.lineTo(pts[i].x, pts[i].y); };
+    line(); gr.stroke({ width:w, color:P.beltEdge, cap:'round', join:'round' });
+    line(); gr.stroke({ width:w-5, color:P.belt, cap:'round', join:'round' });
+    line(); gr.stroke({ width:1, color:0xffffff, alpha:P.dark ? .04 : .25, cap:'round', join:'round' });
+  }
+  function chevrons(gr, path, offset, gap){
+    for (let d = 12 + ((offset % gap) + gap) % gap; d < path.len - 10; d += gap){
+      const p = path.at(d), ca = Math.cos(p.a), sa = Math.sin(p.a), k = 3.4;
+      gr.moveTo(p.x-ca*k-sa*k, p.y-sa*k+ca*k).lineTo(p.x, p.y).lineTo(p.x-ca*k+sa*k, p.y-sa*k-ca*k);
+    }
+  }
+  function dashed(gr, path, dash, gapLen){
+    for (let d = 0; d < path.len; d += dash+gapLen){ const a = path.at(d), b = path.at(Math.min(path.len, d+dash)); gr.moveTo(a.x,a.y).lineTo(b.x,b.y); }
+  }
+  function shapePath(gr, shape){
+    switch (shape){
+      case 'circle': return gr.circle(0,0,12);
+      case 'square': return gr.roundRect(-11,-11,22,22,4);
+      case 'triangle': return gr.poly([0,-13,12.5,9,-12.5,9], true);
+      case 'hexagon': { const p = []; for (let i = 0; i < 6; i++){ const a = Math.PI/6 + i*Math.PI/3; p.push(Math.cos(a)*13.5, Math.sin(a)*13.5); } return gr.poly(p, true); }
+      case 'pentagon': { const p = []; for (let i = 0; i < 5; i++){ const a = -Math.PI/2 + i*2*Math.PI/5; p.push(Math.cos(a)*13.5, Math.sin(a)*13.5); } return gr.poly(p, true); }
+      case 'capsule': return gr.roundRect(-16,-10,32,20,10);
+      default: return gr.circle(0,0,12);
+    }
+  }
+
+  /* ---------- scene ---------- */
+  function clearWorld(){
+    if (!world) return;
+    for (const ch of world.removeChildren()) ch.destroy({ children:true });
+    textures.forEach(t => t.destroy(true)); textures = [];
+    itemViews = new Map();
+  }
+  function buildScene(){
+    clearWorld();
+    const G = S.L, P = S.P = readPalette();
+    const mk = () => { const c = new PIXI.Container(); world.addChild(c); return c; };
+    layers = { floor:mk(), zones:mk(), sheen:mk(), belts:mk(), beltDyn:null, signals:mk(), shadows:mk(), pods:mk(), podDyn:null, items:mk(), fx:null };
+    // floor
+    const b = G.content, m = 2400;
+    const fx0 = Math.floor((b.x0-m)/PERIOD)*PERIOD, fy0 = Math.floor((b.y0-m)/PERIOD)*PERIOD;
+    const fw = Math.ceil((b.x1+m-fx0)/PERIOD)*PERIOD, fh = Math.ceil((b.y1+m-fy0)/PERIOD)*PERIOD;
+    const floor = new PIXI.TilingSprite({ texture:floorTexture(P,false), width:fw, height:fh }); floor.position.set(fx0, fy0); floor.tileScale.set(.5); layers.floor.addChild(floor);
+    // zones
+    const zt = G.zones.length ? floorTexture(P,true) : null;
+    const zg = new PIXI.Graphics();
+    for (const z of G.zones){
+      const ts = new PIXI.TilingSprite({ texture:zt, width:z.w, height:z.h }); ts.position.set(z.x, z.y); ts.tileScale.set(.5); ts.tilePosition.set(-(z.x-fx0), -(z.y-fy0)); layers.zones.addChild(ts);
+      zg.rect(z.x+.5, z.y+.5, z.w-1, z.h-1).stroke({ width:1.5, color:P.zoneLine, alpha:.9 });
+      zg.rect(z.x+5, z.y+5, z.w-10, z.h-10).stroke({ width:1, color:P.zoneLine, alpha:.45 });
+      const L2 = 22, x0 = z.x+5, y0 = z.y+5, x1 = z.x+z.w-5, y1 = z.y+z.h-5;
+      zg.moveTo(x0,y0+L2).lineTo(x0,y0).lineTo(x0+L2,y0).moveTo(x1-L2,y0).lineTo(x1,y0).lineTo(x1,y0+L2).moveTo(x1,y1-L2).lineTo(x1,y1).lineTo(x1-L2,y1).moveTo(x0+L2,y1).lineTo(x0,y1).lineTo(x0,y1-L2).stroke({ width:2.4, color:P.bracket, cap:'square' });
+      if (P.dark){ zg.rect(z.x+2.5, z.y+2.5, z.w-5, z.h-5).stroke({ width:1, color:P.inlay, alpha:.35 }); }
+    }
+    layers.zones.addChild(zg);
+    // sheen
+    const sh = new PIXI.Sprite(radialTexture()); sh.anchor.set(.5); sh.position.set((b.x0+b.x1)/2, (b.y0+b.y1)/2 - 60);
+    sh.width = (b.x1-b.x0)*1.5; sh.height = (b.y1-b.y0)*1.6; sh.alpha = P.dark ? .045 : .5; layers.sheen.addChild(sh);
+    // belts (static)
+    const bg = new PIXI.Graphics();
+    G.entry.forEach(e => drawBelt(bg, e.path, P, 16));
+    G.exit.forEach(e => drawBelt(bg, e.path, P, 16));
+    G.edges.forEach(e => drawBelt(bg, e.path, P, e.loop ? 13 : 17));
+    // wall portals at stub ends
+    G.entry.forEach(e => { const p = e.path.pts[0]; bg.rect(p.x-6, p.y-15, 4, 30).fill(P.bracket); bg.rect(p.x-12, p.y-15, 3, 30).fill({ color:P.bracket, alpha:.5 }); });
+    G.exit.forEach(e => { const p = e.path.pts[e.path.pts.length-1]; bg.rect(p.x+2, p.y-15, 4, 30).fill(P.bracket); bg.rect(p.x+9, p.y-15, 3, 30).fill({ color:P.bracket, alpha:.5 }); });
+    layers.belts.addChild(bg);
+    layers.beltDyn = new PIXI.Graphics(); layers.belts.addChild(layers.beltDyn);
+    // signals (static dashed)
+    const sg = new PIXI.Graphics();
+    G.signals.forEach(s => { dashed(sg, s.path, 6, 5); });
+    sg.stroke({ width:1.6, color:P.signal, cap:'round' });
+    G.signals.forEach(s => { const r = s.recv; sg.poly([r.x, r.y-7, r.x+6, r.y-1, r.x, r.y+5, r.x-6, r.y-1], true).fill(P.signal); });
+    layers.signals.addChild(sg);
+    layers.sigDyn = new PIXI.Graphics(); layers.signals.addChild(layers.sigDyn);
+    // shadows
+    const addShadow = (x,y,w,h,r) => { const s2 = shadowTex(w,h,r); const sp = new PIXI.Sprite(s2.t); sp.position.set(x-s2.pad, y-s2.pad+8); sp.tint = P.shadow; sp.alpha = P.dark ? .7 : .30; layers.shadows.addChild(sp); };
+    for (const [,g] of G.steps) addShadow(g.x, g.y, g.w, g.h, podRadius(g));
+    addShadow(G.booth.x, G.booth.y, G.booth.w, G.booth.h, 18);
+    // pods (static)
+    const pg = new PIXI.Graphics();
+    for (const [,g] of G.steps){
+      const r = podRadius(g), k = g.s.kind;
+      if (k === 'join'){ pg.circle(g.x+g.w/2, g.y+g.h/2, g.h/2).fill(P.pod).stroke({ width:1, color:P.podEdge }); pg.circle(g.x+g.w/2, g.y+g.h/2-3, g.h/2-5).fill({ color:P.podTop, alpha:.55 }); }
+      else {
+        pg.roundRect(g.x, g.y, g.w, g.h, r).fill(P.pod).stroke({ width:1, color:P.podEdge });
+        pg.roundRect(g.x+3, g.y+3, g.w-6, g.h*.44, Math.max(5, r-3)).fill({ color:P.podTop, alpha:.85 });
+        pg.moveTo(g.x+r, g.y+1.5).lineTo(g.x+g.w-r, g.y+1.5).stroke({ width:1, color:0xffffff, alpha:P.dark ? .10 : .18 });
+      }
+      if (k === 'nested') pg.roundRect(g.x+6, g.y+6, g.w-12, g.h-12, 11).stroke({ width:1, color:P.icon, alpha:.35 });
+      const bay = g.bay;
+      if (k === 'join') pg.circle(g.c.x, g.c.y, 22).fill(P.bay).stroke({ width:1, color:P.podEdge, alpha:.8 });
+      else pg.roundRect(bay.x, bay.y, bay.w, bay.h, k === 'wait' ? bay.h/2 : 10).fill(P.bay).stroke({ width:1, color:P.podEdge, alpha:.8 });
+      if (k === 'wait'){ for (let i = 1; i < 4; i++) pg.moveTo(bay.x+14, bay.y+i*bay.h/4).lineTo(bay.x+bay.w-14, bay.y+i*bay.h/4).stroke({ width:1, color:P.icon, alpha:.12 }); }
+      if (k === 'intake' || k === 'output'){ const gap = 12; for (let x = bay.x+10; x < bay.x+bay.w-6; x += gap) pg.moveTo(x, bay.y+bay.h/2-5).lineTo(x+5, bay.y+bay.h/2).lineTo(x, bay.y+bay.h/2+5).stroke({ width:1.3, color:P.icon, alpha:.22, cap:'round', join:'round' }); }
+      icon(pg, k, g.x + (k === 'join' ? g.w/2 : 17), g.y + (k === 'join' ? 15 : 15), P.icon);
+      pg.rect(g.x + g.w/2 - 20, g.y + g.h - 7, 40, 2).fill({ color:P.bay, alpha:.9 });
+    }
+    // Director booth
+    const bo = G.booth;
+    pg.roundRect(bo.x, bo.y, bo.w, bo.h, 18).fill(P.pod).stroke({ width:1, color:P.podEdge });
+    pg.roundRect(bo.x+3, bo.y+3, bo.w-6, bo.h*.5, 15).fill({ color:P.podTop, alpha:.9 });
+    pg.roundRect(bo.x+12, bo.y+12, 44, bo.h-24, 10).fill(P.bay).stroke({ width:1, color:P.podEdge, alpha:.8 });
+    const dx = bo.x+34, dy = bo.y+bo.h/2;
+    pg.poly([dx, dy-11, dx+11, dy, dx, dy+11, dx-11, dy], true).fill(P.ledOn);
+    // console: a strip of small screens, one per step the Director can signal
+    for (let k = 0; k < 3; k++){ const sx = bo.x+66+k*34; pg.roundRect(sx, bo.y+16, 28, 20, 4).fill(P.bay).stroke({ width:1, color:P.podEdge, alpha:.7 }); for (let r = 0; r < 3; r++) pg.rect(sx+5, bo.y+21+r*4.5, [16,11,14][(k+r)%3], 1.4).fill({ color:P.icon, alpha:.35 }); }
+    pg.roundRect(bo.x+66, bo.y+44, 96, 12, 4).fill({ color:P.bay, alpha:.9 });
+    // leader lines to instrument bubbles
+    for (const [,g] of G.steps){ if (!g.bubble) continue; pg.moveTo(g.x+g.w-10, g.y+4).lineTo(g.bubble.x-9, g.bubble.y+9).stroke({ width:1, color:P.ink3, alpha:.8 }); }
+    layers.pods.addChild(pg);
+    layers.podDyn = new PIXI.Graphics(); layers.pods.addChild(layers.podDyn);
+    layers.fx = new PIXI.Graphics(); world.addChild(layers.fx);
+  }
+
+  /* ---------- instruments ---------- */
+  function bubbleTag(kind){ return {assign:'KI',nested:'KI',wait:'KI',gate:'QI',join:'QI',fanout:'QI',output:'QI',end:'QI'}[kind] || null; }
+  function assignBubbles(){ for (const [,g] of S.L.steps){ const tag = bubbleTag(g.s.kind); g.bubble = tag ? { x:g.x+g.w+8, y:g.y-10, tag } : null; } }
+
+  /* ---------- overlay DOM ---------- */
+  function el(tag, cls, css, html){ const e = document.createElement(tag); if (cls) e.className = cls; if (css) Object.assign(e.style, css); if (html != null) e.innerHTML = html; ov.appendChild(e); return e; }
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function buildOverlay(){
+    ov.innerHTML = '';
+    const G = S.L, f = S.f;
+    for (const z of G.zones) el('div','zlabel',{ left:(z.x+22)+'px', top:(z.y+20)+'px' }, `<i>${esc(z.d?.glyph || '')}</i>${esc((z.d?.name || z.id).toUpperCase())}`);
+    for (const [id,g] of G.steps){
+      const dept = g.s.dept ? f.departments.find(d => d.id === g.s.dept) : null;
+      const agent = g.s.agent ? f.agents[g.s.agent] : null;
+      const sub = g.s.sub || (agent ? agent.name : KIND_NAME[g.s.kind]);
+      const b = el('button','mach',{ left:g.x+'px', top:g.y+'px', width:g.w+'px', height:g.h+'px' });
+      b.type = 'button'; b.setAttribute('aria-label', `${g.s.name}. ${KIND_NAME[g.s.kind]}${dept ? ', ' + dept.name : ''}. Open its details.`);
+      b.addEventListener('click', () => { if (!wasDrag()) select('step', id); });
+      const l = el('div','mlabel',{ left:(g.x+g.w/2)+'px', top:(g.y+g.h+7)+'px', width:`calc(${g.w+48}px * var(--lbl))` }, `<b>${esc(g.s.name)}</b><span>${esc(sub)}</span>`);
+      l.addEventListener('click', () => { if (!wasDrag()) select('step', id); });
+      if (g.bubble){ const bb = el('div','bubble',{ left:(g.bubble.x-17)+'px', top:(g.bubble.y-17)+'px' }, `<span class="tag">${g.bubble.tag}</span><span class="val">—</span>`); g.bubbleVal = bb.querySelector('.val'); g.bubbleLast = null; }
+    }
+    for (const e of G.edges){
+      if (!e.def.label) continue;
+      // Loops: centered on the return lane. Forward routes: a sign that ends at the target's input port.
+      if (e.loop){ const p = labelSpot(e.raw) || e.path.at(e.path.len/2); el('div','elabel',{ left:p.x+'px', top:p.y+'px' }, esc(e.def.label)); }
+      else { const p = e.def._b; el('div','elabel at-port',{ left:(p.x-12)+'px', top:p.y+'px' }, esc(e.def.label)); }
+    }
+    G.entry.forEach(e => { const p = e.path.pts[0]; el('div','wall in',{ left:(p.x-6)+'px', top:(p.y-14)+'px' }, 'FROM CALLER'); });
+    G.exit.forEach(e => { const p = e.path.pts[e.path.pts.length-1]; el('div','wall out',{ left:(p.x+6)+'px', top:(p.y-14)+'px' }, 'TO CALLER'); });
+    const bo = G.booth;
+    const bt = el('button','booth',{ left:bo.x+'px', top:bo.y+'px', width:bo.w+'px', height:bo.h+'px' });
+    bt.type = 'button'; bt.setAttribute('aria-label','Director. Open the job card and its command log.');
+    bt.addEventListener('click', () => { if (!wasDrag()) select('run'); });
+    const bl = el('div','boothlabel',{ left:(bo.x+2)+'px', top:(bo.y-8)+'px' }, `<b>◆ DIRECTOR</b><span class="bs">Idle · watching the floor</span>`);
+    bl.addEventListener('click', () => { if (!wasDrag()) select('run'); });
+    S.boothStat = bl.querySelector('.bs');
+    S.boothLast = null;
+    S.stampLayer = el('div', null, { left:'0px', top:'0px' });
+  }
+  function buildStamps(){
+    S.stampLayer.innerHTML = ''; stampEls = [];
+    const R = S.R;
+    const mk = (e, at, text, tone) => { const g = S.L.steps.get(at); if (!g) return; const d = document.createElement('div'); d.className = 'stamp ' + tone; d.textContent = text; d.style.left = (g.x+g.w/2)+'px'; d.style.top = (g.y-12)+'px'; d.style.position = 'absolute'; S.stampLayer.appendChild(d); stampEls.push({ t:e.t, el:d }); };
+    R.verdicts.forEach(v => mk(v, v.step, v.verdict === 'accepted' ? `ACCEPTED · ${v.rev}` : (v.limit ? `REJECTED · ${v.finding} · LIMIT` : `REJECTED · ${v.finding}`), v.verdict === 'accepted' ? 'normal' : (v.limit ? 'alarm' : 'advisory')));
+    R.decides.forEach(d => mk(d, d.step, d.stamp || (d.action.toUpperCase() + ' · ' + d.by.toUpperCase()), 'normal'));
+  }
+
+  /* ---------- run compile ---------- */
+  function findEdge(from, to){ const G = S.L; return G.edges.find(e => e.def.from === from && e.def.to === to) || null; }
+  function straight(from, to){ const a = S.L.steps.get(from).c, b = S.L.steps.get(to).c; return sampler([a, b]); }
+  function compile(f, run){
+    const G = S.L;
+    const ev = run.events.map((e,i) => Object.assign({ i }, e)).sort((a,b) => a.t - b.t || a.i - b.i);
+    const R = { run, ev, times:ev.map(e => e.t), items:new Map(), works:new Map(), verdicts:[], releases:[], scraps:[], waits:[], turns:[], alarms:[], commands:[], msgs:[], readouts:new Map(), decides:[], end:null };
+    f.steps.forEach(s => { R.works.set(s.id, []); R.readouts.set(s.id, []); });
+    for (const e of ev){
+      const it = e.item ? R.items.get(e.item) : null;
+      switch (e.type){
+        case 'spawn': {
+          const n = { id:e.item, art:e.art, label:e.label || '', rev:e.rev || '', sha:e.sha || '', born:e.t, at:e.at, track:[], flags:[] };
+          const en = G.entry.get(e.at);
+          if (en){ n.track.push({ k:'move', t0:e.t, t1:e.t+.9, path:en.move }); n.track.push({ k:'park', t0:e.t+.9, step:e.at }); n.noPop = true; }
+          else n.track.push({ k:'park', t0:e.t, step:e.at });
+          R.items.set(e.item, n); break; }
+        case 'move': { const ed = findEdge(e.from, e.to); it.track.push({ k:'move', t0:e.t, t1:e.t+e.dur, path:ed ? ed.move : straight(e.from, e.to), edge:ed, from:e.from, to:e.to }); it.track.push({ k:'park', t0:e.t+e.dur, step:e.to }); break; }
+        case 'consume': it.track.push({ k:'gone', t0:e.t, how:'consumed', at:e.at }); it.goneAt = e.at; it.goneT = e.t; it.goneHow = 'consumed'; break;
+        case 'release': { const ex = G.exit.get(e.at); it.track.push({ k:'move', t0:e.t, t1:e.t+1.2, path:ex ? ex.move : straight(e.at, e.at), fade:true, exit:true }); it.track.push({ k:'gone', t0:e.t+1.2, how:'released' }); it.goneHow = 'released'; it.goneT = e.t; R.releases.push(e); break; }
+        case 'scrap': it.track.push({ k:'shrink', t0:e.t, t1:e.t+.7, step:e.at }); it.track.push({ k:'gone', t0:e.t+.7, how:'aborted' }); it.goneHow = 'aborted'; it.goneT = e.t; R.scraps.push(e); break;
+        case 'work': R.works.get(e.step).push({ ...e, t0:e.t, t1:e.t+e.dur }); break;
+        case 'verdict': R.verdicts.push(e); break;
+        case 'flag': it.flags.push({ t0:e.t, t1:e.t1 ?? Infinity, flag:e.flag }); break;
+        case 'readout': R.readouts.get(e.step).push(e); break;
+        case 'director': R.turns.push({ ...e, t0:e.t, t1:e.t+e.dur }); break;
+        case 'wait': R.waits.push({ ...e, t0:e.t, t1:e.t1 ?? Infinity }); break;
+        case 'decide': R.decides.push(e); break;
+        case 'alarm': R.alarms.push({ id:run.id + ':' + e.i, t0:e.t, t1:e.t1 ?? Infinity, level:e.level, text:e.text }); break;
+        case 'command': R.commands.push(e); break;
+        case 'end': R.end = e; break;
+      }
+      if (e.msg) R.msgs.push({ t:e.t, text:e.msg, level:e.level2 || e.level || (e.type === 'wait' ? 'action' : 'normal'), i:e.i });
+    }
+    R.tMax = run.live ? run.now : (R.end ? R.end.t : Math.max(...R.times) + 2);
+    R.ops = buildOps(f, R);
+    return R;
+  }
+  function buildOps(f, R){
+    const G = S.L, ops = [];
+    const nm = id => G.steps.get(id)?.s.name || id;
+    const first = R.ev.find(e => e.type === 'spawn' && G.steps.get(e.at)?.s.kind === 'intake');
+    if (first) ops.push({ k:'in', t0:first.t, t1:first.t, step:first.at, label:'Caller Task received', detail:() => 'A2A Task', tone:() => '' });
+    for (const [id, ws] of R.works){
+      const kind = G.steps.get(id).s.kind;
+      ws.forEach((w,wi) => {
+        let label = nm(id);
+        if (kind === 'join') label = `${nm(id)} · all inputs here`;
+        else if (kind === 'fanout') label = `${nm(id)} · branches started`;
+        else if (w.label) label = `${nm(id)} · ${w.label}`;
+        else if (kind === 'gate') label = `${nm(id)} · ${w.rev || ''}`;
+        else if (w.rev) label = `${nm(id)} → ${w.rev}${w.repair ? ' (repair ' + w.repair + ')' : ''}`;
+        const v = kind === 'gate' ? R.verdicts.find(x => x.step === id && Math.abs(x.t - w.t1) < .3) : null;
+        ops.push({ k:id + wi, t0:w.t0, t1:w.t1, step:id, label,
+          detail:t => t < w.t1 ? `working · ${(t-w.t0).toFixed(1)} s` : (v ? (v.verdict === 'accepted' ? 'ACCEPTED' : `REJECTED · ${v.finding}`) : `${(w.t1-w.t0).toFixed(1)} s`),
+          tone:t => (v && t >= w.t1 && v.verdict !== 'accepted') ? (v.limit ? 'alarm' : 'advisory') : '' });
+      });
+    }
+    R.waits.forEach((w,wi) => { const d = R.decides.find(x => x.step === w.step && x.t >= w.t0 - .01 && x.t <= w.t1 + .01);
+      ops.push({ k:'w'+wi, t0:w.t0, t1:w.t1, step:w.step, label:nm(w.step), detail:t => t < w.t1 ? `waiting · ${w.responder}` : (d ? `${d.by}: ${d.action}` : 'closed'), tone:t => t < w.t1 ? w.level : '' }); });
+    R.releases.forEach((r,ri) => { const it = R.items.get(r.item); ops.push({ k:'r'+ri, t0:r.t, t1:r.t+1.2, step:r.at, label:`${nm(r.at)} ${it?.rev || it?.label || ''}`.trim(), detail:() => 'receipt matches', tone:() => '' }); });
+    R.scraps.forEach((r,ri) => ops.push({ k:'s'+ri, t0:r.t, t1:r.t+.7, step:r.at, label:'Run aborted', detail:() => '0 releases', tone:() => '' }));
+    return ops.sort((a,b) => a.t0 - b.t0);
+  }
+
+  /* ---------- state at time t ---------- */
+  function itemAt(it, t){
+    const tr = it.track; if (!tr.length || t < tr[0].t0) return null;
+    let i = tr.length - 1; while (i >= 0 && tr[i].t0 > t) i--;
+    const seg = tr[i]; if (!seg || seg.k === 'gone') return null;
+    let st;
+    if (seg.k === 'move' && t < seg.t1){ const p = (t-seg.t0)/(seg.t1-seg.t0), pt = seg.path.at(EASE.move(p) * seg.path.len); st = { moving:true, x:pt.x, y:pt.y, edge:seg.edge, alpha:seg.fade ? 1 - clamp((p-.55)/.45, 0, 1) : 1, scale:1 }; }
+    else if (seg.k === 'move'){ return null; }
+    else if (seg.k === 'shrink'){ const p = clamp((t-seg.t0)/(seg.t1-seg.t0), 0, 1); st = { parked:true, step:seg.step, since:seg.t0, scale:1 - p*.8, alpha:1 - p }; }
+    else st = { parked:true, step:seg.step, since:seg.t0, scale:1, alpha:1 };
+    st.flag = null; for (const fl of it.flags) if (t >= fl.t0 && t < fl.t1) st.flag = fl.flag;
+    st.pop = (!it.noPop && t - it.born < .32) ? .35 + .65 * EASE.slam(clamp((t - it.born)/.32, 0, 1)) : 1;
+    return st;
+  }
+  const activeWorks = (id, t) => S.R.works.get(id).filter(w => t >= w.t0 && t < w.t1);
+  const waitAt = (id, t) => S.R.waits.find(w => w.step === id && t >= w.t0 && t < w.t1);
+  function readoutAt(g, t){
+    const ro = S.R.readouts.get(g.s.id); let v = null; for (const r of ro) if (r.t <= t) v = r.value;
+    if (v != null) return v;
+    const k = g.s.kind;
+    if (k === 'assign' || k === 'nested'){ const act = activeWorks(g.s.id, t); if (act.length) return (t - Math.min(...act.map(w => w.t0))).toFixed(1); const done = S.R.works.get(g.s.id).filter(w => w.t1 <= t); return done.length ? (done[done.length-1].t1 - done[done.length-1].t0).toFixed(1) : '—'; }
+    if (k === 'wait'){ const w = waitAt(g.s.id, t); return w ? fmtDur(t - w.t0) : '—'; }
+    return '—';
+  }
+  const fmtDur = s => { s = Math.max(0, s); const m = Math.floor(s/60), r = Math.floor(s%60); return m ? `${m}:${String(r).padStart(2,'0')}` : s.toFixed(1); };
+  const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = t - m*60; return `T+${String(m).padStart(2,'0')}:${s.toFixed(1).padStart(4,'0')}`; };
+  const fmtClock = (start, t) => { const d = new Date(new Date(start).getTime() + t*1000); return d.toTimeString().slice(0,8) + ' · ' + d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }); };
+
+  /* ---------- items ---------- */
+  function buildItems(){
+    for (const ch of layers.items.removeChildren()) ch.destroy({ children:true });
+    itemViews = new Map();
+    const P = S.P, f = S.f;
+    for (const it of S.R.items.values()){
+      const c = new PIXI.Container(), g = new PIXI.Graphics();
+      const txt = new PIXI.Text({ text:it.label, style:{ fontFamily:['Martian Mono','ui-monospace','monospace'], fontSize:it.label.length > 2 ? 7.5 : 9, fontWeight:'700', fill:P.itemText }, resolution:5 });
+      txt.anchor.set(.5); const shape = f.artifacts[it.art]?.shape || 'circle'; if (shape === 'triangle') txt.y = 3;
+      c.addChild(g, txt); c.eventMode = 'static'; c.cursor = 'pointer'; c.hitArea = new PIXI.Circle(0, 0, 17);
+      c.on('pointertap', () => { S.itemTap = true; if (!wasDrag()) select('item', it.id); });
+      layers.items.addChild(c);
+      itemViews.set(it.id, { c, g, txt, shape, label:it.label });
+    }
+  }
+
+  /* ---------- per frame ---------- */
+  function frame(dtWall){
+    const R = S.R; if (!R) return;
+    if (S.playing){ S.t = Math.min(S.t + dtWall * S.speed, R.tMax); if (S.t >= R.tMax - 1e-6 && !R.run.live) S.playing = false; }
+    // A live run's edge keeps moving in real time; while playing at the edge, the view follows it.
+    if (R.run.live && S.t >= R.tMax - .05){ R.tMax += dtWall; R.run.now = R.tMax; if (S.playing) S.t = R.tMax; }
+    S.wall += dtWall;
+    const t = S.t, P = S.P, G = S.L, calm = store.calm;
+    // items
+    const parked = new Map(); const states = new Map();
+    for (const it of R.items.values()){ const st = itemAt(it, t); states.set(it.id, st); if (st && st.parked){ (parked.get(st.step) || parked.set(st.step, []).get(st.step)).push([it.id, st]); } }
+    for (const [step, list] of parked){
+      const g = G.steps.get(step); list.sort((a,b) => a[1].since - b[1].since);
+      const n = list.length, gap = n > 3 ? 24 : 30;
+      list.forEach(([, st], k) => { st.x = g.c.x + (k - (n-1)/2) * gap; st.y = g.c.y; });
+      const act = activeWorks(step, t);
+      act.forEach(w => { const p = (t - w.t0)/(w.t1 - w.t0); const target = w.item ? list.find(([id]) => id === w.item) : list[0]; if (target) target[1].progress = p; });
+    }
+    const activeEdges = new Set(); const rejectedEdges = new Set();
+    for (const [id, v] of itemViews){
+      const st = states.get(id);
+      if (!st){ v.c.visible = false; continue; }
+      v.c.visible = true;
+      if (st.moving && st.edge){ activeEdges.add(st.edge.id); if (st.flag === 'rejected') rejectedEdges.add(st.edge.id); }
+      if (st.moving && !st.edge) activeEdges.add('stub');
+      drawItem(v, st, id);
+    }
+    // belts (dynamic chevrons)
+    const bd = layers.beltDyn; bd.clear();
+    const off = t * 26;
+    G.edges.forEach(e => { if (!activeEdges.has(e.id)) chevrons(bd, e.path, 0, 18); });
+    G.entry.forEach(e => chevrons(bd, e.path, 0, 18)); G.exit.forEach(e => chevrons(bd, e.path, 0, 18));
+    bd.stroke({ width:1.4, color:P.beltMark, alpha:.9, cap:'round', join:'round' });
+    G.edges.forEach(e => { if (activeEdges.has(e.id)) chevrons(bd, e.path, off, 18); });
+    if (activeEdges.has('stub')){ G.entry.forEach(e => chevrons(bd, e.path, off, 18)); G.exit.forEach(e => chevrons(bd, e.path, off, 18)); }
+    bd.stroke({ width:1.8, color:P.beltOn, alpha:1, cap:'round', join:'round' });
+    G.edges.forEach(e => { if (rejectedEdges.has(e.id)){ const pts = e.path.pts; bd.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) bd.lineTo(pts[i].x, pts[i].y); } });
+    if (rejectedEdges.size) bd.stroke({ width:14, color:P.advisory, alpha:.28, cap:'round', join:'round' });
+    // pods (dynamic)
+    const pd = layers.podDyn; pd.clear();
+    for (const [id, g] of G.steps){
+      const k = g.s.kind, act = activeWorks(id, t), wt = waitAt(id, t);
+      if (act.length){ const p = act.reduce((a,w) => a + (t-w.t0)/(w.t1-w.t0), 0)/act.length; pd.rect(g.x+g.w/2-20, g.y+g.h-7, 40*clamp(p,0,1), 2).fill(P.ledOn); }
+      let led = P.led, la = 1;
+      if (wt){ led = wt.level === 'action' ? P.action : P.alarm; la = calm ? 1 : .55 + .45*Math.sin(S.wall*5); }
+      else if (act.length){ led = P.ledOn; la = calm ? .95 : .6 + .4*Math.sin(S.wall*3.2); }
+      pd.circle(g.x+g.w-(k === 'join' ? g.w/2 : 14), g.y+(k === 'join' ? g.h-12 : 14), 3.3).fill({ color:led, alpha:la });
+      if (k === 'gate') drawValve(pd, g, t);
+      if (k === 'gate' && act.length){ const b = g.bay, yy = calm ? b.y + b.h*.5 : b.y + 4 + (b.h-8)*(.5 + .5*Math.sin(t*3.4)); pd.moveTo(b.x+5, yy).lineTo(b.x+b.w-5, yy).stroke({ width:1.6, color:P.ledOn, alpha:.75 }); }
+      if ((k === 'assign' || k === 'nested') && act.length && !calm){ const ph = (S.wall*.55 + (g.x % 7)/7) % 1, gx = g.x + 16 + (g.w-32)*ph; pd.moveTo(gx-10, g.y+2).lineTo(gx+10, g.y+2).stroke({ width:1.5, color:0xffffff, alpha:.35*Math.sin(ph*Math.PI) }); }
+      if (wt){ const col = wt.level === 'action' ? P.action : P.alarm, a = calm ? .9 : .45 + .45*(.5 + .5*Math.sin(S.wall*4)); const r = podRadius(g); pd.roundRect(g.x-6, g.y-6, g.w+12, g.h+12, r+6).stroke({ width:2.5, color:col, alpha:a }); pd.roundRect(g.x-11, g.y-11, g.w+22, g.h+22, r+11).stroke({ width:1, color:col, alpha:a*.45 }); }
+      if (S.sel.type === 'step' && S.sel.id === id){ const r = podRadius(g); pd.roundRect(g.x-4, g.y-4, g.w+8, g.h+8, r+4).stroke({ width:2, color:P.focus, alpha:.95 }); }
+      if (g.bubbleVal){ const v = readoutAt(g, t); if (v !== g.bubbleLast){ g.bubbleVal.textContent = v; g.bubbleLast = v; } }
+    }
+    // Director booth + signals
+    const sd = layers.sigDyn; sd.clear();
+    const turn = R.turns.find(x => t >= x.t0 && t < x.t1);
+    const bo = G.booth, dcx = bo.x+32, dcy = bo.y+bo.h/2;
+    if (turn){
+      const sig = G.signals.find(s => s.target === turn.target);
+      if (sig){ for (let k = 0; k < 3; k++){ const ph = ((t - turn.t0)*.55 + k/3) % 1; const p = sig.path.at(ph * sig.path.len); sd.circle(p.x, p.y, 3.4).fill({ color:P.signalOn, alpha:.9 }); } }
+      const rot = calm ? 0 : S.wall*1.6;
+      for (let k = 0; k < 4; k++){ const a0 = rot + k*Math.PI/2; sd.moveTo(dcx + Math.cos(a0)*17, dcy + Math.sin(a0)*17); sd.arc(dcx, dcy, 17, a0, a0 + .9); }
+      sd.stroke({ width:2, color:P.ledOn, alpha:.9 });
+      const n = turn.tools.length, step = Math.min(n-1, Math.floor((t - turn.t0)/(turn.t1 - turn.t0) * n));
+      const txt = `Turn · ${turn.tools.slice(0, step+1).join(' → ')}`;
+      if (txt !== S.boothLast){ S.boothStat.textContent = txt; S.boothStat.classList.add('on'); S.boothLast = txt; }
+    } else {
+      const w = R.waits.find(x => t >= x.t0 && t < x.t1 && !x.human);
+      const txt = w ? 'Owns an open decision · waiting for a turn' : 'Idle · watching the floor';
+      if (txt !== S.boothLast){ S.boothStat.textContent = txt; S.boothStat.classList.remove('on'); S.boothLast = txt; }
+    }
+    // effects
+    const fx = layers.fx; fx.clear();
+    for (const r of R.releases){ const dt = t - r.t; if (dt < 0 || dt > 1.5) continue; const g = G.steps.get(r.at), p = dt/1.5;
+      fx.circle(g.c.x, g.c.y, 18 + 64*EASE.out(p)).stroke({ width:2, color:P.signalOn, alpha:.55*(1-p) });
+      fx.circle(g.c.x, g.c.y, 10 + 34*EASE.out(p)).stroke({ width:1, color:P.signalOn, alpha:.4*(1-p) });
+      for (let k = 0; k < 12; k++){ const a = k/12*Math.PI*2 + .2, d = 14 + 70*EASE.out(p); fx.rect(g.c.x + Math.cos(a)*d - 1.5, g.c.y + Math.sin(a)*d - 1.5, 3, 3).fill({ color:P.signalOn, alpha:.8*(1-p) }); } }
+    for (const v of R.verdicts){ const dt = t - v.t; if (dt < 0 || dt > 1) continue; const g = G.steps.get(v.step), p = dt;
+      const col = v.verdict === 'accepted' ? P.signalOn : (v.limit ? P.alarm : P.advisory);
+      fx.roundRect(g.x-4-12*p, g.y-4-12*p, g.w+8+24*p, g.h+8+24*p, 20+12*p).stroke({ width:2, color:col, alpha:.7*(1-p) }); }
+    for (const s2 of R.scraps){ const dt = t - s2.t; if (dt < 0 || dt > .9) continue; const g = G.steps.get(s2.at), p = dt/.9; fx.circle(g.c.x, g.c.y, 40*(1-p) + 6).stroke({ width:2, color:P.signalOn, alpha:.6*(1-p) }); }
+    // stamps
+    for (const s3 of stampEls){ const dt = t - s3.t; if (dt < 0 || dt > 2.6){ if (s3.on){ s3.el.style.opacity = 0; s3.on = false; } continue; }
+      const sc = dt < .2 ? 1.9 - .9*EASE.out(dt/.2) : 1, op = dt > 2.1 ? 1 - (dt-2.1)/.5 : Math.min(1, dt/.08);
+      s3.el.style.opacity = op; s3.el.style.transform = `translate(-50%,-100%) rotate(-5deg) scale(${sc * S.lbl})`; s3.on = true; }
+    // scrub
+    const frac = R.tMax ? t / R.tMax : 0; const fill = document.getElementById('scrubFill'), th = document.getElementById('scrubThumb');
+    if (fill){ fill.style.width = (frac*100) + '%'; th.style.left = (frac*100) + '%'; }
+    syncHUD(dtWall);
+    miniAcc += dtWall; if (miniAcc > .066){ miniAcc = 0; drawMini(states); }
+  }
+  let miniAcc = 0;
+  function drawItem(v, st, id){
+    const P = S.P, g = v.g; g.clear();
+    const s = (st.scale ?? 1) * (st.pop ?? 1);
+    v.c.position.set(st.x, st.y); v.c.scale.set(s); v.c.alpha = st.alpha ?? 1;
+    const unk = st.flag === 'unknown';
+    shapePath(g, v.shape).fill({ color:P.item, alpha:unk ? .5 : 1 }).stroke({ width:1.6, color:P.itemEdge });
+    if (unk){ for (let k = -2; k <= 2; k++) g.moveTo(-7 + k*5, 7).lineTo(7 + k*5 - 14 + 7, -7).stroke({ width:1, color:P.itemEdge, alpha:.45 }); }
+    const txt = unk ? '?' : v.label; if (v.txt.text !== txt) v.txt.text = txt;
+    if (st.flag === 'rejected') g.circle(0,0,18).stroke({ width:2.6, color:P.advisory });
+    if (st.flag === 'exhausted') g.circle(0,0,18).stroke({ width:2.8, color:P.alarm });
+    if (unk){ for (let k = 0; k < 10; k++){ const a0 = k/10*Math.PI*2 + S.wall*(store.calm ? 0 : .6); g.moveTo(Math.cos(a0)*18, Math.sin(a0)*18); g.arc(0, 0, 18, a0, a0 + .38); } g.stroke({ width:2.2, color:P.advisory }); }
+    if (st.progress != null){ g.circle(0,0,22).stroke({ width:2, color:P.ledOn, alpha:.18 }); const a0 = -Math.PI/2; g.moveTo(0, -22); g.arc(0, 0, 22, a0, a0 + Math.PI*2*clamp(st.progress, 0, 1)); g.stroke({ width:2.2, color:P.ledOn, alpha:.95, cap:'round' }); }
+    if (S.sel.type === 'item' && S.sel.id === id) g.circle(0,0,26).stroke({ width:2, color:P.focus });
+  }
+  function drawValve(pd, g, t){
+    const P = S.P, vx = g.x + g.w - 22, vy = g.c.y;
+    let open = 0, col = P.icon;
+    const v = [...S.R.verdicts].reverse().find(x => x.step === g.s.id && x.t <= t && t - x.t < 1.8);
+    if (v){ const p = (t - v.t)/1.8, env = p < .25 ? EASE.out(p/.25) : (p > .75 ? 1 - (p-.75)/.25 : 1);
+      if (v.verdict === 'accepted'){ open = env; col = P.ledOn; } else { col = v.limit ? P.alarm : P.advisory; } }
+    const a = open * Math.PI/2, ca = Math.cos(a), sa = Math.sin(a);
+    const R2 = (x,y) => [vx + x*ca - y*sa, vy + x*sa + y*ca];
+    pd.poly([...R2(-10,-7), ...R2(-10,7), ...R2(0,0)], true).fill(col);
+    pd.poly([...R2(10,-7), ...R2(10,7), ...R2(0,0)], true).fill(col);
+    pd.moveTo(vx, vy).lineTo(vx, vy-14).stroke({ width:1.5, color:col }); pd.moveTo(vx-5, vy-14).lineTo(vx+5, vy-14).stroke({ width:2, color:col, cap:'round' });
+  }
+
+  /* ---------- minimap ---------- */
+  function drawMini(states){
+    if (!miniCtx) return; const G = S.L, P = S.P, b = G.content, W = mini.width, H = mini.height, x = miniCtx;
+    const sc = Math.min((W-16)/(b.x1-b.x0), (H-16)/(b.y1-b.y0)), ox = 8 + ((W-16) - (b.x1-b.x0)*sc)/2 - b.x0*sc, oy = 8 + ((H-16) - (b.y1-b.y0)*sc)/2 - b.y0*sc;
+    S.miniXf = { sc, ox, oy };
+    x.clearRect(0,0,W,H); x.fillStyle = hex(P.floor); x.fillRect(0,0,W,H);
+    x.fillStyle = hex(P.zone); x.strokeStyle = hex(P.zoneLine); x.lineWidth = 1;
+    G.zones.forEach(z => { x.fillRect(ox+z.x*sc, oy+z.y*sc, z.w*sc, z.h*sc); x.strokeRect(ox+z.x*sc+.5, oy+z.y*sc+.5, z.w*sc, z.h*sc); });
+    x.strokeStyle = hex(P.beltEdge); x.lineWidth = 3; x.lineCap = 'round'; x.lineJoin = 'round';
+    G.edges.forEach(e => { x.beginPath(); e.path.pts.forEach((p,i) => i ? x.lineTo(ox+p.x*sc, oy+p.y*sc) : x.moveTo(ox+p.x*sc, oy+p.y*sc)); x.stroke(); });
+    x.fillStyle = hex(P.pod);
+    for (const [,g] of G.steps){ x.beginPath(); x.roundRect(ox+g.x*sc, oy+g.y*sc, g.w*sc, g.h*sc, 3); x.fill(); }
+    x.beginPath(); x.roundRect(ox+G.booth.x*sc, oy+G.booth.y*sc, G.booth.w*sc, G.booth.h*sc, 3); x.fill();
+    for (const [id, st] of states){ if (!st || st.x == null) continue; x.fillStyle = st.flag === 'rejected' || st.flag === 'unknown' ? hex(P.advisory) : (st.flag === 'exhausted' ? hex(P.alarm) : hex(P.item)); x.beginPath(); x.arc(ox+st.x*sc, oy+st.y*sc, 3.2, 0, Math.PI*2); x.fill(); x.strokeStyle = hex(P.itemEdge); x.lineWidth = 1; x.stroke(); }
+    for (const w of S.R.waits){ if (S.t >= w.t0 && S.t < w.t1){ const g = G.steps.get(w.step); x.strokeStyle = hex(w.level === 'action' ? P.action : P.alarm); x.lineWidth = 2; x.strokeRect(ox+g.x*sc-2, oy+g.y*sc-2, g.w*sc+4, g.h*sc+4); } }
+    const sw = stageEl.clientWidth, sh = stageEl.clientHeight;
+    x.strokeStyle = hex(P.focus); x.lineWidth = 1.5; x.strokeRect(ox + (-cam.x/cam.s)*sc, oy + (-cam.y/cam.s)*sc, sw/cam.s*sc, sh/cam.s*sc);
+  }
+
+  /* ---------- HUD sync ---------- */
+  let hudAcc = 0, lastCursor = -1, lastInspWall = 0, lastDecKey = '', lastToastKey = '', lastAlarmKey = '';
+  function cursorAt(t){ const a = S.R.times; let lo = 0, hi = a.length; while (lo < hi){ const m = (lo+hi) >> 1; if (a[m] <= t) lo = m+1; else hi = m; } return lo; }
+  function syncHUD(dt, force){
+    hudAcc += dt || 0; if (!force && hudAcc < .1) return; hudAcc = 0;
+    const R = S.R, t = S.t, st = store;
+    st.t = t; st.tMax = R.tMax; st.playing = S.playing; st.speed = S.speed;
+    st.tLabel = fmtT(t); st.clock = fmtClock(R.run.start, t);
+    st.live = !!R.run.live; st.atLive = st.live && t >= R.tMax - .05;
+    const al = R.alarms.filter(a => t >= a.t0 && t < a.t1).map(a => ({ id:a.id, level:a.level, text:a.text, tl:fmtT(a.t0) }));
+    const ak = al.map(a => a.id).join('|'); if (ak !== lastAlarmKey){ lastAlarmKey = ak; st.alarms = al; }
+    const W = 3.4 * Math.max(1, S.speed);
+    const ts = R.msgs.filter(m => m.t <= t && m.t > t - W).slice(-3).reverse().map(m => ({ id:m.i, text:m.text, level:m.level, tl:fmtT(m.t) }));
+    const tk = ts.map(m => m.id).join('|'); if (tk !== lastToastKey){ lastToastKey = tk; st.toasts = ts; }
+    const w = R.waits.find(x => t >= x.t0 && t < x.t1);
+    let dec = null;
+    if (w){ const turn = R.turns.find(x => t >= x.t0 && t < x.t1 && x.target === w.step);
+      const g = S.L.steps.get(w.step);
+      dec = { key:w.i, title:w.human ? 'Waiting for you' : 'Waiting for the Director', step:g.s.name, level:w.level, responder:w.responder, allowed:w.allowed, context:w.context, human:!!w.human, atLive:st.atLive, waited:fmtDur(t - w.t0) + (t - w.t0 < 60 ? ' s' : ''),
+        turn:turn ? { tools:turn.tools, step:Math.min(turn.tools.length-1, Math.floor((t - turn.t0)/(turn.t1 - turn.t0) * turn.tools.length)) } : null,
+        pending:S.pending ? { ...S.pending } : null }; }
+    const dk = dec ? JSON.stringify([dec.key, dec.atLive, dec.turn, dec.pending, dec.waited.split('.')[0]]) : '';
+    if (dk !== lastDecKey){ lastDecKey = dk; st.decision = dec; }
+    const cur = cursorAt(t);
+    if (force || cur !== lastCursor || (S.playing && S.wall - lastInspWall > .5)){ lastCursor = cur; lastInspWall = S.wall; st.insp = inspect(); }
+  }
+
+  /* ---------- inspector ---------- */
+  function inspect(){ if (S.sel.type === 'step' && S.L.steps.has(S.sel.id)) return inspStep(S.sel.id); if (S.sel.type === 'item' && S.R.items.has(S.sel.id)) return inspItem(S.sel.id); return inspRun(); }
+  function revFacts(it, t){
+    const R = S.R, gate = S.f.steps.find(s => s.kind === 'gate');
+    const produced = it.born <= t, stored = it.born + .3 <= t;
+    const toRev = gate ? it.track.some(s => s.k === 'park' && s.step === gate.id && s.t0 <= t) : null;
+    const v = R.verdicts.find(x => x.item === it.id && x.t <= t);
+    const acc = gate ? (v ? v.verdict === 'accepted' : null) : null;
+    const rel = R.releases.find(x => x.item === it.id && x.t <= t);
+    const facts = [produced ? 'on' : '', stored ? 'on' : '', gate ? (toRev ? 'on' : '') : 'na', gate ? (acc === true ? 'on' : (acc === false ? 'no' : '')) : 'na'];
+    let verdict = '', tone = 'normal';
+    if (rel) verdict = acc === true ? 'ACCEPTED · RELEASED' : 'RELEASED';
+    else if (v) { verdict = v.verdict === 'accepted' ? 'ACCEPTED' : `REJECTED · ${v.finding}`; tone = v.verdict === 'accepted' ? 'normal' : (v.limit ? 'alarm' : 'advisory'); }
+    else if (it.goneHow === 'aborted' && it.goneT <= t) verdict = 'ABORTED';
+    else verdict = gate ? (toRev ? 'IN REVIEW' : 'NOT YET REVIEWED') : 'NO GATE';
+    const factsText = `Produced ${facts[0] ? 'yes' : 'no'}, stored ${facts[1] ? 'yes' : 'no'}, sent to reviewer ${facts[2] === 'on' ? 'yes' : (facts[2] === 'na' ? 'not applicable' : 'no')}, accepted ${facts[3] === 'on' ? 'yes' : (facts[3] === 'no' ? 'rejected' : (facts[3] === 'na' ? 'not applicable' : 'not yet'))}`;
+    return { facts, verdict, tone, factsText };
+  }
+  function inspRun(){
+    const R = S.R, f = S.f, t = S.t, run = R.run;
+    const ops = R.ops.filter(o => o.t0 <= t).map((o, idx) => ({ k:o.k, n:String(idx+1).padStart(2,'0'), step:o.step, label:o.label, detail:o.detail(t), status:t >= o.t1 ? 'done' : 'active', tone:o.tone(t) }));
+    const revs = [...R.items.values()].filter(it => it.art === f.mainArt && it.born <= t).map(it => ({ id:it.id, rev:it.rev || it.label, sha:it.sha, ...revFacts(it, t) }));
+    const commands = R.commands.filter(c => c.t <= t).map(c => ({ k:c.i, tl:fmtT(c.t).slice(2), by:c.by, cmd:c.cmd, outcome:c.outcome }));
+    let outcome = { label:'Running', tone:'normal' };
+    const w = R.waits.find(x => t >= x.t0 && t < x.t1);
+    if (R.end && t >= R.end.t) outcome = { label:R.end.outcome === 'released' ? 'Released' : 'Aborted · 0 releases', tone:'normal' };
+    else if (w) outcome = w.human ? { label:'Needs you', tone:'action' } : { label:'Waiting · Director', tone:'alarm' };
+    else if (R.alarms.some(a => t >= a.t0 && t < a.t1 && a.level === 'advisory')) outcome = { label:'Running · advisory', tone:'advisory' };
+    const agents = Object.values(f.agents).map(a => a.name).join(', ');
+    return { kind:'run', title:'Run ' + run.id, outcome, brief:run.brief, bound:`${f.capability} ${f.version} · ${f.digest}`, started:fmtClock(run.start, 0).replace(' · ', ', '),
+      depts:f.departments.length ? f.departments.map(d => d.glyph + ' ' + d.name).join('  ') : 'None declared', programs:f.programs.length ? f.programs.map(p => p.name + (p.on ? ' on' : ' off')).join(' · ') : 'None attached',
+      ops, revs, artName:f.artifacts[f.mainArt]?.name || f.mainArt, commands, agents,
+      provenance:`${f.provenance}. Director plus ${Object.keys(f.agents).length} pinned agent${Object.keys(f.agents).length === 1 ? '' : 's'}: ${agents}.` };
+  }
+  function inspStep(id){
+    const g = S.L.steps.get(id), s = g.s, f = S.f, R = S.R, t = S.t;
+    const agent = s.agent ? f.agents[s.agent] : null, dept = s.dept ? f.departments.find(d => d.id === s.dept) : null;
+    const facts = [];
+    if (agent){ facts.push(['Agent', agent.name]); facts.push(['Contract', agent.contract]); facts.push(['Revision', agent.rev]); }
+    if (s.loop) facts.push(['Loop', `back to ${S.L.steps.get(s.loop.to).s.name} · at most ${s.loop.max} repair${s.loop.max === 1 ? '' : 's'}`]);
+    if (s.responder){ facts.push(['Responder', s.responder]); facts.push(['Allowed', (s.allowed || []).join(', ')]); }
+    if (g.bubble) facts.push([g.bubble.tag === 'KI' ? 'Time (KI)' : 'Count (QI)', readoutAt(g, t)]);
+    const outs = f.edges.filter(e => e.from === id).map(e => (e.label ? e.label + ' → ' : '') + S.L.steps.get(e.to).s.name);
+    if (outs.length) facts.push(['Routes', outs.join(' · ')]);
+    const attempts = R.works.get(id).filter(w => w.t0 <= t).map((w, k) => {
+      const v = s.kind === 'gate' ? R.verdicts.find(x => x.step === id && Math.abs(x.t - w.t1) < .3 && x.t <= t) : null;
+      const it = w.item ? R.items.get(w.item) : null;
+      return { k, n:'#' + (w.attempt ?? k+1), what:w.label || (w.rev ? (s.kind === 'gate' ? 'reviewing ' + w.rev : 'producing ' + w.rev) : (it ? 'with ' + (f.artifacts[it.art]?.name || it.art).toLowerCase() + ' ' + it.label : 'working')), task:w.task || '—', dur:t < w.t1 ? `working · ${(t-w.t0).toFixed(1)} s` : `${(w.t1-w.t0).toFixed(1)} s`,
+        verdict:v ? (v.verdict === 'accepted' ? `ACCEPTED · ${v.sha}` : `REJECTED · ${v.finding} · ${v.sha}`) : '', tone:v ? (v.verdict === 'accepted' ? 'normal' : (v.limit ? 'alarm' : 'advisory')) : 'normal' };
+    });
+    let note = null;
+    if (agent && agent.nested) note = 'This agent is itself a factory. You see its public contract, its Task states and the results it returns, not its graph.';
+    else if (agent) note = 'Black box. The factory sees this agent\'s contract, Task states and returned artifacts. Its prompts, models and internal helpers stay private.' + (agent.note ? ' ' + agent.note : '');
+    return { kind:'step', title:s.name, kindName:KIND_NAME[s.kind], dept:dept ? dept.glyph + ' ' + dept.name : null, desc:KIND_DESC[s.kind], facts, attempts, note };
+  }
+  function inspItem(id){
+    const R = S.R, f = S.f, t = S.t, it = R.items.get(id), art = f.artifacts[it.art] || { name:it.art, shape:'circle' };
+    const st = itemAt(it, t), nm = x => S.L.steps.get(x)?.s.name || x;
+    let where;
+    if (t < it.born) where = 'Not produced yet';
+    else if (st && st.moving){ const seg = [...it.track].reverse().find(s => s.k === 'move' && s.t0 <= t); where = seg && seg.from ? `On the belt from ${nm(seg.from)} to ${nm(seg.to)}` : (seg && seg.exit ? 'Leaving the factory' : 'Arriving'); }
+    else if (st) where = `At ${nm(st.step)}`;
+    else where = it.goneHow === 'released' ? 'Released to the caller' : (it.goneHow === 'aborted' ? 'Discarded with the aborted run' : `Used by ${nm(it.goneAt)}`);
+    const facts = [['Artifact', `${art.name} · ${art.shape}`], ['Where', where]];
+    if (it.sha) facts.push(['Digest', it.sha]);
+    const flag = st?.flag; if (flag) facts.push(['State', flag === 'rejected' ? 'Rejected, going back for repair' : (flag === 'exhausted' ? 'Rejected at the repair limit' : 'Outcome unknown, reconciling')]);
+    const lineage = it.art === f.mainArt ? [...R.items.values()].filter(x => x.art === f.mainArt && x.born <= t).map(x => ({ id:x.id, rev:x.rev || x.label, sha:x.sha, ...revFacts(x, t) })) : [];
+    let note = null;
+    if (it.art === f.mainArt && S.f.steps.some(s => s.kind === 'gate')) note = 'Acceptance names this exact revision and digest. A repair makes a new revision that needs its own verdict.';
+    if (flag === 'unknown') note = 'A lost response does not prove the work failed. The factory records the outcome as unknown and reconciles it with the remote Task before doing anything else.';
+    return { kind:'item', eyebrow:'Work item', title:`${art.name} ${it.rev || it.label}`, facts, lineage, note };
+  }
+
+  /* ---------- camera ---------- */
+  function applyCam(){
+    world.position.set(cam.x, cam.y); world.scale.set(cam.s);
+    ov.style.transform = `translate(${cam.x}px,${cam.y}px) scale(${cam.s})`;
+    ov.style.setProperty('--lbl', String(clamp(.92/cam.s, 1, 1.8)));
+    S.lbl = clamp(.92/cam.s, 1, 1.8); stageEl.classList.toggle('lod-far', cam.s < .38);
+  }
+  function panelSpace(){ return store.panel && store.wide ? Math.min(372, window.innerWidth*.4) + 24 : 0; }
+  function fit(animate = true){
+    const b = S.L.content, W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight, pad = 56;
+    const s = clamp(Math.min((W - pad*2)/(b.x1 - b.x0), (H - pad*2)/(b.y1 - b.y0)), .28, 1.05);
+    const tx = pad + (W - pad*2 - (b.x1 - b.x0)*s)/2 - b.x0*s, ty = pad + (H - pad*2 - (b.y1 - b.y0)*s)/2 - b.y0*s;
+    gsap.killTweensOf(cam);
+    if (animate && !reduced()) gsap.to(cam, { x:tx, y:ty, s, duration:.8, ease:'power3.inOut', onUpdate:applyCam });
+    else { cam.x = tx; cam.y = ty; cam.s = s; applyCam(); }
+  }
+  // First view: fit the floor if it stays readable; otherwise frame the action at a readable zoom, like a game camera.
+  function initialView(){
+    const b = S.L.content, W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight, pad = 56;
+    const sFit = Math.min((W - pad*2)/(b.x1 - b.x0), (H - pad*2)/(b.y1 - b.y0));
+    if (sFit >= .42) return fit(false);
+    const t = S.t, R = S.R, s = .62;
+    const w = R.waits.find(x => t >= x.t0 && t < x.t1);
+    let p = w ? S.L.steps.get(w.step).c : null;
+    if (!p){ for (const [id, ws] of R.works) if (ws.some(x => t >= x.t0 && t < x.t1)) p = S.L.steps.get(id).c; }
+    if (!p) p = { x:(b.x0+b.x1)/2, y:(b.y0+b.y1)/2 };
+    gsap.killTweensOf(cam);
+    cam.s = s;
+    cam.x = clamp(W/2 - p.x*s, W - pad - b.x1*s, pad - b.x0*s);
+    cam.y = (b.y1 - b.y0)*s < H - pad*2 ? pad + (H - pad*2 - (b.y1 - b.y0)*s)/2 - b.y0*s : H/2 - p.y*s;
+    applyCam();
+  }
+  function zoomAt(k, sx, sy){ const ns = clamp(cam.s*k, .25, 2.6), r = ns/cam.s; cam.x = sx - (sx - cam.x)*r; cam.y = sy - (sy - cam.y)*r; cam.s = ns; applyCam(); }
+  function zoom(dir){ const W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight; const target = { s:clamp(cam.s*(dir > 0 ? 1.3 : 1/1.3), .25, 2.6) }; const r = target.s/cam.s; gsap.killTweensOf(cam); gsap.to(cam, { x:W/2 - (W/2 - cam.x)*r, y:H/2 - (H/2 - cam.y)*r, s:target.s, duration:reduced() ? 0 : .35, ease:'power2.out', onUpdate:applyCam }); }
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- input ---------- */
+  const pts = new Map(); let panStart = null, moved = false, pinch0 = null;
+  function wasDrag(){ return moved; }
+  function bindInput(){
+    stageEl.addEventListener('pointerdown', e => {
+      if (e.target.closest('.float-ui') || e.target.closest('.toasts')) return;
+      pts.set(e.pointerId, { x:e.clientX, y:e.clientY }); moved = false;
+      if (pts.size === 1) panStart = { x:e.clientX, y:e.clientY, cx:cam.x, cy:cam.y };
+      else if (pts.size === 2){ const [a,b] = [...pts.values()]; pinch0 = { d:Math.hypot(a.x-b.x, a.y-b.y), s:cam.s, cx:cam.x, cy:cam.y, mx:(a.x+b.x)/2, my:(a.y+b.y)/2 }; }
+    });
+    window.addEventListener('pointermove', e => {
+      if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
+      if (pts.size === 1 && panStart){ const dx = e.clientX - panStart.x, dy = e.clientY - panStart.y; if (!moved && Math.hypot(dx, dy) > 4){ moved = true; gsap.killTweensOf(cam); } if (moved){ cam.x = panStart.cx + dx; cam.y = panStart.cy + dy; applyCam(); } }
+      else if (pts.size === 2 && pinch0){ moved = true; const [a,b] = [...pts.values()]; const r = stageEl.getBoundingClientRect(); const d = Math.hypot(a.x-b.x, a.y-b.y); const ns = clamp(pinch0.s * d/pinch0.d, .25, 2.6), k = ns/pinch0.s; const mx = pinch0.mx - r.left, my = pinch0.my - r.top; cam.s = ns; cam.x = mx - (mx - pinch0.cx)*k + ((a.x+b.x)/2 - pinch0.mx); cam.y = my - (my - pinch0.cy)*k + ((a.y+b.y)/2 - pinch0.my); applyCam(); }
+    });
+    const up = e => { if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if (pts.size === 0){ panStart = null; pinch0 = null; setTimeout(() => { moved = false; }, 0); } else if (pts.size === 1){ const [p] = [...pts.values()]; panStart = { x:p.x, y:p.y, cx:cam.x, cy:cam.y }; pinch0 = null; } };
+    window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    stageEl.addEventListener('wheel', e => { if (e.target.closest('.insp') || e.target.closest('.legend')) return; e.preventDefault(); gsap.killTweensOf(cam); const r = stageEl.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? .012 : .0016)), e.clientX - r.left, e.clientY - r.top); }, { passive:false });
+    app.canvas.addEventListener('click', () => { if (moved) return; if (!S.itemTap && S.sel.type !== 'run') select('run'); S.itemTap = false; });
+    // scrubber
+    const scrub = document.getElementById('scrub'); let scrubbing = false;
+    const seekFrom = e => { const r = scrub.getBoundingClientRect(); seek(clamp((e.clientX - r.left)/r.width, 0, 1) * S.R.tMax); };
+    scrub.addEventListener('pointerdown', e => { scrubbing = true; scrub.setPointerCapture(e.pointerId); seekFrom(e); });
+    scrub.addEventListener('pointermove', e => { if (scrubbing) seekFrom(e); });
+    scrub.addEventListener('pointerup', () => { scrubbing = false; });
+    // minimap
+    mini.addEventListener('pointerdown', e => { const r = mini.getBoundingClientRect(), xf = S.miniXf; if (!xf) return; const mx = (e.clientX - r.left) * (mini.width/r.width), my = (e.clientY - r.top) * (mini.height/r.height); const wx = (mx - xf.ox)/xf.sc, wy = (my - xf.oy)/xf.sc; const W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight; gsap.killTweensOf(cam); gsap.to(cam, { x:W/2 - wx*cam.s, y:H/2 - wy*cam.s, duration:reduced() ? 0 : .45, ease:'power2.out', onUpdate:applyCam }); });
+    // keys
+    window.addEventListener('keydown', e => {
+      if (e.target.closest && e.target.closest('select, input, textarea')) return;
+      if (e.code === 'Space' && !e.target.closest('button, [role="slider"]')){ e.preventDefault(); toggle(); }
+      else if (e.key === 'ArrowRight' && !e.target.closest('[role="slider"]')) jump(1);
+      else if (e.key === 'ArrowLeft' && !e.target.closest('[role="slider"]')) jump(-1);
+      else if (e.key === 'f' || e.key === 'F') fit();
+      else if (e.key === '+' || e.key === '=') zoom(1);
+      else if (e.key === '-') zoom(-1);
+    });
+    window.addEventListener('resize', () => { store.wide = window.innerWidth > 760; });
+  }
+
+  /* ---------- actions ---------- */
+  function select(type, id = null){ S.sel = { type, id }; if (type !== 'run' && !store.panel) store.panel = true; syncHUD(0, true); }
+  function seek(t){ S.t = clamp(t, 0, S.R.tMax); if (S.t < S.R.tMax - .01 && !S.playing && S.autoResume) S.playing = true; syncHUD(0, true); }
+  function toggle(){ if (!S.R) return; if (!S.playing && S.t >= S.R.tMax - .01) S.t = 0; S.playing = !S.playing; syncHUD(0, true); }
+  function jump(dir){ const ms = S.R.msgs.map(m => m.t); let tt; if (dir > 0) tt = ms.find(x => x > S.t + .05); else tt = [...ms].reverse().find(x => x < S.t - .4); if (tt == null) tt = dir > 0 ? S.R.tMax : 0; S.t = clamp(tt + (dir > 0 ? .02 : .02), 0, S.R.tMax); syncHUD(0, true); }
+  function setSpeed(s){ S.speed = s; syncHUD(0, true); }
+  function nudge(d){ seek(S.t + d); }
+  function toLive(){ S.t = S.R.tMax; S.playing = false; syncHUD(0, true); }
+  function setRun(id, first){
+    const run = S.f.runs.find(r => r.id === id) || S.f.runs[0];
+    S.R = compile(S.f, run); S.sel = { type:'run', id:null }; S.pending = null;
+    buildItems(); buildStamps();
+    S.t = run.startAt || 0; S.playing = true;
+    store.runId = run.id; store.runs = S.f.runs.map(r => ({ id:r.id, name:r.name, outcomeLabel:r.outcomeLabel, tone:r.tone }));
+    store.ticks = S.R.msgs.map(m => ({ id:m.i, left:(m.t / S.R.tMax) * 100, level:m.level, text:`${fmtT(m.t)} · ${m.text}` }));
+    lastAlarmKey = lastToastKey = lastDecKey = ''; lastCursor = -1;
+    syncHUD(0, true);
+  }
+  async function loadFactory(id){
+    const f = FACTORIES.find(x => x.id === id) || FACTORIES[0];
+    store.ready = false; S.f = f; store.factoryId = f.id;
+    S.L = await layoutFactory(f); assignBubbles();
+    buildScene(); buildOverlay();
+    store.capability = f.capability; store.versionLabel = `${f.version} · ${f.digest}`; store.provenance = f.provenance;
+    setRun(f.defaultRun || f.runs[0].id, true);
+    initialView(); store.ready = true;
+  }
+  function decide(action){
+    const R = S.R, run = R.run; if (!run.live || S.pending || S.t < R.tMax - .05) return;
+    S.pending = { action, stage:0 }; syncHUD(0, true);
+    setTimeout(() => { S.pending.stage = 1; syncHUD(0, true); }, 420);
+    setTimeout(() => { S.pending.stage = 2; syncHUD(0, true); }, 900);
+    setTimeout(() => {
+      const now = R.tMax; S.f.onDecide(run, action, now);
+      const keepT = S.t, sel = S.sel;
+      S.R = compile(S.f, run); buildItems(); buildStamps();
+      S.t = keepT; S.sel = sel; S.pending = null; S.playing = true;
+      store.runs = S.f.runs.map(r => ({ id:r.id, name:r.name, outcomeLabel:r.outcomeLabel, tone:r.tone }));
+      store.ticks = S.R.msgs.map(m => ({ id:m.i, left:(m.t / S.R.tMax) * 100, level:m.level, text:`${fmtT(m.t)} · ${m.text}` }));
+      lastDecKey = ''; syncHUD(0, true);
+    }, 1350);
+  }
+  function rebuildTheme(){ if (!S.L) return; shadowCache.clear(); buildScene(); buildItems(); }
+
+  async function boot(){
+    store = Alpine.store('floor');
+    stageEl = document.getElementById('stage'); ov = document.getElementById('ov');
+    mini = document.getElementById('minimap'); miniCtx = mini.getContext('2d');
+    store.wide = window.innerWidth > 760; store.panel = window.innerWidth > 1100;
+    if (reduced()) store.calm = true;
+    try {
+      app = new PIXI.Application();
+      await app.init({ backgroundAlpha:0, antialias:true, resolution:Math.min(window.devicePixelRatio || 1, 2), autoDensity:true, resizeTo:document.getElementById('pixi') });
+      document.getElementById('pixi').appendChild(app.canvas);
+      world = new PIXI.Container(); app.stage.addChild(world);
+    } catch (err){ console.error(err); store.error = 'The factory floor needs WebGL, which this browser did not provide. The job card and timeline still describe the run.'; return; }
+    await Promise.race([Promise.all([document.fonts.load('700 9px "Martian Mono"'), document.fonts.load('11px "Michroma"'), document.fonts.load('600 12px "Hanken Grotesk"')]).catch(() => {}), new Promise(r => setTimeout(r, 1800))]);
+    bindInput();
+    try { await loadFactory('verified-research'); } catch (err){ console.error(err); store.error = 'The floor could not be laid out: ' + err.message; return; }
+    app.ticker.add(tk => frame(Math.min(tk.deltaMS/1000, .1)));
+    const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('change', rebuildTheme);
+    new MutationObserver(rebuildTheme).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+    new ResizeObserver(() => { if (store.ready) drawMini(new Map()); }).observe(stageEl);
+  }
+
+  return { boot, loadFactory, setRun, toggle, jump, setSpeed, seek, nudge, toLive, select, decide, fit, zoom, wasDrag };
+})();
+
+document.addEventListener('alpine:init', () => {
+  Alpine.store('floor', {
+    ready:false, error:'', notice:'',
+    factories:FACTORIES.map(f => ({ id:f.id, name:f.name })), factoryId:'verified-research',
+    capability:'', versionLabel:'', provenance:'',
+    runs:[], runId:'',
+    playing:true, speed:2, t:0, tMax:1, tLabel:'T+00:00.0', clock:'', live:false, atLive:false,
+    calm:false, legend:false, panel:true, wide:true,
+    alarms:[], toasts:[], ticks:[], decision:null, insp:null, acked:{},
+    setFactory(id){ Floor.loadFactory(id); },
+    setRun(id){ Floor.setRun(id); },
+    toggle(){ Floor.toggle(); }, jump(d){ Floor.jump(d); }, setSpeed(s){ Floor.setSpeed(s); },
+    restart(){ Floor.seek(0); }, nudge(d){ Floor.nudge(d); }, toLive(){ Floor.toLive(); },
+    select(type, id){ Floor.select(type, id); },
+    ack(id){ this.acked = { ...this.acked, [id]:true }; },
+    decide(a){ Floor.decide(a); },
+    zoom(d){ Floor.zoom(d); }, fit(){ Floor.fit(); }, refit(){ setTimeout(() => Floor.fit(), 30); },
+    soon(v){ this.notice = `${v} is not part of this mockup yet`; clearTimeout(this._nt); this._nt = setTimeout(() => { this.notice = ''; }, 2600); },
+  });
+});
+document.addEventListener('alpine:initialized', () => { Floor.boot(); });
+</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.17.4/cdn.min.js"></script>
+</body>
+</html>
