@@ -2105,14 +2105,14 @@ const Floor = (() => {
     inbound.sort((a,b) => b.d - a.d);
     for (const st of inbound){ const key = st.via.id + '>' + st.qTo; let tail = tails.has(key) ? tails.get(key) : st.via.qEnd; tail -= (bumped.get(key) || 0) * QSP; if (st.d > tail){ const p = st.path.at(Math.max(0, tail)); st.x = p.x; st.y = p.y; st.bumped = true; bumped.set(key, (bumped.get(key) || 0) + 1); } }
     // Following a job: dim the rest, and keep its work in the middle of the view.
-    S.liveBusy = false;
+    S.liveBusy = false; S.camBusy = false;
     if (S.follow && S.track && !pts.size && !gsap.isTweening(cam)){
       let sx = 0, sy = 0, n = 0;
       for (const it of (R.jobs.get(S.follow)?.items || [])){ const st = states.get(it.id); if (st && !st.hidden && st.x != null){ sx += st.x; sy += st.y; n++; } }
       if (n){
         const W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight, k = S.snap ? 1 : 1 - Math.exp(-dtWall * 2.6);
         const ns = cam.s + (S.trackScale - cam.s) * k, tx = W/2 - (sx/n) * ns, ty = H/2 - (sy/n) * ns;
-        if (Math.abs(tx - cam.x) + Math.abs(ty - cam.y) + Math.abs(ns - cam.s) * 400 > .6){ cam.s = ns; cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; applyCam(); S.liveBusy = true; }
+        if (Math.abs(tx - cam.x) + Math.abs(ty - cam.y) + Math.abs(ns - cam.s) * 400 > .6){ cam.s = ns; cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; applyCam(); S.camBusy = true; }
       }
     }
     const activeEdges = new Set(); const rejectedEdges = new Set();
@@ -2123,6 +2123,9 @@ const Floor = (() => {
       if (st.moving && !st.bumped){ S.liveBusy = true; if (st.edge){ activeEdges.add(st.edge.id); if (st.flag === 'rejected') rejectedEdges.add(st.edge.id); } else activeEdges.add('stub'); }
       drawItem(v, st, id, dtWall);
     }
+    // Work in progress fills its progress ring continuously, so it counts as motion too.
+    if (!S.liveBusy){ for (const ws of R.works.values()) if (ws.some(w => t >= w.t0 && t < w.t1)){ S.liveBusy = true; break; } }
+    if (!S.liveBusy && R.turns.some(x => t >= x.t0 && t < x.t1)) S.liveBusy = true;
     // belts (dynamic chevrons)
     const bd = layers.beltDyn; bd.clear();
     const off = t * 26, moving = [];
@@ -2609,26 +2612,33 @@ const Floor = (() => {
   /* ---------- camera ---------- */
   /* Render scheduling. Pixi's ticker is off; frames run only while something can change:
      the replay is playing, the camera or selection just changed, or a live run's clock is ticking.
-     Replay caps at 60 fps (ProMotion screens would otherwise double it); a live run at "now" refreshes 4 times a second.
+     Anything that visibly moves (replay, live work, the camera) renders at the display's refresh rate, up to 120 fps;
+     a still floor refreshes 4 times a second. A frame costs 2-3 ms of script, so smoothness is cheap; idle is what must stay near zero.
      Pulses that mean "waiting on someone" are CSS animations, so they cost the compositor, not the page. */
   let rafId = 0, timerId = 0, lastTs = 0, pending = 2, scrubFill = null, scrubThumb = null;
   function invalidate(n = 1){ pending = Math.max(pending, n); if (timerId){ clearTimeout(timerId); timerId = 0; } if (!rafId && app) rafId = requestAnimationFrame(loop); }
   // Below 60 fps, sleep on a timer between frames rather than waking on every vsync.
-  function schedule(fps){ const wait = lastTs ? 1000/fps - (performance.now() - lastTs) : 0; if (wait > 6){ timerId = setTimeout(() => { timerId = 0; rafId = requestAnimationFrame(loop); }, wait - 4); } else rafId = requestAnimationFrame(loop); }
-  const fpsNow = () => store.view !== 'Floor' ? (replaying() ? 15 : 4) : (replaying() || camMoving() || pending > 0 ? 60 : (atLiveEdge() && S.liveBusy ? 24 : 4));
+  // At a still live edge, wake exactly when the next event is due rather than on the next idle tick,
+  // so a job that starts moving does not jump forward by up to a quarter second.
+  let wakeAt = 0;
+  function schedule(fps){ let wait = lastTs ? 1000/fps - (performance.now() - lastTs) : 0; if (wakeAt) wait = Math.min(wait, wakeAt - performance.now()); if (fps >= 60) wait = 0; if (wait > 6){ timerId = setTimeout(() => { timerId = 0; rafId = requestAnimationFrame(loop); }, wait - 4); } else rafId = requestAnimationFrame(loop); }
+  const fpsNow = () => store.view !== 'Floor' ? (replaying() ? 15 : 4) : (replaying() || camMoving() || pending > 0 || S.camBusy || (atLiveEdge() && S.liveBusy) ? 120 : 4);
   const atLiveEdge = () => !!S.R && S.R.run.live && S.t >= S.R.tMax - .05;
   const replaying = () => S.playing && !atLiveEdge();
   function loop(ts){
     rafId = 0;
-    // Floor: 60 fps while replaying or the camera moves; 24 at the live edge while work is moving; 4 when nothing moves.
+    // Floor: display rate (up to 120) while anything moves; 4 fps when nothing does.
     // Board: the canvas is hidden, so only the clock and the cards need updating.
     const board = store.view !== 'Floor', fps = fpsNow();
-    if (lastTs && ts - lastTs < 1000/fps - 3){ schedule(fps); return; }
+    const due = wakeAt && ts >= wakeAt - 4;
+    if (!due && lastTs && ts - lastTs < 1000/fps - 3){ schedule(fps); return; }
     const dt = lastTs ? Math.min((ts - lastTs)/1000, .1) : 0; lastTs = ts;
     frame(dt); if (!board) app.render();
     const rp = replaying(); if (rp !== S.bodyPlaying){ S.bodyPlaying = rp; document.body.classList.toggle('playing', rp); }
     if (pending > 0) pending--;
-    if (replaying() || camMoving() || pending > 0 || atLiveEdge() || (S.follow && S.track && S.liveBusy)) schedule(fpsNow());
+    wakeAt = 0;
+    if (!board && atLiveEdge() && !S.liveBusy && !S.camBusy){ const a = S.R.times, i = cursorAt(S.t + 1e-3); if (i < a.length) wakeAt = performance.now() + (a[i] - S.t) * 1000; }
+    if (replaying() || camMoving() || pending > 0 || atLiveEdge() || S.camBusy) schedule(fpsNow());
     else { lastTs = 0; if (S.lastStates) drawMini(S.lastStates); syncHUD(0, false, true); }
   }
   const camMoving = () => gsap.isTweening(cam) || pts.size > 0;
@@ -2636,8 +2646,11 @@ const Floor = (() => {
     invalidate();
     world.position.set(cam.x, cam.y); world.scale.set(cam.s);
     ov.style.transform = `translate(${cam.x}px,${cam.y}px) scale(${cam.s})`;
-    ov.style.setProperty('--lbl', String(clamp(.92/cam.s, 1, 1.8)));
-    S.lbl = clamp(.92/cam.s, 1, 1.8); stageEl.classList.toggle('lod-far', cam.s < .38);
+    // Labels keep a readable size when zoomed out. Step the size in 5% increments so a moving camera
+    // does not restyle and re-lay out every label on every frame.
+    const lbl = Math.round(clamp(.92/cam.s, 1, 1.8) * 20) / 20;
+    if (lbl !== S.lbl){ S.lbl = lbl; ov.style.setProperty('--lbl', String(lbl)); }
+    const far = cam.s < .38; if (far !== S.lodFar){ S.lodFar = far; stageEl.classList.toggle('lod-far', far); }
   }
   function panelSpace(){ return store.panel && store.wide ? Math.min(372, window.innerWidth*.4) + 24 : 0; }
   function fit(animate = true){
@@ -2788,7 +2801,10 @@ const Floor = (() => {
     if (reduced()) store.calm = true;
     try {
       app = new PIXI.Application();
-      await app.init({ backgroundAlpha:0, antialias:true, resolution:Math.min(window.devicePixelRatio || 1, 2), autoDensity:true, resizeTo:document.getElementById('pixi'), autoStart:false, eventFeatures:{ move:true, globalMove:false, click:true, wheel:false } });
+      // MSAA multiplies the GPU fill of every frame; on a 2x screen the edges are already smooth without it,
+      // and on a large Retina display it capped the floor near 50 fps.
+      const dpr = window.devicePixelRatio || 1;
+      await app.init({ backgroundAlpha:0, antialias:dpr < 1.5, resolution:Math.min(dpr, 2), autoDensity:true, resizeTo:document.getElementById('pixi'), autoStart:false, eventFeatures:{ move:true, globalMove:false, click:true, wheel:false } });
       // No background tickers: Pixi's system ticker only re-checks hover under a still pointer, which the floor does not need.
       app.ticker.stop(); PIXI.Ticker.system.stop(); PIXI.Ticker.shared.stop();
       document.getElementById('pixi').appendChild(app.canvas);
