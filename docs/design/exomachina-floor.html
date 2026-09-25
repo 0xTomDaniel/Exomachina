@@ -6,10 +6,10 @@
 <title>Exomachina Floor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Martian+Mono:wght@400;500;700&family=Michroma&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Martian+Mono:wght@400;500;700&family=Michroma&family=VT323&display=swap">
 <style>
 :root{
-  --bg:#E2E5E8; --panel:#F6F7F8; --panel-2:#ECEEF1; --glass:rgba(246,247,248,.86); --line:#C9CED4; --line-2:#DCE0E4;
+  --bg:#E2E5E8; --panel:#F6F7F8; --panel-2:#ECEEF1; --glass:rgba(246,247,248,.95); --line:#C9CED4; --line-2:#DCE0E4;
   --ink:#1A1E22; --ink-2:#545C64; --ink-3:#848C94; --halo:rgba(227,229,232,.92);
   --advisory:#D9A400; --advisory-ink:#765600; --advisory-bg:#FAF0CC;
   --alarm:#D0342C; --alarm-ink:#A5211A; --alarm-bg:#FADFDC;
@@ -22,6 +22,10 @@
   --w-pod:#2A3035; --w-pod-top:#353C42; --w-pod-edge:#4B545C; --w-bay:#1A1E22; --w-icon:#A8B0B8;
   --w-item:#F5F6F7; --w-item-edge:#1F2429; --w-item-text:#1A1E22;
   --w-led:#59616A; --w-led-on:#F1F4F7; --w-shadow:#0A0C0E;
+  --w-done:#12A150;
+  /* The Director's console is a physical phosphor screen: same in both themes. */
+  --crt-bg:#03130A; --crt-ink:#62FF8E; --crt-hi:#CFFFDA; --crt-dim:#2E9A53; --crt-glow:rgba(90,255,140,.55); --crt-glow-2:rgba(60,255,120,.22);
+  --font-crt:"VT323", ui-monospace, "SF Mono", Menlo, monospace;
   --font-ui:"Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono:"Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-mark:"Michroma", "Eurostile", "Arial Black", ui-sans-serif, sans-serif;
@@ -29,7 +33,7 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
-    --bg:#101215; --panel:#171A1E; --panel-2:#1E2226; --glass:rgba(22,25,29,.84); --line:#2B3137; --line-2:#23282D;
+    --bg:#101215; --panel:#171A1E; --panel-2:#1E2226; --glass:rgba(22,25,29,.95); --line:#2B3137; --line-2:#23282D;
     --ink:#E3E6E9; --ink-2:#A0A8B0; --ink-3:#6C747C; --halo:rgba(22,25,28,.9);
     --advisory:#E6B422; --advisory-ink:#F2C94C; --advisory-bg:#3A300F;
     --alarm:#F0544C; --alarm-ink:#FF8079; --alarm-bg:#3D1715;
@@ -42,11 +46,12 @@
     --w-pod:#2D3339; --w-pod-top:#383F46; --w-pod-edge:#4F5962; --w-bay:#131619; --w-icon:#99A2AB;
     --w-item:#E9ECEF; --w-item-edge:#0C0E10; --w-item-text:#14171A;
     --w-led:#465059; --w-led-on:#F4F7FA; --w-shadow:#000000;
+    --w-done:#3DDC7A;
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#101215; --panel:#171A1E; --panel-2:#1E2226; --glass:rgba(22,25,29,.84); --line:#2B3137; --line-2:#23282D;
+  --bg:#101215; --panel:#171A1E; --panel-2:#1E2226; --glass:rgba(22,25,29,.95); --line:#2B3137; --line-2:#23282D;
   --ink:#E3E6E9; --ink-2:#A0A8B0; --ink-3:#6C747C; --halo:rgba(22,25,28,.9);
   --advisory:#E6B422; --advisory-ink:#F2C94C; --advisory-bg:#3A300F;
   --alarm:#F0544C; --alarm-ink:#FF8079; --alarm-bg:#3D1715;
@@ -59,13 +64,19 @@
   --w-pod:#2D3339; --w-pod-top:#383F46; --w-pod-edge:#4F5962; --w-bay:#131619; --w-icon:#99A2AB;
   --w-item:#E9ECEF; --w-item-edge:#0C0E10; --w-item-text:#14171A;
   --w-led:#465059; --w-led-on:#F4F7FA; --w-shadow:#000000;
+    --w-done:#3DDC7A;
 }
 
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:13px;line-height:1.4;overflow:hidden;-webkit-font-smoothing:antialiased}
 [x-cloak]{display:none!important}
 .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
-button{cursor:pointer}
+*,*::before,*::after{box-sizing:border-box}
+p,h1,h2,h3,h4,ol,ul,dl,dd{margin:0}
+ol,ul{padding:0;list-style:none}
+svg,canvas{display:block}
+button,select{font:inherit;color:inherit;margin:0}
+button{background:transparent;border:0;padding:0;border-radius:0;cursor:pointer}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 .app{height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto}
@@ -151,14 +162,38 @@ button{cursor:pointer}
 .boothlabel b{display:block;font-family:var(--font-mark);font-weight:400;font-size:.92em;letter-spacing:.2em}
 .boothlabel .bs{display:block;font-family:var(--font-mono);font-size:.78em;color:var(--ink-2);margin-top:3px}
 .boothlabel .bs.on{color:var(--ink)}
-.stamp{left:0;top:0;opacity:0;font-family:var(--font-mark);font-size:11px;letter-spacing:.14em;padding:5px 9px 4px;border:2px solid currentColor;border-radius:4px;background:var(--panel);white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.18);will-change:transform,opacity}
+.crt{pointer-events:none;overflow:hidden;border-radius:14px/18px;background:radial-gradient(ellipse 80% 75% at 50% 45%,#0B2A16 0%,var(--crt-bg) 62%,#010A05 100%);box-shadow:inset 0 0 22px rgba(0,0,0,.9),inset 0 0 3px rgba(120,255,160,.35);font-family:var(--font-crt);font-size:15px;line-height:14.5px;color:var(--crt-ink);text-shadow:0 0 2px var(--crt-glow),0 0 8px var(--crt-glow-2);transition:filter .3s}
+.crt.on{filter:brightness(1.22) saturate(1.1)}
+.crt::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(0,0,0,.30) 0 1px,transparent 1px 3px)}
+.crt::after{content:"";position:absolute;left:0;right:0;top:0;height:45%;transform:translateY(-100%);will-change:transform;z-index:3;pointer-events:none;background:linear-gradient(to bottom,transparent,rgba(130,255,170,.07) 60%,transparent);animation:crt-roll 6s linear infinite}
+.crt .scr{position:absolute;inset:0;padding:8px 12px;white-space:pre}
+.crt .hd{color:var(--crt-dim);display:flex;justify-content:space-between;border-bottom:1px solid rgba(98,255,142,.28);padding-bottom:2px;margin-bottom:3px}
+.crt .log > div{overflow:hidden;text-overflow:clip}
+.crt .dim{color:var(--crt-dim)}
+.crt .hi{color:var(--crt-hi)}
+.crt .hd2{color:var(--crt-ink);opacity:.8}
+.crt .cur{display:inline-block;width:.5em;height:.95em;margin-left:1px;vertical-align:-2px;background:currentColor;box-shadow:0 0 6px var(--crt-glow);animation:crt-blink 1.05s steps(2,jump-none) infinite}
+.crt .cur.on{animation:none}
+@keyframes crt-roll{from{transform:translateY(-100%)}to{transform:translateY(225%)}}
+@keyframes crt-blink{0%{opacity:1}100%{opacity:0}}
+.calm .crt::after,.calm .crt .cur{animation:none}
+/* Decorative CSS motion runs only while a replay plays, so a still or waiting floor costs almost nothing. */
+body:not(.playing) .crt::after,body:not(.playing) .op.st-active .l::after{animation-play-state:paused}
+.waitring{pointer-events:none;border:2.5px solid var(--action);opacity:0;will-change:opacity}
+.waitring::after{content:"";position:absolute;inset:-7px;border:1px solid currentColor;border-radius:inherit;opacity:.45}
+.waitring.action{color:var(--action);border-color:var(--action)}
+.waitring.alarm{color:var(--alarm);border-color:var(--alarm)}
+.waitring.on{opacity:1;animation:wring 1.5s ease-in-out infinite}
+@keyframes wring{50%{opacity:.3}}
+.calm .waitring.on{animation:none}
+.stamp{left:0;top:0;opacity:0;will-change:transform,opacity;font-family:var(--font-mark);font-size:11px;letter-spacing:.14em;padding:5px 9px 4px;border:2px solid currentColor;border-radius:4px;background:var(--panel);white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.18);will-change:transform,opacity}
 .stamp.normal{color:var(--ink)}
 .stamp.advisory{color:var(--advisory-ink);border-color:var(--advisory)}
 .stamp.alarm{color:var(--alarm-ink);border-color:var(--alarm)}
 .stamp.action{color:var(--action-ink);border-color:var(--action)}
 
 /* HUD floats */
-.float{position:absolute;background:var(--glass);-webkit-backdrop-filter:blur(12px) saturate(1.15);backdrop-filter:blur(12px) saturate(1.15);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.float{position:absolute;background:var(--glass);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
 .tl-btns{position:absolute;left:12px;top:12px;display:flex;gap:6px}
 .tl-btns .float{position:relative}
 .fbtn{font-size:12px;font-weight:600;color:var(--ink);padding:6px 10px;border-radius:9px}
@@ -304,18 +339,7 @@ button{cursor:pointer}
   .brand-sub{display:none}
 }
 @media (prefers-reduced-motion: reduce){
-  .apill.unacked .isa,.op.st-active .l::after{animation:none}
-}
-</style>
-<style type="text/tailwindcss">
-@theme inline {
-  --color-ink: var(--ink);
-  --color-ink-2: var(--ink-2);
-  --color-ink-3: var(--ink-3);
-  --color-panel: var(--panel);
-  --color-line: var(--line);
-  --font-sans: var(--font-ui);
-  --font-mono: var(--font-mono);
+  .waitring.on,.apill.unacked .isa,.op.st-active .l::after,.crt::after,.crt .cur{animation:none}
 }
 </style>
 
@@ -410,6 +434,7 @@ button{cursor:pointer}
         <li><span class="isa advisory">2</span>Advisory</li>
         <li><span class="isa alarm">1</span>Alarm</li>
         <li><span class="isa action">!</span>You need to act</li>
+        <li class="wide"><span class="isa" style="background:var(--w-done);border-radius:50%" aria-hidden="true"></span>Delivered: one green flash, then back to grey</li>
         <li class="wide">Motion shows work. Healthy work moves; stalled work stops.</li>
         <li class="wide"><span class="mono" style="font-size:10px">KI</span> time in s · <span class="mono" style="font-size:10px">QI</span> count</li>
       </ul>
@@ -591,7 +616,6 @@ button{cursor:pointer}
   </footer>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3/dist/index.global.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.21.0/dist/pixi.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/elkjs@0.12.0/lib/elk.bundled.js"></script>
@@ -939,7 +963,7 @@ const Floor = (() => {
   const cam = { x:0, y:0, s:1 };
 
   /* ---------- palette ---------- */
-  const TOK = {floor:'--w-floor',floorHi:'--w-floor-hi',seam:'--w-seam',inlay:'--w-inlay',zone:'--w-zone',zoneLine:'--w-zone-line',bracket:'--w-bracket',beltEdge:'--w-belt-edge',belt:'--w-belt',beltMark:'--w-belt-mark',beltOn:'--w-belt-on',signal:'--w-signal',signalOn:'--w-signal-on',pod:'--w-pod',podTop:'--w-pod-top',podEdge:'--w-pod-edge',bay:'--w-bay',icon:'--w-icon',item:'--w-item',itemEdge:'--w-item-edge',itemText:'--w-item-text',led:'--w-led',ledOn:'--w-led-on',shadow:'--w-shadow',advisory:'--advisory',alarm:'--alarm',action:'--action',focus:'--focus',ink:'--ink',ink2:'--ink-2',ink3:'--ink-3',line:'--line',panel:'--panel'};
+  const TOK = {floor:'--w-floor',floorHi:'--w-floor-hi',seam:'--w-seam',inlay:'--w-inlay',zone:'--w-zone',zoneLine:'--w-zone-line',bracket:'--w-bracket',beltEdge:'--w-belt-edge',belt:'--w-belt',beltMark:'--w-belt-mark',beltOn:'--w-belt-on',signal:'--w-signal',signalOn:'--w-signal-on',pod:'--w-pod',podTop:'--w-pod-top',podEdge:'--w-pod-edge',bay:'--w-bay',icon:'--w-icon',item:'--w-item',itemEdge:'--w-item-edge',itemText:'--w-item-text',led:'--w-led',ledOn:'--w-led-on',shadow:'--w-shadow',done:'--w-done',advisory:'--advisory',alarm:'--alarm',action:'--action',focus:'--focus',ink:'--ink',ink2:'--ink-2',ink3:'--ink-3',line:'--line',panel:'--panel'};
   function isDark(){ const a = document.documentElement.getAttribute('data-theme'); if (a === 'dark') return true; if (a === 'light') return false; return matchMedia('(prefers-color-scheme: dark)').matches; }
   function readPalette(){
     const cs = getComputedStyle(document.documentElement); const P = { dark:isDark(), css:{} };
@@ -1010,7 +1034,7 @@ const Floor = (() => {
   /* ---------- layout ---------- */
   async function elkLayout(f, sizes){
     const spacing = {'elk.spacing.nodeNode':'60','elk.layered.spacing.nodeNodeBetweenLayers':'124','elk.layered.spacing.edgeNodeBetweenLayers':'30','elk.layered.nodePlacement.strategy':'BRANDES_KOEPF','elk.layered.nodePlacement.bk.fixedAlignment':'BALANCED'};
-    const root = { id:'root', layoutOptions:{'elk.algorithm':'layered','elk.direction':'RIGHT','elk.hierarchyHandling':'INCLUDE_CHILDREN','elk.padding':'[top=40,left=40,bottom=40,right=40]','elk.spacing.componentComponent':'90',...spacing}, children:[], edges:[] };
+    const root = { id:'root', layoutOptions:{'elk.algorithm':'layered','elk.direction':'RIGHT','elk.hierarchyHandling':'INCLUDE_CHILDREN','elk.padding':'[top=40,left=40,bottom=40,right=40]','elk.spacing.componentComponent':'90',...spacing,'elk.layered.considerModelOrder.strategy':'NODES_AND_EDGES'}, children:[], edges:[] };
     const depts = new Map();
     for (const s of f.steps){
       const node = { id:s.id, width:sizes[s.id].w, height:sizes[s.id].h + LABEL_H };
@@ -1094,7 +1118,8 @@ const Floor = (() => {
     let minX = Infinity, minY = Infinity;
     for (const [,g] of G.steps){ minX = Math.min(minX, g.x); minY = Math.min(minY, g.y); }
     G.zones.forEach(z => { minX = Math.min(minX, z.x); minY = Math.min(minY, z.y); });
-    const booth = { x:minX, y:minY-150, w:176, h:72 }; G.booth = booth;
+    const booth = { x:minX, y:minY-272, w:400, h:196 }; G.booth = booth;
+    G.screen = { x:booth.x+74, y:booth.y+14, w:booth.w-88, h:booth.h-46 };
     for (const id of (f.signals || [])){
       const g = G.steps.get(id); if (!g) continue;
       let R = { x:g.x+g.w/2, y:g.y };
@@ -1243,10 +1268,13 @@ const Floor = (() => {
     G.entry.forEach(e => drawBelt(bg, e.path, P, 16));
     G.exit.forEach(e => drawBelt(bg, e.path, P, 16));
     G.edges.forEach(e => drawBelt(bg, e.path, P, e.loop ? 13 : 17));
+    const ch = new PIXI.Graphics();
+    G.edges.forEach(e => chevrons(ch, e.path, 0, 18)); G.entry.forEach(e => chevrons(ch, e.path, 0, 18)); G.exit.forEach(e => chevrons(ch, e.path, 0, 18));
+    ch.stroke({ width:1.4, color:P.beltMark, alpha:.9, cap:'round', join:'round' });
     // wall portals at stub ends
     G.entry.forEach(e => { const p = e.path.pts[0]; bg.rect(p.x-6, p.y-15, 4, 30).fill(P.bracket); bg.rect(p.x-12, p.y-15, 3, 30).fill({ color:P.bracket, alpha:.5 }); });
     G.exit.forEach(e => { const p = e.path.pts[e.path.pts.length-1]; bg.rect(p.x+2, p.y-15, 4, 30).fill(P.bracket); bg.rect(p.x+9, p.y-15, 3, 30).fill({ color:P.bracket, alpha:.5 }); });
-    layers.belts.addChild(bg);
+    layers.belts.addChild(bg, ch);
     layers.beltDyn = new PIXI.Graphics(); layers.belts.addChild(layers.beltDyn);
     // signals (static dashed)
     const sg = new PIXI.Graphics();
@@ -1280,14 +1308,16 @@ const Floor = (() => {
     }
     // Director booth
     const bo = G.booth;
-    pg.roundRect(bo.x, bo.y, bo.w, bo.h, 18).fill(P.pod).stroke({ width:1, color:P.podEdge });
-    pg.roundRect(bo.x+3, bo.y+3, bo.w-6, bo.h*.5, 15).fill({ color:P.podTop, alpha:.9 });
-    pg.roundRect(bo.x+12, bo.y+12, 44, bo.h-24, 10).fill(P.bay).stroke({ width:1, color:P.podEdge, alpha:.8 });
-    const dx = bo.x+34, dy = bo.y+bo.h/2;
-    pg.poly([dx, dy-11, dx+11, dy, dx, dy+11, dx-11, dy], true).fill(P.ledOn);
-    // console: a strip of small screens, one per step the Director can signal
-    for (let k = 0; k < 3; k++){ const sx = bo.x+66+k*34; pg.roundRect(sx, bo.y+16, 28, 20, 4).fill(P.bay).stroke({ width:1, color:P.podEdge, alpha:.7 }); for (let r = 0; r < 3; r++) pg.rect(sx+5, bo.y+21+r*4.5, [16,11,14][(k+r)%3], 1.4).fill({ color:P.icon, alpha:.35 }); }
-    pg.roundRect(bo.x+66, bo.y+44, 96, 12, 4).fill({ color:P.bay, alpha:.9 });
+    pg.roundRect(bo.x, bo.y, bo.w, bo.h, 20).fill(P.pod).stroke({ width:1, color:P.podEdge });
+    pg.roundRect(bo.x+3, bo.y+3, bo.w-6, bo.h*.42, 17).fill({ color:P.podTop, alpha:.9 });
+    pg.roundRect(bo.x+14, bo.y+14, 48, bo.h-28, 12).fill(P.bay).stroke({ width:1, color:P.podEdge, alpha:.8 });
+    const dx = bo.x+38, dy = bo.y+bo.h/2;
+    pg.poly([dx, dy-12, dx+12, dy, dx, dy+12, dx-12, dy], true).fill(P.ledOn);
+    // CRT bezel (the phosphor screen itself is DOM, so its text stays crisp) and a keyboard deck
+    const sc = G.screen;
+    pg.roundRect(sc.x-5, sc.y-5, sc.w+10, sc.h+10, 17).fill(0x0A0C0B).stroke({ width:1, color:P.podEdge });
+    const kw = sc.w/16;
+    for (let k = 0; k < 16; k++) pg.roundRect(sc.x + k*kw + 1.5, bo.y+bo.h-23, kw-3, 10, 2.5).fill({ color:P.bay, alpha:.95 });
     // leader lines to instrument bubbles
     for (const [,g] of G.steps){ if (!g.bubble) continue; pg.moveTo(g.x+g.w-10, g.y+4).lineTo(g.bubble.x-9, g.bubble.y+9).stroke({ width:1, color:P.ink3, alpha:.8 }); }
     layers.pods.addChild(pg);
@@ -1316,6 +1346,7 @@ const Floor = (() => {
       const l = el('div','mlabel',{ left:(g.x+g.w/2)+'px', top:(g.y+g.h+7)+'px', width:`calc(${g.w+48}px * var(--lbl))` }, `<b>${esc(g.s.name)}</b><span>${esc(sub)}</span>`);
       l.addEventListener('click', () => { if (!wasDrag()) select('step', id); });
       if (g.bubble){ const bb = el('div','bubble',{ left:(g.bubble.x-17)+'px', top:(g.bubble.y-17)+'px' }, `<span class="tag">${g.bubble.tag}</span><span class="val">—</span>`); g.bubbleVal = bb.querySelector('.val'); g.bubbleLast = null; }
+      { const r = podRadius(g); g.ringEl = el('div','waitring',{ left:(g.x-6)+'px', top:(g.y-6)+'px', width:(g.w+12)+'px', height:(g.h+12)+'px', borderRadius:(r+6)+'px' }); g.ringKey = ''; }
     }
     for (const e of G.edges){
       if (!e.def.label) continue;
@@ -1327,12 +1358,17 @@ const Floor = (() => {
     G.exit.forEach(e => { const p = e.path.pts[e.path.pts.length-1]; el('div','wall out',{ left:(p.x+6)+'px', top:(p.y-14)+'px' }, 'TO CALLER'); });
     const bo = G.booth;
     const bt = el('button','booth',{ left:bo.x+'px', top:bo.y+'px', width:bo.w+'px', height:bo.h+'px' });
-    bt.type = 'button'; bt.setAttribute('aria-label','Director. Open the job card and its command log.');
-    bt.addEventListener('click', () => { if (!wasDrag()) select('run'); });
+    bt.type = 'button'; bt.setAttribute('aria-label','Director console. Zoom in to read it and open the job card.');
+    bt.addEventListener('click', () => { if (!wasDrag()){ select('run'); focusDirector(); } });
     const bl = el('div','boothlabel',{ left:(bo.x+2)+'px', top:(bo.y-8)+'px' }, `<b>◆ DIRECTOR</b><span class="bs">Idle · watching the floor</span>`);
-    bl.addEventListener('click', () => { if (!wasDrag()) select('run'); });
+    bl.addEventListener('click', () => { if (!wasDrag()){ select('run'); focusDirector(); } });
     S.boothStat = bl.querySelector('.bs');
     S.boothLast = null;
+    const sc = G.screen;
+    S.crt = el('div','crt',{ left:sc.x+'px', top:sc.y+'px', width:sc.w+'px', height:sc.h+'px' }, `<div class="scr"><div class="hd"><span></span><span></span></div><div class="log"></div></div>`);
+    S.crt.setAttribute('aria-hidden','true');
+    [S.crtHdL, S.crtHdR] = S.crt.querySelectorAll('.hd span'); S.crtLog = S.crt.querySelector('.log'); S.crtKey = '';
+    if (!reduced()) gsap.fromTo(S.crt, { scaleY:.015, filter:'brightness(3.5)' }, { scaleY:1, filter:'brightness(1)', duration:.6, delay:.2, ease:'power3.out', clearProps:'transform,filter' });
     S.stampLayer = el('div', null, { left:'0px', top:'0px' });
   }
   function buildStamps(){
@@ -1379,7 +1415,62 @@ const Floor = (() => {
     }
     R.tMax = run.live ? run.now : (R.end ? R.end.t : Math.max(...R.times) + 2);
     R.ops = buildOps(f, R);
+    R.con = buildConsole(f, R);
     return R;
+  }
+  /* The Director's console transcript. Its own turns print bright; floor events it is watching print dim. */
+  const CPS = 26, CON_W = 42, CON_ROWS = 8;
+  function buildConsole(f, R){
+    const L = [], nm = id => (S.L.steps.get(id)?.s.name || id).toUpperCase();
+    const ascii = s => String(s).replace(/→/g, '->').replace(/·/g, '-').replace(/[“”]/g, '"');
+    const add = (t, text, cls = '') => {
+      // Wrapped lines keep their parent's place in the log and start typing when the line above finishes.
+      let s = ascii(text), first = true, seq = 0, t0 = t;
+      while (s.length){
+        let cut = s.length <= CON_W ? s.length : s.lastIndexOf(' ', CON_W); if (cut <= 4) cut = CON_W;
+        L.push({ t, t0, seq:seq++, text:(first ? '' : '    ') + s.slice(0, cut), cls }); t0 += cut / CPS; s = s.slice(cut).trimStart(); first = false;
+      }
+    };
+    let turnN = 0;
+    for (const e of R.ev){
+      switch (e.type){
+        case 'director': { turnN++; add(e.t, `== TURN ${turnN} ======= ${fmtT(e.t)}`, 'hd2'); const n = e.tools.length; e.tools.forEach((tl, k) => add(e.t + .3 + k*(e.dur/n), '> ' + tl, 'hi')); break; }
+        case 'command':
+          if (e.by === 'Director') add(e.t, '  ' + e.outcome.toUpperCase());
+          else if (e.by === 'Caller') add(e.t, '. CALLER ' + e.cmd, 'dim');
+          else if (e.by === 'Factory') add(e.t, '. ' + e.cmd, 'dim');
+          break;
+        case 'spawn': if (e.rev && e.sha) add(e.t, `. ${e.rev} PRODUCED ${e.sha}`, 'dim'); break;
+        case 'verdict': add(e.t, `. ${e.rev} ${e.verdict === 'accepted' ? 'ACCEPTED' : 'REJECTED ' + e.finding}${e.limit ? ' - LIMIT' : ''} @ ${nm(e.step)}`, e.limit ? '' : 'dim'); break;
+        case 'wait': if (e.human) add(e.t, `. WAITING ON ${e.responder.toUpperCase()}`, 'dim'); else add(e.t, `! DECISION OWED @ ${nm(e.step)}`, 'hi'); break;
+        case 'decide':
+          if (e.by === 'Director'){ add(e.t, `  DECIDED ${e.action.toUpperCase()}`, 'hi'); if (e.rationale) add(e.t + 1, `  "${e.rationale}"`); }
+          else add(e.t, `. ${e.by.toUpperCase()}: ${e.action.toUpperCase()}`, 'dim');
+          break;
+        case 'release': add(e.t, `. RELEASED ${R.items.get(e.item)?.rev || ''} [OK]`, 'hi'); break;
+        case 'scrap': add(e.t, '. RUN ABORTED - 0 RELEASES'); break;
+        case 'flag': if (e.flag === 'unknown') add(e.t, '. OUTCOME UNKNOWN - RECONCILING'); break;
+      }
+    }
+    return L.sort((a,b) => a.t - b.t || a.seq - b.seq);
+  }
+  function drawConsole(t, turnOn){
+    const L = S.R.con; let lo = 0, hi = L.length;
+    while (lo < hi){ const m = (lo+hi) >> 1; if (L[m].t <= t) lo = m+1; else hi = m; }
+    // A finished run's log is complete, even if the last line was still typing when the run ended.
+    const ended = !S.R.run.live && t >= S.R.tMax - 1e-3;
+    const typedLen = ln => ended ? Infinity : Math.floor((t - ln.t0) * CPS);
+    let typing = false; const start = Math.max(0, lo - CON_ROWS);
+    for (let i = start; i < lo; i++) if (typedLen(L[i]) < L[i].text.length) typing = true;
+    const vis = L.slice(Math.max(0, lo - (typing ? CON_ROWS : CON_ROWS - 1)), lo);
+    let key = lo + ':' + (turnOn ? 1 : 0), html = '';
+    vis.forEach((ln, k) => {
+      const n = typedLen(ln), full = n >= ln.text.length, s = full ? ln.text : ln.text.slice(0, Math.max(0, n));
+      key += ':' + s.length;
+      html += `<div class="${ln.cls}">${esc(s)}${!full && k === vis.length - 1 ? '<i class="cur on"></i>' : ''}</div>`;
+    });
+    if (!typing) html += `<div>&gt; <i class="cur"></i></div>`;
+    if (key !== S.crtKey){ S.crtKey = key; S.crtLog.innerHTML = html; S.crt.classList.toggle('on', !!turnOn); }
   }
   function buildOps(f, R){
     const G = S.L, ops = [];
@@ -1414,7 +1505,7 @@ const Floor = (() => {
     let i = tr.length - 1; while (i >= 0 && tr[i].t0 > t) i--;
     const seg = tr[i]; if (!seg || seg.k === 'gone') return null;
     let st;
-    if (seg.k === 'move' && t < seg.t1){ const p = (t-seg.t0)/(seg.t1-seg.t0), pt = seg.path.at(EASE.move(p) * seg.path.len); st = { moving:true, x:pt.x, y:pt.y, edge:seg.edge, alpha:seg.fade ? 1 - clamp((p-.55)/.45, 0, 1) : 1, scale:1 }; }
+    if (seg.k === 'move' && t < seg.t1){ const p = (t-seg.t0)/(seg.t1-seg.t0), pt = seg.path.at(EASE.move(p) * seg.path.len); st = { moving:true, exit:!!seg.exit, x:pt.x, y:pt.y, edge:seg.edge, alpha:seg.fade ? 1 - clamp((p-.55)/.45, 0, 1) : 1, scale:1 }; }
     else if (seg.k === 'move'){ return null; }
     else if (seg.k === 'shrink'){ const p = clamp((t-seg.t0)/(seg.t1-seg.t0), 0, 1); st = { parked:true, step:seg.step, since:seg.t0, scale:1 - p*.8, alpha:1 - p }; }
     else st = { parked:true, step:seg.step, since:seg.t0, scale:1, alpha:1 };
@@ -1481,13 +1572,13 @@ const Floor = (() => {
     }
     // belts (dynamic chevrons)
     const bd = layers.beltDyn; bd.clear();
-    const off = t * 26;
-    G.edges.forEach(e => { if (!activeEdges.has(e.id)) chevrons(bd, e.path, 0, 18); });
-    G.entry.forEach(e => chevrons(bd, e.path, 0, 18)); G.exit.forEach(e => chevrons(bd, e.path, 0, 18));
-    bd.stroke({ width:1.4, color:P.beltMark, alpha:.9, cap:'round', join:'round' });
-    G.edges.forEach(e => { if (activeEdges.has(e.id)) chevrons(bd, e.path, off, 18); });
-    if (activeEdges.has('stub')){ G.entry.forEach(e => chevrons(bd, e.path, off, 18)); G.exit.forEach(e => chevrons(bd, e.path, off, 18)); }
-    bd.stroke({ width:1.8, color:P.beltOn, alpha:1, cap:'round', join:'round' });
+    const off = t * 26, moving = [];
+    G.edges.forEach(e => { if (activeEdges.has(e.id)) moving.push([e.path, e.loop ? 13 : 17]); });
+    if (activeEdges.has('stub')){ G.entry.forEach(e => moving.push([e.path, 16])); G.exit.forEach(e => moving.push([e.path, 16])); }
+    // A running belt repaints its own surface over the idle chevrons, then draws them moving.
+    for (const [path, w] of moving){ const pts = path.pts; bd.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) bd.lineTo(pts[i].x, pts[i].y); bd.stroke({ width:w-5, color:P.belt, cap:'round', join:'round' }); }
+    for (const [path] of moving) chevrons(bd, path, off, 18);
+    if (moving.length) bd.stroke({ width:1.8, color:P.beltOn, alpha:1, cap:'round', join:'round' });
     G.edges.forEach(e => { if (rejectedEdges.has(e.id)){ const pts = e.path.pts; bd.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) bd.lineTo(pts[i].x, pts[i].y); } });
     if (rejectedEdges.size) bd.stroke({ width:14, color:P.advisory, alpha:.28, cap:'round', join:'round' });
     // pods (dynamic)
@@ -1496,20 +1587,23 @@ const Floor = (() => {
       const k = g.s.kind, act = activeWorks(id, t), wt = waitAt(id, t);
       if (act.length){ const p = act.reduce((a,w) => a + (t-w.t0)/(w.t1-w.t0), 0)/act.length; pd.rect(g.x+g.w/2-20, g.y+g.h-7, 40*clamp(p,0,1), 2).fill(P.ledOn); }
       let led = P.led, la = 1;
-      if (wt){ led = wt.level === 'action' ? P.action : P.alarm; la = calm ? 1 : .55 + .45*Math.sin(S.wall*5); }
+      if (wt){ led = wt.level === 'action' ? P.action : P.alarm; la = 1; }
       else if (act.length){ led = P.ledOn; la = calm ? .95 : .6 + .4*Math.sin(S.wall*3.2); }
+      const rel = !wt && R.releases.find(r => r.at === id && t >= r.t && t - r.t < 2.4);
+      if (rel){ const p = (t - rel.t)/2.4; led = P.done; la = 1; const r = podRadius(g); pd.roundRect(g.x-5, g.y-5, g.w+10, g.h+10, r+5).stroke({ width:2.5, color:P.done, alpha:.95*(1-p) }); pd.roundRect(g.x+3, g.y+3, g.w-6, g.h-6, Math.max(4, r-3)).fill({ color:P.done, alpha:.16*(1-p) }); }
       pd.circle(g.x+g.w-(k === 'join' ? g.w/2 : 14), g.y+(k === 'join' ? g.h-12 : 14), 3.3).fill({ color:led, alpha:la });
       if (k === 'gate') drawValve(pd, g, t);
       if (k === 'gate' && act.length){ const b = g.bay, yy = calm ? b.y + b.h*.5 : b.y + 4 + (b.h-8)*(.5 + .5*Math.sin(t*3.4)); pd.moveTo(b.x+5, yy).lineTo(b.x+b.w-5, yy).stroke({ width:1.6, color:P.ledOn, alpha:.75 }); }
       if ((k === 'assign' || k === 'nested') && act.length && !calm){ const ph = (S.wall*.55 + (g.x % 7)/7) % 1, gx = g.x + 16 + (g.w-32)*ph; pd.moveTo(gx-10, g.y+2).lineTo(gx+10, g.y+2).stroke({ width:1.5, color:0xffffff, alpha:.35*Math.sin(ph*Math.PI) }); }
-      if (wt){ const col = wt.level === 'action' ? P.action : P.alarm, a = calm ? .9 : .45 + .45*(.5 + .5*Math.sin(S.wall*4)); const r = podRadius(g); pd.roundRect(g.x-6, g.y-6, g.w+12, g.h+12, r+6).stroke({ width:2.5, color:col, alpha:a }); pd.roundRect(g.x-11, g.y-11, g.w+22, g.h+22, r+11).stroke({ width:1, color:col, alpha:a*.45 }); }
+      const rk = wt ? 'waitring on ' + wt.level : 'waitring'; if (g.ringEl && rk !== g.ringKey){ g.ringKey = rk; g.ringEl.className = rk; }
       if (S.sel.type === 'step' && S.sel.id === id){ const r = podRadius(g); pd.roundRect(g.x-4, g.y-4, g.w+8, g.h+8, r+4).stroke({ width:2, color:P.focus, alpha:.95 }); }
       if (g.bubbleVal){ const v = readoutAt(g, t); if (v !== g.bubbleLast){ g.bubbleVal.textContent = v; g.bubbleLast = v; } }
     }
     // Director booth + signals
     const sd = layers.sigDyn; sd.clear();
     const turn = R.turns.find(x => t >= x.t0 && t < x.t1);
-    const bo = G.booth, dcx = bo.x+32, dcy = bo.y+bo.h/2;
+    const bo = G.booth, dcx = bo.x+38, dcy = bo.y+bo.h/2;
+    drawConsole(t, !!turn);
     if (turn){
       const sig = G.signals.find(s => s.target === turn.target);
       if (sig){ for (let k = 0; k < 3; k++){ const ph = ((t - turn.t0)*.55 + k/3) % 1; const p = sig.path.at(ph * sig.path.len); sd.circle(p.x, p.y, 3.4).fill({ color:P.signalOn, alpha:.9 }); } }
@@ -1526,10 +1620,11 @@ const Floor = (() => {
     }
     // effects
     const fx = layers.fx; fx.clear();
-    for (const r of R.releases){ const dt = t - r.t; if (dt < 0 || dt > 1.5) continue; const g = G.steps.get(r.at), p = dt/1.5;
-      fx.circle(g.c.x, g.c.y, 18 + 64*EASE.out(p)).stroke({ width:2, color:P.signalOn, alpha:.55*(1-p) });
-      fx.circle(g.c.x, g.c.y, 10 + 34*EASE.out(p)).stroke({ width:1, color:P.signalOn, alpha:.4*(1-p) });
-      for (let k = 0; k < 12; k++){ const a = k/12*Math.PI*2 + .2, d = 14 + 70*EASE.out(p); fx.rect(g.c.x + Math.cos(a)*d - 1.5, g.c.y + Math.sin(a)*d - 1.5, 3, 3).fill({ color:P.signalOn, alpha:.8*(1-p) }); } }
+    // Delivery is the one moment that turns green: an event, never a resting state.
+    for (const r of R.releases){ const dt = t - r.t; if (dt < 0 || dt > 1.6) continue; const g = G.steps.get(r.at), p = dt/1.6;
+      fx.circle(g.c.x, g.c.y, 18 + 70*EASE.out(p)).stroke({ width:2.4, color:P.done, alpha:.75*(1-p) });
+      fx.circle(g.c.x, g.c.y, 10 + 38*EASE.out(p)).stroke({ width:1.2, color:P.done, alpha:.55*(1-p) });
+      for (let k = 0; k < 14; k++){ const a = k/14*Math.PI*2 + .2, d = 14 + 78*EASE.out(p); fx.rect(g.c.x + Math.cos(a)*d - 1.6, g.c.y + Math.sin(a)*d - 1.6, 3.2, 3.2).fill({ color:P.done, alpha:.9*(1-p) }); } }
     for (const v of R.verdicts){ const dt = t - v.t; if (dt < 0 || dt > 1) continue; const g = G.steps.get(v.step), p = dt;
       const col = v.verdict === 'accepted' ? P.signalOn : (v.limit ? P.alarm : P.advisory);
       fx.roundRect(g.x-4-12*p, g.y-4-12*p, g.w+8+24*p, g.h+8+24*p, 20+12*p).stroke({ width:2, color:col, alpha:.7*(1-p) }); }
@@ -1539,10 +1634,10 @@ const Floor = (() => {
       const sc = dt < .2 ? 1.9 - .9*EASE.out(dt/.2) : 1, op = dt > 2.1 ? 1 - (dt-2.1)/.5 : Math.min(1, dt/.08);
       s3.el.style.opacity = op; s3.el.style.transform = `translate(-50%,-100%) rotate(-5deg) scale(${sc * S.lbl})`; s3.on = true; }
     // scrub
-    const frac = R.tMax ? t / R.tMax : 0; const fill = document.getElementById('scrubFill'), th = document.getElementById('scrubThumb');
-    if (fill){ fill.style.width = (frac*100) + '%'; th.style.left = (frac*100) + '%'; }
+    const frac = R.tMax ? t / R.tMax : 0, pct = (frac*100).toFixed(2) + '%';
+    if (pct !== S.scrubPct){ S.scrubPct = pct; scrubFill.style.width = pct; scrubThumb.style.left = pct; }
     syncHUD(dtWall);
-    miniAcc += dtWall; if (miniAcc > .066){ miniAcc = 0; drawMini(states); }
+    S.lastStates = states; miniAcc += dtWall; if (miniAcc > .12){ miniAcc = 0; drawMini(states); }
   }
   let miniAcc = 0;
   function drawItem(v, st, id){
@@ -1555,6 +1650,7 @@ const Floor = (() => {
     const txt = unk ? '?' : v.label; if (v.txt.text !== txt) v.txt.text = txt;
     if (st.flag === 'rejected') g.circle(0,0,18).stroke({ width:2.6, color:P.advisory });
     if (st.flag === 'exhausted') g.circle(0,0,18).stroke({ width:2.8, color:P.alarm });
+    if (st.exit) g.circle(0,0,18).stroke({ width:2.6, color:P.done });
     if (unk){ for (let k = 0; k < 10; k++){ const a0 = k/10*Math.PI*2 + S.wall*(store.calm ? 0 : .6); g.moveTo(Math.cos(a0)*18, Math.sin(a0)*18); g.arc(0, 0, 18, a0, a0 + .38); } g.stroke({ width:2.2, color:P.advisory }); }
     if (st.progress != null){ g.circle(0,0,22).stroke({ width:2, color:P.ledOn, alpha:.18 }); const a0 = -Math.PI/2; g.moveTo(0, -22); g.arc(0, 0, 22, a0, a0 + Math.PI*2*clamp(st.progress, 0, 1)); g.stroke({ width:2.2, color:P.ledOn, alpha:.95, cap:'round' }); }
     if (S.sel.type === 'item' && S.sel.id === id) g.circle(0,0,26).stroke({ width:2, color:P.focus });
@@ -1594,8 +1690,9 @@ const Floor = (() => {
   /* ---------- HUD sync ---------- */
   let hudAcc = 0, lastCursor = -1, lastInspWall = 0, lastDecKey = '', lastToastKey = '', lastAlarmKey = '';
   function cursorAt(t){ const a = S.R.times; let lo = 0, hi = a.length; while (lo < hi){ const m = (lo+hi) >> 1; if (a[m] <= t) lo = m+1; else hi = m; } return lo; }
-  function syncHUD(dt, force){
-    hudAcc += dt || 0; if (!force && hudAcc < .1) return; hudAcc = 0;
+  function syncHUD(dt, force, settle){
+    if (force) invalidate();
+    hudAcc += dt || 0; if (!force && !settle && hudAcc < .1) return; hudAcc = 0;
     const R = S.R, t = S.t, st = store;
     st.t = t; st.tMax = R.tMax; st.playing = S.playing; st.speed = S.speed;
     st.tLabel = fmtT(t); st.clock = fmtClock(R.run.start, t);
@@ -1692,7 +1789,28 @@ const Floor = (() => {
   }
 
   /* ---------- camera ---------- */
+  /* Render scheduling. Pixi's ticker is off; frames run only while something can change:
+     the replay is playing, the camera or selection just changed, or a live run's clock is ticking.
+     Replay caps at 60 fps (ProMotion screens would otherwise double it); a live run at "now" refreshes 4 times a second.
+     Pulses that mean "waiting on someone" are CSS animations, so they cost the compositor, not the page. */
+  let rafId = 0, lastTs = 0, pending = 2, scrubFill = null, scrubThumb = null;
+  function invalidate(n = 1){ pending = Math.max(pending, n); if (!rafId && app) rafId = requestAnimationFrame(loop); }
+  const atLiveEdge = () => !!S.R && S.R.run.live && S.t >= S.R.tMax - .05;
+  const replaying = () => S.playing && !atLiveEdge();
+  function loop(ts){
+    rafId = 0;
+    const fps = replaying() || camMoving() || pending > 0 ? 60 : 4;
+    if (lastTs && ts - lastTs < 1000/fps - 3){ rafId = requestAnimationFrame(loop); return; }
+    const dt = lastTs ? Math.min((ts - lastTs)/1000, .1) : 0; lastTs = ts;
+    frame(dt); app.render();
+    const rp = replaying(); if (rp !== S.bodyPlaying){ S.bodyPlaying = rp; document.body.classList.toggle('playing', rp); }
+    if (pending > 0) pending--;
+    if (replaying() || camMoving() || pending > 0 || atLiveEdge()) rafId = requestAnimationFrame(loop);
+    else { lastTs = 0; if (S.lastStates) drawMini(S.lastStates); syncHUD(0, false, true); }
+  }
+  const camMoving = () => gsap.isTweening(cam) || pts.size > 0;
   function applyCam(){
+    invalidate();
     world.position.set(cam.x, cam.y); world.scale.set(cam.s);
     ov.style.transform = `translate(${cam.x}px,${cam.y}px) scale(${cam.s})`;
     ov.style.setProperty('--lbl', String(clamp(.92/cam.s, 1, 1.8)));
@@ -1700,6 +1818,7 @@ const Floor = (() => {
   }
   function panelSpace(){ return store.panel && store.wide ? Math.min(372, window.innerWidth*.4) + 24 : 0; }
   function fit(animate = true){
+    S.focusedDirector = false;
     const b = S.L.content, W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight, pad = 56;
     const s = clamp(Math.min((W - pad*2)/(b.x1 - b.x0), (H - pad*2)/(b.y1 - b.y0)), .28, 1.05);
     const tx = pad + (W - pad*2 - (b.x1 - b.x0)*s)/2 - b.x0*s, ty = pad + (H - pad*2 - (b.y1 - b.y0)*s)/2 - b.y0*s;
@@ -1722,6 +1841,14 @@ const Floor = (() => {
     cam.x = clamp(W/2 - p.x*s, W - pad - b.x1*s, pad - b.x0*s);
     cam.y = (b.y1 - b.y0)*s < H - pad*2 ? pad + (H - pad*2 - (b.y1 - b.y0)*s)/2 - b.y0*s : H/2 - p.y*s;
     applyCam();
+  }
+  // Clicking the console leans in so its text is readable; clicking again steps back out.
+  function focusDirector(){
+    const bo = S.L.booth, W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight;
+    if (S.focusedDirector && cam.s > 1){ S.focusedDirector = false; return fit(); }
+    const s = clamp(Math.min(1.5, (W - 80)/bo.w, (H - 140)/bo.h), .6, 2.6);
+    S.focusedDirector = true; gsap.killTweensOf(cam);
+    gsap.to(cam, { x:W/2 - (bo.x + bo.w/2)*s, y:H/2 - (bo.y + bo.h/2)*s + 24, s, duration:reduced() ? 0 : .8, ease:'power3.inOut', onUpdate:applyCam });
   }
   function zoomAt(k, sx, sy){ const ns = clamp(cam.s*k, .25, 2.6), r = ns/cam.s; cam.x = sx - (sx - cam.x)*r; cam.y = sy - (sy - cam.y)*r; cam.s = ns; applyCam(); }
   function zoom(dir){ const W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight; const target = { s:clamp(cam.s*(dir > 0 ? 1.3 : 1/1.3), .25, 2.6) }; const r = target.s/cam.s; gsap.killTweensOf(cam); gsap.to(cam, { x:W/2 - (W/2 - cam.x)*r, y:H/2 - (H/2 - cam.y)*r, s:target.s, duration:reduced() ? 0 : .35, ease:'power2.out', onUpdate:applyCam }); }
@@ -1779,6 +1906,7 @@ const Floor = (() => {
     const run = S.f.runs.find(r => r.id === id) || S.f.runs[0];
     S.R = compile(S.f, run); S.sel = { type:'run', id:null }; S.pending = null;
     buildItems(); buildStamps();
+    S.crtHdL.textContent = `DIRECTOR  ${S.f.capability}`; S.crtHdR.textContent = `RUN ${run.id}`; S.crtKey = '';
     S.t = run.startAt || 0; S.playing = true;
     store.runId = run.id; store.runs = S.f.runs.map(r => ({ id:r.id, name:r.name, outcomeLabel:r.outcomeLabel, tone:r.tone }));
     store.ticks = S.R.msgs.map(m => ({ id:m.i, left:(m.t / S.R.tMax) * 100, level:m.level, text:`${fmtT(m.t)} · ${m.text}` }));
@@ -1809,7 +1937,7 @@ const Floor = (() => {
       lastDecKey = ''; syncHUD(0, true);
     }, 1350);
   }
-  function rebuildTheme(){ if (!S.L) return; shadowCache.clear(); buildScene(); buildItems(); }
+  function rebuildTheme(){ if (!S.L) return; shadowCache.clear(); buildScene(); buildItems(); invalidate(2); }
 
   async function boot(){
     store = Alpine.store('floor');
@@ -1819,20 +1947,24 @@ const Floor = (() => {
     if (reduced()) store.calm = true;
     try {
       app = new PIXI.Application();
-      await app.init({ backgroundAlpha:0, antialias:true, resolution:Math.min(window.devicePixelRatio || 1, 2), autoDensity:true, resizeTo:document.getElementById('pixi') });
+      await app.init({ backgroundAlpha:0, antialias:true, resolution:Math.min(window.devicePixelRatio || 1, 2), autoDensity:true, resizeTo:document.getElementById('pixi'), autoStart:false, eventFeatures:{ move:true, globalMove:false, click:true, wheel:false } });
+      // No background tickers: Pixi's system ticker only re-checks hover under a still pointer, which the floor does not need.
+      app.ticker.stop(); PIXI.Ticker.system.stop(); PIXI.Ticker.shared.stop();
       document.getElementById('pixi').appendChild(app.canvas);
       world = new PIXI.Container(); app.stage.addChild(world);
     } catch (err){ console.error(err); store.error = 'The factory floor needs WebGL, which this browser did not provide. The job card and timeline still describe the run.'; return; }
     await Promise.race([Promise.all([document.fonts.load('700 9px "Martian Mono"'), document.fonts.load('11px "Michroma"'), document.fonts.load('600 12px "Hanken Grotesk"')]).catch(() => {}), new Promise(r => setTimeout(r, 1800))]);
     bindInput();
     try { await loadFactory('verified-research'); } catch (err){ console.error(err); store.error = 'The floor could not be laid out: ' + err.message; return; }
-    app.ticker.add(tk => frame(Math.min(tk.deltaMS/1000, .1)));
+    scrubFill = document.getElementById('scrubFill'); scrubThumb = document.getElementById('scrubThumb');
+    Alpine.effect(() => { void store.calm; invalidate(2); });
+    invalidate(2);
     const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('change', rebuildTheme);
     new MutationObserver(rebuildTheme).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
-    new ResizeObserver(() => { if (store.ready) drawMini(new Map()); }).observe(stageEl);
+    new ResizeObserver(() => { if (store.ready) invalidate(3); }).observe(stageEl);
   }
 
-  return { boot, loadFactory, setRun, toggle, jump, setSpeed, seek, nudge, toLive, select, decide, fit, zoom, wasDrag };
+  return { boot, loadFactory, setRun, toggle, jump, setSpeed, seek, nudge, toLive, select, decide, fit, zoom, focusDirector, wasDrag };
 })();
 
 document.addEventListener('alpine:init', () => {
