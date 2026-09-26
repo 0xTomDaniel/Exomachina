@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Martian+Mono:wght@400;500;700&family=Michroma&family=VT323&display=swap">
 <style>
+/* Box-drawing, block and arrow glyphs drawn on VT323's pixel grid; VT323 has none, so these fill in. */
+@font-face{font-family:"ExoTerm Box";src:url(data:font/woff2;base64,d09GMgABAAAAAATUAAoAAAAAG7QAAASJAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAAgmQKq0ikOAE2AiQDagtqAAQgBWwHgzwbBxcjUg9aBP+lgBsy4QxfdZShUtkKsrIKgiC7bR3mSuWZvPJMOv20Gg3xBDJkAmbh9P9wDIO+JpPBYK5GY+LqgwDX2N1viMrwKCLpyc1iIVISUcSjZOCcA8VZdNi481EgJ1KvhBWiphn45H62wXNLHuhMBtKPLLyutlgHPwAjzPtWrQ7bRtbVsX2TMGs89b/OfL0uDuDGErBw6L+ZAiY9wI4bbAO2wYI1YL9i0dpuj4aCQUY/eG4DzHoHno5+sbxaTsvecp/WVRTKMhEmzv4DO8cwR3pRrbhS949yqVWpqD4+TkfHx4mMfxz4GCViZs5GLqFqy5gN8bc9/O4E95UpIHJsme4Glp7luEf+hf5vuN3DCRRLUZmKBKC+S/SGaP6bm7NMAdU9R0DKYmF5dapPzak99aexNJ7m0552QZwWVfv+OM1rSVZ1w5KOdEuv9Pv/h559cPS87Govx+Hr/7nTPTQxIZlfX969eHTle65jjUGnVasUUrGAy6KjgW6H3WI0aFUlT5XjZ3z8ArAF/AxETlIMB9RyW9hL0kCBJJFYojL4nEeFPnSiFvVEh8FuVKo/zLq/nRksA5Bbou6PbGv4vhgblB3N6P5xuHLcCGOyOYquNhRQWkmTA01ankCAhpTqidLcUFZqqzpUKzM4BrO3ioMW7DySRmVMq0FSrzs5oCZ7ZQjLMMobChgooACCknsCpzAlJLgTxakxNKFA2Uq37ZGhncXYIsDr+YI1zFjKBd16nLvEIoppd+Um2QZ5Ke0hRxiWQqDc5sVbtW6KO46onDXbWJ4Ct/HLS2StXuGrYl27JVfr0VYZKT0b07cUhuW24rOMCX7OTgw+SUee2qhHwbWZaLVIOu6Qou6F2ryOEFWOaQaRQZ5WV01HDwB2rUcGQYuJHUzZCnmOFeMkWgeny1+Sn2AZT2ll4CnDtJhjh9tJC0uIFGIRiJ02rig2h73ZrvhZ0fqXlTB6kb9r/lmYDbfcJHd3t2TPXVapsHUJERuUQbPjaebBh7unFfuGDfZ7oNgIEv52Iy6sa/M0Uzm6fJIxKRUAVHbqdOoYcsVua5q//ML9peG9/9BJl6o2/ip5v2arxr0Z9WeFIYDOOxA95oEnboUW9BiInX/oA+xhUonD1Qb+9ki4bNUyWvuOhrJquTowbDYlBBBaY7LjQT0NV8V+by/+K8QT7QMIvSHXDnT2u4qvjmaUrrPVwaBrn3xiLLvpT2fmwjaQhWR/bvJZ0lMqKf+RlV3bp+x4LS4JFwBn/w7SP/5v/8ABBDKSY2/+pt0HLS0hSldBPJXLwjg3fe8cGVqITAJTFsoA96pIDIUtsQRpBO/XZVQytPGv36Qa3e/7R/fngOBjRVMjzcxwTjX4IeWntdxM5ByVONB3dV/KzGC0wEKLLLbEUssst8JKq6wWiSVSmVyhVKk1Wp3eYDQxNTO3sLSytrG1s3dwdHJ2cXVzL7jcHmho6HCaAkBHYgpVGZDYQlVOoapDoaoAGhILB19xq9KRoqqKGJiiqhpIbCGvYRgY4cCpHOteJ0wcoSoBiYmFm7wA) format("woff2");unicode-range:U+2190-2193,U+2500-257F,U+2580-259F,U+25A0-25FF}
 :root{
   --bg:#E2E5E8; --panel:#F6F7F8; --panel-2:#ECEEF1; --glass:rgba(246,247,248,.95); --line:#C9CED4; --line-2:#DCE0E4;
   --ink:#1A1E22; --ink-2:#545C64; --ink-3:#848C94; --halo:rgba(227,229,232,.92);
@@ -25,7 +27,7 @@
   --w-done:#12A150;
   /* The Director's console is a physical phosphor screen: same in both themes. */
   --crt-bg:#03130A; --crt-ink:#62FF8E; --crt-hi:#CFFFDA; --crt-dim:#2E9A53; --crt-glow:rgba(90,255,140,.55); --crt-glow-2:rgba(60,255,120,.22);
-  --font-crt:"VT323", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-crt:"VT323", "ExoTerm Box", ui-monospace, "SF Mono", Menlo, monospace;
   --font-ui:"Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono:"Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-mark:"Michroma", "Eurostile", "Arial Black", ui-sans-serif, sans-serif;
@@ -127,7 +129,8 @@ button{background:transparent;border:0;padding:0;border-radius:0;cursor:pointer}
 /* Stage */
 .stage{position:relative;overflow:hidden;background:var(--bg);min-height:0;touch-action:none;user-select:none;-webkit-user-select:none}
 .stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 70% at 45% 45%,transparent 55%,var(--vignette) 100%)}
-#pixi{position:absolute;inset:0}
+/* The canvas stops at the side panel: pixels under an opaque panel still cost GPU fill every frame. */
+#pixi{position:absolute;left:0;top:0;bottom:0;right:var(--pwc, 0px)}
 #pixi canvas{display:block}
 #ov{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;--lbl:1}
 #ov > *{position:absolute}
@@ -475,6 +478,31 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
 .act .ask:hover{background:var(--panel-2);color:var(--ink)}
 @media (hover:none){ .act .ask{opacity:1} }
 .empty2{font-size:12px;color:var(--ink-3);padding:10px 0}
+/* Director console in the panel: the booth's phosphor screen, same in both themes. Calm mode keeps the plain panel. */
+.insp.term{
+  color-scheme:dark; color:var(--crt-ink);
+  background:radial-gradient(ellipse 130% 90% at 50% 38%,#0A2414 0%,var(--crt-bg) 58%,#010A05 100%);
+  border-color:#0D2E19; box-shadow:var(--shadow),inset 0 0 44px rgba(0,0,0,.85),inset 0 0 2px rgba(120,255,160,.45);
+}
+.insp.term::after{content:"";position:absolute;inset:0;z-index:5;border-radius:inherit;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
+.tty{position:relative;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding:12px 12px 10px;font:25px/1 var(--font-crt);color:var(--crt-ink);text-shadow:0 0 2px var(--crt-glow),0 0 7px var(--crt-glow-2);cursor:text;animation:crt-on .5s ease-out}
+.tty pre{margin:0;font:inherit;font-variant-ligatures:none;font-feature-settings:"liga" 0,"clig" 0;white-space:pre;overflow:hidden;flex:none}
+.tty .tty-log{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:none;padding-block:8px;overscroll-behavior:contain}
+.tty .tty-log::-webkit-scrollbar{display:none}
+.tty .d{color:var(--crt-dim)}
+.tty .h{color:var(--crt-hi)}
+.tty .r{background:var(--crt-ink);color:var(--crt-bg);text-shadow:none}
+.tty .u{cursor:pointer}
+.tty .ul{text-decoration:underline;text-decoration-color:var(--crt-dim);text-underline-offset:3px}
+.tty .u:hover{background:var(--crt-hi);color:var(--crt-bg);text-shadow:none;text-decoration:none}
+/* a classic block cursor: always blinking; a redraw (you typed) restarts it lit */
+.tty .cur{animation:tty-blink 1.06s steps(1) infinite}
+@keyframes tty-blink{0%{background:var(--crt-ink);color:var(--crt-bg);text-shadow:none}50%{background:transparent;color:var(--crt-hi)}}
+.tty .spin{position:relative}
+.tty .spin::after{content:"|";position:absolute;left:0;top:0;animation:tty-spin .6s steps(1) infinite}
+@keyframes tty-spin{0%{content:"|"}25%{content:"/"}50%{content:"-"}75%{content:"\\"}}
+.tty-in{position:absolute;left:12px;bottom:10px;width:calc(100% - 24px);height:25px;opacity:0;font-size:16px;border:0;padding:0;margin:0;background:transparent;color:transparent;caret-color:transparent;pointer-events:none}
+@keyframes crt-on{0%{opacity:0;filter:brightness(3)}45%{opacity:1;filter:brightness(1.7)}100%{filter:none}}
 /* Your inbox */
 .ibx{border:1.5px solid var(--action);border-radius:10px;padding:10px 12px 11px;margin-top:12px;background:var(--panel)}
 .ibx .ih{display:flex;align-items:center;gap:8px}
@@ -537,6 +565,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
 }
 @media (max-width: 760px){
   .insp{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:58%}
+  .insp.term{top:8px;max-height:none}
   .toasts{right:12px;width:calc(100% - 24px)}
   .decision{left:50%;transform:translateX(-50%);width:calc(100% - 24px);bottom:auto;top:12px}
   .board{padding-right:16px}
@@ -546,7 +575,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
   .brand-sub{display:none}
 }
 @media (prefers-reduced-motion: reduce){
-  .waitring.on,.apill.unacked .isa,.op.st-active .l::after,.crt::after,.crt .cur{animation:none}
+  .waitring.on,.apill.unacked .isa,.op.st-active .l::after,.crt::after,.crt .cur,.insp.term .insp-body,.insp.term .mb.pending::after{animation:none}
 }
 </style>
 
@@ -574,7 +603,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
     </nav>
     <div class="grow"></div>
     <span class="mockchip" x-text="$store.floor.notice || 'Mockup · illustrative data'"></span>
-    <button type="button" class="toggle" :aria-pressed="$store.floor.calm ? 'true' : 'false'" @click="$store.floor.calm = !$store.floor.calm" title="Stop background motion. Work items still move.">
+    <button type="button" class="toggle" :aria-pressed="$store.floor.calm ? 'true' : 'false'" @click="$store.floor.calm = !$store.floor.calm" title="Plain panels and no background motion. Work items still move.">
       <span class="sw"></span>Calm mode
     </button>
   </header>
@@ -604,7 +633,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
     </div>
   </div>
 
-  <main id="stage" class="stage" :class="{'pw-closed': !$store.floor.panel}" :style="'--pw:' + ($store.floor.panel && $store.floor.wide ? 'var(--pwv)' : '0px') + ';--pwv:min(372px, 40vw)'">
+  <main id="stage" class="stage" :class="{'pw-closed': !$store.floor.panel}" :style="'--pw:' + ($store.floor.panel && $store.floor.wide ? 'var(--pwv)' : '0px') + ';--pwv:' + $store.floor.pwv + 'px;--pwc:' + ($store.floor.panel && $store.floor.wide ? $store.floor.pwv + 12 : 0) + 'px'">
     <div id="pixi"></div>
     <div id="ov"></div>
     <section class="board" x-show="$store.floor.view === 'Board'" x-cloak aria-label="Board" x-data="{ get b(){ return $store.floor.board } }">
@@ -809,11 +838,11 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
       </div>
     </template>
 
-    <aside class="float insp float-ui" aria-label="Job card">
+    <aside class="float insp float-ui" :class="{term: $store.floor.term}" aria-label="Job card">
       <template x-if="!$store.floor.panel">
         <button type="button" class="insp-tab" @click="$store.floor.panel = true; $store.floor.refit()">Job card ‹</button>
       </template>
-      <template x-if="$store.floor.panel">
+      <template x-if="$store.floor.panel && !$store.floor.term">
         <div style="display:contents">
           <div class="insp-bar">
             <span class="eyebrow" x-text="({run:'Job card', job:'Job card', floor:'Floor', step:'Step', item:'Work item', director:'Director', inbox:'Decisions'})[$store.floor.insp && $store.floor.insp.kind] || ''"></span>
@@ -910,7 +939,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
                   <div>
                     <div class="chat" aria-live="polite">
                       <div class="empty2" x-show="!i.chat.length">Ask the Director about this floor. Its own work runs in the background; see Activity.</div>
-                      <template x-for="m in i.chat" :key="m.k">
+                      <template x-for="m in i.chat.filter(m => m.who !== 'sys')" :key="m.k">
                         <div class="msg" :class="m.who">
                           <div class="who"><span x-text="m.who === 'you' ? 'You' : 'Director'"></span><span class="mt" x-text="m.tl"></span></div>
                           <template x-if="m.status"><div class="mb pending" x-text="m.status"></div></template>
@@ -1027,6 +1056,13 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
           </div>
         </div>
       </template>
+      <div class="tty" x-show="$store.floor.term" role="region" aria-label="Director console">
+        <pre class="tty-top"></pre>
+        <pre class="tty-log" role="log" aria-live="polite"></pre>
+        <pre class="tty-bot"></pre>
+        <pre class="tty-bar"></pre>
+        <input class="tty-in" type="text" aria-label="Message the Director" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </div>
     </aside>
   </main>
 
@@ -2376,7 +2412,7 @@ const Floor = (() => {
     // A live run's edge keeps moving in real time; while playing at the edge, the view follows it.
     if (R.run.live && S.t >= R.tMax - .05){ R.tMax += dtWall; R.run.now = R.tMax; if (S.playing) S.t = R.tMax; }
     S.wall += dtWall;
-    const t = S.t, P = S.P, G = S.L, calm = store.calm;
+    const t = S.t, P = S.P, G = S.L, calm = store.calm || reduced();
     // items: work sits in the station's bay; work that finds every slot busy stops on the belt it came in on
     const parked = new Map(), states = new Map(), inbound = [];
     for (const [,g] of G.steps){ g.qn = 0; g.qOld = 0; g.qMore = 0; g.qMoreAt = null; g.nParked = 0; g.qLines = null; }
@@ -2417,7 +2453,7 @@ const Floor = (() => {
     inbound.sort((a,b) => b.d - a.d);
     for (const st of inbound){ const key = st.via.id + '>' + st.qTo; let tail = tails.has(key) ? tails.get(key) : st.via.qEnd; tail -= (bumped.get(key) || 0) * QSP; if (st.d > tail){ const p = st.path.at(Math.max(0, tail)); st.x = p.x; st.y = p.y; st.bumped = true; bumped.set(key, (bumped.get(key) || 0) + 1); } }
     // Following a job: dim the rest, and keep its work in the middle of the view.
-    S.liveBusy = false; S.camBusy = false;
+    S.liveBusy = false; S.slowBusy = false; S.camBusy = false;
     if (S.follow && S.track && !pts.size && !gsap.isTweening(cam)){
       let sx = 0, sy = 0, n = 0;
       for (const it of (R.jobs.get(S.follow)?.items || [])){ const st = states.get(it.id); if (st && !st.hidden && st.x != null){ sx += st.x; sy += st.y; n++; } }
@@ -2436,8 +2472,9 @@ const Floor = (() => {
       drawItem(v, st, id, dtWall);
     }
     // Work in progress fills its progress ring continuously, so it counts as motion too.
-    if (!S.liveBusy){ for (const ws of R.works.values()) if (ws.some(w => t >= w.t0 && t < w.t1)){ S.liveBusy = true; break; } }
-    if (!S.liveBusy && R.turns.some(x => t >= x.t0 && t < x.t1)) S.liveBusy = true;
+    // Work in progress and Director turns only animate slow things (LEDs, a scanning line, a dial), so 30 fps is enough.
+    for (const ws of R.works.values()) if (ws.some(w => t >= w.t0 && t < w.t1)){ S.slowBusy = true; break; }
+    if (!S.slowBusy && R.turns.some(x => t >= x.t0 && t < x.t1)) S.slowBusy = true;
     // belts (dynamic chevrons)
     const bd = layers.beltDyn; bd.clear();
     const off = t * 26, moving = [];
@@ -2572,7 +2609,7 @@ const Floor = (() => {
     if (st.flag === 'rejected') g.circle(0,0,18).stroke({ width:2.6, color:P.advisory });
     if (st.flag === 'exhausted') g.circle(0,0,18).stroke({ width:2.8, color:P.alarm });
     if (st.exit) g.circle(0,0,18).stroke({ width:2.6, color:P.done });
-    if (unk){ for (let k = 0; k < 10; k++){ const a0 = k/10*Math.PI*2 + S.wall*(store.calm ? 0 : .6); g.moveTo(Math.cos(a0)*18, Math.sin(a0)*18); g.arc(0, 0, 18, a0, a0 + .38); } g.stroke({ width:2.2, color:P.advisory }); }
+    if (unk){ for (let k = 0; k < 10; k++){ const a0 = k/10*Math.PI*2 + S.wall*(store.calm || reduced() ? 0 : .6); g.moveTo(Math.cos(a0)*18, Math.sin(a0)*18); g.arc(0, 0, 18, a0, a0 + .38); } g.stroke({ width:2.2, color:P.advisory }); }
     if (st.progress != null){ g.circle(0,0,22).stroke({ width:2, color:P.ledOn, alpha:.18 }); const a0 = -Math.PI/2; g.moveTo(0, -22); g.arc(0, 0, 22, a0, a0 + Math.PI*2*clamp(st.progress, 0, 1)); g.stroke({ width:2.2, color:P.ledOn, alpha:.95, cap:'round' }); }
     if ((S.sel.type === 'item' && S.sel.id === id) || (S.follow && st.job === S.follow)) g.circle(0,0,S.follow ? 21 : 26).stroke({ width:2, color:P.focus });
   }
@@ -2645,6 +2682,7 @@ const Floor = (() => {
     if (R.multi && st.atLive && S.wall - lastTickWall > 3){ lastTickWall = S.wall; setTicks(); }
     const cur = cursorAt(t);
     if (force || cur !== lastCursor || (S.playing && S.wall - lastInspWall > .5)){ lastCursor = cur; lastInspWall = S.wall; st.insp = inspect(); }
+    if (st.term) ttyRender();
   }
   function setTicks(){ const R = S.R; store.ticks = R.msgs.filter(m => m.t >= 0 && m.t <= R.tMax && (!R.multi || m.level !== 'normal' || m.tick)).map(m => ({ id:m.i, left:(m.t / R.tMax) * 100, level:m.level, text:`${fmtT(m.t)} · ${m.text}` })); }
 
@@ -2980,6 +3018,169 @@ const Floor = (() => {
       S.chat.push({ k:'d' + (++S.chatSeq), who:'director', parts:[{ text:'Intake is paused. New jobs wait at the door until you tell me to resume. (Mocked: the recorded floor keeps its arrivals.)' }], t:S.t + .01, card:null, status:null }); }
     syncHUD(0, true);
   }
+  /* ---------- Director console: a character-cell terminal, the booth's screen at panel size ---------- */
+  // Everything is text on a fixed grid: frames are box-drawing characters, keys are [bracketed], highlights are
+  // inverse video, links are underlined. A hidden input takes the typing; the grid draws the prompt and the cursor.
+  const TTY = { root:null, top:null, log:null, bot:null, inp:null, keys:{}, cols:0, focus:false, stick:true, more:false };
+  const ttyEsc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
+  const ttyTxt = s => String(s).replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/[—–]/g, '-').replace(/‹/g, '<').replace(/›/g, '>');
+  const seg = (s, c = '', a = '') => ({ s:ttyTxt(s), c, a });
+  const segLen = l => l.reduce((n, g) => n + g.s.length, 0);
+  const pad = (l, w, fill = ' ', c = '') => { const n = w - segLen(l); return n > 0 ? [...l, seg(fill.repeat(n), c)] : l; };
+  function ttyWrap(segs, w){
+    const lines = [[]]; let len = 0;
+    const push = g => { lines[lines.length-1].push(g); len += g.s.length; }, nl = () => { lines.push([]); len = 0; };
+    for (const g of segs){
+      const units = g.a ? [g.s] : g.s.split(/(\s+)/).filter(x => x !== '');
+      for (let u of units){
+        if (/^\s+$/.test(u)){ if (u.includes('\n')){ for (let k = 0; k < u.split('\n').length - 1; k++) nl(); continue; } if (len && len < w) push({ ...g, s:' ' }); continue; }
+        if (len + u.length > w && len){ const L = lines[lines.length-1]; if (L.length && L[L.length-1].s === ' ') { L.pop(); len--; } nl(); }
+        while (u.length > w){ push({ ...g, s:u.slice(0, w) }); u = u.slice(w); nl(); }
+        push({ ...g, s:u });
+      }
+    }
+    return lines;
+  }
+  const ttyHtml = lines => lines.map(l => l.map(g => {
+    const t = ttyEsc(g.s); if (!g.c && !g.a) return t;
+    return `<span class="${g.c}${g.a ? ' u' : ''}"${g.a ? ` data-a="${ttyEsc(g.a)}"` : ''}>${t}</span>`;
+  }).join('')).join('\n');
+  // A framed block: title in the top rule, body lines padded to the inner width.
+  function ttyBox(title, body, w, dbl, right = null){
+    const B = dbl ? { tl:'╔', tr:'╗', bl:'╚', br:'╝', h:'═', v:'║' } : { tl:'┌', tr:'┐', bl:'└', br:'┘', h:'─', v:'│' };
+    const head = [seg(B.tl + B.h + ' ', 'd'), ...title, seg(' ', 'd')], tail = right ? [seg(' ', 'd'), ...right, seg(' ' + B.h + B.tr, 'd')] : [seg(B.tr, 'd')];
+    const top = [...head, seg(B.h.repeat(Math.max(0, w - segLen(head) - segLen(tail))), 'd'), ...tail];
+    return [top, ...body.map(l => l === 'rule' ? [seg((dbl ? '╟' : '├') + '─'.repeat(w - 2) + (dbl ? '╢' : '┤'), 'd')] : [seg(B.v, 'd'), seg(' '), ...pad(l, w - 4), seg(' '), seg(B.v, 'd')]),
+      [seg(B.bl + B.h.repeat(w - 2) + B.br, 'd')]];
+  }
+  const ttyParts = (ps, cls = '') => ps.map(p => p.text != null ? seg(p.text, cls) : p.job ? seg('Job ' + p.job, 'h ul', 'job:' + p.job) : p.step ? seg(p.label, 'h ul', 'step:' + p.step) : p.inbox ? seg('[I] ' + (p.label || 'Open your inbox').toUpperCase(), 'h', 'inbox') : seg(''));
+  const ttyCard = i => (i.chat || []).find(m => m.card && m.card.state === 'ask');
+  function ttyMount(){
+    const root = document.querySelector('.tty'); if (!root || TTY.root === root) return !!root;
+    Object.assign(TTY, { root, top:root.querySelector('.tty-top'), log:root.querySelector('.tty-log'), bot:root.querySelector('.tty-bot'), bar:root.querySelector('.tty-bar'), inp:root.querySelector('.tty-in'), keys:{} });
+    const inp = TTY.inp;
+    root.addEventListener('mousedown', e => { if (e.target.closest('[data-a]')) return; if (!getSelection().toString()) setTimeout(() => inp.focus({ preventScroll:true }), 0); });
+    root.addEventListener('click', e => { const el = e.target.closest('[data-a]'); if (el) ttyDo(el.dataset.a); });
+    inp.addEventListener('input', () => { store.chatDraft = inp.value; ttyRender(); });
+    inp.addEventListener('focus', () => { TTY.focus = true; root.classList.add('focus'); ttyRender(true); });
+    inp.addEventListener('blur', () => { TTY.focus = false; root.classList.remove('focus'); ttyRender(true); });
+    inp.addEventListener('keydown', ttyKey);
+    document.addEventListener('selectionchange', () => { if (document.activeElement === inp) ttyRender(); });
+    TTY.log.addEventListener('scroll', () => { const l = TTY.log; TTY.stick = l.scrollTop + l.clientHeight >= l.scrollHeight - 4; if (TTY.stick && TTY.more){ TTY.more = false; ttyRender(true); } }, { passive:true });
+    new ResizeObserver(() => ttyRender(true)).observe(root);
+    return true;
+  }
+  function ttyDo(a){
+    const i = store.insp || {}, [k, v, w] = a.split(':');
+    if (k === 'job') pickJob(v); else if (k === 'step') select('step', v); else if (k === 'inbox') select('inbox');
+    else if (k === 'tab') store.setDirTab(v); else if (k === 'back') back(); else if (k === 'live') toLive();
+    else if (k === 'hide'){ store.panel = false; store.refit(); }
+    else if (k === 'ask'){ const c = i.chips?.[+v]; if (c) ttyAsk(c); }
+    else if (k === 'q'){ const x = (i.act || []).find(r => r.k === v); if (x) store.askAbout(x.q); }
+    else if (k === 'card'){ const m = ttyCard(i); if (m) chatAct(m.k, w === 'y' ? m.card.actions[0] : 'Cancel'); }
+    else if (k === 'end'){ TTY.stick = true; TTY.more = false; TTY.log.scrollTop = 1e9; ttyRender(true); }
+    if (k !== 'job' && k !== 'step' && k !== 'inbox' && k !== 'back' && k !== 'hide') TTY.inp?.focus({ preventScroll:true });
+  }
+  // The Director answers in the present: on a live floor, asking from a pause or a replay jumps back to now.
+  function ttyAsk(q){ if (S.R.run.live && S.t < S.R.tMax - .05){ toLive(); ttySys('Back to now.'); } sendChat(q); }
+  function ttySys(text){ S.chat.push({ k:'s' + (++S.chatSeq), who:'sys', parts:[{ text }], t:S.t, card:null, status:null }); syncHUD(0, true); }
+  function ttyKey(e){
+    const i = store.insp || {}, inp = TTY.inp, card = ttyCard(i);
+    if (card && !inp.value && /^[yn]$/i.test(e.key)){ e.preventDefault(); chatAct(card.k, e.key.toLowerCase() === 'y' ? card.card.actions[0] : 'Cancel'); return; }
+    if (!i.canChat && store.live && !inp.value && /^j$/i.test(e.key)){ e.preventDefault(); toLive(); return; }
+    if (e.key === 'Escape'){ e.preventDefault(); if (inp.value){ inp.value = store.chatDraft = ''; ttyRender(); } else back(); return; }
+    if (e.key === 'F1' || e.key === 'F2'){ e.preventDefault(); store.setDirTab(e.key === 'F1' ? 'chat' : 'activity'); return; }
+    if (e.key === 'PageUp' || e.key === 'PageDown'){ e.preventDefault(); TTY.log.scrollTop += (e.key === 'PageUp' ? -1 : 1) * (TTY.log.clientHeight - 20); return; }
+    if (e.key !== 'Enter') return;
+    e.preventDefault(); const v = inp.value.trim(); if (!v) return;
+    inp.value = store.chatDraft = '';
+    const cmd = v.toLowerCase();
+    if (cmd === '/help' || cmd === 'help' || cmd === '?') ttySys('The Director takes one turn at a time, and decisions go before new starts. Keys: type a question and press Enter. 1-' + (i.chips?.length || 5) + ' asks a menu question. F1 chat, F2 log, PgUp/PgDn scroll, Esc back to the floor. Commands: /chat /log /inbox /floor /clear /help.');
+    else if (cmd === '/log') store.setDirTab('activity');
+    else if (cmd === '/chat') store.setDirTab('chat');
+    else if (cmd === '/inbox') select('inbox');
+    else if (cmd === '/floor') back();
+    else if (cmd === '/clear'){ S.chat = []; S.chatClear = S.t; syncHUD(0, true); }
+    else if (/^\d$/.test(v) && i.chips?.[+v - 1]){ store.setDirTab('chat'); ttyAsk(i.chips[+v - 1]); }
+    else if (v.startsWith('/')) ttySys(`Unknown command ${v}. Type /help.`);
+    else if (!i.canChat && !store.live) ttySys('Chat is offline. ' + i.chatOff);
+    else { store.setDirTab('chat'); ttyAsk(v); }
+    TTY.stick = true; ttyRender(true);
+  }
+  function ttyRender(force){
+    if (!store.term || !ttyMount() || !TTY.root.offsetParent) return;
+    const i = store.insp; if (!i || i.kind !== 'director') return;
+    const cw = parseFloat(getComputedStyle(TTY.root).fontSize) * .4, C = Math.max(28, Math.floor((TTY.top.clientWidth || TTY.root.clientWidth - 24) / cw));
+    if (C !== TTY.cols){ TTY.cols = C; TTY.keys = {}; }
+    const put = (el, name, lines) => { const h = ttyHtml(lines); if (force || TTY.keys[name] !== h){ TTY.keys[name] = h; el.innerHTML = h; } };
+    const f = S.f, tab = store.dirTab, IW = C - 4, LW = 7;
+    if (tab !== TTY.tab){ TTY.tab = tab; TTY.stick = true; TTY.more = false; }
+    // Header: who, state, what it's doing now, what waits for you, and the two screens.
+    const row = (label, body, lc = 'd') => { const ls = ttyWrap(body, IW - LW); return ls.map((l, k) => [seg(k ? ' '.repeat(LW) : (label + ' '.repeat(LW)).slice(0, LW), lc), ...l]); };
+    const nowBody = [...(i.now.busy ? [seg(' ', 'spin'), seg(' ')] : [seg('- ', 'd')]), ...(i.now.job ? [seg('Job ' + i.now.job, 'h ul', 'job:' + i.now.job), seg(' · ')] : []), seg(i.now.text, i.now.busy ? '' : 'd')];
+    const youBody = i.you ? [seg(` ${i.you} WAITING FOR YOU `, 'r', 'inbox'), seg(' '), seg('[I] INBOX', 'h', 'inbox')] : [seg('nothing waiting', 'd')];
+    const tabs = [seg(' '), seg(' F1 CHAT ', tab === 'chat' ? 'r' : '', 'tab:chat'), seg('  '), seg(` F2 LOG${i.unread ? ' [' + i.unread + ']' : ''} `, tab === 'activity' ? 'r' : '', 'tab:activity')];
+    const top = ttyBox([seg('◆ DIRECTOR', 'h')], [
+      [seg(`${f.capability} · ${f.version}`, 'd')],
+      ...row('STATE', [seg(String(i.state).toUpperCase(), i.now.busy ? 'h' : '')]),
+      ...row('NOW', nowBody),
+      ...row('YOU', youBody),
+      'rule', tabs], C, true, [seg('[ESC] FLOOR', '', 'back'), seg(' ═ ', 'd'), seg('[×]', '', 'hide')]);
+    put(TTY.top, 'top', top);
+    // Log: chat transcript or the Director's own activity, oldest at the top like a terminal.
+    const L = [], W = C - 1;
+    if (tab === 'chat'){
+      const msgs = i.chat.filter(m => !(S.chatClear != null && m.t <= S.chatClear));
+      if (!msgs.length) L.push(...ttyWrap([seg('Ask the Director about this floor. Its own work runs in the background: F2 LOG. Type /help for keys.', 'd')], W), []);
+      for (const m of msgs){
+        if (m.who === 'sys'){ L.push(...ttyWrap([seg('* ' + m.parts.map(p => p.text).join(''), 'd')], W), []); continue; }
+        L.push([seg(`${m.tl} `, 'd'), seg(m.who === 'you' ? 'YOU' : 'DIRECTOR', m.who === 'you' ? 'd' : 'h')]);
+        if (m.status) L.push(...ttyWrap([seg(m.status, 'd'), seg(' '), seg(' ', 'spin')], W));
+        else if (m.who === 'you') L.push(...ttyWrap([seg('> ', 'd'), ...ttyParts(m.parts, 'h')], W));
+        else L.push(...ttyWrap(ttyParts(m.parts), W));
+        if (m.card){ const c = m.card, bw = Math.min(W, 44);
+          const body = [...ttyWrap([seg(c.body)], bw - 4), []];
+          if (c.state === 'ask') body.push([seg(`[Y] ${c.actions[0].toUpperCase()}`, 'r', 'card:' + m.k + ':y'), seg('   '), seg('[N] CANCEL', 'h', 'card:' + m.k + ':n')]);
+          else body.push([seg('>> ' + c.result.toUpperCase(), 'h')]);
+          L.push(...ttyBox([seg(c.title.toUpperCase() + '?', 'h')], body, bw, false)); }
+        L.push([]);
+      }
+    } else {
+      L.push(...ttyWrap([seg("The Director's own work, one turn at a time. Bright lines are its turns; dim lines are floor events it reacted to. [?] asks about a line.", 'd')], W), []);
+      for (const a of [...i.act].reverse()){
+        const cls = a.cls === 'dim' ? 'd' : (a.cls === 'turn' ? 'h' : '');
+        const head = ttyWrap([seg(a.text, a.cls === 'esc' ? 'r' : cls)], W - 9 - 4);
+        head.forEach((l, k) => L.push([seg(k ? '         ' : a.tl + ' ', 'd'), ...(k ? l : pad(l, W - 13)), ...(k ? [] : [seg(' '), seg('[?]', 'd', 'q:' + a.k)])]));
+        if (a.tools) ttyWrap([seg('› ' + a.tools, 'd')], W - 9).forEach(l => L.push([seg('         '), ...l]));
+      }
+    }
+    const lh = ttyHtml(L), lk = tab + '|' + lh;
+    if (force || TTY.keys.log !== lk){ const grew = TTY.keys.log && TTY.keys.log !== lk; TTY.keys.log = lk; TTY.log.innerHTML = lh;
+      if (TTY.stick) TTY.log.scrollTop = 1e9; else if (grew && !TTY.more){ TTY.more = true; } }
+    // Footer: the menu, the prompt with its cursor, and a status line.
+    const B = [], card = ttyCard(i);
+    B.push(TTY.more ? [seg('─'.repeat(Math.max(0, C - 16)), 'd'), seg(' ▼ MORE BELOW ', 'r', 'end'), seg('──', 'd')] : [seg('─'.repeat(C), 'd')]);
+    if (card) B.push(...ttyWrap([seg(card.card.title.toUpperCase() + '? ', 'h'), seg('[Y]', 'r', 'card:' + card.k + ':y'), seg(' '), seg(card.card.actions[0].toLowerCase(), 'h', 'card:' + card.k + ':y'), seg('   '), seg('[N]', 'h', 'card:' + card.k + ':n'), seg(' cancel', 'd', 'card:' + card.k + ':n')], C));
+    else { const items = (i.chips || []).map((c, k) => [seg(String(k + 1), 'r', 'ask:' + k), seg(' ' + c.toUpperCase(), i.canChat || store.live ? '' : 'd', 'ask:' + k)]);
+      let line = []; for (const it of items){ if (line.length && segLen(line) + 2 + segLen(it) > C){ B.push(line); line = []; } if (line.length) line.push(seg('  ')); line.push(...it); } if (line.length) B.push(line); }
+    B.push([seg('─'.repeat(C), 'd')]);
+    const draft = store.chatDraft || '', inp = TTY.inp;
+    if (inp.value !== draft) inp.value = draft;
+    const caret = TTY.focus ? Math.min(draft.length, inp.selectionStart ?? draft.length) : draft.length;
+    const full = '> ' + ttyTxt(draft), at = 2 + caret, rows = Math.max(1, Math.ceil((full.length + 1) / C));
+    for (let r = 0; r < rows; r++){ const s = full.slice(r*C, (r+1)*C), l = [];
+      if (at >= r*C && at < (r+1)*C){ const c = at - r*C; l.push(seg(s.slice(0, c), 'h'), seg(s[c] || ' ', 'cur'), seg(s.slice(c + 1), 'h')); } else l.push(seg(s, 'h'));
+      if (r === 0 && !draft && !TTY.focus) l.push(seg(i.canChat || store.live ? ' type a question' : ' chat offline', 'd'));
+      B.push(l); }
+    const st = R_live() ? (store.atLive ? ' LIVE ' : (store.playing ? ' REPLAY ' : ' PAUSED ')) : ' RECORDED ';
+    const right = i.canChat || store.live ? ' 1-' + (i.chips?.length || 5) + ' ASK · /HELP ' : '';
+    const bar = [seg(st, 'r'), seg(' ' + (store.clock || '').split(' · ')[0] + ' ', 'r')];
+    if (!i.canChat && store.live) bar.push(seg('· [J] BACK TO NOW ', 'r', 'live'));
+    put(TTY.bot, 'bot', B);
+    // The status line has its own row: its clock ticks every second, and redrawing the prompt would restart the cursor's blink.
+    put(TTY.bar, 'bar', [[], pad([...bar, seg(' '.repeat(Math.max(0, C - segLen(bar) - right.length)), 'r'), seg(right, 'r')], C, ' ', 'r')]);
+  }
+  const R_live = () => !!S.R?.run.live;
   function revFacts(it, t){
     const R = S.R, gate = S.f.steps.find(s => s.kind === 'gate');
     const produced = it.born <= t, stored = it.born + .3 <= t;
@@ -3077,7 +3278,7 @@ const Floor = (() => {
   // so a job that starts moving does not jump forward by up to a quarter second.
   let wakeAt = 0;
   function schedule(fps){ let wait = lastTs ? 1000/fps - (performance.now() - lastTs) : 0; if (wakeAt) wait = Math.min(wait, wakeAt - performance.now()); if (fps >= 60) wait = 0; if (wait > 6){ timerId = setTimeout(() => { timerId = 0; rafId = requestAnimationFrame(loop); }, wait - 4); } else rafId = requestAnimationFrame(loop); }
-  const fpsNow = () => store.view !== 'Floor' ? (replaying() ? 15 : 4) : (replaying() || camMoving() || pending > 0 || S.camBusy || (atLiveEdge() && S.liveBusy) ? 120 : 4);
+  const fpsNow = () => store.view !== 'Floor' ? (replaying() ? 15 : 4) : (replaying() || camMoving() || pending > 0 || S.camBusy || (atLiveEdge() && S.liveBusy) ? 120 : (atLiveEdge() && S.slowBusy ? 30 : 4));
   const atLiveEdge = () => !!S.R && S.R.run.live && S.t >= S.R.tMax - .05;
   const replaying = () => S.playing && !atLiveEdge();
   function loop(ts){
@@ -3092,7 +3293,7 @@ const Floor = (() => {
     const rp = replaying(); if (rp !== S.bodyPlaying){ S.bodyPlaying = rp; document.body.classList.toggle('playing', rp); }
     if (pending > 0) pending--;
     wakeAt = 0;
-    if (!board && atLiveEdge() && !S.liveBusy && !S.camBusy){ const a = S.R.times, i = cursorAt(S.t + 1e-3); if (i < a.length) wakeAt = performance.now() + (a[i] - S.t) * 1000; }
+    if (!board && atLiveEdge() && !S.liveBusy && !S.slowBusy && !S.camBusy){ const a = S.R.times, i = cursorAt(S.t + 1e-3); if (i < a.length) wakeAt = performance.now() + (a[i] - S.t) * 1000; }
     if (replaying() || camMoving() || pending > 0 || atLiveEdge() || S.camBusy) schedule(fpsNow());
     else { lastTs = 0; if (S.lastStates) drawMini(S.lastStates); syncHUD(0, false, true); }
   }
@@ -3107,7 +3308,7 @@ const Floor = (() => {
     if (lbl !== S.lbl){ S.lbl = lbl; ov.style.setProperty('--lbl', String(lbl)); }
     const far = cam.s < .38; if (far !== S.lodFar){ S.lodFar = far; stageEl.classList.toggle('lod-far', far); }
   }
-  function panelSpace(){ return store.panel && store.wide ? Math.min(372, window.innerWidth*.4) + 24 : 0; }
+  function panelSpace(){ return store.panel && store.wide ? store.pwv + 24 : 0; }
   function fit(animate = true){
     S.focusedDirector = false; stopTrack();
     const b = S.L.content, W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight - 64, pad = 48;
@@ -3177,6 +3378,8 @@ const Floor = (() => {
     // keys
     window.addEventListener('keydown', e => {
       if (e.target.closest && e.target.closest('select, input, textarea')) return;
+      // With the console open it owns the keyboard, like a terminal: typing lands at its prompt, not on floor shortcuts.
+      if (store.term && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace') && !(e.target.closest && e.target.closest('button') && e.key === 'Enter')){ const inp = document.querySelector('.tty-in'); if (inp){ inp.focus({ preventScroll:true }); return; } }
       if (e.code === 'Space' && !e.target.closest('button, [role="slider"]')){ e.preventDefault(); toggle(); }
       else if (e.key === 'ArrowRight' && !e.target.closest('[role="slider"]')) jump(1);
       else if (e.key === 'ArrowLeft' && !e.target.closest('[role="slider"]')) jump(-1);
@@ -3185,7 +3388,10 @@ const Floor = (() => {
       else if (e.key === '+' || e.key === '=') zoom(1);
       else if (e.key === '-') zoom(-1);
     });
-    window.addEventListener('resize', () => { store.wide = window.innerWidth > 760; });
+    window.addEventListener('resize', () => { store.wide = window.innerWidth > 760; store.vw = window.innerWidth; });
+    // The console widens the panel; keep the floor's visible centre where it was.
+    let lastPw = store.pwv; Alpine.effect(() => { const pw = store.pwv; if (pw === lastPw) return; const d = pw - lastPw; lastPw = pw;
+      if (store.panel && store.wide && !S.follow){ gsap.killTweensOf(cam); gsap.to(cam, { x:cam.x - d/2, duration:reduced() ? 0 : .35, ease:'power2.out', onUpdate:applyCam }); } invalidate(2); });
   }
 
   /* ---------- actions ---------- */
@@ -3212,7 +3418,8 @@ const Floor = (() => {
   function jump(dir){ S.snap = true; const ms = (S.R.multi ? S.R.msgs.filter(m => m.level !== 'normal' || m.tick || (S.follow && m.job === S.follow)) : S.R.msgs).map(m => m.t); let tt; if (dir > 0) tt = ms.find(x => x > S.t + .05); else tt = [...ms].reverse().find(x => x < S.t - .4); if (tt == null) tt = dir > 0 ? S.R.tMax : 0; S.t = clamp(tt + (dir > 0 ? .02 : .02), 0, S.R.tMax); syncHUD(0, true); }
   function setSpeed(s){ S.speed = s; syncHUD(0, true); }
   function nudge(d){ seek(S.t + d); }
-  function toLive(){ S.t = S.R.tMax; S.playing = false; syncHUD(0, true); }
+  // Live means following the present, so jumping to now also plays.
+  function toLive(){ S.t = S.R.tMax; S.playing = true; syncHUD(0, true); invalidate(2); }
   function setRun(id, first){
     const run = S.f.runs.find(r => r.id === id) || S.f.runs[0];
     S.R = compile(S.f, run); S.sel = { type:'run', id:null }; S.pending = null; S.follow = null; S.track = false; store.follow = null;
@@ -3228,7 +3435,7 @@ const Floor = (() => {
   }
   async function loadFactory(id){
     const f = FACTORIES.find(x => x.id === id) || FACTORIES[0];
-    store.ready = false; S.f = f; store.factoryId = f.id; S.chat = []; S.chatTurns = []; store.chatDraft = '';
+    store.ready = false; S.f = f; store.factoryId = f.id; S.chat = []; S.chatTurns = []; S.chatClear = null; store.chatDraft = '';
     S.L = await layoutFactory(f); assignBubbles();
     buildScene(); buildOverlay();
     store.capability = f.capability; store.versionLabel = `${f.version} · ${f.digest}`; store.provenance = f.provenance;
@@ -3256,7 +3463,6 @@ const Floor = (() => {
     stageEl = document.getElementById('stage'); ov = document.getElementById('ov');
     mini = document.getElementById('minimap'); miniCtx = mini.getContext('2d');
     store.wide = window.innerWidth > 760; store.panel = window.innerWidth > 1100;
-    if (reduced()) store.calm = true;
     try {
       app = new PIXI.Application();
       // MSAA multiplies the GPU fill of every frame; on a 2x screen the edges are already smooth without it,
@@ -3266,6 +3472,8 @@ const Floor = (() => {
       // No background tickers: Pixi's system ticker only re-checks hover under a still pointer, which the floor does not need.
       app.ticker.stop(); PIXI.Ticker.system.stop(); PIXI.Ticker.shared.stop();
       document.getElementById('pixi').appendChild(app.canvas);
+      // Pixi only watches window resizes; the host also changes size when the panel opens, closes or widens.
+      new ResizeObserver(() => { app.resize(); invalidate(2); }).observe(document.getElementById('pixi'));
       world = new PIXI.Container(); app.stage.addChild(world);
     } catch (err){ console.error(err); store.error = 'The factory floor needs WebGL, which this browser did not provide. The job card and timeline still describe the run.'; return; }
     await Promise.race([Promise.all([document.fonts.load('700 9px "Martian Mono"'), document.fonts.load('11px "Michroma"'), document.fonts.load('600 12px "Hanken Grotesk"')]).catch(() => {}), new Promise(r => setTimeout(r, 1800))]);
@@ -3281,6 +3489,7 @@ const Floor = (() => {
         sparkTheme(); lastSparkKey = ''; drawSpark(store.hud.del.buckets); }
     } catch (err){ console.warn('Sparkline unavailable', err); }
     Alpine.effect(() => { void store.calm; invalidate(2); });
+    let wasTerm = false; Alpine.effect(() => { const on = store.term; if (on && !wasTerm) Alpine.nextTick(() => ttyRender(true)); wasTerm = on; });
     invalidate(2);
     const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('change', rebuildTheme);
     new MutationObserver(rebuildTheme).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
@@ -3301,6 +3510,10 @@ document.addEventListener('alpine:init', () => {
     board:{ group:'role', lanes:'none', cols:[], rows:[], sub:'' },
     playing:true, speed:2, t:0, tMax:1, tLabel:'T+00:00.0', clock:'', live:false, atLive:false,
     calm:false, legend:false, panel:true, wide:true,
+    get term(){ return this.panel && !this.calm && !!this.insp && this.insp.kind === 'director'; },
+    vw:window.innerWidth,
+    // Panel width. The console takes whole 10px columns: 80 when there's room, never under 40, at most 45% of the window.
+    get pwv(){ if (this.term){ const c = Math.max(40, Math.min(80, Math.floor((this.vw*.45 - 26)/10))); return c*10 + 26; } return Math.min(372, this.vw*.4); },
     alarms:[], toasts:[], ticks:[], decision:null, insp:null, acked:{}, dirTab:'chat', chatDraft:'',
     setFactory(id){ Floor.loadFactory(id); },
     setRun(id){ Floor.setRun(id); },
@@ -3313,7 +3526,7 @@ document.addEventListener('alpine:init', () => {
     decide(a, job){ Floor.decide(a, job); },
     sendChat(txt){ Floor.sendChat(txt); }, chatAct(k, a){ Floor.chatAct(k, a); },
     setDirTab(tab){ this.dirTab = tab; Floor.refresh(); },
-    askAbout(q){ this.dirTab = 'chat'; this.chatDraft = q; Floor.refresh(); setTimeout(() => { const el = document.querySelector('.composer input'); if (el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 60); },
+    askAbout(q){ this.dirTab = 'chat'; this.chatDraft = q; Floor.refresh(); setTimeout(() => { const el = document.querySelector(this.term ? '.tty-in' : '.composer input'); if (el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 60); },
     zoom(d){ Floor.zoom(d); }, fit(){ Floor.fit(); }, refit(){ setTimeout(() => Floor.fit(), 30); },
     soon(v){ this.notice = `${v} is not part of this mockup yet`; clearTimeout(this._nt); this._nt = setTimeout(() => { this.notice = ''; }, 2600); },
   });
