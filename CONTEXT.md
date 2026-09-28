@@ -2,6 +2,13 @@
 
 Exomachina describes how independent agent capabilities cooperate through reusable factories. This glossary names the work, evidence, and authority visible to their participants.
 
+## Architecture principles
+
+Keep **process, provider, and implementation independently replaceable**, subject
+to capability contracts, qualification, authority, and active-run version binding.
+See [Architecture principles](docs/architecture-principles.md) for the boundaries
+and their consequences for factory composition.
+
 ## Language
 
 **Capability**:
