@@ -7,7 +7,7 @@
 <meta name="description" content="Spike: an engraved-style Certificate of Acceptance for an Exomachina factory outcome, with a procedurally generated house seal derived from the service key.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Pinyon+Script&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Pinyon+Script&family=Uncial+Antiqua&family=UnifrakturMaguntia&display=swap">
 <style>
 :root{
   --bg:#E7E3DA; --panel:#F7F5F0; --line:#D5CFC2; --ink:#1D1F22; --ink-2:#585D64; --ink-3:#8A8F96;
@@ -76,6 +76,20 @@ input{width:100%;min-width:0;font:500 14px/1.2 "IBM Plex Mono",ui-monospace,mono
 .f-cg{font-family:"Cormorant Garamond",Garamond,Georgia,serif}
 .f-sc{font-family:"Pinyon Script","Snell Roundhand","Apple Chancery",cursive}
 .f-mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+.f-unc{font-family:"Uncial Antiqua","Cinzel",Georgia,serif}
+.f-frak{font-family:"UnifrakturMaguntia","Cinzel",Georgia,serif}
+.insp{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:center;justify-items:center}
+@media (min-width:560px){.insp.two{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+.insp figure{margin:0;width:100%;max-width:380px;background:#F8F2E2;border:1px solid var(--line);border-radius:12px;padding:10px}
+.insp figure svg{display:block;width:100%;height:auto}
+.insp figcaption{font:600 10px/1.3 "Hanken Grotesk",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6B6355;text-align:center;margin-top:6px}
+.blazon{font:italic 500 17px/1.45 "Cormorant Garamond",Georgia,serif;color:var(--ink)}
+.space{display:grid;grid-template-columns:auto auto auto;gap:0;font-size:14px}
+.space > div{padding:9px 8px 9px 0;border-top:1px solid var(--line)}
+.space > .hd{border-top:0;padding-top:0;font:600 11px/1.3 "Hanken Grotesk",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.space .cur{font-weight:600}
+.space sup{font-size:.72em}
+@media (max-width:480px){.space{font-size:13px}}
 </style>
 </head>
 <body>
@@ -113,7 +127,19 @@ input{width:100%;min-width:0;font:500 14px/1.2 "IBM Plex Mono",ui-monospace,mono
       <button type="button" class="btn" id="random">New random house</button>
       <button type="button" class="btn" id="reset">Back to research-factory</button>
     </div>
-    <p class="info" id="info"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="insp-h">
+    <h2 id="insp-h">House seal</h2>
+    <div class="insp" id="insp">
+      <figure><svg id="insp-seal" viewBox="-118 -118 236 236" role="img" aria-label="House seal, enlarged"></svg></figure>
+      <figure id="insp-arms-fig" hidden><svg id="insp-arms" viewBox="-40 -46 80 106" role="img" aria-label="The same arms in true tinctures"></svg><figcaption>The arms in true tinctures</figcaption></figure>
+    </div>
+    <p class="info" id="insp-desc"></p>
+    <p class="info" id="insp-odds"></p>
+    <h2 style="margin-top:20px">Design space</h2>
+    <div class="space" id="space"></div>
+    <p class="note">Each visible design choice records how much information it uses, so the size of each style's design space is measured, not estimated. The page samples 256 keys in your browser. <b>Designs</b> is 2 to the power of the average. <b>Lookalike pair likely after</b> uses collision entropy, which is weighted toward the plainest designs because those collide first: it is the number of houses at which two would have a 50% chance of sharing an identical seal. For comparison, Ethereum's blockie identicons carry about 46 bits of pattern plus three colours. Not counted: the printed fingerprint, wax drips and ink grain.</p>
   </section>
 
   <section class="panel">
@@ -200,8 +226,10 @@ function sha256(msg){
   return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
 }
 
-/* Each design decision draws from its own domain-separated stream: rng(label, seed). */
-function rng(label, seedHex){
+/* Each design decision draws from its own domain-separated stream: rng(label, seed).
+   Visible structural choices (pick, level, chance, wpick) add their information to acc.bits,
+   which is how the page measures each style's design space. float/int/upick are uncounted jitter. */
+function rng(label, seedHex, acc){
   const h = sha256(label + '\n' + seedHex), wd = i => parseInt(h.slice(i * 8, i * 8 + 8), 16) | 0;
   let a = wd(0), b = wd(1), c = wd(2), d = wd(3);
   const next = () => { // sfc32
@@ -211,11 +239,20 @@ function rng(label, seedHex){
     return (t >>> 0) / 4294967296;
   };
   for (let i = 0; i < 12; i++) next();
+  const add = b => { if (acc) acc.bits += b; }, idx = n => Math.floor(next() * n);
   return {
     next, float: (lo, hi) => lo + (hi - lo) * next(),
-    int: (lo, hi) => lo + Math.floor(next() * (hi - lo + 1)),
-    pick: arr => arr[Math.floor(next() * arr.length)],
-    chance: p => next() < p
+    int: (lo, hi) => lo + idx(hi - lo + 1),
+    upick: arr => arr[idx(arr.length)],
+    pick: arr => { add(Math.log2(arr.length)); return arr[idx(arr.length)]; },
+    level: n => { add(Math.log2(n)); return idx(n); },
+    chance: p => { const v = next() < p; add(-Math.log2(v ? p : 1 - p)); return v; },
+    wpick: pairs => {
+      const tot = pairs.reduce((a, q) => a + q[0], 0);
+      let x = next() * tot, hit = pairs[pairs.length - 1];
+      for (const q of pairs){ if ((x -= q[0]) <= 0){ hit = q; break; } }
+      add(-Math.log2(hit[0] / tot)); return hit[1];
+    }
   };
 }
 
@@ -263,17 +300,21 @@ function rrSampler(x0, y0, x1, y1, rad){
   }};
 }
 
-/* Evenly spaced legend around a circle, starting at the top. '+' is a cross pattée, '*' a lozenge. */
+/* Evenly spaced legend around a circle, starting at the top.
+   '@' is the start mark (o.mark), '+' a cross pattée, '*' a lozenge stop, '%' an annulet stop. */
 const CROSS_D = 'M-.2,-.5H.2L.08,-.08L.5,-.2V.2L.08,.08L.2,.5H-.2L-.08,.08L-.5,.2V-.2L-.08,-.08Z';
-function ringText(str, R, size, fill, weight){
-  const n = str.length;
-  let s = `<g class="f-cz" font-size="${n2(size)}" font-weight="${weight || 700}" fill="${fill}" text-anchor="middle">`;
+const LOZ_D = 'M0,-.5L.32,0L0,.5L-.32,0Z';
+const RING_D = 'M.3,0A.3,.3 0 1 1 -.3,0A.3,.3 0 1 1 .3,0ZM.16,0A.16,.16 0 1 0 -.16,0A.16,.16 0 1 0 .16,0Z';
+function ringText(str, R, size, fill, o){
+  o = o || {};
+  const n = str.length, cls = o.cls || 'f-cz';
+  let s = `<g class="${cls}" font-size="${n2(size)}" font-weight="${o.weight || 700}" fill="${fill}" text-anchor="middle">`;
   for (let i = 0; i < n; i++){
     const ch = str[i]; if (ch === ' ') continue;
     const a = -90 + 360 * i / n, ar = a * Math.PI / 180;
     const x = n2(R * Math.cos(ar)), y = n2(R * Math.sin(ar)), rot = n2(a + 90);
-    if (ch === '+') s += `<path d="${CROSS_D}" transform="translate(${x} ${y}) rotate(${rot}) scale(${n2(size * .85)})"/>`;
-    else if (ch === '*') s += `<path d="M0,-.5L.32,0L0,.5L-.32,0Z" transform="translate(${x} ${y}) rotate(${rot}) scale(${n2(size * .72)})"/>`;
+    const glyph = ch === '@' ? (o.mark || CROSS_D) : ch === '+' ? CROSS_D : ch === '*' ? LOZ_D : ch === '%' ? RING_D : null;
+    if (glyph) s += `<path d="${glyph}" fill-rule="evenodd" transform="translate(${x} ${y}) rotate(${rot}) scale(${n2(size * (ch === '@' ? .95 : .72))})"/>`;
     else s += `<text transform="translate(${x} ${y}) rotate(${rot})" dy=".35em">${esc(ch)}</text>`;
   }
   return s + '</g>';
@@ -298,11 +339,6 @@ const INKS = [
   {name:'Aubergine',  a:'#3A2350', b:'#765C99', t:'#BFB0D4', rib:'#523272'},
   {name:'Deep teal',  a:'#123F44', b:'#4A8486', t:'#A1C8C5', rib:'#1E5C62'},
   {name:'Graphite and ochre', a:'#2A2F36', b:'#8A6A2E', t:'#CFBD8C', rib:'#3C434C'}];
-const WAXES = [
-  {name:'vermilion', c:'#9C2A20'}, {name:'oxblood', c:'#681A1E'}, {name:'bottle green', c:'#22482F'},
-  {name:'navy', c:'#1F2D52'}, {name:'black', c:'#2A2422'}, {name:'ochre', c:'#A2772A'},
-  {name:'royal purple', c:'#4A2452'}, {name:'chestnut', c:'#6B3A1E'}];
-const CINNABAR = [{name:'cinnabar', c:'#B8322A'}, {name:'vermilion', c:'#C9432E'}, {name:'carmine', c:'#A5231F'}, {name:'madder', c:'#B23A3E'}];
 
 const houseSeed = key => sha256('exomachina/house-mark/v1\n' + key.trim().toLowerCase());
 const livery = hex => rng('livery', hex).pick(INKS);
@@ -313,163 +349,502 @@ function fingerprint(key, hex){
 const groups = fp => fp.match(/.{1,4}/g).join(' ');
 
 /* ---------- Style 1: engine-turned rosette ---------- */
+const INK12 = [
+  {name:'bank green', a:'#1E4D3A', b:'#5E8C6A'}, {name:'steel blue', a:'#1F3A5F', b:'#5577A0'},
+  {name:'oxblood', a:'#5E1A22', b:'#9E4A48'},    {name:'sepia', a:'#3F2C1C', b:'#866444'},
+  {name:'aubergine', a:'#3A2350', b:'#765C99'},  {name:'deep teal', a:'#123F44', b:'#4A8486'},
+  {name:'graphite', a:'#2A2F36', b:'#6E7680'},   {name:'prussian', a:'#14304F', b:'#3F6E99'},
+  {name:'olive', a:'#3B4220', b:'#7D8848'},      {name:'burnt sienna', a:'#6A3014', b:'#B06A3C'},
+  {name:'indigo', a:'#262A5E', b:'#5D63A8'},     {name:'plum', a:'#4F1D3D', b:'#93587D'}];
+const SYM = [5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24];
+const FAMS = ['weave', 'loops', 'lattice', 'scallop', 'ripple'];
+
 function bandPath(o){
   let d = '';
+  const env = t => [o.rIn + o.ai * (.5 + .5 * Math.sin(o.pi * t + o.phi)), o.rOut - o.ao * (.5 + .5 * Math.sin(o.po * t + o.pho))];
   for (let k = 0; k < o.K; k++){
-    const ph = TAU * k / o.K;
-    d += polarPath(t => {
-      const ri = o.rIn + o.ai * (.5 + .5 * Math.sin(o.pi * t + o.phi));
-      const ro = o.rOut - o.ao * (.5 + .5 * Math.sin(o.po * t + o.pho));
-      return ri + (ro - ri) * (.5 + .5 * Math.sin(o.m * t + ph));
-    }, o.N, o.tw ? t => t + o.tw * Math.sin(o.m * t + ph + o.twPh) : null);
+    if (o.only !== undefined && k % 2 !== o.only) continue;
+    const ph = TAU * k / o.K, sgn = o.fam === 'lattice' && k % 2 ? -1 : 1;
+    let fr;
+    if (o.fam === 'scallop') fr = t => { const [ri, ro] = env(t); return ri + (ro - ri) * Math.pow(Math.abs(Math.sin(o.m * t / 2 + ph / 2)), o.pw); };
+    else if (o.fam === 'ripple') fr = t => { const [ri, ro] = env(t), g = (ro - ri) / o.K; return ri + g * (k + .5) + g * .5 * Math.sin(o.m * t + k * o.shift); };
+    else fr = t => { const [ri, ro] = env(t); return ri + (ro - ri) * (.5 + .5 * Math.sin(sgn * o.m * t + ph)); };
+    d += polarPath(fr, o.N, o.fam === 'loops' ? t => t + o.tw * Math.sin(o.m * t + ph) : null);
   }
   return d;
 }
 
+function rimOrnament(style, count, R, ink){
+  let s = '';
+  for (let i = 0; i < count; i++){
+    const a = TAU * i / count, c = Math.cos(a), sn = Math.sin(a);
+    if (style === 'beads') s += `<circle cx="${n2(R * c)}" cy="${n2(R * sn)}" r="1.05" fill="${ink}"/>`;
+    else if (style === 'dashes') s += `<path d="M${n2((R - 1.3) * c)},${n2((R - 1.3) * sn)}L${n2((R + 1.3) * c)},${n2((R + 1.3) * sn)}" stroke="${ink}" stroke-width=".8"/>`;
+    else if (style === 'rope'){ const b = a + .05; s += `<path d="M${n2((R - 1.4) * Math.cos(a - .03))},${n2((R - 1.4) * Math.sin(a - .03))}L${n2((R + 1.4) * Math.cos(b))},${n2((R + 1.4) * Math.sin(b))}" stroke="${ink}" stroke-width=".7"/>`; }
+  }
+  if (style === 'double') s = `<circle r="${n2(R - .9)}" fill="none" stroke="${ink}" stroke-width=".5"/><circle r="${n2(R + .9)}" fill="none" stroke="${ink}" stroke-width=".5"/>`;
+  return s;
+}
+
 function rosetteMark(hex, o){
   o = o || {};
-  const r = rng('rosette', hex), det = o.detail || 1, inks = o.inks || livery(hex), sw = o.sw || .5;
-  const S = r.pick([5,6,7,8,9,10,11,12,13,14,15,16,18,20,24]);
+  const acc = {bits: 0}, r = rng('rosette/v2', hex, acc), det = o.detail || 1, sw = o.sw || .5;
+  const i1 = r.level(12), i2 = (i1 + 1 + r.level(11)) % 12;
+  const inks = o.inks || {a: INK12[i1].a, b: INK12[i2].b};
+  const S = r.pick(SYM);
+  const rim = r.pick(['beads', 'dashes', 'rope', 'double']), rimN = S * (2 + r.level(4));
+  const path = (d, ink) => `<path d="${d}" fill="none" stroke="${ink}" stroke-width="${sw}"/>`;
   let s = `<circle r="99" fill="none" stroke="${inks.a}" stroke-width="1.6"/><circle r="96.6" fill="none" stroke="${inks.a}" stroke-width=".45"/>`;
-  let outerR = 92;
+  let top = 93.4;
   if (o.legend){
-    const base = o.legend, L = base.repeat(Math.max(1, Math.round(66 / base.length)));
-    s += ringText(L, 91.7, clamp(TAU * 91.7 / L.length * 1.05, 5.4, 8.2), inks.a, 700);
+    const L = o.legend.repeat(Math.max(1, Math.round(66 / o.legend.length)));
+    s += ringText(L, 91.7, clamp(TAU * 91.7 / L.length * 1.05, 5.4, 8.2), inks.a);
     s += `<circle r="86.6" fill="none" stroke="${inks.a}" stroke-width=".45"/><circle r="84.6" fill="none" stroke="${inks.a}" stroke-width="1.1"/>`;
-    outerR = 81;
+    top = 82.2;
   }
-  const beadR = o.legend ? 82.1 : 93.4, beads = S * r.int(3, 6);
-  for (let i = 0; i < beads; i++){
-    const a = TAU * i / beads;
-    s += `<circle cx="${n2(beadR * Math.cos(a))}" cy="${n2(beadR * Math.sin(a))}" r="1.05" fill="${inks.a}"/>`;
-  }
-  const nb = r.int(2, 3), rMin = r.float(20, 30), rMax = outerR - 2.5, gap = 2.4;
-  const ws = Array.from({length: nb}, () => r.float(.7, 1.3)), tot = ws.reduce((x, y) => x + y, 0);
-  const avail = rMax - rMin - gap * (nb - 1);
-  let edge = rMax, lastIn = rMin;
+  s += rimOrnament(rim, rimN, top, inks.a);
+  const nb = 3 + r.level(3), gap = 2.2, rMin = 24;
+  const ws = Array.from({length: nb}, () => [.7, 1, 1.4][r.level(3)]), tot = ws.reduce((x, y) => x + y, 0);
+  const avail = top - 2.8 - rMin - gap * (nb - 1), used = [];
+  let edge = top - 2.8, lastIn = rMin;
   for (let i = 0; i < nb; i++){
     const th = avail * ws[i] / tot, rOut = edge, rIn = edge - th, rMid = (rIn + rOut) / 2;
-    const lambda = r.float(9, 18), m = S * Math.max(1, Math.round(TAU * rMid / lambda / S));
-    const twist = r.chance(.4);
-    const band = {
-      rIn, rOut, m, K: Math.max(6, Math.round(r.pick([16,20,24,30,36]) * det)),
-      ai: th * r.float(0, .25), pi: S * r.int(1, 2), phi: r.float(0, TAU),
-      ao: th * r.float(0, .25), po: S * r.int(1, 3), pho: r.float(0, TAU),
-      tw: twist ? r.float(.5, 1.6) / m : 0, twPh: r.float(0, TAU),
-      N: Math.max(180, Math.round(m * (det < 1 ? 7 : 10)))
-    };
-    s += `<path d="${bandPath(band)}" fill="none" stroke="${i % 2 ? inks.b : inks.a}" stroke-width="${sw}"/>`;
+    const fam = r.pick(FAMS); used.push(fam);
+    const m = S * Math.max(1, Math.round(TAU * rMid / ((fam === 'scallop' ? 34 : 13) * S) * [.55, 1, 1.5, 2.1][r.level(4)]));
+    const inF = r.level(4), inA = inF ? r.level(3) : 0, inPh = inF ? r.level(2) : 0;
+    const outF = r.level(4), outA = outF ? r.level(3) : 0, outPh = outF ? r.level(2) : 0;
+    const dens = r.level(4), inkSel = r.level(3), AMP = [.16, .3, .45];
+    const band = {fam, rIn, rOut, m,
+      ai: inF ? th * AMP[inA] : 0, pi: S * inF, phi: inPh * Math.PI,
+      ao: outF ? th * AMP[outA] : 0, po: S * outF, pho: outPh * Math.PI,
+      K: fam === 'ripple' ? [3, 4, 6, 8][dens]
+        : 2 * Math.max(2, Math.round(th / [2.4, 1.7, 1.25, .95][dens] * {weave:1, loops:.9, lattice:.6, scallop:.55}[fam] * det / 2)),
+      tw: fam === 'loops' ? [.7, 1.1, 1.6][r.level(3)] / m : 0,
+      pw: fam === 'scallop' ? [.6, 1.8][r.level(2)] : 1,
+      shift: fam === 'ripple' ? [.4, 1.2, 2.4][r.level(3)] : 0,
+      N: Math.max(160, Math.round(m * (det < 1 ? 7 : 10)))};
+    if (inkSel === 2) s += path(bandPath({...band, only: 0}), inks.a) + path(bandPath({...band, only: 1}), inks.b);
+    else s += path(bandPath(band), inkSel ? inks.b : inks.a);
     if (i < nb - 1) s += `<circle r="${n2(rIn - gap / 2)}" fill="none" stroke="${inks.a}" stroke-width=".35"/>`;
     lastIn = rIn; edge = rIn - gap;
   }
-  const rc = lastIn - 2, n = S * r.pick([1, 1, 2]), K2 = Math.max(5, Math.round(r.pick([8,12,16,20]) * det));
-  const b = r.float(.1, .45), c2 = r.chance(.5) ? r.float(.06, .18) : 0, c2ph = r.float(0, TAU);
-  let rose = '';
+  const rc = lastIn - 2, cf = r.pick(['rose', 'loops', 'rings']);
+  const n = S * (1 + r.level(2)), K2 = Math.max(3, Math.round(rc / [4.2, 2.8, 2][r.level(3)] * det * clamp(9 / n, .2, 1))), bq = [.3, .45, .6][r.level(3)];
+  let core = '';
   for (let k = 0; k < K2; k++){
-    const rot = k * TAU / (n * K2);
-    rose += polarPath(t => rc * ((b + (1 - b) * (.5 + .5 * Math.cos(n * t))) * (1 - c2) + c2 * (.5 + .5 * Math.cos(2 * n * t + c2ph))),
-      Math.max(180, n * 10), t => t + rot);
+    const rot = k * TAU / (n * K2), N = Math.max(180, n * 10);
+    if (cf === 'rings') core += polarPath(t => rc * (k + 1) / (K2 + 1) + rc * (.03 + .06 * bq) * Math.sin(n * t + k * .9), N);
+    else core += polarPath(t => rc * (bq + (1 - bq) * (.5 + .5 * Math.cos(n * t))), N,
+      cf === 'loops' ? t => t + rot + (.9 / n) * Math.sin(n * t) : t => t + rot);
   }
-  s += `<path d="${rose}" fill="none" stroke="${inks.a}" stroke-width="${sw}"/><circle r="1.6" fill="${inks.a}"/>`;
-  return { svg: s, desc: `Engine-turned rosette, ${S}-fold symmetry, ${nb} guilloché bands` };
+  s += path(core, inks.a);
+  const hub = r.pick(['dot', 'ring', 'star']);
+  s += hub === 'dot' ? `<circle r="1.6" fill="${inks.a}"/>` : hub === 'ring' ? `<circle r="2.4" fill="none" stroke="${inks.a}" stroke-width=".7"/><circle r=".8" fill="${inks.a}"/>`
+    : `<path d="${starD(S > 12 ? 8 : S, 3, 1.2)}" fill="${inks.a}"/>`;
+  return { svg: s, bits: acc.bits, desc: `Engine-turned rosette, ${S}-fold symmetry, ${nb} bands (${used.join(', ')}), ${cf} centre` };
 }
 
-/* ---------- Style 2: wax sigillum with procedural heraldry ---------- */
-// The wax is built as a greyscale height map, then lit inside one filter.
-const G = {blob:'#8c8c8c', lip:'#9b9b9b', field:'#6b6b6b', ridge:'#aaaaaa', shield:'#7d7d7d', ord:'#999999', dia:'#9d9d9d', charge:'#b9b9b9'};
-const CH = {
-  mullet:  {sg:'a mullet', pl:'mullets', d:(() => { let p = ''; for (let i = 0; i < 10; i++){ const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? .21 : .52; p += (i ? 'L' : 'M') + n2(rr * Math.cos(a)) + ',' + n2(rr * Math.sin(a)); } return p + 'Z'; })()},
-  roundel: {sg:'a roundel', pl:'roundels', d:'M.46,0A.46,.46 0 1 1 -.46,0A.46,.46 0 1 1 .46,0Z'},
-  annulet: {sg:'an annulet', pl:'annulets', d:'M.47,0A.47,.47 0 1 1 -.47,0A.47,.47 0 1 1 .47,0ZM.27,0A.27,.27 0 1 0 -.27,0A.27,.27 0 1 0 .27,0Z'},
-  lozenge: {sg:'a lozenge', pl:'lozenges', d:'M0,-.56L.38,0L0,.56L-.38,0Z'},
-  crescent:{sg:'a crescent', pl:'crescents', d:'M-.3623,-.3446A.5,.5 0 1 0 .3623,-.3446A.4,.4 0 1 1 -.3623,-.3446Z'},
-  cross:   {sg:'a cross pattée', pl:'crosses pattée', d:CROSS_D},
-  billet:  {sg:'a billet', pl:'billets', d:'M-.22,-.42H.22V.42H-.22Z'}};
-const DIV = {
-  'per pale': {parts:['-40,-46 0,-46 0,58 -40,58', '0,-46 40,-46 40,58 0,58'], line:'M0,-46V58', ch:[[-17,2],[17,2]], size:17},
-  'per fess': {parts:['-40,-46 40,-46 40,0 -40,0', '-40,0 40,0 40,58 -40,58'], line:'M-40,0H40', ch:[[-19,-21],[0,-21],[19,-21]], size:13, phrase:'in chief '},
-  'per bend': {parts:['-40,-46 40,-46 40,58', '-40,-46 40,58 -40,58'], line:'M-40,-46L40,58', ch:[[16,-20],[-16,24]], size:16},
-  'per bend sinister': {parts:['-40,-46 40,-46 -40,58', '40,-46 40,58 -40,58'], line:'M40,-46L-40,58', ch:[[-16,-20],[16,24]], size:16},
-  'quarterly': {parts:['-40,-46 0,-46 0,0 -40,0', '0,-46 40,-46 40,0 0,0', '0,0 40,0 40,58 0,58', '-40,0 0,0 0,58 -40,58'], line:'M0,-46V58M-40,0H40', ch:[[-18,-21],[18,24]], size:17, phrase:'in the first and fourth quarters '},
-  'per chevron': {parts:['-40,-46 40,-46 40,38 0,-4 -40,38', '-40,38 0,-4 40,38 40,58 -40,58'], line:'M-40,38L0,-4L40,38', ch:[[-17,-24],[17,-24],[0,32]], size:15},
-  'per saltire': {parts:['-40,-46 40,-46 0,6', '40,-46 40,58 0,6', '40,58 -40,58 0,6', '-40,58 -40,-46 0,6'], line:'M-40,-46L40,58M40,-46L-40,58', ch:[], size:0}};
-const ORD = {
-  fess:    {name:'a fess', svg:`<rect x="-40" y="-9" width="80" height="19" fill="${G.ord}"/>`, ch:[[-17,-25],[17,-25],[0,31]], size:14},
-  pale:    {name:'a pale', svg:`<rect x="-10" y="-46" width="20" height="104" fill="${G.ord}"/>`, ch:[[-23,-6],[23,-6]], size:13},
-  bend:    {name:'a bend', svg:`<polygon points="-47.13,-40.51 32.87,63.49 47.13,52.51 -32.87,-51.49" fill="${G.ord}"/>`, ch:[[17,-22],[-17,24]], size:14},
-  chevron: {name:'a chevron', svg:`<path d="M-46,44L0,-2L46,44" fill="none" stroke="${G.ord}" stroke-width="16"/>`, ch:[[-18,-24],[18,-24],[0,33]], size:14},
-  cross:   {name:'a cross', svg:`<path d="M0,-46V58M-40,1H40" fill="none" stroke="${G.ord}" stroke-width="15"/>`, ch:[[-19,-22],[19,-22],[-17,26],[17,26]], size:11},
-  saltire: {name:'a saltire', svg:`<path d="M-40,-46L40,58M40,-46L-40,58" fill="none" stroke="${G.ord}" stroke-width="14"/>`, ch:[[0,-31],[0,40],[-26,6],[26,6]], size:10},
-  chief:   {name:'a chief', svg:`<rect x="-40" y="-46" width="80" height="26" fill="${G.ord}"/>`, ch:[[-20,-32],[0,-32],[20,-32]], size:11, on:true}};
-const COUNT = ['', 'a', 'two', 'three', 'four'];
+/* ---------- Heraldry: a recursive blazon grammar ---------- */
+const NUM = ['', 'a', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const ptsStr = p => p.map(q => n2(q[0]) + ',' + n2(q[1])).join(' ');
+const circ = (cx, cy, r) => `M${n2(cx + r)},${n2(cy)}A${r},${r} 0 1 1 ${n2(cx - r)},${n2(cy)}A${r},${r} 0 1 1 ${n2(cx + r)},${n2(cy)}Z`;
+const rectD = (x0, y0, x1, y1) => `M${x0},${y0}H${x1}V${y1}H${x0}Z`;
+function starD(n, ro, ri){
+  let p = '';
+  for (let i = 0; i < 2 * n; i++){ const a = -Math.PI / 2 + i * Math.PI / n, rr = i % 2 ? ri : ro; p += (i ? 'L' : 'M') + n2(rr * Math.cos(a)) + ',' + n2(rr * Math.sin(a)); }
+  return p + 'Z';
+}
+const rotPoly = (pts, deg) => { const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a); return 'M' + pts.map(([x, y]) => n2(x * c - y * s) + ',' + n2(x * s + y * c)).join('L') + 'Z'; };
+const BAR = [[-.11, -.5], [.11, -.5], [.11, .5], [-.11, .5]];
+const sunD = (() => { let d = circ(0, 0, .24); for (let i = 0; i < 16; i++){ const a = i * TAU / 16, w = TAU / 70, ro = i % 2 ? .42 : .52;
+  d += `M${n2(.27 * Math.cos(a - w))},${n2(.27 * Math.sin(a - w))}L${n2(ro * Math.cos(a))},${n2(ro * Math.sin(a))}L${n2(.27 * Math.cos(a + w))},${n2(.27 * Math.sin(a + w))}Z`; } return d; })();
+const roseD = (() => { let d = ''; for (let i = 0; i < 5; i++){ const a = -Math.PI / 2 + i * TAU / 5; d += circ(.25 * Math.cos(a), .25 * Math.sin(a), .21); } return d + circ(0, 0, .2); })();
+const FLEUR_D = 'M0,-.52C.13,-.36 .16,-.16 .07,.02L-.07,.02C-.16,-.16 -.13,-.36 0,-.52Z' +
+  'M.07,-.02C.12,-.22 .36,-.3 .46,-.14C.52,-.02 .44,.12 .32,.08C.4,.02 .38,-.1 .3,-.1C.2,-.1 .14,-.02 .12,.06Z' +
+  'M-.07,-.02C-.12,-.22 -.36,-.3 -.46,-.14C-.52,-.02 -.44,.12 -.32,.08C-.4,.02 -.38,-.1 -.3,-.1C-.2,-.1 -.14,-.02 -.12,.06Z' +
+  'M-.22,.02H.22V.12H-.22Z M-.07,.12H.07L.1,.38C.04,.31 -.04,.31 -.1,.38Z' +
+  'M.07,.12C.14,.2 .24,.24 .31,.2C.27,.31 .15,.31 .07,.22Z M-.07,.12C-.14,.2 -.24,.24 -.31,.2C-.27,.31 -.15,.31 -.07,.22Z';
+const CHG = {
+  'mullet': {sg:'a mullet', pl:'mullets', d:starD(5, .52, .21)},
+  'mullet of six points': {sg:'a mullet of six points', pl:'mullets of six points', d:starD(6, .52, .26)},
+  'estoile': {sg:'an estoile', pl:'estoiles', d:starD(6, .55, .1)},
+  'roundel': {sg:'a roundel', pl:'roundels', d:circ(0, 0, .46)},
+  'annulet': {sg:'an annulet', pl:'annulets', d:circ(0, 0, .47) + circ(0, 0, .27), eo:true},
+  'lozenge': {sg:'a lozenge', pl:'lozenges', d:'M0,-.56L.38,0L0,.56L-.38,0Z'},
+  'mascle': {sg:'a mascle', pl:'mascles', d:'M0,-.56L.38,0L0,.56L-.38,0ZM0,-.32L.2,0L0,.32L-.2,0Z', eo:true},
+  'fusil': {sg:'a fusil', pl:'fusils', d:'M0,-.58L.22,0L0,.58L-.22,0Z'},
+  'crescent': {sg:'a crescent', pl:'crescents', d:'M-.3623,-.4246A.5,.5 0 1 0 .3623,-.4246A.4,.4 0 1 1 -.3623,-.4246Z'},
+  'cross pattée': {sg:'a cross pattée', pl:'crosses pattée', d:CROSS_D},
+  'cross couped': {sg:'a cross couped', pl:'crosses couped', d:rectD(-.12, -.48, .12, .48) + rectD(-.48, -.12, .48, .12)},
+  'cross crosslet': {sg:'a cross crosslet', pl:'crosses crosslet', d:rectD(-.07, -.48, .07, .48) + rectD(-.48, -.07, .48, .07) +
+    rectD(-.18, -.4, .18, -.29) + rectD(-.18, .29, .18, .4) + rectD(-.4, -.18, -.29, .18) + rectD(.29, -.18, .4, .18)},
+  'saltire couped': {sg:'a saltire couped', pl:'saltires couped', d:rotPoly(BAR, 45) + rotPoly(BAR, -45)},
+  'billet': {sg:'a billet', pl:'billets', d:rectD(-.22, -.42, .22, .42)},
+  'rose': {sg:'a rose', pl:'roses', d:roseD, det:circ(0, 0, .12)},
+  'trefoil': {sg:'a trefoil', pl:'trefoils', d:circ(0, -.22, .17) + circ(-.2, .02, .17) + circ(.2, .02, .17) + 'M-.04,.1L.04,.1L.1,.5L.02,.46Z'},
+  'sun in splendour': {sg:'a sun in splendour', pl:'suns in splendour', d:sunD},
+  'tower': {sg:'a tower', pl:'towers', d:'M-.4,-.15V-.45H-.24V-.32H-.08V-.45H.08V-.32H.24V-.45H.4V-.15H.32V.45H-.32V-.15ZM-.1,.43V.2A.1,.1 0 0 1 .1,.2V.43Z', eo:true},
+  'escallop': {sg:'an escallop', pl:'escallops', d:'M-.46,-.06A.46,.46 0 0 1 .46,-.06L.1,.4H-.1Z', det:'M0,-.48V.36M-.2,-.42L-.05,.36M.2,-.42L.05,.36M-.38,-.26L-.08,.36M.38,-.26L.08,.36'},
+  'heart': {sg:'a heart', pl:'hearts', d:'M0,.44C-.52,.06 -.44,-.44 0,-.2C.44,-.44 .52,.06 0,.44Z'},
+  'fleur-de-lis': {sg:'a fleur-de-lis', pl:'fleurs-de-lis', d:FLEUR_D}};
+const CHG_KEYS = Object.keys(CHG);
+const countPh = (n, C) => n === 1 ? C.sg : `${NUM[n]} ${C.pl}`;
 
-function heraldry(r, idp){
-  const SH = 'M-36,-42H36V2C36,30 18,44 0,54C-18,44 -36,30 -36,2Z';
-  const chKey = r.pick(Object.keys(CH)), C = CH[chKey];
-  const mode = r.pick(['division', 'division', 'ordinary', 'ordinary', 'plain']);
-  const diaperFirst = r.chance(.5);
-  let s = `<clipPath id="${idp}-sh"><path d="${SH}"/></clipPath>` +
-    `<pattern id="${idp}-dp" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">` +
-    `<rect width="8" height="8" fill="${G.shield}"/><path d="M0,0H8M0,0V8" stroke="${G.dia}" stroke-width="1"/><circle cx="4" cy="4" r="1.1" fill="${G.dia}"/></pattern>`;
-  s += `<path d="${SH}" fill="${G.shield}"/><g clip-path="url(#${idp}-sh)">`;
-  let pts = [], size = 0, blazon = '';
-  const many = n => n === 1 ? C.sg : `${COUNT[n]} ${C.pl}`;
-  if (mode === 'division'){
-    const key = r.pick(Object.keys(DIV)), dv = DIV[key];
-    dv.parts.forEach((p, i) => { s += `<polygon points="${p}" fill="${(i % 2 === 0) === diaperFirst ? `url(#${idp}-dp)` : G.shield}"/>`; });
-    s += `<path d="${dv.line}" fill="none" stroke="${G.ridge}" stroke-width="1.8"/>`;
-    pts = dv.ch; size = dv.size;
-    blazon = cap(key) + (pts.length ? `, ${dv.phrase || ''}${many(pts.length)}` : '');
-  } else {
-    const diaper = r.chance(.45);
-    if (diaper) s += `<rect x="-40" y="-46" width="80" height="104" fill="url(#${idp}-dp)"/>`;
-    if (mode === 'ordinary'){
-      const key = r.pick(Object.keys(ORD)), od = ORD[key];
-      s += od.svg; pts = od.ch; size = od.size;
-      blazon = od.on ? `On a chief ${many(pts.length)}` : `${cap(od.name)} between ${many(pts.length)}`;
-    } else {
-      const three = r.chance(.55);
-      pts = three ? [[-15,-15],[15,-15],[0,21]] : [[0,4]]; size = three ? 20 : 36;
-      blazon = cap(many(pts.length));
-    }
-    if (diaper) blazon += ', on a diapered field';
-  }
-  s += '</g>';
-  for (const [x, y] of pts) s += `<path d="${C.d}" fill="${G.charge}" fill-rule="evenodd" transform="translate(${x} ${y}) scale(${size})"/>`;
-  s += `<path d="${SH}" fill="none" stroke="${G.ridge}" stroke-width="2.6" stroke-linejoin="round"/>`;
-  const sprig = r.pick(['pellets', 'mullets', 'none']);
-  if (sprig !== 'none'){
-    for (const [x, y] of [[-47,22],[47,22],[-44,-34],[44,-34]]){
-      s += sprig === 'pellets' ? `<circle cx="${x}" cy="${y}" r="3" fill="${G.ridge}"/>`
-        : `<path d="${CH.mullet.d}" fill="${G.ridge}" transform="translate(${x} ${y}) scale(8)"/>`;
-    }
-  }
-  return { svg: s, blazon };
+const TINCT = {or:{k:'m', c:'#D9AA3A'}, argent:{k:'m', c:'#F3F1EA'}, gules:{k:'c', c:'#C0262D'}, azure:{k:'c', c:'#25519F'},
+  vert:{k:'c', c:'#1F7A3E'}, purpure:{k:'c', c:'#6C2D84'}, sable:{k:'c', c:'#1E1C1B'}, ermine:{k:'f', c:'#F3F1EA'}};
+const TKEYS = Object.keys(TINCT), METALS = ['or', 'argent'], COLOURS = ['gules', 'azure', 'vert', 'purpure', 'sable'];
+// Rule of tincture: metal on colour, colour on metal; a fur goes with either.
+const contrast = (r, t) => TINCT[t].k === 'm' ? r.pick(COLOURS) : TINCT[t].k === 'c' ? r.pick(['or', 'argent', 'ermine']) : r.pick(COLOURS.concat(['or']));
+function fieldPair(r){
+  const m = r.chance(.1) ? 'ermine' : r.pick(METALS), c = r.pick(COLOURS);
+  return r.chance(.5) ? [m, c] : [c, m];
 }
 
+const ermSpot = (x, y, c) => `<g fill="${c}"><circle cx="${x}" cy="${y - 1.3}" r=".7"/><circle cx="${x - 1.2}" cy="${y}" r=".7"/><circle cx="${x + 1.2}" cy="${y}" r=".7"/><path d="M${x - .8},${y + .4}L${x},${y + 3.4}L${x + .8},${y + .4}Z"/></g>`;
+const G = {blob:'#8c8c8c', lip:'#9b9b9b', field:'#6b6b6b', ridge:'#aaaaaa', shield:'#7d7d7d', dia:'#9d9d9d', frame:'#777777', charge:'#b9b9b9'};
+/* A painter turns tinctures into fills: true colours, or Petra Sancta hatching raised in wax relief. */
+function painter(mode, idp){
+  let k = 0;
+  const uid = () => `${idp}-u${k++}`;
+  if (mode === 'color'){
+    const defs = `<pattern id="${idp}-erm" width="10" height="12" patternUnits="userSpaceOnUse"><rect width="10" height="12" fill="${TINCT.ermine.c}"/>${ermSpot(2.5, 3, '#1E1C1B')}${ermSpot(7.5, 9, '#1E1C1B')}</pattern>`;
+    return {mode, defs, uid, fill: t => t === 'ermine' ? `url(#${idp}-erm)` : TINCT[t].c, edge:'#2A2420', ew:.6, detail:'rgba(30,24,20,.55)'};
+  }
+  const w = 3.4, h = w / 2, ln = G.dia;
+  const pat = (t, body, tf) => `<pattern id="${idp}-h-${t}" width="${w}" height="${w}" patternUnits="userSpaceOnUse"${tf ? ` patternTransform="${tf}"` : ''}><rect width="${w}" height="${w}" fill="${G.shield}"/>${body}</pattern>`;
+  const HL = `<path d="M0,${h}H${w}" stroke="${ln}" stroke-width="1"/>`, VL = `<path d="M${h},0V${w}" stroke="${ln}" stroke-width="1"/>`;
+  const defs = pat('argent', '') + pat('or', `<circle cx="${h}" cy="${h}" r=".75" fill="${ln}"/>`) + pat('gules', VL) + pat('azure', HL) +
+    pat('vert', HL, 'rotate(45)') + pat('purpure', HL, 'rotate(-45)') + pat('sable', HL + VL) +
+    `<pattern id="${idp}-h-ermine" width="10" height="12" patternUnits="userSpaceOnUse"><rect width="10" height="12" fill="${G.shield}"/>${ermSpot(2.5, 3, ln)}${ermSpot(7.5, 9, ln)}</pattern>`;
+  return {mode, defs, uid, fill: t => `url(#${idp}-h-${t})`, edge:G.ridge, ew:1.1, detail:G.field};
+}
+
+/* Lines of partition: an offset profile repeated along a straight segment. */
+const LINE = {
+  straight: null,
+  indented: {P:6, A:2.2, f: u => 1 - Math.abs(2 * u - 1)},
+  dancetty: {P:16, A:5, f: u => 1 - Math.abs(2 * u - 1)},
+  embattled: {P:10, A:3, sq:true},
+  wavy: {P:14, A:2.8, f: u => .5 + .5 * Math.sin(TAU * u)},
+  engrailed: {P:9, A:2.6, f: u => 1 - Math.sqrt(Math.max(0, 1 - (2 * u - 1) ** 2))},
+  invected: {P:9, A:2.6, f: u => Math.sqrt(Math.max(0, 1 - (2 * u - 1) ** 2))},
+  nebuly: {P:12, A:3.2, f: u => .5 + .38 * Math.sin(TAU * u) + .12 * Math.sin(2 * TAU * u + .9)}};
+const LINE_KEYS = Object.keys(LINE);
+function styledLine(x0, y0, x1, y1, style){
+  const spec = LINE[style];
+  if (!spec) return [[x0, y0], [x1, y1]];
+  const L = Math.hypot(x1 - x0, y1 - y0), dx = (x1 - x0) / L, dy = (y1 - y0) / L;
+  const at = (s, off) => [x0 + dx * s - dy * off, y0 + dy * s + dx * off], pts = [];
+  if (spec.sq){
+    for (let s = 0, k = 0; s < L; k++){ const s2 = Math.min(L, s + spec.P / 2), lev = (k % 2 ? .5 : -.5) * spec.A; pts.push(at(s, lev), at(s2, lev)); s = s2; }
+  } else {
+    for (let s = 0; s < L; s += .6) pts.push(at(s, spec.A * (spec.f((s / spec.P) % 1) - .5)));
+    pts.push(at(L, spec.A * (spec.f((L / spec.P) % 1) - .5)));
+  }
+  return pts;
+}
+const styledPoly = (pts, style) => pts.slice(1).reduce((acc, p, i) => acc.concat(styledLine(pts[i][0], pts[i][1], p[0], p[1], style).slice(i ? 1 : 0)), []);
+function bandPoly(x0, x1, y0, y1, style, bottomOnly){
+  const top = bottomOnly ? [[x0, y0], [x1, y0]] : styledLine(x0, y0, x1, y0, style);
+  return top.concat(styledLine(x0, y1, x1, y1, style).reverse());
+}
+
+/* Field divisions. Sector divisions radiate from a centre to points on a box around the shield. */
+const BX = {x0:-46, y0:-52, x1:46, y1:64}, BW = 92, BH = 116, BP = 416;
+function perim([x, y]){
+  if (Math.abs(y - BX.y0) < 1e-6) return x - BX.x0;
+  if (Math.abs(x - BX.x1) < 1e-6) return BW + (y - BX.y0);
+  if (Math.abs(y - BX.y1) < 1e-6) return BW + BH + (BX.x1 - x);
+  return 2 * BW + BH + (BX.y1 - y);
+}
+const CORNERS = [[[BX.x1, BX.y0], BW], [[BX.x1, BX.y1], BW + BH], [[BX.x0, BX.y1], 2 * BW + BH], [[BX.x0, BX.y0], BP]];
+function boxWalk(a, b){
+  const sa = perim(a); let sb = perim(b); if (sb <= sa) sb += BP;
+  const out = [];
+  for (const off of [0, BP]) for (const [p, s] of CORNERS){ const ss = (s % BP) + off; if (ss > sa + 1e-6 && ss < sb - 1e-6) out.push([ss, p]); }
+  return out.sort((x, y) => x[0] - y[0]).map(q => q[1]);
+}
+function sectorParts(c, ends, style){
+  const rays = ends.map(e => styledLine(c[0], c[1], e[0], e[1], style));
+  return ends.map((e, i) => {
+    const j = (i + 1) % ends.length;
+    return {p: rays[i].concat(boxWalk(e, ends[j]), rays[j].slice().reverse()), i};
+  });
+}
+function stripeParts(n, style, horiz, lo, hi){
+  const cut = [-90]; for (let k = 1; k < n; k++) cut.push(lo + (hi - lo) * k / n); cut.push(90);
+  const lines = cut.map((c, i) => (i === 0 || i === n) ? (horiz ? [[-90, c], [90, c]] : [[c, -90], [c, 90]])
+    : horiz ? styledLine(-90, c, 90, c, style) : styledLine(c, -90, c, 90, style));
+  return Array.from({length: n}, (_, i) => ({p: lines[i].concat(lines[i + 1].slice().reverse()), i}));
+}
+const DIVS = {
+  'per pale': {c:[0, 4], e:[[0, -52], [0, 64]]},
+  'per fess': {c:[0, 2], e:[[46, 2], [-46, 2]]},
+  'per bend': {c:[0, 6], e:[[-46, -52], [46, 64]]},
+  'per bend sinister': {c:[0, 6], e:[[46, -52], [-46, 64]]},
+  'per chevron': {c:[0, -6], e:[[46, 40], [-46, 40]]},
+  'per saltire': {c:[0, 6], e:[[-46, -52], [46, -52], [46, 64], [-46, 64]]},
+  'quarterly': {c:[0, 2], e:[[0, -52], [46, 2], [0, 64], [-46, 2]]},
+  'per pall': {c:[0, 0], e:[[-46, -52], [46, -52], [0, 64]]},
+  'gyronny': {c:[0, 4], e:[[-46, -52], [0, -52], [46, -52], [46, 4], [46, 64], [0, 64], [-46, 64], [-46, 4]]},
+  'per pile': {c:[0, 40], e:[[-18, -52], [18, -52]]}};
+const DIV_KINDS = Object.keys(DIVS).map(k => ({k})).concat(
+  [4, 6, 8].map(n => ({k:'paly', n})), [4, 6, 8, 10].map(n => ({k:'barry', n})),
+  [4, 6].map(n => ({k:'bendy', n})), [4, 6].map(n => ({k:'bendy sinister', n})),
+  [{k:'chequy', n:5, straight:true}, {k:'chequy', n:7, straight:true}, {k:'lozengy', n:4, straight:true}, {k:'lozengy', n:6, straight:true}]);
+function fieldParts(kind, style){
+  if (DIVS[kind.k]) return sectorParts(DIVS[kind.k].c, DIVS[kind.k].e, style);
+  if (kind.k === 'paly') return stripeParts(kind.n, style, false, -36, 36);
+  if (kind.k === 'barry') return stripeParts(kind.n, style, true, -42, 54);
+  if (kind.k.startsWith('bendy')){
+    const tf = `translate(0 6) rotate(${kind.k === 'bendy' ? -45 : 45})`;
+    return stripeParts(kind.n, style, false, -62, 62).map(p => ({...p, tf}));
+  }
+  const loz = kind.k === 'lozengy', s = loz ? 110 / kind.n : 72 / kind.n, out = [];
+  const [xa, xb, ya, yb] = loz ? [-80, 80, -80, 80] : [-36, 36, -42, 54];
+  for (let i = 0; xa + i * s < xb; i++) for (let j = 0; ya + j * s < yb; j++){
+    const x = xa + i * s, y = ya + j * s;
+    out.push({p:[[x, y], [x + s, y], [x + s, y + s], [x, y + s]], i:(i + j) % 2, tf: loz ? 'translate(0 6) rotate(45)' : null});
+  }
+  return out;
+}
+
+/* Ordinaries, with where charges go "between" and "on" them. */
+const ORD_KEYS = ['fess', 'pale', 'bend', 'bend sinister', 'chevron', 'cross', 'saltire', 'pile', 'pall', 'bordure', 'canton'];
+const ORD_LINES = new Set(['fess', 'pale', 'bend', 'bend sinister', 'chevron', 'cross', 'saltire', 'pile']);
+function ordinary(key, st){
+  const band = (w, tf) => ({p: bandPoly(-90, 90, -w, w, st), tf});
+  switch (key){
+    case 'fess': return {shapes:[band(10, 'translate(0 1)')], btw:[[-17, -25], [17, -25], [0, 33]], bs:13, on:[[-20, 1], [0, 1], [20, 1]], os:10};
+    case 'pale': return {shapes:[band(10, 'rotate(90)')], btw:[[-23, 2], [23, 2]], bs:14, on:[[0, -26], [0, 2], [0, 30]], os:10};
+    case 'bend': return {shapes:[band(9, 'translate(0 4) rotate(45)')], btw:[[17, -22], [-17, 26]], bs:14, on:[[-14, -10], [0, 4], [14, 18]], os:9};
+    case 'bend sinister': return {shapes:[band(9, 'translate(0 4) rotate(-45)')], btw:[[-17, -22], [17, 26]], bs:14, on:[[14, -10], [0, 4], [-14, 18]], os:9};
+    case 'chevron': return {shapes:[{p: styledPoly([[-70, 58], [0, -12], [70, 58]], st).concat(styledPoly([[-70, 80], [0, 10], [70, 80]], st).reverse())}],
+      btw:[[-18, -26], [18, -26], [0, 37]], bs:13, on:[[0, -1], [-20, 19], [20, 19]], os:8};
+    case 'cross': return {shapes:[band(8, 'translate(0 2)'), band(8, 'rotate(90)')], btw:[[-20, -22], [20, -22], [-18, 28], [18, 28]], bs:10, on:[[0, 2]], os:11};
+    case 'saltire': return {shapes:[band(7, 'translate(0 6) rotate(45)'), band(7, 'translate(0 6) rotate(-45)')], btw:[[0, -28], [0, 42], [-26, 6], [26, 6]], bs:10, on:[[0, 6]], os:10};
+    case 'pile': return {shapes:[{p: styledLine(-20, -90, 0, 38, st).concat(styledLine(0, 38, 20, -90, st))}], btw:[[-26, 22], [26, 22]], bs:12, on:[[0, -30], [0, -10], [0, 9]], os:8};
+    case 'pall': { const b = bandPoly(0, 95, -7, 7, 'straight');
+      return {shapes:[{p:b, tf:'translate(0 2) rotate(-125)'}, {p:b, tf:'translate(0 2) rotate(-55)'}, {p:b, tf:'translate(0 2) rotate(90)'}], btw:[[0, -34], [-24, 26], [24, 26]], bs:12, on:[[0, 2]], os:9}; }
+    case 'bordure': return {bordure:true, on:[[-29, -35], [0, -35], [29, -35], [-29, -6], [29, -6], [-24, 22], [24, 22], [0, 42]], os:6.5};
+    default: return {shapes:[{p:[[-40, -46], [-8, -46], [-8, -14], [-40, -14]]}], on:[[-23, -29]], os:12};
+  }
+}
+function drawShapes(shapes, fill, P){
+  return shapes.map(s => `<polygon points="${ptsStr(s.p)}"${s.tf ? ` transform="${s.tf}"` : ''} fill="${fill}" stroke="${P.edge}" stroke-width="${P.ew}" stroke-linejoin="round"/>`).join('');
+}
+const drawBordure = (fill, P) => `<path d="${P.sh}" fill="none" stroke="${P.edge}" stroke-width="${n2(13 + P.ew * 2)}"/><path d="${P.sh}" fill="none" stroke="${fill}" stroke-width="13"/>`;
+function charges(C, pts, size, fill, P){
+  return pts.map(([x, y]) => `<g transform="translate(${n2(x)} ${n2(y)}) scale(${n2(size)})"><path d="${C.d}" fill="${fill}" fill-rule="${C.eo ? 'evenodd' : 'nonzero'}" stroke="${P.edge}" stroke-width="${n2(P.ew / size)}" stroke-linejoin="round"/>` +
+    (C.det ? `<path d="${C.det}" fill="none" stroke="${P.detail}" stroke-width="${n2(P.ew * .8 / size)}"/>` : '') + `</g>`).join('');
+}
+const ARR = {
+  one: {p:[[0, 6]], s:34, ph:''}, 'two in pale': {p:[[0, -16], [0, 28]], s:22, ph:' in pale'}, 'two in fess': {p:[[-15, 2], [15, 2]], s:22, ph:' in fess'},
+  three: {p:[[-15, -15], [15, -15], [0, 21]], s:20, ph:''}, 'three in pale': {p:[[0, -25], [0, 3], [0, 31]], s:15, ph:' in pale'},
+  'three in bend': {p:[[-17, -21], [0, 1], [17, 23]], s:15, ph:' in bend'}, four: {p:[[-14, -17], [14, -17], [-14, 15], [14, 15]], s:17, ph:''},
+  five: {p:[[-17, -20], [17, -20], [0, 3], [-14, 26], [14, 26]], s:13, ph:' in saltire'},
+  six: {p:[[-20, -25], [0, -25], [20, -25], [-11, 0], [11, 0], [0, 25]], s:12, ph:''},
+  seme: {p:(() => { const o = []; for (let j = 0, y = -40; y < 58; y += 12, j++) for (let x = -42 + (j % 2) * 6.5; x < 44; x += 13) o.push([x, y]); return o; })(), s:7, seme:true}};
+const ARR_KEYS = Object.keys(ARR);
+const SHIELDS = {
+  heater: 'M-36,-42H36V2C36,30 18,44 0,54C-18,44 -36,30 -36,2Z',
+  rounded: 'M-36,-42H36V18A36,36 0 0 1 -36,18Z',
+  french: 'M-36,-42H36V38Q36,48 26,48H8L0,54L-8,48H-26Q-36,48 -36,38Z',
+  kite: 'M-36,-42H36C36,-4 22,30 0,56C-22,30 -36,-4 -36,-42Z'};
+
+/* One coat of arms. depth 0 may carry a chief, canton and bordure; quartered/impaled coats (depth 1) may not. */
+function coat(r, P, depth){
+  let svg = '', tA, tB = null, three = false, clipA = '', clipB = '', field;
+  const plain = r.chance(.2);
+  if (plain){
+    tA = r.pick(TKEYS);
+    svg += `<rect x="-90" y="-90" width="180" height="180" fill="${P.fill(tA)}"/>`;
+    field = cap(tA);
+  } else {
+    const kind = r.pick(DIV_KINDS), style = kind.straight ? 'straight' : r.pick(LINE_KEYS);
+    [tA, tB] = fieldPair(r);
+    const tins = [tA, tB];
+    if (kind.k === 'per pall'){ tins.push(r.pick(COLOURS.filter(c => c !== tA && c !== tB))); three = true; }
+    for (const pt of fieldParts(kind, style)){
+      const t = tins[pt.i % tins.length], tf = pt.tf ? ` transform="${pt.tf}"` : '', pts = ptsStr(pt.p);
+      svg += `<polygon points="${pts}"${tf} fill="${P.fill(t)}" stroke="${P.edge}" stroke-width="${n2(P.ew * .5)}"/>`;
+      if (t === tA) clipA += `<polygon points="${pts}"${tf}/>`; else if (t === tB) clipB += `<polygon points="${pts}"${tf}/>`;
+    }
+    const nm = kind.n && !kind.straight ? `${kind.k} of ${NUM[kind.n]}` : kind.k;
+    field = `${cap(nm)}${style !== 'straight' ? ' ' + style : ''} ${three ? `${tins[0]}, ${tins[1]} and ${tins[2]}` : `${tA} and ${tB}`}`;
+  }
+  const others = TKEYS.filter(t => t !== tA && t !== tB);
+  const clash = t => plain ? contrast(r, t) : r.pick(others);
+
+  // A plain field always carries an ordinary; a field with no ordinary always carries charges.
+  let ord = null, ordKey = null, tO = null, ordPh = '';
+  if (plain || r.chance(.5)){
+    ordKey = r.pick(depth ? ORD_KEYS.slice(0, 9) : ORD_KEYS);
+    const st = ORD_LINES.has(ordKey) ? r.pick(LINE_KEYS) : 'straight';
+    tO = clash(tA); ord = ordinary(ordKey, st);
+    svg += ord.bordure ? drawBordure(P.fill(tO), P) : drawShapes(ord.shapes, P.fill(tO), P);
+    ordPh = `${/^[aeiou]/.test(ordKey) ? 'an' : 'a'} ${ordKey}${st !== 'straight' ? ' ' + st : ''} ${tO}`;
+  }
+  let chief = null, canton = null, bordure = null;
+  if (!depth){
+    if (r.chance(.22)){ chief = {t: clash(tA), st: r.pick(LINE_KEYS)}; if (r.chance(.5)){ chief.ch = r.pick(CHG_KEYS); chief.tc = contrast(r, chief.t); } }
+    if (!chief && ordKey !== 'canton' && r.chance(.1)) canton = {t: clash(tA)};
+    if (ordKey !== 'bordure' && r.chance(.16)){ bordure = {t: clash(tA)}; if (r.chance(.4)){ bordure.ch = r.pick(CHG_KEYS); bordure.tc = contrast(r, bordure.t); } }
+  }
+  const words = [field];
+  if (!ord || r.chance(.8)){
+    const C = CHG[r.pick(CHG_KEYS)];
+    let pts, size, mode = 'field', ph = '', seme = false;
+    if (ord && ord.on && r.chance(.4)){ pts = ord.on; size = ord.os; mode = 'on'; }
+    else if (ord && ord.btw){ pts = ord.btw; size = ord.bs; mode = 'between'; }
+    else { const a = ARR[r.pick(ARR_KEYS)]; pts = a.p; size = a.s; ph = a.ph || ''; seme = !!a.seme; }
+    let tC = null, counter = false;
+    if (mode === 'on') tC = contrast(r, tO);
+    else if (plain) tC = contrast(r, tA);
+    else if (!three && r.chance(.4)) counter = true;
+    else tC = r.pick(others.filter(t => t !== tO));
+    const tf = mode !== 'on' && chief ? 'translate(0 16) scale(.74) translate(0 -6)' : mode !== 'on' && (bordure || ordKey === 'bordure') ? 'translate(0 6) scale(.8) translate(0 -6)' : null;
+    const wrap = g => tf ? `<g transform="${tf}">${g}</g>` : g;
+    if (counter){
+      const a = P.uid(), b = P.uid();
+      svg += `<clipPath id="${a}">${clipA}</clipPath><clipPath id="${b}">${clipB}</clipPath>` +
+        `<g clip-path="url(#${a})">${wrap(charges(C, pts, size, P.fill(tB), P))}</g><g clip-path="url(#${b})">${wrap(charges(C, pts, size, P.fill(tA), P))}</g>`;
+    } else svg += wrap(charges(C, pts, size, P.fill(tC), P));
+    const cnt = seme ? `semé of ${C.pl}` : countPh(pts.length, C) + ph, tin = counter ? 'counterchanged' : tC;
+    if (mode === 'on') words.push(`on ${ordPh} ${cnt} ${tin}`);
+    else if (mode === 'between') words.push(`${ordPh} between ${cnt} ${tin}`);
+    else { if (ordPh) words.push(ordPh); words.push(`${cnt} ${tin}`); }
+  } else words.push(ordPh);
+  if (chief){
+    svg += drawShapes([{p: bandPoly(-90, 90, -90, -18, chief.st, true)}], P.fill(chief.t), P);
+    const st = chief.st !== 'straight' ? ' ' + chief.st : '';
+    if (chief.ch){ svg += charges(CHG[chief.ch], [[-20, -30], [0, -30], [20, -30]], 11, P.fill(chief.tc), P); words.push(`on a chief${st} ${chief.t} three ${CHG[chief.ch].pl} ${chief.tc}`); }
+    else words.push(`a chief${st} ${chief.t}`);
+  }
+  if (canton){ svg += drawShapes([{p:[[-40, -46], [-8, -46], [-8, -14], [-40, -14]]}], P.fill(canton.t), P); words.push(`a canton ${canton.t}`); }
+  if (bordure){
+    svg += drawBordure(P.fill(bordure.t), P);
+    if (bordure.ch){ svg += charges(CHG[bordure.ch], ordinary('bordure').on, 6.5, P.fill(bordure.tc), P); words.push(`a bordure ${bordure.t} charged with eight ${CHG[bordure.ch].pl} ${bordure.tc}`); }
+    else words.push(`a bordure ${bordure.t}`);
+  }
+  return {svg, blazon: words.join(', ')};
+}
+
+const BRISURES = ['crescent', 'mullet', 'annulet', 'fleur-de-lis', 'rose', 'cross crosslet'];
+/* A full shield: marshalling (single, impaled, quartered) plus a mark of cadency. */
+function arms(r, P){
+  const shape = r.pick(Object.keys(SHIELDS)); P.sh = SHIELDS[shape];
+  const mode = r.wpick([[.45, 'single'], [.22, 'impaled'], [.33, 'quarterly']]);
+  let body = '', bl;
+  if (mode === 'single'){ const c = coat(r, P, 0); body = c.svg; bl = c.blazon; }
+  else if (mode === 'impaled'){
+    const d = coat(r, P, 1), s = coat(r, P, 1), cd = P.uid(), cs = P.uid();
+    body = `<clipPath id="${cd}"><rect x="-90" y="-90" width="90" height="180"/></clipPath><clipPath id="${cs}"><rect x="0" y="-90" width="90" height="180"/></clipPath>` +
+      `<g clip-path="url(#${cd})"><g transform="translate(-18 0) scale(.5 1)">${d.svg}</g></g><g clip-path="url(#${cs})"><g transform="translate(18 0) scale(.5 1)">${s.svg}</g></g>` +
+      `<path d="M0,-90V90" stroke="${P.edge}" stroke-width="${P.ew}"/>`;
+    bl = `Impaled. Dexter: ${d.blazon}. Sinister: ${s.blazon}`;
+  } else {
+    const rep = r.chance(.5), cs = [];
+    if (rep){ const a = coat(r, P, 1), b = coat(r, P, 1); cs.push(a, b, b, a); bl = `Quarterly. 1st and 4th: ${a.blazon}. 2nd and 3rd: ${b.blazon}`; }
+    else { for (let i = 0; i < 4; i++) cs.push(coat(r, P, 1)); bl = 'Quarterly. ' + cs.map((c, i) => `${['1st', '2nd', '3rd', '4th'][i]}: ${c.blazon}`).join('. '); }
+    [[-18, -18, -90, -90, 96], [18, -18, 0, -90, 96], [-18, 30, -90, 6, 84], [18, 30, 0, 6, 84]].forEach(([cx, cy, x, y, h], i) => {
+      const id = P.uid();
+      body += `<clipPath id="${id}"><rect x="${x}" y="${y}" width="90" height="${h}"/></clipPath><g clip-path="url(#${id})"><g transform="translate(${cx} ${cy}) scale(.5) translate(0 -6)">${cs[i].svg}</g></g>`;
+    });
+    body += `<path d="M0,-90V90M-90,6H90" stroke="${P.edge}" stroke-width="${P.ew}"/>`;
+  }
+  const cad = r.wpick([[.55, null], [.25, 'label'], [.2, 'brisure']]);
+  if (cad === 'label'){
+    const n = r.chance(.5) ? 3 : 5, t = r.pick(TKEYS), f = P.fill(t);
+    let d = 'M-25,-37H25V-33.5H-25Z';
+    for (let i = 0; i < n; i++){ const x = -20 + 40 * i / (n - 1); d += `M${x - 2.6},-33.5H${x + 2.6}L${x + 3.6},-25H${x - 3.6}Z`; }
+    body += `<path d="${d}" fill="${f}" stroke="${P.edge}" stroke-width="${P.ew}"/>`;
+    bl += `; a label of ${NUM[n]} points ${t}`;
+  } else if (cad === 'brisure'){
+    const k = r.pick(BRISURES), t = r.pick(TKEYS);
+    body += charges(CHG[k], [[0, -31]], 10, P.fill(t), P);
+    bl += `; for difference ${CHG[k].sg} ${t}`;
+  }
+  const clip = P.uid();
+  return {svg: `${P.defs}<clipPath id="${clip}"><path d="${P.sh}"/></clipPath><g clip-path="url(#${clip})">${body}</g>` +
+    `<path d="${P.sh}" fill="none" stroke="${P.edge}" stroke-width="${n2(P.ew * 2.2)}" stroke-linejoin="round"/>`, blazon: bl, shape, mode};
+}
+
+/* A small accompanying shield: one division or tincture, one charge. */
+const MINI_KINDS = DIV_KINDS.filter(k => ['per pale', 'per fess', 'per bend', 'per bend sinister', 'quarterly', 'per saltire', 'per chevron', 'gyronny'].includes(k.k) || (k.k === 'paly' && k.n === 4) || (k.k === 'barry' && k.n === 6) || (k.k === 'chequy' && k.n === 5));
+function miniCoat(r, P){
+  let svg = '', tA, tB = null;
+  if (r.chance(.3)){ tA = r.pick(TKEYS); svg += `<rect x="-90" y="-90" width="180" height="180" fill="${P.fill(tA)}"/>`; }
+  else {
+    const kind = r.pick(MINI_KINDS); [tA, tB] = fieldPair(r);
+    for (const pt of fieldParts(kind, 'straight')) svg += `<polygon points="${ptsStr(pt.p)}"${pt.tf ? ` transform="${pt.tf}"` : ''} fill="${P.fill(pt.i % 2 ? tB : tA)}" stroke="${P.edge}" stroke-width="${n2(P.ew * .5)}"/>`;
+  }
+  const C = CHG[r.pick(CHG_KEYS)], tC = tB ? r.pick(TKEYS.filter(t => t !== tA && t !== tB)) : contrast(r, tA);
+  svg += charges(C, [[0, 6]], 40, P.fill(tC), P);
+  const sh = SHIELDS.heater, id = P.uid();
+  return `<clipPath id="${id}"><path d="${sh}"/></clipPath><g clip-path="url(#${id})">${svg}</g><path d="${sh}" fill="none" stroke="${P.edge}" stroke-width="${n2(P.ew * 2.6)}"/>`;
+}
+
+/* ---------- Style 2: wax sigillum ---------- */
+// The wax is a greyscale height map, lit inside one filter.
+const WAX10 = [
+  {name:'vermilion', c:'#9C2A20'}, {name:'oxblood', c:'#681A1E'}, {name:'bottle green', c:'#22482F'}, {name:'navy', c:'#1F2D52'},
+  {name:'black', c:'#2A2422'}, {name:'ochre', c:'#A2772A'}, {name:'royal purple', c:'#4A2452'}, {name:'chestnut', c:'#6B3A1E'},
+  {name:'tan', c:'#9A6E45'}, {name:'slate', c:'#3E4A57'}];
+const FOILS = {none:0, trefoil:3, quatrefoil:4, cinquefoil:5, hexafoil:6, octofoil:8};
 function waxMark(hex, o){
   o = o || {};
-  const r = rng('wax', hex), idp = o.idp || 'w', wax = r.pick(WAXES);
+  const acc = {bits: 0}, r = rng('wax/v2', hex, acc), idp = o.idp || 'w';
+  const wax = r.pick(WAX10);
+  const font = r.pick([['roman', 'f-cz', 700], ['Lombardic', 'f-unc', 400], ['blackletter', 'f-frak', 400]]);
+  const markKey = r.pick(['cross', 'mullet', 'crescent', 'rose']), stop = r.pick(['·', ':', '*', '%']);
+  const ringIn = r.pick(['plain', 'beaded', 'rope']), ringOut = r.pick(['plain', 'beaded', 'rope']);
+  const foil = r.pick(Object.keys(FOILS)), diaper = r.pick(['plain', 'lattice', 'dots', 'scales', 'fretty']);
+  const acc2 = r.wpick([[.55, 'two shields'], [.45, 'four shields']]);
   const seed = parseInt(hex.slice(0, 6), 16) % 9973;
-  const harm = [3,4,5,6,7].map(i => [i, r.float(.003, .016), r.float(0, TAU)]);
+  // Uncounted: the blob's outline and how the matrix was pressed.
+  const harm = [3, 4, 5, 6, 7].map(i => [i, r.float(.003, .016), r.float(0, TAU)]);
   const drips = Array.from({length: r.int(2, 5)}, () => [r.float(0, TAU), r.float(4, 11), r.float(.07, .2)]);
   const blob = polarPath(t => {
-    let rr = 95 * (1 + harm.reduce((acc, [i, a, p]) => acc + a * Math.sin(i * t + p), 0));
+    let rr = 95 * (1 + harm.reduce((s, [i, a, p]) => s + a * Math.sin(i * t + p), 0));
     for (const [c, A, w] of drips){ const dt = Math.atan2(Math.sin(t - c), Math.cos(t - c)); rr += A * Math.exp(-((dt / w) ** 2)); }
     return rr;
   }, 240);
   const ox = n2(r.float(-3, 3)), oy = n2(r.float(-3, 3)), rot = n2(r.float(-12, 12));
-  const dev = heraldry(r, idp);
-  const legend = o.legend || '+ S\' SERVICE ';
+
+  const P = painter('relief', idp);
+  const A = arms(rng('arms/v2', hex, acc), P);
+  const rm = rng('minis/v2', hex, acc);
+  let accomp = '';
+  const pos = acc2 === 'two shields' ? [[-47, 4, .24], [47, 4, .24]] : [[-46, -22, .2], [46, -22, .2], [-44, 32, .2], [44, 32, .2]];
+  for (const [x, y, sc] of pos) accomp += `<g transform="translate(${x} ${y}) scale(${sc}) translate(0 -6)">${miniCoat(rm, P)}</g>`;
+  const accDesc = `flanked by ${NUM[pos.length]} small shields of arms`;
+  const mainShield = `<g transform="translate(0 6) scale(.82) translate(0 -6)">${A.svg}</g>`;
+
+  const name = o.name || 'SERVICE', fp = o.fp || '00000000';
+  const legend = `@ S'${stop}${name.replace(/[\s_-]+/g, stop)}${stop}${fp.slice(0, 4)}${stop}${fp.slice(4, 8)} `;
+  const MARKS = {cross:CROSS_D, mullet:CHG.mullet.d, crescent:CHG.crescent.d, rose:roseD};
   const size = clamp(TAU * 71.6 / legend.length * 1.12, 6.5, 11);
+  const ring = (style, R) => style === 'plain' ? `<circle r="${R}" fill="none" stroke="${G.ridge}" stroke-width="1.6"/>`
+    : style === 'beaded' ? rimOrnament('beads', Math.round(TAU * R / 3.4), R, G.ridge) : rimOrnament('rope', Math.round(TAU * R / 2.6), R, G.ridge);
+  let lobes = '';
+  if (FOILS[foil]){
+    const n = FOILS[foil], R0 = 30, rl = 31;
+    lobes = `<path d="${polarPath(t => { let best = 0; for (let i = 0; i < n; i++){ const d = t - (-Math.PI / 2 + i * TAU / n), c = R0 * Math.cos(d), disc = rl * rl - R0 * R0 * Math.sin(d) ** 2; if (disc >= 0) best = Math.max(best, c + Math.sqrt(disc)); } return best; }, 360)}" fill="${G.frame}" stroke="${G.ridge}" stroke-width="1.5"/>`;
+  }
+  const DIAPERS = {
+    lattice: `<pattern id="${idp}-dp" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0,0H9M0,0V9" stroke="${G.dia}" stroke-width=".9"/></pattern>`,
+    dots: `<pattern id="${idp}-dp" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1" fill="${G.dia}"/></pattern>`,
+    scales: `<pattern id="${idp}-dp" width="10" height="7" patternUnits="userSpaceOnUse"><path d="M0,7A5,5 0 0 1 10,7M-5,3.5A5,5 0 0 1 5,3.5M5,3.5A5,5 0 0 1 15,3.5" fill="none" stroke="${G.dia}" stroke-width=".8"/></pattern>`,
+    fretty: `<pattern id="${idp}-dp" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0,0H12M0,0V12" stroke="${G.dia}" stroke-width="1.6"/><circle cx="6" cy="6" r="1.1" fill="${G.dia}"/></pattern>`};
   const filters =
     `<filter id="${idp}-bb" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3.2"/></filter>` +
     `<filter id="${idp}-sb" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4"/></filter>` +
     `<filter id="${idp}-wf" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
       <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="h"/>
       <feComponentTransfer in="h" result="mask"><feFuncA type="linear" slope="12" intercept="-1.4"/></feComponentTransfer>
-      <feGaussianBlur in="h" stdDeviation=".9" result="hb"/>
+      <feGaussianBlur in="h" stdDeviation=".75" result="hb"/>
       <feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="${seed}" result="nz"/>
       <feComposite in="hb" in2="nz" operator="arithmetic" k2="1" k3=".06" result="hn"/>
       <feDiffuseLighting in="hn" surfaceScale="5" diffuseConstant="1.15" lighting-color="#fff" result="diff"><feDistantLight azimuth="225" elevation="48"/></feDiffuseLighting>
@@ -478,24 +853,27 @@ function waxMark(hex, o){
       <feComposite in="wax" in2="diff" operator="arithmetic" k1="1.2" result="lit"/>
       <feComposite in="spec" in2="lit" operator="arithmetic" k2=".55" k3="1" result="shine"/>
       <feComposite in="shine" in2="mask" operator="in"/></filter>`;
-  const s = `<defs>${filters}</defs>` +
+  const svg = `<defs>${filters}${DIAPERS[diaper] || ''}</defs>` +
     `<path d="${blob}" fill="#000" opacity=".38" transform="translate(2 4)" filter="url(#${idp}-sb)"/>` +
     `<g filter="url(#${idp}-wf)"><rect x="-135" y="-135" width="270" height="270" fill="#000"/>` +
     `<path d="${blob}" fill="${G.blob}" filter="url(#${idp}-bb)"/>` +
     `<circle r="85" fill="none" stroke="${G.lip}" stroke-width="7" filter="url(#${idp}-bb)"/>` +
     `<g transform="translate(${ox} ${oy}) rotate(${rot})">` +
-      `<circle r="79.5" fill="${G.field}"/><circle r="79.5" fill="none" stroke="${G.ridge}" stroke-width="2.2"/>` +
-      `<circle r="64" fill="none" stroke="${G.ridge}" stroke-width="1.3"/>` +
-      ringText(legend, 71.6, size, G.ridge, 700) + dev.svg +
+      `<circle r="79.5" fill="${G.field}"/>${ring(ringOut, 79.5)}${ring(ringIn, 63.5)}` +
+      (DIAPERS[diaper] ? `<circle r="62.5" fill="url(#${idp}-dp)"/>` : '') +
+      ringText(legend, 71.6, size, G.ridge, {cls: font[1], weight: font[2], mark: MARKS[markKey]}) +
+      lobes + accomp + mainShield +
     `</g></g>`;
-  return { svg: s, desc: `Wax sigillum in ${wax.name} wax. Arms: ${dev.blazon}` };
+  const colorArms = () => arms(rng('arms/v2', hex), painter('color', idp + 'c'));
+  return { svg, bits: acc.bits, colorArms,
+    desc: `Wax sigillum in ${wax.name} wax, ${font[0]} legend, ${foil === 'none' ? 'no tracery' : foil + ' tracery'}, ${diaper === 'plain' ? 'plain' : diaper} ground, ${accDesc}. Arms: ${A.blazon}.` };
 }
 
-/* ---------- Style 3: square seal chop with folded-stroke glyphs ---------- */
+/* ---------- Style 3: square seal chop with composed folded-stroke glyphs ---------- */
 function mazeTree(cols, rows, g, hb){
   const N = cols * rows, seen = new Uint8Array(N), edges = [];
   const start = g.int(0, N - 1), stack = [[start, -1]]; seen[start] = 1;
-  const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   while (stack.length){
     const [cur, last] = stack[stack.length - 1], cx = cur % cols, cy = (cur / cols) | 0, opts = [];
     dirs.forEach(([dx, dy], di) => {
@@ -505,61 +883,149 @@ function mazeTree(cols, rows, g, hb){
       opts.push([ni, di, (dx ? hb : 1) * (di === last ? 2.2 : 1)]);
     });
     if (!opts.length){ stack.pop(); continue; }
-    let x = g.next() * opts.reduce((a, o) => a + o[2], 0), pick = opts[opts.length - 1];
-    for (const o of opts){ if ((x -= o[2]) <= 0){ pick = o; break; } }
-    seen[pick[0]] = 1; edges.push([cur, pick[0]]); stack.push([pick[0], pick[1]]);
+    let x = g.next() * opts.reduce((a, q) => a + q[2], 0), pick = opts[opts.length - 1];
+    for (const q of opts){ if ((x -= q[2]) <= 0){ pick = q; break; } }
+    seen[pick[0]] = 1; edges.push([cur % cols, (cur / cols) | 0, pick[0] % cols, (pick[0] / cols) | 0]); stack.push([pick[0], pick[1]]);
   }
   return edges;
 }
-
-function glyph(c, pitch, wr, g){
-  const W = c.x1 - c.x0, H = c.y1 - c.y0;
-  const cols = Math.max(3, Math.round(W / pitch)), rows = Math.max(3, Math.round(H / pitch));
-  const sx = W / cols, sy = H / rows, sw = Math.min(sx, sy) * wr;
-  let edges = mazeTree(cols, rows, g, g.float(1.4, 4));
-  for (let p = g.int(0, 2); p > 0; p--){
-    const deg = new Uint8Array(cols * rows);
-    for (const [a, b] of edges){ deg[a]++; deg[b]++; }
-    edges = edges.filter(([a, b]) => !((deg[a] === 1 || deg[b] === 1) && g.chance(.45)));
+const GLYPH_LAYOUTS = [
+  [[0, 0, .5, 1], [.5, 0, 1, 1]], [[0, 0, .38, 1], [.38, 0, 1, 1]], [[0, 0, .62, 1], [.62, 0, 1, 1]],
+  [[0, 0, 1, .5], [0, .5, 1, 1]], [[0, 0, 1, .38], [0, .38, 1, 1]], [[0, 0, 1, .62], [0, .62, 1, 1]],
+  [[0, 0, .5, .5], [.5, 0, 1, .5], [0, .5, .5, 1], [.5, .5, 1, 1]],
+  [[0, 0, .5, 1], [.5, 0, 1, .5], [.5, .5, 1, 1]], [[0, 0, .5, .5], [0, .5, .5, 1], [.5, 0, 1, 1]],
+  [[0, 0, 1, .5], [0, .5, .5, 1], [.5, .5, 1, 1]], [[0, 0, .5, .5], [.5, 0, 1, .5], [0, .5, 1, 1]],
+  [[0, 0, 1 / 3, 1], [1 / 3, 0, 2 / 3, 1], [2 / 3, 0, 1, 1]], [[0, 0, 1, 1 / 3], [0, 1 / 3, 1, 2 / 3], [0, 2 / 3, 1, 1]]];
+const STROKE_FAMS = ['maze', 'hfold', 'vfold', 'spiral', 'frame', 'comb', 'grid'];
+// Each family is a stroke structure on the region's node lattice; edges are [x1, y1, x2, y2] node coordinates.
+function familyEdges(fam, C, R, g, mz){
+  const E = [], seg = (a, b, c, d) => E.push([a, b, c, d]);
+  const flip = (fx, fy) => E.forEach(e => { if (fx){ e[0] = C - 1 - e[0]; e[2] = C - 1 - e[2]; } if (fy){ e[1] = R - 1 - e[1]; e[3] = R - 1 - e[3]; } });
+  if (fam === 'maze') return mazeTree(C, R, mz, [1.3, 2.5, 4.5][g.level(3)]);
+  if (fam === 'hfold' || fam === 'vfold'){
+    const h = fam === 'hfold', A = h ? R : C, B = h ? C : R, v = g.level(4);
+    const put = (b1, a1, b2, a2) => h ? seg(b1, a1, b2, a2) : seg(a1, b1, a2, b2);
+    for (let a = 0; a < A; a++){ put(0, a, B - 1, a); if (a < A - 1){ const end = a % 2 ? 0 : B - 1; put(end, a, end, a + 1); } }
+    flip(v & 1, v >> 1); return E;
   }
-  const X = i => n2(c.x0 + sx * (i % cols + .5)), Y = i => n2(c.y0 + sy * (((i / cols) | 0) + .5));
-  let d = '';
-  for (const [a, b] of edges) d += `M${X(a)},${Y(a)}L${X(b)},${Y(b)}`;
-  return `<path d="${d}" stroke-width="${n2(sw)}"/>`;
+  if (fam === 'spiral'){
+    const v = g.level(4), tr = g.level(2), order = [], [CC, RR] = tr ? [R, C] : [C, R];
+    let l = 0, rt = CC - 1, t = 0, b = RR - 1;
+    while (l <= rt && t <= b){
+      for (let x = l; x <= rt; x++) order.push([x, t]);
+      for (let y = t + 1; y <= b; y++) order.push([rt, y]);
+      if (t < b) for (let x = rt - 1; x >= l; x--) order.push([x, b]);
+      if (l < rt) for (let y = b - 1; y > t; y--) order.push([l, y]);
+      l++; rt--; t++; b--;
+    }
+    if (tr) order.forEach(p => p.reverse());
+    for (let i = 1; i < order.length; i++) seg(order[i - 1][0], order[i - 1][1], order[i][0], order[i][1]);
+    flip(v & 1, v >> 1); return E;
+  }
+  if (fam === 'frame'){
+    const side = g.level(4), alt = g.chance(.5);
+    for (let i = 0; i <= Math.min(C, R) / 2 - 1; i++){
+      const x0 = i, x1 = C - 1 - i, y0 = i, y1 = R - 1 - i; if (x1 <= x0 || y1 <= y0) break;
+      const s = (side + (alt ? i : 0)) % 4, mx = Math.floor((x0 + x1) / 2), my = Math.floor((y0 + y1) / 2);
+      const sides = [[x0, y0, x1, y0], [x1, y0, x1, y1], [x0, y1, x1, y1], [x0, y0, x0, y1]];
+      sides.forEach((sd, k) => {
+        if (k !== s) return seg(...sd);
+        if (k % 2 === 0){ if (mx > sd[0]) seg(sd[0], sd[1], mx, sd[1]); if (mx + 1 < sd[2]) seg(mx + 1, sd[1], sd[2], sd[1]); }
+        else { if (my > sd[1]) seg(sd[0], sd[1], sd[0], my); if (my + 1 < sd[3]) seg(sd[0], my + 1, sd[0], sd[3]); }
+      });
+    }
+    return E;
+  }
+  if (fam === 'comb'){
+    const vert = g.level(2), side = g.level(2);
+    if (!vert){ const sx = side ? C - 1 : 0; seg(sx, 0, sx, R - 1); for (let y = 0; y < R; y += 2) seg(0, y, C - 1, y); }
+    else { const sy = side ? R - 1 : 0; seg(0, sy, C - 1, sy); for (let x = 0; x < C; x += 2) seg(x, 0, x, R - 1); }
+    return E;
+  }
+  const off = g.level(2), tian = g.level(2);
+  if (tian){ seg(0, 0, C - 1, 0); seg(0, R - 1, C - 1, R - 1); seg(0, 0, 0, R - 1); seg(C - 1, 0, C - 1, R - 1);
+    const mx = Math.floor((C - 1) / 2) + off * ((C - 1) % 2), my = Math.floor((R - 1) / 2) + off * ((R - 1) % 2); seg(mx, 0, mx, R - 1); seg(0, my, C - 1, my); }
+  else { for (let y = off; y < R; y += 2) seg(0, y, C - 1, y); for (let x = off; x < C; x += 2) seg(x, 0, x, R - 1); }
+  return E;
 }
-
+function glyph(cell, pitch, wr, g, mzLabel, hex){
+  const lay = g.pick(GLYPH_LAYOUTS), W = cell.x1 - cell.x0, H = cell.y1 - cell.y0, inset = pitch * .2;
+  let out = '';
+  lay.forEach((q, qi) => {
+    const x0 = cell.x0 + W * q[0] + (q[0] > 0 ? inset : 0), x1 = cell.x0 + W * q[2] - (q[2] < 1 ? inset : 0);
+    const y0 = cell.y0 + H * q[1] + (q[1] > 0 ? inset : 0), y1 = cell.y0 + H * q[3] - (q[3] < 1 ? inset : 0);
+    const C = Math.max(2, Math.round((x1 - x0) / pitch)), R = Math.max(2, Math.round((y1 - y0) / pitch));
+    const sx = (x1 - x0) / C, sy = (y1 - y0) / R, sw = Math.min(sx, sy) * wr * [.82, 1.12][g.level(2)];
+    const fam = g.pick(STROKE_FAMS), E = familyEdges(fam, C, R, g, rng(mzLabel + '-' + qi, hex));
+    const X = i => n2(x0 + sx * (i + .5)), Y = j => n2(y0 + sy * (j + .5));
+    out += `<path d="${E.map(e => `M${X(e[0])},${Y(e[1])}L${X(e[2])},${Y(e[3])}`).join('')}" stroke-width="${n2(sw)}"/>`;
+  });
+  return out;
+}
+const CINNABAR6 = [{name:'cinnabar', c:'#B8322A'}, {name:'vermilion', c:'#C9432E'}, {name:'carmine', c:'#A5231F'},
+  {name:'madder', c:'#B23A3E'}, {name:'cadmium', c:'#D0532F'}, {name:'crimson lake', c:'#8E1F2A'}];
 function chopMark(hex, o){
   o = o || {};
-  const r = rng('chop', hex), idp = o.idp || 'c', ink = r.pick(CINNABAR);
-  const baiwen = r.chance(.55), three = r.chance(.33), rx = r.pick([0, 2, 4, 8]);
-  const bw = baiwen ? 0 : r.float(6, 10), margin = baiwen ? r.float(9, 14) : bw + r.float(6, 9), gap = r.float(5, 10);
+  const acc = {bits: 0}, r = rng('chop/v2', hex, acc), idp = o.idp || 'c';
+  const ink = r.pick(CINNABAR6), baiwen = r.chance(.5);
+  const arr = r.wpick([[.45, '2x2'], [.2, 'right-tall'], [.15, 'left-tall'], [.2, '3x2']]);
+  const rx = [0, 3, 7, 12][r.level(4)];
+  const border = baiwen ? r.pick(['none', 'thin']) : r.pick(['thin', 'thick', 'double']);
+  const bw = {none:0, thin:4, thick:9, double:7}[border];
+  const divider = !baiwen && r.chance(.4);
+  const pitch = [12, 13.5, 15, 16.5][r.level(4)], wr = [.42, .5, .58][r.level(3)];
+  const chips = [];
+  for (let i = 0; i < 8; i++) if (r.chance(.5)) chips.push(i);
+  const margin = baiwen ? 11 + bw : bw + 7, gap = 7;
   const lo = -100 + margin, hi = 100 - margin, h = gap / 2;
-  // Traditional reading order: right column top to bottom, then left.
-  const cells = three
-    ? [{x0:h, y0:lo, x1:hi, y1:hi}, {x0:lo, y0:lo, x1:-h, y1:-h}, {x0:lo, y0:h, x1:-h, y1:hi}]
-    : [{x0:h, y0:lo, x1:hi, y1:-h}, {x0:h, y0:h, x1:hi, y1:hi}, {x0:lo, y0:lo, x1:-h, y1:-h}, {x0:lo, y0:h, x1:-h, y1:hi}];
-  const pitch = r.float(12.5, 16.5), wr = r.float(.44, .56);
-  const strokes = cells.map((c, i) => glyph(c, pitch, wr, rng('chop-glyph-' + i, hex))).join('');
-  const seed = parseInt(hex.slice(6, 12), 16) % 9973;
+  const third = (hi - lo - 2 * gap) / 3;
+  const cells = {
+    '2x2': [[h, lo, hi, -h], [h, h, hi, hi], [lo, lo, -h, -h], [lo, h, -h, hi]],
+    'right-tall': [[h, lo, hi, hi], [lo, lo, -h, -h], [lo, h, -h, hi]],
+    'left-tall': [[h, lo, hi, -h], [h, h, hi, hi], [lo, lo, -h, hi]],
+    '3x2': [0, 1, 2].flatMap(c => [[hi - (c + 1) * third - c * gap, lo, hi - c * (third + gap), -h], [hi - (c + 1) * third - c * gap, h, hi - c * (third + gap), hi]])
+  }[arr].map(([x0, y0, x1, y1]) => ({x0, y0, x1, y1}));
+  const strokes = cells.map((c, i) => glyph(c, pitch, wr, r, `chop-maze-${i}`, hex)).join('');
+  const seed = parseInt(hex.slice(6, 12), 16) % 9973, cr = rng('chop-chips', hex);
+  const chipD = chips.map(i => {
+    const side = i >> 1, t = (i & 1 ? .7 : .3) * 200 - 100, w = cr.float(3, 7), d = cr.float(3, 8), j = cr.float(-2, 2);
+    const pts = [[t - w, -103], [t + w, -103], [t + w * .4 + j, -100 + d], [t - w * .6, -100 + d * .5]];
+    return rotPoly(pts, side * 90);
+  }).join('');
   let s = `<defs>${inkFilter(idp + '-f', seed, 3.5, .55)}</defs>`;
+  const maskOpen = `<mask id="${idp}-m" maskUnits="userSpaceOnUse" x="-105" y="-105" width="210" height="210"><rect x="-100" y="-100" width="200" height="200" rx="${rx}" fill="#fff"/>`;
+  const chipCut = chipD ? `<path d="${chipD}" fill="#000"/>` : '';
   if (baiwen){
-    s += `<mask id="${idp}-m" maskUnits="userSpaceOnUse" x="-105" y="-105" width="210" height="210">` +
-      `<rect x="-100" y="-100" width="200" height="200" rx="${rx}" fill="#fff"/>` +
-      `<g fill="none" stroke="#000" stroke-linecap="square">${strokes}</g></mask>` +
-      `<g filter="url(#${idp}-f)"><rect x="-100" y="-100" width="200" height="200" rx="${rx}" fill="${ink.c}" mask="url(#${idp}-m)"/></g>`;
+    s += maskOpen + `<g fill="none" stroke="#000" stroke-linecap="square">${strokes}</g>${chipCut}</mask>` +
+      `<g filter="url(#${idp}-f)"><rect x="-100" y="-100" width="200" height="200" rx="${rx}" fill="${ink.c}" mask="url(#${idp}-m)"/>` +
+      (border === 'thin' ? `<rect x="-93" y="-93" width="186" height="186" rx="${n2(rx * .8)}" fill="none" stroke="${PAPER}" stroke-width="2.2"/>` : '') + `</g>`;
   } else {
-    const divider = r.chance(.4) ? `<path d="M0,${lo}V${hi}${three ? '' : `M${lo},0H${hi}`}" stroke-width="${n2(bw * .45)}"/>` : '';
-    s += `<g filter="url(#${idp}-f)" fill="none" stroke="${ink.c}" stroke-linecap="square">` +
-      `<rect x="${n2(-100 + bw / 2)}" y="${n2(-100 + bw / 2)}" width="${n2(200 - bw)}" height="${n2(200 - bw)}" rx="${rx}" stroke-width="${n2(bw)}"/>` +
-      divider + strokes + `</g>`;
+    const frame = border === 'double'
+      ? `<rect x="-98" y="-98" width="196" height="196" rx="${rx}" stroke-width="3"/><rect x="-91.5" y="-91.5" width="183" height="183" rx="${n2(rx * .8)}" stroke-width="2.4"/>`
+      : `<rect x="${n2(-100 + bw / 2)}" y="${n2(-100 + bw / 2)}" width="${n2(200 - bw)}" height="${n2(200 - bw)}" rx="${rx}" stroke-width="${bw}"/>`;
+    const div = divider ? `<path d="M0,${lo}V${hi}${arr === '2x2' ? `M${lo},0H${hi}` : ''}" stroke-width="2.6"/>` : '';
+    s += maskOpen + `${chipCut}</mask><g filter="url(#${idp}-f)" mask="url(#${idp}-m)" fill="none" stroke="${ink.c}" stroke-linecap="square">${frame}${div}${strokes}</g>`;
   }
-  return { svg: s, desc: `${baiwen ? 'Baiwen (white-line)' : 'Zhuwen (red-line)'} seal chop in ${ink.name}, ${cells.length} folded-stroke glyphs, one per slice of the key hash` };
+  return { svg: s, bits: acc.bits,
+    desc: `${baiwen ? 'Baiwen (white-line)' : 'Zhuwen (red-line)'} chop in ${ink.name}, ${cells.length} glyphs composed from folded-stroke components, ${border === 'none' ? 'borderless' : border + ' border'}, ${chips.length} chipped edge${chips.length === 1 ? '' : 's'}` };
 }
 
 function houseMark(style, hex, name, fp, idp, detail){
-  if (style === 'wax') return waxMark(hex, {idp, legend: `+ S' ${name.replace(/[\s_-]+/g, '·')} · ${fp.slice(0, 4)}·${fp.slice(4, 8)} `});
+  if (style === 'wax') return waxMark(hex, {idp, name, fp});
   if (style === 'chop') return chopMark(hex, {idp});
   return rosetteMark(hex, {idp, legend: `${name} * ${groups(fp)} * `, detail});
+}
+
+/* Measure a style's design space by sampling keys: Shannon bits (mean) and collision bits (Rényi-2). */
+function measureStyle(style, n, from){
+  const out = [];
+  for (let i = from; i < from + n; i++) out.push(houseMark(style, sha256('exomachina/sample/' + i), 'SAMPLE', 'ABCDEF0123456789', 'ms', .3).bits);
+  return out;
+}
+function spaceStats(bits){
+  const H = bits.reduce((a, b) => a + b, 0) / bits.length;
+  const H2 = -Math.log2(bits.reduce((a, b) => a + 2 ** -b, 0) / bits.length);
+  return {H, H2, min: Math.min(...bits), n: bits.length};
 }
 
 /* ---------- The certificate ---------- */
@@ -776,9 +1242,47 @@ function renderCert(){
   const svg = document.getElementById('cert');
   svg.innerHTML = `<defs>${defs}</defs>` + (cancelled ? `<g mask="url(#c-punch)">${s}</g>` : s);
   svg.setAttribute('aria-label', `Certificate of Acceptance for artifact revision ${DATA.revision}, produced by ${name}. State: ${state.status}.`);
-  document.getElementById('info').innerHTML =
-    `<b>House mark.</b> ${esc(seal.desc)}. <b>Livery:</b> ${esc(liv.name.toLowerCase())}, from the same key. ` +
-    `<b>Seeds:</b> house ← SHA-256 of key (<code>${hex.slice(0, 12)}…</code>), vignette ← manifest, underprint and counters ← revision sha256.`;
+  renderInspector(hex, name, fp, liv);
+}
+
+/* ---------- Seal inspector and design space ---------- */
+const STYLE_NAMES = {rosette:'Rosette', wax:'Wax sigillum', chop:'Seal chop'};
+const pow10 = b => `10<sup>${Math.floor(b * Math.log10(2))}</sup>`;
+const houses50 = h2 => { const b = h2 / 2 + Math.log2(1.1774); return b < 20 ? Math.round(2 ** b).toLocaleString() : `≈ ${pow10(b)}`; };
+function renderInspector(hex, name, fp, liv){
+  const m = houseMark(state.style, hex, name, fp, 'is', 1), wax = state.style === 'wax';
+  document.getElementById('insp-seal').innerHTML = m.svg;
+  const fig = document.getElementById('insp-arms-fig');
+  fig.hidden = !wax; document.getElementById('insp').classList.toggle('two', wax);
+  let desc = esc(m.desc);
+  if (wax){
+    const A = m.colorArms();
+    document.getElementById('insp-arms').innerHTML = A.svg;
+    const [lead, arms] = m.desc.split(' Arms: ');
+    desc = `${esc(lead)}</p><p class="blazon">${esc(arms)}`;
+  }
+  document.getElementById('insp-desc').innerHTML = desc;
+  document.getElementById('insp-odds').innerHTML =
+    `<b>This exact seal:</b> 1 in 2<sup>${Math.round(m.bits)}</sup> (${pow10(m.bits)}). <b>Certificate livery:</b> ${esc(liv.name.toLowerCase())}, also from the key.`;
+  renderSpace();
+}
+const SAMPLES = 256, space = {rosette: [], wax: [], chop: []};
+function renderSpace(){
+  let h = '<div class="hd">Style</div><div class="hd">Designs</div><div class="hd">Lookalike pair likely after</div>';
+  for (const st of Object.keys(space)){
+    const b = space[st], cur = st === state.style ? ' class="cur"' : '';
+    if (b.length < SAMPLES){ h += `<div${cur}>${STYLE_NAMES[st]}</div><div>measuring…</div><div>${b.length}/${SAMPLES}</div>`; continue; }
+    const s = spaceStats(b);
+    h += `<div${cur}>${STYLE_NAMES[st]}</div><div>2<sup>${Math.round(s.H)}</sup> ${pow10(s.H)}</div><div>${houses50(s.H2)} houses</div>`;
+  }
+  document.getElementById('space').innerHTML = h;
+}
+function measureSpace(){
+  const st = Object.keys(space).find(k => space[k].length < SAMPLES);
+  if (!st) return;
+  space[st].push(...measureStyle(st, 16, space[st].length));
+  renderSpace();
+  setTimeout(measureSpace, 0);
 }
 
 /* ---------- Gallery ---------- */
@@ -827,7 +1331,7 @@ document.getElementById('gallery').addEventListener('click', e => {
   document.getElementById('cert').scrollIntoView({behavior: 'smooth', block: 'start'});
 });
 
-syncControls(); renderCert(); renderGallery();
+syncControls(); renderCert(); renderGallery(); setTimeout(measureSpace, 300);
 </script>
 </body>
 </html>
