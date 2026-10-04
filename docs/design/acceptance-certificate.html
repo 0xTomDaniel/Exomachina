@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Certificate of Acceptance</title>
+<meta name="description" content="Spike: an engraved-style Certificate of Acceptance for an Exomachina factory outcome, with a procedurally generated house seal derived from the service key.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Pinyon+Script&display=swap">
+<style>
+:root{
+  --bg:#E7E3DA; --panel:#F7F5F0; --line:#D5CFC2; --ink:#1D1F22; --ink-2:#585D64; --ink-3:#8A8F96;
+  --chip:#ECE8DF; --focus:#2A66D9;
+  --shadow:0 18px 40px rgba(46,36,20,.20), 0 2px 6px rgba(46,36,20,.12);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141619; --panel:#1C1F23; --line:#30353C; --ink:#ECEDEE; --ink-2:#A9AFB6; --ink-3:#7A8088;
+    --chip:#24282D; --focus:#7AA7F5;
+    --shadow:0 18px 50px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141619; --panel:#1C1F23; --line:#30353C; --ink:#ECEDEE; --ink-2:#A9AFB6; --ink-3:#7A8088;
+  --chip:#24282D; --focus:#7AA7F5;
+  --shadow:0 18px 50px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Hanken Grotesk",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:22px 16px 72px}
+header .kicker{font:600 12px/1.3 "Hanken Grotesk",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 6px}
+header h1{font:600 26px/1.15 "Cormorant Garamond",Georgia,serif;margin:0 0 6px}
+header p{margin:0 0 18px;color:var(--ink-2);max-width:62ch}
+h2{font:600 13px/1.3 "Hanken Grotesk",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin:0 0 10px}
+#cert{display:block;width:100%;height:auto;filter:drop-shadow(0 14px 22px rgba(46,36,20,.22)) drop-shadow(0 2px 4px rgba(46,36,20,.14))}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:18px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:14px}
+.label{font:600 12px/1.2 "Hanken Grotesk",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);min-width:128px}
+.seg{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--chip)}
+.seg button{appearance:none;border:0;background:transparent;color:var(--ink-2);font:500 14px/1 "Hanken Grotesk",sans-serif;padding:9px 14px;border-radius:999px;cursor:pointer;min-height:36px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.fields{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px}
+@media (min-width:560px){.fields{grid-template-columns:1fr 1.5fr}}
+.field{display:flex;flex-direction:column;gap:5px;font:600 12px/1.2 "Hanken Grotesk",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.field small{font:400 12px/1.3 "Hanken Grotesk",sans-serif;letter-spacing:0;text-transform:none;color:var(--ink-3)}
+input{width:100%;min-width:0;font:500 14px/1.2 "IBM Plex Mono",ui-monospace,monospace;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--chip);color:var(--ink)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--ink);font:500 14px/1 "Hanken Grotesk",sans-serif;padding:10px 14px;border-radius:999px;cursor:pointer;min-height:38px}
+.btn:hover{border-color:var(--ink-3)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.info{margin:14px 0 0;color:var(--ink-2);font-size:14px}
+.info b{color:var(--ink);font-weight:600}
+.gallery-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.gallery-head p{margin:0 0 12px;color:var(--ink-2);font-size:14px}
+.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (min-width:560px){.gallery{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile{appearance:none;border:1px solid var(--line);border-radius:12px;background:#F8F2E2;padding:8px 6px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#2B2722;min-width:0}
+.tile:hover{border-color:#B9A985}
+.tile svg{display:block;width:100%;height:auto;aspect-ratio:1}
+.tile span{font:600 9.5px/1.25 "Hanken Grotesk",sans-serif;letter-spacing:.06em;text-transform:uppercase;text-align:center;overflow-wrap:anywhere}
+.tile code{font:400 9px/1.2 "IBM Plex Mono",monospace;color:#6B6355}
+.map{display:grid;grid-template-columns:1fr;gap:0;margin:0}
+.map div{padding:10px 0;border-top:1px solid var(--line)}
+.map div:first-child{border-top:0;padding-top:0}
+.map dt{font-weight:600;font-size:14px}
+.map dd{margin:2px 0 0;color:var(--ink-2);font-size:14px}
+.map code,.note code{font:12.5px "IBM Plex Mono",monospace}
+.note{margin:14px 0 0;padding:12px 14px;border-left:3px solid var(--ink-3);background:var(--chip);border-radius:0 8px 8px 0;color:var(--ink-2);font-size:14px}
+/* Certificate type, shared by the page's inline SVGs */
+.f-cz{font-family:"Cinzel","Trajan Pro",Georgia,serif}
+.f-cg{font-family:"Cormorant Garamond",Garamond,Georgia,serif}
+.f-sc{font-family:"Pinyon Script","Snell Roundhand","Apple Chancery",cursive}
+.f-mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="kicker">Exomachina · design spike</p>
+    <h1>Certificate of Acceptance</h1>
+    <p>The human-readable face of an Acceptance record: Quality accepted an exact artifact revision. The house seal is generated from the factory service's key, so every factory gets its own mark. Data is the prototype's observed run r2.</p>
+  </header>
+
+  <figure style="margin:0">
+    <svg id="cert" viewBox="0 0 1000 1414" role="img" aria-label="Certificate of Acceptance for artifact revision r2"></svg>
+  </figure>
+
+  <section class="panel" aria-label="Certificate controls">
+    <div class="row"><span class="label">House seal</span>
+      <div class="seg" data-key="style">
+        <button type="button" data-v="rosette">Rosette</button>
+        <button type="button" data-v="wax">Wax sigillum</button>
+        <button type="button" data-v="chop">Seal chop</button>
+      </div>
+    </div>
+    <div class="row"><span class="label">Certificate state</span>
+      <div class="seg" data-key="status">
+        <button type="button" data-v="accepted">Accepted</button>
+        <button type="button" data-v="specimen">Specimen</button>
+        <button type="button" data-v="cancelled">Cancelled</button>
+      </div>
+    </div>
+    <div class="fields">
+      <label class="field">Service name <input id="name" autocomplete="off" spellcheck="false"><small>Changes the legend only.</small></label>
+      <label class="field">Service key fingerprint <input id="key" autocomplete="off" spellcheck="false"><small>Drives all geometry. The demo uses the A2A service identity.</small></label>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn" id="random">New random house</button>
+      <button type="button" class="btn" id="reset">Back to research-factory</button>
+    </div>
+    <p class="info" id="info"></p>
+  </section>
+
+  <section class="panel">
+    <div class="gallery-head">
+      <h2>Other houses</h2>
+      <button type="button" class="btn" id="shuffle">Shuffle</button>
+    </div>
+    <p style="margin:0 0 12px;color:var(--ink-2);font-size:14px">Same style, different keys. Tap one to put it on the certificate.</p>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+  <section class="panel">
+    <h2>What each part binds</h2>
+    <dl class="map">
+      <div><dt>Body text</dt><dd>The Acceptance: Quality accepted revision <code>r2</code> (<code>af57a60b…</code>) on attempt 2, after rejecting <code>r1</code>.</dd></div>
+      <div><dt>House seal</dt><dd>Provenance. Geometry comes from SHA-256 of the service key fingerprint, so it is fixed for the life of the key.</dd></div>
+      <div><dt>Top vignette</dt><dd>Factory version <code>v1</code>, generated from manifest digest <code>a746eb04…</code>. A new version gets a new vignette.</dd></div>
+      <div><dt>Underprint and corner counters</dt><dd>This exact revision, generated from its sha256. No two certificates share them.</dd></div>
+      <div><dt>Signatures</dt><dd>Quality, the acceptance authority, and the Director, accountable for the run. Production never signs its own acceptance.</dd></div>
+      <div><dt>DELIVERED stamp</dt><dd>The delivery receipt, an endorsement added after acceptance: release <code>r2</code>, 1 effect, 1 attempt.</dd></div>
+      <div><dt>Border microprint</dt><dd>The manifest, package, run-inputs, definition and revision digests, in full.</dd></div>
+      <div><dt>SPECIMEN overprint</dt><dd>The run used a fixture Director and release receiver, so this certificate must not look like the real thing.</dd></div>
+      <div><dt>Punch cancellation</dt><dd>A revoked or superseded acceptance (demo only).</dd></div>
+    </dl>
+    <p class="note">Ornament is not security. Anyone can copy pixels. The credential would be a signed attestation over these digests, such as an in-toto statement recorded in a transparency log. This page is only its human-readable face.</p>
+  </section>
+</main>
+
+<script>
+'use strict';
+
+/* ---------- Observed run r2 (prototype/temporal-factory/evidence/integrated-observed.json) ---------- */
+const DATA = {
+  service: 'research-factory',
+  identity: 'c905870f-6467-4cbb-aad9-8be1d85b987b',
+  capability: 'verified-research@1',
+  task: '34277fae-eb3d-425d-80cc-811445c95d94',
+  run: '63a59ec29163054e44b3',
+  revision: 'r2',
+  sha: 'af57a60be510c0f760fe09e019a8a806c6f21e49d6c1e9f319739fc9eb33d70c',
+  reviewer: '88cf19f8-0baf-4ce2-8403-d0aff7e2259c',
+  version: 'v1',
+  manifest: 'a746eb04ba30a638fe565574aa7572568e575886f357a47b2543950cf7009d0b',
+  build: 'b-05b5760359e6',
+  runInputs: '138a081a917793bef45f42f1bd26fe6279497b664bf2ed5ff513c08e4149d82e',
+  pkg: '04cdc117c1bf16d44d6e3f99e6fe18f58b5b9e991462424f1a8870b5df412683',
+  definition: '911e5a4edd64703398e5398c095b2d17778dd54151d4cefc3efa937d75d6e1fb',
+  receipt: '2eeba6dc98ac86f915f3e013569dbdf17866b088bb216de660c820a1f9d3756c'
+};
+
+/* ---------- SHA-256 (pure JS, so file:// and any context work) ---------- */
+const K256 = [
+  0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+  0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+  0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+  0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+  0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+  0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+  0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+  0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+function sha256(msg){
+  const bytes = new TextEncoder().encode(msg), l = bytes.length;
+  const size = ((l + 9 + 63) >> 6) << 6, buf = new Uint8Array(size);
+  buf.set(bytes); buf[l] = 0x80;
+  const dv = new DataView(buf.buffer);
+  dv.setUint32(size - 4, (l * 8) >>> 0); dv.setUint32(size - 8, Math.floor(l / 0x20000000));
+  const H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const w = new Uint32Array(64), rotr = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let off = 0; off < size; off += 64){
+    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(off + i * 4);
+    for (let i = 16; i < 64; i++){
+      const a = w[i-15], b = w[i-2];
+      w[i] = (w[i-16] + (rotr(a,7) ^ rotr(a,18) ^ (a >>> 3)) + w[i-7] + (rotr(b,17) ^ rotr(b,19) ^ (b >>> 10))) | 0;
+    }
+    let [a,b,c,d,e,f,g,h] = H;
+    for (let i = 0; i < 64; i++){
+      const t1 = (h + (rotr(e,6) ^ rotr(e,11) ^ rotr(e,25)) + ((e & f) ^ (~e & g)) + K256[i] + w[i]) | 0;
+      const t2 = ((rotr(a,2) ^ rotr(a,13) ^ rotr(a,22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+    }
+    H[0]=(H[0]+a)|0; H[1]=(H[1]+b)|0; H[2]=(H[2]+c)|0; H[3]=(H[3]+d)|0;
+    H[4]=(H[4]+e)|0; H[5]=(H[5]+f)|0; H[6]=(H[6]+g)|0; H[7]=(H[7]+h)|0;
+  }
+  return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+}
+
+/* Each design decision draws from its own domain-separated stream: rng(label, seed). */
+function rng(label, seedHex){
+  const h = sha256(label + '\n' + seedHex), wd = i => parseInt(h.slice(i * 8, i * 8 + 8), 16) | 0;
+  let a = wd(0), b = wd(1), c = wd(2), d = wd(3);
+  const next = () => { // sfc32
+    a |= 0; b |= 0; c |= 0; d |= 0;
+    const t = (((a + b) | 0) + d) | 0; d = (d + 1) | 0;
+    a = b ^ (b >>> 9); b = (c + (c << 3)) | 0; c = (c << 21) | (c >>> 11); c = (c + t) | 0;
+    return (t >>> 0) / 4294967296;
+  };
+  for (let i = 0; i < 12; i++) next();
+  return {
+    next, float: (lo, hi) => lo + (hi - lo) * next(),
+    int: (lo, hi) => lo + Math.floor(next() * (hi - lo + 1)),
+    pick: arr => arr[Math.floor(next() * arr.length)],
+    chance: p => next() < p
+  };
+}
+
+/* ---------- Helpers ---------- */
+const TAU = Math.PI * 2;
+const n2 = v => Math.round(v * 100) / 100;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function polarPath(fr, N, ftheta){
+  let s = 'M';
+  for (let i = 0; i < N; i++){
+    const t = TAU * i / N, th = ftheta ? ftheta(t) : t, r = fr(t);
+    s += (i ? ' ' : '') + n2(r * Math.cos(th)) + ',' + n2(r * Math.sin(th));
+  }
+  return s + 'Z';
+}
+
+function rrPathD(x0, y0, x1, y1, r){
+  return `M${x0+r},${y0}H${x1-r}A${r},${r} 0 0 1 ${x1},${y0+r}V${y1-r}A${r},${r} 0 0 1 ${x1-r},${y1}` +
+         `H${x0+r}A${r},${r} 0 0 1 ${x0},${y1-r}V${y0+r}A${r},${r} 0 0 1 ${x0+r},${y0}Z`;
+}
+
+/* Arc-length sampler for a rounded rectangle, walked clockwise; returns [x, y, outward nx, ny]. */
+function rrSampler(x0, y0, x1, y1, rad){
+  const lw = x1 - x0 - 2 * rad, lh = y1 - y0 - 2 * rad, la = Math.PI * rad / 2;
+  const segs = [
+    ['l', x0 + rad, y0, 1, 0, lw], ['a', x1 - rad, y0 + rad, -Math.PI / 2],
+    ['l', x1, y0 + rad, 0, 1, lh], ['a', x1 - rad, y1 - rad, 0],
+    ['l', x1 - rad, y1, -1, 0, lw], ['a', x0 + rad, y1 - rad, Math.PI / 2],
+    ['l', x0, y1 - rad, 0, -1, lh], ['a', x0 + rad, y0 + rad, Math.PI]];
+  const L = 2 * lw + 2 * lh + 4 * la;
+  return { L, at(s){
+    s = ((s % L) + L) % L;
+    for (const g of segs){
+      const len = g[0] === 'l' ? g[5] : la;
+      if (s <= len){
+        if (g[0] === 'l') return [g[1] + g[3] * s, g[2] + g[4] * s, g[4], -g[3]];
+        const a = g[3] + s / rad;
+        return [g[1] + rad * Math.cos(a), g[2] + rad * Math.sin(a), Math.cos(a), Math.sin(a)];
+      }
+      s -= len;
+    }
+    return [x0 + rad, y0, 0, -1];
+  }};
+}
+
+/* Evenly spaced legend around a circle, starting at the top. '+' is a cross pattée, '*' a lozenge. */
+const CROSS_D = 'M-.2,-.5H.2L.08,-.08L.5,-.2V.2L.08,.08L.2,.5H-.2L-.08,.08L-.5,.2V-.2L-.08,-.08Z';
+function ringText(str, R, size, fill, weight){
+  const n = str.length;
+  let s = `<g class="f-cz" font-size="${n2(size)}" font-weight="${weight || 700}" fill="${fill}" text-anchor="middle">`;
+  for (let i = 0; i < n; i++){
+    const ch = str[i]; if (ch === ' ') continue;
+    const a = -90 + 360 * i / n, ar = a * Math.PI / 180;
+    const x = n2(R * Math.cos(ar)), y = n2(R * Math.sin(ar)), rot = n2(a + 90);
+    if (ch === '+') s += `<path d="${CROSS_D}" transform="translate(${x} ${y}) rotate(${rot}) scale(${n2(size * .85)})"/>`;
+    else if (ch === '*') s += `<path d="M0,-.5L.32,0L0,.5L-.32,0Z" transform="translate(${x} ${y}) rotate(${rot}) scale(${n2(size * .72)})"/>`;
+    else s += `<text transform="translate(${x} ${y}) rotate(${rot})" dy=".35em">${esc(ch)}</text>`;
+  }
+  return s + '</g>';
+}
+
+function inkFilter(id, seed, warp, grain){
+  return `<filter id="${id}" x="-6%" y="-6%" width="112%" height="112%">
+    <feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="${seed}" result="w"/>
+    <feDisplacementMap in="SourceGraphic" in2="w" scale="${warp}" xChannelSelector="R" yChannelSelector="G" result="d"/>
+    <feTurbulence type="fractalNoise" baseFrequency="${grain}" numOctaves="2" seed="${seed + 7}" result="g"/>
+    <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -6 4.6" result="s"/>
+    <feComposite in="d" in2="s" operator="in"/></filter>`;
+}
+
+/* ---------- Palettes ---------- */
+const PAPER = '#F8F2E2';
+const INKS = [
+  {name:'Bank green', a:'#1E4D3A', b:'#5E8C6A', t:'#9DBE9E', rib:'#2F6B4F'},
+  {name:'Steel blue', a:'#1F3A5F', b:'#5577A0', t:'#A3B8D4', rib:'#2C4F7E'},
+  {name:'Oxblood',    a:'#5E1A22', b:'#9E4A48', t:'#D6A9A1', rib:'#7E2630'},
+  {name:'Sepia',      a:'#3F2C1C', b:'#866444', t:'#CBB491', rib:'#6A4A2C'},
+  {name:'Aubergine',  a:'#3A2350', b:'#765C99', t:'#BFB0D4', rib:'#523272'},
+  {name:'Deep teal',  a:'#123F44', b:'#4A8486', t:'#A1C8C5', rib:'#1E5C62'},
+  {name:'Graphite and ochre', a:'#2A2F36', b:'#8A6A2E', t:'#CFBD8C', rib:'#3C434C'}];
+const WAXES = [
+  {name:'vermilion', c:'#9C2A20'}, {name:'oxblood', c:'#681A1E'}, {name:'bottle green', c:'#22482F'},
+  {name:'navy', c:'#1F2D52'}, {name:'black', c:'#2A2422'}, {name:'ochre', c:'#A2772A'},
+  {name:'royal purple', c:'#4A2452'}, {name:'chestnut', c:'#6B3A1E'}];
+const CINNABAR = [{name:'cinnabar', c:'#B8322A'}, {name:'vermilion', c:'#C9432E'}, {name:'carmine', c:'#A5231F'}, {name:'madder', c:'#B23A3E'}];
+
+const houseSeed = key => sha256('exomachina/house-mark/v1\n' + key.trim().toLowerCase());
+const livery = hex => rng('livery', hex).pick(INKS);
+function fingerprint(key, hex){
+  const hx = key.toLowerCase().replace(/[^0-9a-f]/g, '');
+  return (hx.length >= 16 ? hx : hex).slice(0, 16).toUpperCase();
+}
+const groups = fp => fp.match(/.{1,4}/g).join(' ');
+
+/* ---------- Style 1: engine-turned rosette ---------- */
+function bandPath(o){
+  let d = '';
+  for (let k = 0; k < o.K; k++){
+    const ph = TAU * k / o.K;
+    d += polarPath(t => {
+      const ri = o.rIn + o.ai * (.5 + .5 * Math.sin(o.pi * t + o.phi));
+      const ro = o.rOut - o.ao * (.5 + .5 * Math.sin(o.po * t + o.pho));
+      return ri + (ro - ri) * (.5 + .5 * Math.sin(o.m * t + ph));
+    }, o.N, o.tw ? t => t + o.tw * Math.sin(o.m * t + ph + o.twPh) : null);
+  }
+  return d;
+}
+
+function rosetteMark(hex, o){
+  o = o || {};
+  const r = rng('rosette', hex), det = o.detail || 1, inks = o.inks || livery(hex), sw = o.sw || .5;
+  const S = r.pick([5,6,7,8,9,10,11,12,13,14,15,16,18,20,24]);
+  let s = `<circle r="99" fill="none" stroke="${inks.a}" stroke-width="1.6"/><circle r="96.6" fill="none" stroke="${inks.a}" stroke-width=".45"/>`;
+  let outerR = 92;
+  if (o.legend){
+    const base = o.legend, L = base.repeat(Math.max(1, Math.round(66 / base.length)));
+    s += ringText(L, 91.7, clamp(TAU * 91.7 / L.length * 1.05, 5.4, 8.2), inks.a, 700);
+    s += `<circle r="86.6" fill="none" stroke="${inks.a}" stroke-width=".45"/><circle r="84.6" fill="none" stroke="${inks.a}" stroke-width="1.1"/>`;
+    outerR = 81;
+  }
+  const beadR = o.legend ? 82.1 : 93.4, beads = S * r.int(3, 6);
+  for (let i = 0; i < beads; i++){
+    const a = TAU * i / beads;
+    s += `<circle cx="${n2(beadR * Math.cos(a))}" cy="${n2(beadR * Math.sin(a))}" r="1.05" fill="${inks.a}"/>`;
+  }
+  const nb = r.int(2, 3), rMin = r.float(20, 30), rMax = outerR - 2.5, gap = 2.4;
+  const ws = Array.from({length: nb}, () => r.float(.7, 1.3)), tot = ws.reduce((x, y) => x + y, 0);
+  const avail = rMax - rMin - gap * (nb - 1);
+  let edge = rMax, lastIn = rMin;
+  for (let i = 0; i < nb; i++){
+    const th = avail * ws[i] / tot, rOut = edge, rIn = edge - th, rMid = (rIn + rOut) / 2;
+    const lambda = r.float(9, 18), m = S * Math.max(1, Math.round(TAU * rMid / lambda / S));
+    const twist = r.chance(.4);
+    const band = {
+      rIn, rOut, m, K: Math.max(6, Math.round(r.pick([16,20,24,30,36]) * det)),
+      ai: th * r.float(0, .25), pi: S * r.int(1, 2), phi: r.float(0, TAU),
+      ao: th * r.float(0, .25), po: S * r.int(1, 3), pho: r.float(0, TAU),
+      tw: twist ? r.float(.5, 1.6) / m : 0, twPh: r.float(0, TAU),
+      N: Math.max(180, Math.round(m * (det < 1 ? 7 : 10)))
+    };
+    s += `<path d="${bandPath(band)}" fill="none" stroke="${i % 2 ? inks.b : inks.a}" stroke-width="${sw}"/>`;
+    if (i < nb - 1) s += `<circle r="${n2(rIn - gap / 2)}" fill="none" stroke="${inks.a}" stroke-width=".35"/>`;
+    lastIn = rIn; edge = rIn - gap;
+  }
+  const rc = lastIn - 2, n = S * r.pick([1, 1, 2]), K2 = Math.max(5, Math.round(r.pick([8,12,16,20]) * det));
+  const b = r.float(.1, .45), c2 = r.chance(.5) ? r.float(.06, .18) : 0, c2ph = r.float(0, TAU);
+  let rose = '';
+  for (let k = 0; k < K2; k++){
+    const rot = k * TAU / (n * K2);
+    rose += polarPath(t => rc * ((b + (1 - b) * (.5 + .5 * Math.cos(n * t))) * (1 - c2) + c2 * (.5 + .5 * Math.cos(2 * n * t + c2ph))),
+      Math.max(180, n * 10), t => t + rot);
+  }
+  s += `<path d="${rose}" fill="none" stroke="${inks.a}" stroke-width="${sw}"/><circle r="1.6" fill="${inks.a}"/>`;
+  return { svg: s, desc: `Engine-turned rosette, ${S}-fold symmetry, ${nb} guilloché bands` };
+}
+
+/* ---------- Style 2: wax sigillum with procedural heraldry ---------- */
+// The wax is built as a greyscale height map, then lit inside one filter.
+const G = {blob:'#8c8c8c', lip:'#9b9b9b', field:'#6b6b6b', ridge:'#aaaaaa', shield:'#7d7d7d', ord:'#999999', dia:'#9d9d9d', charge:'#b9b9b9'};
+const CH = {
+  mullet:  {sg:'a mullet', pl:'mullets', d:(() => { let p = ''; for (let i = 0; i < 10; i++){ const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? .21 : .52; p += (i ? 'L' : 'M') + n2(rr * Math.cos(a)) + ',' + n2(rr * Math.sin(a)); } return p + 'Z'; })()},
+  roundel: {sg:'a roundel', pl:'roundels', d:'M.46,0A.46,.46 0 1 1 -.46,0A.46,.46 0 1 1 .46,0Z'},
+  annulet: {sg:'an annulet', pl:'annulets', d:'M.47,0A.47,.47 0 1 1 -.47,0A.47,.47 0 1 1 .47,0ZM.27,0A.27,.27 0 1 0 -.27,0A.27,.27 0 1 0 .27,0Z'},
+  lozenge: {sg:'a lozenge', pl:'lozenges', d:'M0,-.56L.38,0L0,.56L-.38,0Z'},
+  crescent:{sg:'a crescent', pl:'crescents', d:'M-.3623,-.3446A.5,.5 0 1 0 .3623,-.3446A.4,.4 0 1 1 -.3623,-.3446Z'},
+  cross:   {sg:'a cross pattée', pl:'crosses pattée', d:CROSS_D},
+  billet:  {sg:'a billet', pl:'billets', d:'M-.22,-.42H.22V.42H-.22Z'}};
+const DIV = {
+  'per pale': {parts:['-40,-46 0,-46 0,58 -40,58', '0,-46 40,-46 40,58 0,58'], line:'M0,-46V58', ch:[[-17,2],[17,2]], size:17},
+  'per fess': {parts:['-40,-46 40,-46 40,0 -40,0', '-40,0 40,0 40,58 -40,58'], line:'M-40,0H40', ch:[[-19,-21],[0,-21],[19,-21]], size:13, phrase:'in chief '},
+  'per bend': {parts:['-40,-46 40,-46 40,58', '-40,-46 40,58 -40,58'], line:'M-40,-46L40,58', ch:[[16,-20],[-16,24]], size:16},
+  'per bend sinister': {parts:['-40,-46 40,-46 -40,58', '40,-46 40,58 -40,58'], line:'M40,-46L-40,58', ch:[[-16,-20],[16,24]], size:16},
+  'quarterly': {parts:['-40,-46 0,-46 0,0 -40,0', '0,-46 40,-46 40,0 0,0', '0,0 40,0 40,58 0,58', '-40,0 0,0 0,58 -40,58'], line:'M0,-46V58M-40,0H40', ch:[[-18,-21],[18,24]], size:17, phrase:'in the first and fourth quarters '},
+  'per chevron': {parts:['-40,-46 40,-46 40,38 0,-4 -40,38', '-40,38 0,-4 40,38 40,58 -40,58'], line:'M-40,38L0,-4L40,38', ch:[[-17,-24],[17,-24],[0,32]], size:15},
+  'per saltire': {parts:['-40,-46 40,-46 0,6', '40,-46 40,58 0,6', '40,58 -40,58 0,6', '-40,58 -40,-46 0,6'], line:'M-40,-46L40,58M40,-46L-40,58', ch:[], size:0}};
+const ORD = {
+  fess:    {name:'a fess', svg:`<rect x="-40" y="-9" width="80" height="19" fill="${G.ord}"/>`, ch:[[-17,-25],[17,-25],[0,31]], size:14},
+  pale:    {name:'a pale', svg:`<rect x="-10" y="-46" width="20" height="104" fill="${G.ord}"/>`, ch:[[-23,-6],[23,-6]], size:13},
+  bend:    {name:'a bend', svg:`<polygon points="-47.13,-40.51 32.87,63.49 47.13,52.51 -32.87,-51.49" fill="${G.ord}"/>`, ch:[[17,-22],[-17,24]], size:14},
+  chevron: {name:'a chevron', svg:`<path d="M-46,44L0,-2L46,44" fill="none" stroke="${G.ord}" stroke-width="16"/>`, ch:[[-18,-24],[18,-24],[0,33]], size:14},
+  cross:   {name:'a cross', svg:`<path d="M0,-46V58M-40,1H40" fill="none" stroke="${G.ord}" stroke-width="15"/>`, ch:[[-19,-22],[19,-22],[-17,26],[17,26]], size:11},
+  saltire: {name:'a saltire', svg:`<path d="M-40,-46L40,58M40,-46L-40,58" fill="none" stroke="${G.ord}" stroke-width="14"/>`, ch:[[0,-31],[0,40],[-26,6],[26,6]], size:10},
+  chief:   {name:'a chief', svg:`<rect x="-40" y="-46" width="80" height="26" fill="${G.ord}"/>`, ch:[[-20,-32],[0,-32],[20,-32]], size:11, on:true}};
+const COUNT = ['', 'a', 'two', 'three', 'four'];
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function heraldry(r, idp){
+  const SH = 'M-36,-42H36V2C36,30 18,44 0,54C-18,44 -36,30 -36,2Z';
+  const chKey = r.pick(Object.keys(CH)), C = CH[chKey];
+  const mode = r.pick(['division', 'division', 'ordinary', 'ordinary', 'plain']);
+  const diaperFirst = r.chance(.5);
+  let s = `<clipPath id="${idp}-sh"><path d="${SH}"/></clipPath>` +
+    `<pattern id="${idp}-dp" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">` +
+    `<rect width="8" height="8" fill="${G.shield}"/><path d="M0,0H8M0,0V8" stroke="${G.dia}" stroke-width="1"/><circle cx="4" cy="4" r="1.1" fill="${G.dia}"/></pattern>`;
+  s += `<path d="${SH}" fill="${G.shield}"/><g clip-path="url(#${idp}-sh)">`;
+  let pts = [], size = 0, blazon = '';
+  const many = n => n === 1 ? C.sg : `${COUNT[n]} ${C.pl}`;
+  if (mode === 'division'){
+    const key = r.pick(Object.keys(DIV)), dv = DIV[key];
+    dv.parts.forEach((p, i) => { s += `<polygon points="${p}" fill="${(i % 2 === 0) === diaperFirst ? `url(#${idp}-dp)` : G.shield}"/>`; });
+    s += `<path d="${dv.line}" fill="none" stroke="${G.ridge}" stroke-width="1.8"/>`;
+    pts = dv.ch; size = dv.size;
+    blazon = cap(key) + (pts.length ? `, ${dv.phrase || ''}${many(pts.length)}` : '');
+  } else {
+    const diaper = r.chance(.45);
+    if (diaper) s += `<rect x="-40" y="-46" width="80" height="104" fill="url(#${idp}-dp)"/>`;
+    if (mode === 'ordinary'){
+      const key = r.pick(Object.keys(ORD)), od = ORD[key];
+      s += od.svg; pts = od.ch; size = od.size;
+      blazon = od.on ? `On a chief ${many(pts.length)}` : `${cap(od.name)} between ${many(pts.length)}`;
+    } else {
+      const three = r.chance(.55);
+      pts = three ? [[-15,-15],[15,-15],[0,21]] : [[0,4]]; size = three ? 20 : 36;
+      blazon = cap(many(pts.length));
+    }
+    if (diaper) blazon += ', on a diapered field';
+  }
+  s += '</g>';
+  for (const [x, y] of pts) s += `<path d="${C.d}" fill="${G.charge}" fill-rule="evenodd" transform="translate(${x} ${y}) scale(${size})"/>`;
+  s += `<path d="${SH}" fill="none" stroke="${G.ridge}" stroke-width="2.6" stroke-linejoin="round"/>`;
+  const sprig = r.pick(['pellets', 'mullets', 'none']);
+  if (sprig !== 'none'){
+    for (const [x, y] of [[-47,22],[47,22],[-44,-34],[44,-34]]){
+      s += sprig === 'pellets' ? `<circle cx="${x}" cy="${y}" r="3" fill="${G.ridge}"/>`
+        : `<path d="${CH.mullet.d}" fill="${G.ridge}" transform="translate(${x} ${y}) scale(8)"/>`;
+    }
+  }
+  return { svg: s, blazon };
+}
+
+function waxMark(hex, o){
+  o = o || {};
+  const r = rng('wax', hex), idp = o.idp || 'w', wax = r.pick(WAXES);
+  const seed = parseInt(hex.slice(0, 6), 16) % 9973;
+  const harm = [3,4,5,6,7].map(i => [i, r.float(.003, .016), r.float(0, TAU)]);
+  const drips = Array.from({length: r.int(2, 5)}, () => [r.float(0, TAU), r.float(4, 11), r.float(.07, .2)]);
+  const blob = polarPath(t => {
+    let rr = 95 * (1 + harm.reduce((acc, [i, a, p]) => acc + a * Math.sin(i * t + p), 0));
+    for (const [c, A, w] of drips){ const dt = Math.atan2(Math.sin(t - c), Math.cos(t - c)); rr += A * Math.exp(-((dt / w) ** 2)); }
+    return rr;
+  }, 240);
+  const ox = n2(r.float(-3, 3)), oy = n2(r.float(-3, 3)), rot = n2(r.float(-12, 12));
+  const dev = heraldry(r, idp);
+  const legend = o.legend || '+ S\' SERVICE ';
+  const size = clamp(TAU * 71.6 / legend.length * 1.12, 6.5, 11);
+  const filters =
+    `<filter id="${idp}-bb" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3.2"/></filter>` +
+    `<filter id="${idp}-sb" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4"/></filter>` +
+    `<filter id="${idp}-wf" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+      <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="h"/>
+      <feComponentTransfer in="h" result="mask"><feFuncA type="linear" slope="12" intercept="-1.4"/></feComponentTransfer>
+      <feGaussianBlur in="h" stdDeviation=".9" result="hb"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="${seed}" result="nz"/>
+      <feComposite in="hb" in2="nz" operator="arithmetic" k2="1" k3=".06" result="hn"/>
+      <feDiffuseLighting in="hn" surfaceScale="5" diffuseConstant="1.15" lighting-color="#fff" result="diff"><feDistantLight azimuth="225" elevation="48"/></feDiffuseLighting>
+      <feSpecularLighting in="hn" surfaceScale="5" specularConstant=".7" specularExponent="26" lighting-color="#fff" result="spec"><feDistantLight azimuth="225" elevation="48"/></feSpecularLighting>
+      <feFlood flood-color="${wax.c}" result="wax"/>
+      <feComposite in="wax" in2="diff" operator="arithmetic" k1="1.2" result="lit"/>
+      <feComposite in="spec" in2="lit" operator="arithmetic" k2=".55" k3="1" result="shine"/>
+      <feComposite in="shine" in2="mask" operator="in"/></filter>`;
+  const s = `<defs>${filters}</defs>` +
+    `<path d="${blob}" fill="#000" opacity=".38" transform="translate(2 4)" filter="url(#${idp}-sb)"/>` +
+    `<g filter="url(#${idp}-wf)"><rect x="-135" y="-135" width="270" height="270" fill="#000"/>` +
+    `<path d="${blob}" fill="${G.blob}" filter="url(#${idp}-bb)"/>` +
+    `<circle r="85" fill="none" stroke="${G.lip}" stroke-width="7" filter="url(#${idp}-bb)"/>` +
+    `<g transform="translate(${ox} ${oy}) rotate(${rot})">` +
+      `<circle r="79.5" fill="${G.field}"/><circle r="79.5" fill="none" stroke="${G.ridge}" stroke-width="2.2"/>` +
+      `<circle r="64" fill="none" stroke="${G.ridge}" stroke-width="1.3"/>` +
+      ringText(legend, 71.6, size, G.ridge, 700) + dev.svg +
+    `</g></g>`;
+  return { svg: s, desc: `Wax sigillum in ${wax.name} wax. Arms: ${dev.blazon}` };
+}
+
+/* ---------- Style 3: square seal chop with folded-stroke glyphs ---------- */
+function mazeTree(cols, rows, g, hb){
+  const N = cols * rows, seen = new Uint8Array(N), edges = [];
+  const start = g.int(0, N - 1), stack = [[start, -1]]; seen[start] = 1;
+  const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+  while (stack.length){
+    const [cur, last] = stack[stack.length - 1], cx = cur % cols, cy = (cur / cols) | 0, opts = [];
+    dirs.forEach(([dx, dy], di) => {
+      const nx = cx + dx, ny = cy + dy;
+      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) return;
+      const ni = ny * cols + nx; if (seen[ni]) return;
+      opts.push([ni, di, (dx ? hb : 1) * (di === last ? 2.2 : 1)]);
+    });
+    if (!opts.length){ stack.pop(); continue; }
+    let x = g.next() * opts.reduce((a, o) => a + o[2], 0), pick = opts[opts.length - 1];
+    for (const o of opts){ if ((x -= o[2]) <= 0){ pick = o; break; } }
+    seen[pick[0]] = 1; edges.push([cur, pick[0]]); stack.push([pick[0], pick[1]]);
+  }
+  return edges;
+}
+
+function glyph(c, pitch, wr, g){
+  const W = c.x1 - c.x0, H = c.y1 - c.y0;
+  const cols = Math.max(3, Math.round(W / pitch)), rows = Math.max(3, Math.round(H / pitch));
+  const sx = W / cols, sy = H / rows, sw = Math.min(sx, sy) * wr;
+  let edges = mazeTree(cols, rows, g, g.float(1.4, 4));
+  for (let p = g.int(0, 2); p > 0; p--){
+    const deg = new Uint8Array(cols * rows);
+    for (const [a, b] of edges){ deg[a]++; deg[b]++; }
+    edges = edges.filter(([a, b]) => !((deg[a] === 1 || deg[b] === 1) && g.chance(.45)));
+  }
+  const X = i => n2(c.x0 + sx * (i % cols + .5)), Y = i => n2(c.y0 + sy * (((i / cols) | 0) + .5));
+  let d = '';
+  for (const [a, b] of edges) d += `M${X(a)},${Y(a)}L${X(b)},${Y(b)}`;
+  return `<path d="${d}" stroke-width="${n2(sw)}"/>`;
+}
+
+function chopMark(hex, o){
+  o = o || {};
+  const r = rng('chop', hex), idp = o.idp || 'c', ink = r.pick(CINNABAR);
+  const baiwen = r.chance(.55), three = r.chance(.33), rx = r.pick([0, 2, 4, 8]);
+  const bw = baiwen ? 0 : r.float(6, 10), margin = baiwen ? r.float(9, 14) : bw + r.float(6, 9), gap = r.float(5, 10);
+  const lo = -100 + margin, hi = 100 - margin, h = gap / 2;
+  // Traditional reading order: right column top to bottom, then left.
+  const cells = three
+    ? [{x0:h, y0:lo, x1:hi, y1:hi}, {x0:lo, y0:lo, x1:-h, y1:-h}, {x0:lo, y0:h, x1:-h, y1:hi}]
+    : [{x0:h, y0:lo, x1:hi, y1:-h}, {x0:h, y0:h, x1:hi, y1:hi}, {x0:lo, y0:lo, x1:-h, y1:-h}, {x0:lo, y0:h, x1:-h, y1:hi}];
+  const pitch = r.float(12.5, 16.5), wr = r.float(.44, .56);
+  const strokes = cells.map((c, i) => glyph(c, pitch, wr, rng('chop-glyph-' + i, hex))).join('');
+  const seed = parseInt(hex.slice(6, 12), 16) % 9973;
+  let s = `<defs>${inkFilter(idp + '-f', seed, 3.5, .55)}</defs>`;
+  if (baiwen){
+    s += `<mask id="${idp}-m" maskUnits="userSpaceOnUse" x="-105" y="-105" width="210" height="210">` +
+      `<rect x="-100" y="-100" width="200" height="200" rx="${rx}" fill="#fff"/>` +
+      `<g fill="none" stroke="#000" stroke-linecap="square">${strokes}</g></mask>` +
+      `<g filter="url(#${idp}-f)"><rect x="-100" y="-100" width="200" height="200" rx="${rx}" fill="${ink.c}" mask="url(#${idp}-m)"/></g>`;
+  } else {
+    const divider = r.chance(.4) ? `<path d="M0,${lo}V${hi}${three ? '' : `M${lo},0H${hi}`}" stroke-width="${n2(bw * .45)}"/>` : '';
+    s += `<g filter="url(#${idp}-f)" fill="none" stroke="${ink.c}" stroke-linecap="square">` +
+      `<rect x="${n2(-100 + bw / 2)}" y="${n2(-100 + bw / 2)}" width="${n2(200 - bw)}" height="${n2(200 - bw)}" rx="${rx}" stroke-width="${n2(bw)}"/>` +
+      divider + strokes + `</g>`;
+  }
+  return { svg: s, desc: `${baiwen ? 'Baiwen (white-line)' : 'Zhuwen (red-line)'} seal chop in ${ink.name}, ${cells.length} folded-stroke glyphs, one per slice of the key hash` };
+}
+
+function houseMark(style, hex, name, fp, idp, detail){
+  if (style === 'wax') return waxMark(hex, {idp, legend: `+ S' ${name.replace(/[\s_-]+/g, '·')} · ${fp.slice(0, 4)}·${fp.slice(4, 8)} `});
+  if (style === 'chop') return chopMark(hex, {idp});
+  return rosetteMark(hex, {idp, legend: `${name} * ${groups(fp)} * `, detail});
+}
+
+/* ---------- The certificate ---------- */
+function guillocheField(hex, cx, cy, ink){
+  const r = rng('underprint', hex), S = r.pick([12, 16, 18, 20, 24]);
+  let d = '';
+  for (const [rIn, rOut, K] of [[150, 290, 12], [302, 420, 16]]){
+    const m = S * Math.max(1, Math.round(TAU * (rIn + rOut) / 2 / r.float(30, 46) / S));
+    d += bandPath({rIn, rOut, m, K, ai: r.float(0, 30), pi: S, phi: r.float(0, TAU), ao: r.float(0, 30), po: S * r.int(1, 2), pho: r.float(0, TAU), tw: 0, N: m * 9});
+  }
+  return `<path d="${d}" transform="translate(${cx} ${cy})" fill="none" stroke="${ink}" stroke-width=".55" opacity=".38"/>`;
+}
+
+function waveField(hex, ink){
+  const r = rng('waves', hex), p1 = r.float(0, TAU), p2 = r.float(0, TAU);
+  let d = '';
+  for (let i = 0; i < 64; i++){
+    const y0 = 96 + i * 19.4;
+    d += 'M';
+    for (let j = 0; j <= 70; j++){
+      const x = 82 + j * 836 / 70;
+      d += (j ? ' ' : '') + n2(x) + ',' + n2(y0 + 5 * Math.sin(x * .018 + i * .31 + p1) + 2.4 * Math.sin(x * .047 - i * .17 + p2));
+    }
+  }
+  return `<path d="${d}" fill="none" stroke="${ink}" stroke-width=".6" opacity=".4"/>`;
+}
+
+function borderBand(hex, liv){
+  const r = rng('border', hex), samp = rrSampler(52, 52, 948, 1362, 34), hw = 15.5;
+  const m = Math.round(samp.L / r.float(18, 30)), K = r.int(7, 12);
+  const depth = r.float(0, .6), m2 = Math.max(1, Math.round(m / r.pick([4, 6, 8, 12])));
+  const N = m * 9, sets = [[liv.a, 0, 0], [liv.b, Math.PI / K, depth]];
+  let s = '';
+  for (const [ink, ph0, dep] of sets){
+    let d = '';
+    for (let k = 0; k < K; k++){
+      const ph = ph0 + TAU * k / K;
+      d += 'M';
+      for (let i = 0; i < N; i++){
+        const u = TAU * i / N, [x, y, nx, ny] = samp.at(samp.L * i / N);
+        const off = hw * (1 - dep * (.5 + .5 * Math.cos(m2 * u))) * Math.sin(m * u + ph);
+        d += (i ? ' ' : '') + n2(x + nx * off) + ',' + n2(y + ny * off);
+      }
+      d += 'Z';
+    }
+    s += `<path d="${d}" fill="none" stroke="${ink}" stroke-width=".55"/>`;
+  }
+  return s;
+}
+
+const state = { style:'rosette', status:'specimen', name:'RESEARCH-FACTORY', key:DATA.identity };
+// Deep links: ?style=rosette|wax|chop&status=accepted|specimen|cancelled&name=…&key=…
+{
+  const q = new URLSearchParams(location.search);
+  if (['rosette', 'wax', 'chop'].includes(q.get('style'))) state.style = q.get('style');
+  if (['accepted', 'specimen', 'cancelled'].includes(q.get('status'))) state.status = q.get('status');
+  if (q.get('name')) state.name = q.get('name');
+  if (q.get('key')) state.key = q.get('key');
+}
+
+function renderCert(){
+  const key = state.key.trim() || DATA.identity;
+  const name = (state.name.trim() || 'UNNAMED SERVICE').toUpperCase().slice(0, 28);
+  const hex = houseSeed(key), liv = livery(hex), fp = fingerprint(key, hex);
+  const verHex = sha256('exomachina/version-mark/v1\n' + DATA.manifest);
+  const seal = houseMark(state.style, hex, name, fp, 'cs', 1);
+  const counter = rosetteMark(DATA.sha, {inks: liv, detail: .55});
+  const vignette = rosetteMark(verHex, {inks: liv, detail: .8});
+  const tx = (x, y, str, cls, attrs) => `<text x="${x}" y="${y}" class="${cls}" ${attrs || ''}>${esc(str)}</text>`;
+  const mid = 'text-anchor="middle"';
+  const micro = (`MANIFEST ${DATA.manifest} · PACKAGE ${DATA.pkg} · RUN INPUTS ${DATA.runInputs} · DEFINITION ${DATA.definition} · REVISION ${DATA.revision} ${DATA.sha} · `).repeat(5);
+  const cancelled = state.status === 'cancelled', specimen = state.status === 'specimen';
+  const holes = cancelled ? [150, 195, 240, 285, 330, 670, 715, 760, 805, 850].map(x => [x, 1190]) : [];
+
+  let defs = `
+    <linearGradient id="c-tint" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F2DDD3"/><stop offset=".3" stop-color="#F6EEDC"/><stop offset=".62" stop-color="#E1EBD8"/><stop offset="1" stop-color="#D8E2EE"/></linearGradient>
+    <linearGradient id="c-foil" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F3E3A2"/><stop offset=".35" stop-color="#C9A24A"/><stop offset=".55" stop-color="#F6E7AE"/><stop offset=".8" stop-color="#A9822E"/><stop offset="1" stop-color="#E2C877"/></linearGradient>
+    <filter id="c-fiber" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="7"/>
+      <feColorMatrix values="0 0 0 0 .35  0 0 0 0 .28  0 0 0 0 .16  0 0 0 .16 0"/></filter>
+    <pattern id="c-hatch" width="4" height="3.2" patternUnits="userSpaceOnUse"><rect width="4" height="3.2" fill="${PAPER}"/><path d="M0,1.1H4" stroke="${liv.a}" stroke-width="1.3"/></pattern>
+    ${inkFilter('c-stamp', 11, 2.5, .5)}
+    <clipPath id="c-inner"><rect x="82" y="82" width="836" height="1250" rx="12"/></clipPath>
+    <path id="c-micro" d="${rrPathD(79.6, 79.6, 920.4, 1334.4, 14)}"/>
+    <g id="c-counter"><circle r="44" fill="${PAPER}" stroke="${liv.a}" stroke-width="1.6"/><circle r="40.5" fill="none" stroke="${liv.a}" stroke-width=".5"/>
+      <g transform="scale(.38)">${counter.svg}</g><circle r="13" fill="${PAPER}" stroke="${liv.a}" stroke-width=".8"/>
+      ${tx(0, 4.5, DATA.revision, 'f-cz', `${mid} font-size="13" font-weight="700" fill="${liv.a}"`)}</g>`;
+  if (cancelled){
+    defs += `<mask id="c-punch" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1414"><rect width="1000" height="1414" fill="#fff"/>` +
+      holes.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9.5" fill="#000"/>`).join('') + `</mask>`;
+  }
+
+  let s = `<rect width="1000" height="1414" rx="6" fill="${PAPER}"/>`;
+  s += `<rect x="82" y="82" width="836" height="1250" rx="12" fill="url(#c-tint)" opacity=".6"/>`;
+  s += `<g clip-path="url(#c-inner)">${waveField(DATA.sha, liv.t)}${guillocheField(DATA.sha, 500, 760, liv.t)}</g>`;
+  s += `<rect width="1000" height="1414" rx="6" filter="url(#c-fiber)"/>`;
+
+  // Frame: rules, braided band, microprint, corner counters
+  s += `<rect x="28" y="28" width="944" height="1358" rx="40" fill="none" stroke="${liv.a}" stroke-width="1.8"/>`;
+  s += `<rect x="33" y="33" width="934" height="1348" rx="36" fill="none" stroke="${liv.a}" stroke-width=".6"/>`;
+  s += borderBand(hex, liv);
+  s += `<rect x="71" y="71" width="858" height="1272" rx="18" fill="none" stroke="${liv.a}" stroke-width=".6"/>`;
+  s += `<rect x="74.5" y="74.5" width="851" height="1265" rx="16" fill="none" stroke="${liv.a}" stroke-width="1.6"/>`;
+  s += `<text class="f-mono" font-size="4.6" fill="${liv.a}" letter-spacing=".15"><textPath href="#c-micro">${esc(micro)}</textPath></text>`;
+  s += `<rect x="82" y="82" width="836" height="1250" rx="12" fill="none" stroke="${liv.a}" stroke-width=".5"/>`;
+  for (const [x, y] of [[90, 90], [910, 90], [90, 1324], [910, 1324]]) s += `<use href="#c-counter" x="${x}" y="${y}"/>`;
+
+  // Header
+  s += tx(500, 120, 'EXOMACHINA  ·  FACTORY SERVICE', 'f-cz', `${mid} font-size="14" font-weight="600" letter-spacing="5" fill="${liv.a}"`);
+  s += `<g transform="translate(500 198)"><g transform="scale(.6)">${vignette.svg}</g><circle r="17" fill="${PAPER}" stroke="${liv.a}" stroke-width=".9"/>` +
+    tx(0, 6.5, DATA.version, 'f-cz', `${mid} font-size="18" font-weight="700" fill="${liv.a}"`) + `</g>`;
+  const serial = 'Nº ' + DATA.sha.slice(0, 4).toUpperCase() + '·' + DATA.sha.slice(4, 8).toUpperCase();
+  s += tx(150, 206, serial, 'f-mono', `font-size="17" font-weight="500" fill="#B3261E" letter-spacing="1"`);
+  s += tx(850, 206, serial, 'f-mono', `text-anchor="end" font-size="17" font-weight="500" fill="#B3261E" letter-spacing="1"`);
+  if (specimen){
+    s += tx(150, 226, 'SPECIMEN', 'f-cz', `font-size="11" font-weight="700" letter-spacing="3" fill="#B3261E"`);
+    s += tx(850, 226, 'SPECIMEN', 'f-cz', `text-anchor="end" font-size="11" font-weight="700" letter-spacing="3" fill="#B3261E"`);
+  }
+  s += tx(500, 322, 'CERTIFICATE', 'f-cz', `${mid} font-size="72" font-weight="700" letter-spacing="7" fill="url(#c-hatch)" stroke="${liv.a}" stroke-width="1.1"`);
+  s += tx(500, 386, 'of Acceptance', 'f-sc', `${mid} font-size="56" fill="${liv.a}"`);
+  s += `<g stroke="${liv.a}" fill="none"><path d="M330,414H468M532,414H670" stroke-width="1"/><path d="M340,418H468M532,418H660" stroke-width=".4"/>` +
+    `<path d="M500,406L512,414L500,422L488,414Z" fill="${liv.a}"/></g>` +
+    `<circle cx="322" cy="415" r="2.2" fill="${liv.a}"/><circle cx="678" cy="415" r="2.2" fill="${liv.a}"/>`;
+
+  // Body
+  const body = '#2A2622';
+  s += tx(500, 468, 'This is to certify that', 'f-sc', `${mid} font-size="33" fill="${body}"`);
+  s += tx(500, 528, `ARTIFACT REVISION ${DATA.revision}`, 'f-cz', `${mid} font-size="40" font-weight="600" letter-spacing="3" fill="${liv.a}"`);
+  s += tx(500, 558, 'SHA-256  ' + DATA.sha.match(/.{8}/g).join(' '), 'f-mono', `${mid} font-size="12.5" fill="#4A443D"`);
+  s += tx(500, 604, 'produced by the factory service', 'f-cg', `${mid} font-size="25" font-style="italic" font-weight="500" fill="${body}"`);
+  const nameAttrs = name.length > 18 ? `textLength="760" lengthAdjust="spacingAndGlyphs"` : '';
+  s += tx(500, 656, name, 'f-cz', `${mid} font-size="42" font-weight="700" letter-spacing="4" fill="${liv.a}" ${nameAttrs}`);
+  s += tx(500, 686, 'service key  ' + key, 'f-mono', `${mid} font-size="12.5" fill="#4A443D"`);
+  const lines = [
+    `for the capability ${DATA.capability}, was independently`,
+    'assessed by Quality and accepted as meeting the criteria of its',
+    'capability contract, this twenty-third day of September, 2026.'];
+  lines.forEach((l, i) => { s += tx(500, 734 + i * 32, l, 'f-cg', `${mid} font-size="24" font-weight="500" fill="${body}"`); });
+  s += `<g fill="${liv.a}"><circle cx="484" cy="836" r="2"/><circle cx="500" cy="836" r="2.6"/><circle cx="516" cy="836" r="2"/></g>`;
+
+  // Particulars
+  const rows = [
+    ['TASK', DATA.task, 'RUN INPUTS', DATA.runInputs.slice(0, 24) + '…'],
+    ['FACTORY VERSION', `${DATA.version} · manifest ${DATA.manifest.slice(0, 16)}`, 'PACKAGE', DATA.pkg.slice(0, 24) + '…'],
+    ['INTERPRETER BUILD', DATA.build, 'PRIOR REVISION', 'r1 · rejected, counterevidence unresolved']];
+  rows.forEach(([l1, v1, l2, v2], i) => {
+    const y = 880 + i * 46;
+    s += tx(140, y, l1, 'f-cz', `font-size="10.5" font-weight="600" letter-spacing="2.2" fill="#6A6259"`);
+    s += tx(140, y + 18, v1, 'f-mono', `font-size="12" fill="#26221E"`);
+    s += tx(530, y, l2, 'f-cz', `font-size="10.5" font-weight="600" letter-spacing="2.2" fill="#6A6259"`);
+    s += tx(530, y + 18, v2, 'f-mono', `font-size="12" fill="#26221E"`);
+  });
+
+  // Quality's finding, delivery endorsement
+  s += tx(250, 1046, '“Counterevidence addressed', 'f-cg', `${mid} font-size="22" font-style="italic" fill="${body}"`);
+  s += tx(250, 1072, 'for exact revision.”', 'f-cg', `${mid} font-size="22" font-style="italic" fill="${body}"`);
+  s += tx(250, 1096, 'QUALITY FINDING · ATTEMPT 2', 'f-cz', `${mid} font-size="9.5" font-weight="600" letter-spacing="2" fill="#6A6259"`);
+  const violet = '#4A3C8C';
+  s += `<g transform="translate(770 1062) rotate(-7)" style="mix-blend-mode:multiply" opacity=".88"><g filter="url(#c-stamp)">` +
+    `<rect x="-118" y="-40" width="236" height="80" rx="5" fill="none" stroke="${violet}" stroke-width="3"/>` +
+    `<rect x="-112" y="-34" width="224" height="68" rx="3" fill="none" stroke="${violet}" stroke-width="1"/>` +
+    tx(0, -6, 'DELIVERED', 'f-cz', `${mid} font-size="27" font-weight="700" letter-spacing="5" fill="${violet}"`) +
+    tx(0, 13, '23 SEP 2026 · 19:58 UTC', 'f-mono', `${mid} font-size="11.5" font-weight="500" fill="${violet}"`) +
+    tx(0, 27, `RECEIPT ${DATA.receipt.slice(0, 8).toUpperCase()} · 1 EFFECT · 1 ATTEMPT`, 'f-mono', `${mid} font-size="9" fill="${violet}"`) +
+    `</g></g>`;
+
+  // Signatures
+  s += tx(255, 1194, 'Quality', 'f-sc', `${mid} font-size="44" fill="#1F2A44"`);
+  s += tx(745, 1194, 'Director', 'f-sc', `${mid} font-size="44" fill="#1F2A44"`);
+  s += `<path d="M135,1208H375M625,1208H865" stroke="${body}" stroke-width=".9"/>`;
+  s += tx(255, 1230, 'QUALITY · ACCEPTANCE AUTHORITY', 'f-cz', `${mid} font-size="10" font-weight="600" letter-spacing="1.6" fill="#4A443D"`);
+  s += tx(255, 1247, 'reviewer ' + DATA.reviewer.slice(0, 8) + '…' + DATA.reviewer.slice(-5), 'f-mono', `${mid} font-size="10" fill="#6A6259"`);
+  s += tx(745, 1230, 'DIRECTOR · ACCOUNTABLE FOR THE RUN', 'f-cz', `${mid} font-size="10" font-weight="600" letter-spacing="1.6" fill="#4A443D"`);
+  s += tx(745, 1247, 'fixture decision · run ' + DATA.run.slice(0, 8) + '…', 'f-mono', `${mid} font-size="10" fill="#6A6259"`);
+  s += tx(255, 1288, 'THE SIGNED ATTESTATION, NOT THIS', 'f-cz', `${mid} font-size="8.5" font-weight="600" letter-spacing="1.5" fill="#6A6259"`);
+  s += tx(255, 1301, 'RENDERING, IS THE CREDENTIAL', 'f-cz', `${mid} font-size="8.5" font-weight="600" letter-spacing="1.5" fill="#6A6259"`);
+  s += tx(745, 1288, 'ATTESTATION · NOT YET ISSUED', 'f-cz', `${mid} font-size="8.5" font-weight="600" letter-spacing="1.5" fill="#6A6259"`);
+  s += tx(745, 1301, 'PROTOTYPE EVIDENCE · RUN r2', 'f-cz', `${mid} font-size="8.5" font-weight="600" letter-spacing="1.5" fill="#6A6259"`);
+
+  // House seal
+  const ribbon = c => { const tail = 'M-30,-6L-4,4L-42,136L-55,119L-72,128Z';
+    return `<g fill="${c}" stroke="rgba(0,0,0,.35)" stroke-width=".8"><path d="${tail}"/><path d="${tail}" transform="scale(-1 1)"/></g>` +
+      `<g stroke="rgba(255,255,255,.22)" stroke-width="3"><path d="M-18,2L-56,128"/><path d="M18,2L56,128"/></g>`; };
+  s += `<g transform="translate(500 1196) scale(.86)">`;
+  if (state.style === 'rosette'){
+    let star = '';
+    for (let i = 0; i < 128; i++){ const a = TAU * i / 128, rr = i % 2 ? 98.5 : 104; star += (i ? 'L' : 'M') + n2(rr * Math.cos(a)) + ',' + n2(rr * Math.sin(a)); }
+    s += ribbon(liv.rib) + `<path d="${star}Z" fill="url(#c-foil)" stroke="#8A6A24" stroke-width=".6"/>` +
+      `<circle r="94.5" fill="none" stroke="#8A6A24" stroke-width=".8"/><circle r="91" fill="${PAPER}"/><g transform="scale(.9)">${seal.svg}</g>`;
+  } else if (state.style === 'wax'){
+    s += ribbon(liv.rib) + `<g transform="scale(.95)">${seal.svg}</g>`;
+  } else {
+    const rot = n2(rng('chop-place', hex).float(-6, 4));
+    s += `<g transform="rotate(${rot}) scale(.66)" style="mix-blend-mode:multiply" opacity=".93">${seal.svg}</g>`;
+  }
+  s += `</g>`;
+
+  // Overprints
+  if (specimen){
+    s += `<g transform="translate(500 740) rotate(-32)" style="mix-blend-mode:multiply">` +
+      tx(0, 50, 'SPECIMEN', 'f-cz', `${mid} font-size="150" font-weight="700" letter-spacing="12" fill="rgba(190,40,34,.07)" stroke="rgba(190,40,34,.55)" stroke-width="3"`) + `</g>`;
+  }
+  if (cancelled){
+    s += holes.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="10.4" fill="none" stroke="rgba(90,70,40,.35)" stroke-width="1.6"/>`).join('');
+    s += `<g transform="translate(500 640) rotate(-14)" style="mix-blend-mode:multiply" opacity=".88"><g filter="url(#c-stamp)">` +
+      `<rect x="-200" y="-56" width="400" height="112" rx="6" fill="none" stroke="#B3261E" stroke-width="5"/>` +
+      `<rect x="-190" y="-46" width="380" height="92" rx="4" fill="none" stroke="#B3261E" stroke-width="1.5"/>` +
+      tx(0, 14, 'CANCELLED', 'f-cz', `${mid} font-size="62" font-weight="700" letter-spacing="8" fill="#B3261E"`) +
+      tx(0, 36, 'ACCEPTANCE REVOKED · DEMONSTRATION', 'f-cz', `${mid} font-size="11" font-weight="700" letter-spacing="3" fill="#B3261E"`) +
+      `</g></g>`;
+  }
+
+  const svg = document.getElementById('cert');
+  svg.innerHTML = `<defs>${defs}</defs>` + (cancelled ? `<g mask="url(#c-punch)">${s}</g>` : s);
+  svg.setAttribute('aria-label', `Certificate of Acceptance for artifact revision ${DATA.revision}, produced by ${name}. State: ${state.status}.`);
+  document.getElementById('info').innerHTML =
+    `<b>House mark.</b> ${esc(seal.desc)}. <b>Livery:</b> ${esc(liv.name.toLowerCase())}, from the same key. ` +
+    `<b>Seeds:</b> house ← SHA-256 of key (<code>${hex.slice(0, 12)}…</code>), vignette ← manifest, underprint and counters ← revision sha256.`;
+}
+
+/* ---------- Gallery ---------- */
+const NAMES_A = ['ATLAS','HALCYON','MERIDIAN','KESTREL','ORRERY','BASALT','LUMEN','CORVID','TIDEWATER','VESPER','QUILL','CINDER','MARROW','LODESTAR','AUGUR'];
+const NAMES_B = ['RESEARCH','AUDIT','CODEGEN','TRANSLATE','REVIEW','DESIGN','LEGAL','DATA','FORECAST','SURVEY'];
+function randomHouse(){
+  const hx = Array.from({length: 32}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  const key = `${hx.slice(0,8)}-${hx.slice(8,12)}-4${hx.slice(13,16)}-${hx.slice(16,20)}-${hx.slice(20)}`;
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  return { name: `${pick(NAMES_A)}-${pick(NAMES_B)}`, key };
+}
+let houses = Array.from({length: 12}, randomHouse);
+
+function renderGallery(){
+  const el = document.getElementById('gallery');
+  el.innerHTML = houses.map((h, i) => {
+    const hex = houseSeed(h.key), fp = fingerprint(h.key, hex);
+    const mark = houseMark(state.style, hex, h.name, fp, 'g' + i, .55);
+    return `<button type="button" class="tile" data-i="${i}" aria-label="Use ${esc(h.name)}">` +
+      `<svg viewBox="-118 -118 236 236" aria-hidden="true">${mark.svg}</svg>` +
+      `<span>${esc(h.name)}</span><code>${fp.slice(0, 8)}</code></button>`;
+  }).join('');
+}
+
+/* ---------- Wiring ---------- */
+const nameIn = document.getElementById('name'), keyIn = document.getElementById('key');
+function syncControls(){
+  document.querySelectorAll('.seg').forEach(seg => seg.querySelectorAll('button').forEach(b =>
+    b.setAttribute('aria-pressed', String(state[seg.dataset.key] === b.dataset.v))));
+  nameIn.value = state.name; keyIn.value = state.key;
+}
+document.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  state[seg.dataset.key] = b.dataset.v; syncControls(); renderCert();
+  if (seg.dataset.key === 'style') renderGallery();
+}));
+let timer;
+const onInput = () => { state.name = nameIn.value; state.key = keyIn.value; clearTimeout(timer); timer = setTimeout(renderCert, 160); };
+nameIn.addEventListener('input', onInput); keyIn.addEventListener('input', onInput);
+document.getElementById('random').addEventListener('click', () => { Object.assign(state, randomHouse()); syncControls(); renderCert(); });
+document.getElementById('reset').addEventListener('click', () => { state.name = 'RESEARCH-FACTORY'; state.key = DATA.identity; syncControls(); renderCert(); });
+document.getElementById('shuffle').addEventListener('click', () => { houses = Array.from({length: 12}, randomHouse); renderGallery(); });
+document.getElementById('gallery').addEventListener('click', e => {
+  const t = e.target.closest('.tile'); if (!t) return;
+  Object.assign(state, houses[+t.dataset.i]); syncControls(); renderCert();
+  document.getElementById('cert').scrollIntoView({behavior: 'smooth', block: 'start'});
+});
+
+syncControls(); renderCert(); renderGallery();
+</script>
+</body>
+</html>
