@@ -15,7 +15,7 @@ from definition import digest, validate  # noqa: E402
 from testbed import (QUALITY_POLICY, SERVICE_NAMES, REPORT_CAPABILITIES, REPORT_NAMES,
                      REPORT_QUALITY_POLICY, binding_records, contract_records, down,
                      report_bindings, report_contracts, up, write_metadata)  # noqa: E402
-from agent_binding import resolve  # noqa: E402
+from agent_binding import card_identity, resolve, resolve_card  # noqa: E402
 
 
 class TestbedTests(unittest.TestCase):
@@ -42,7 +42,8 @@ class TestbedTests(unittest.TestCase):
         self.assertEqual(set(contracts), set(SERVICE_NAMES))
         for index, name in enumerate(SERVICE_NAMES):
             binding = self.bindings[name]
-            self.assertEqual(set(binding), {"role", "url", "identity", "approved"})
+            self.assertEqual(set(binding), {"role", "url", "identity", "approved"} |
+                             ({"output"} if name == "release" else set()))
             self.assertEqual(binding["url"], f"http://127.0.0.1:{45100 + index}")
             self.assertTrue(binding["approved"])
             contract = contracts[name]
@@ -51,9 +52,17 @@ class TestbedTests(unittest.TestCase):
             self.assertEqual(contract["role"], binding["role"])
             self.assertEqual(contract["a2a_protocol"], "1.0")
             self.assertIs(contract["attested"], False)
+            if name == "release":
+                # An ordinary A2A agent with output none: no private route.
+                self.assertEqual(binding["output"], "none")
+                self.assertEqual(contract["input"]["transport"], "a2a-SendMessage")
+                self.assertEqual(contract["output"]["mode"], "none")
+                self.assertEqual(contract["operations"],
+                                 {"idempotency": "messageId", "task_lookup": "GetTask"})
+                self.assertNotIn("/", json.dumps(contract).replace("application/json", ""))
+                continue
             self.assertIs(contract["operations"]["idempotent_action_id"], True)
-            self.assertEqual(contract["operations"]["lookup"],
-                             "/receipts/{id}" if name == "release" else "/fixture/actions/{id}")
+            self.assertEqual(contract["operations"]["lookup"], "/fixture/actions/{id}")
 
     def test_template_materializes_and_validates_with_generated_bindings(self):
         template = json.loads((ROOT / "definitions" / "report-template.json").read_text())
@@ -99,6 +108,15 @@ class TestbedTests(unittest.TestCase):
             self.assertEqual(resolved_url, binding["url"])
             self.assertEqual(observation["contract_document"]["capability"],
                              REPORT_CAPABILITIES[name])
+        release, contract = bindings["release"], contracts["release"]
+        self.assertEqual(release["output"], "none")
+        self.assertEqual(release["identity"], card_identity(contract["card_sha256"]))
+        self.assertEqual(contract["reconcile"], "a2a-idempotent-resend")
+        resolved_url, observation = resolve_card(directory / "agent_snapshot.json",
+                                                 release["identity"], contract)
+        self.assertEqual((resolved_url, observation["card_sha256"]),
+                         (release["url"], contract["card_sha256"]))
+        self.assertEqual(result["health"]["release"]["mode"], "participating")
 
 
 if __name__ == "__main__":
