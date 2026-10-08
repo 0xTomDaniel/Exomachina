@@ -17,12 +17,42 @@ sys.path.insert(0, str(ROOT / "scenarios"))
 from single_factory import (_findings_on_claim, _redact_history,
                             _run_actions, check_evidence)  # noqa: E402
 from sf_attest import verify_redaction, attest, resolve
+sys.path.insert(0, str(ROOT / "src"))
+import a2a_v1  # noqa: E402
+
+
+def as_a2a_v1(value):
+    """Project the preserved 0.3-wire observation onto A2A v1 shapes in memory.
+
+    ``scripted-7.json`` was observed on a2a-sdk 0.3.26 and stays byte-identical
+    as evidence. The checker accepts only v1 Tasks, Messages and Parts, so the
+    false-pass probes run against the same observation re-expressed in v1:
+    no ``kind`` on A2A objects, ``TASK_STATE_*`` states and ``ROLE_*`` roles.
+    Non-A2A records that also use a ``kind`` field are left unchanged.
+    """
+    if isinstance(value, list):
+        return [as_a2a_v1(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+    value = {key: as_a2a_v1(item) for key, item in value.items()}
+    kind = value.get("kind")
+    if kind in ("task", "message") and {"status", "parts", "messageId"} & set(value):
+        del value["kind"]
+    elif kind in ("text", "data") and kind in value:
+        del value["kind"]
+    status = value.get("status")
+    if isinstance(status, dict) and status.get("state") in ("working", "completed"):
+        value["status"] = {**status, "state": a2a_v1.wire_state(status["state"])}
+    if "parts" in value and value.get("role") in ("user", "agent"):
+        value["role"] = "ROLE_" + value["role"].upper()
+    return value
 
 
 class ReviewTwoCheckerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.snapshot = json.loads((ROOT / "evidence" / "single-factory" / "scripted-7.json").read_text())
+        cls.snapshot = as_a2a_v1(json.loads(
+            (ROOT / "evidence" / "single-factory" / "scripted-7.json").read_text()))
 
     def setUp(self):
         self.e = copy.deepcopy(self.snapshot)
@@ -134,10 +164,18 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.e["broker_events"].append({"event": "start", "pid": 123456})
         self.fails("G-2")
 
+    def test_preserved_0_3_wire_observation_does_not_satisfy_v1_checks(self):
+        legacy = json.loads((ROOT / "evidence" / "single-factory" / "scripted-7.json").read_text())
+        for key in ("setup", "binding_names", "leak_scan"):
+            legacy[key] = copy.deepcopy(self.e[key])
+        checks = check_evidence(legacy)
+        for key in ("SF-3", "R1-a", "R1-d", "G-7"):
+            self.assertFalse(checks[key]["pass"], key)
+
     def test_live_attempt_1_corrected_predicates(self):
         """Replay preserved live observations without changing the evidence file."""
-        live = json.loads((ROOT / "evidence" / "single-factory" /
-                           "codex-subscription-1.json").read_text())
+        live = as_a2a_v1(json.loads((ROOT / "evidence" / "single-factory" /
+                                     "codex-subscription-1.json").read_text()))
         checks = check_evidence(live)
         for key in ("R2-b", "R3-b", "R3-d", "G-5"):
             self.assertTrue(checks[key]["pass"], key)
