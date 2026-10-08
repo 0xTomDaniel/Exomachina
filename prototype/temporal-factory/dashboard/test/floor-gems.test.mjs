@@ -82,3 +82,23 @@ test("control edges are thin lines without chevrons or items, and gem facets are
   assert.ok(html.includes("textures = []; gemCache = new Map();"), "theme rebuild drops cached gem textures");
   assert.ok(html.includes("case 'verdict': R.verdicts.push(e); if (it) it.seals.push("), "gate verdicts seal the item they name");
 });
+
+test("Demo factories carry illustrative gems through the Demo Adapter, labelled as illustrative", async () => {
+  const { loadFloorDemoFixtures } = await import("./support/floor-fixtures.mjs");
+  const { createDemoAdapter } = await import("../adapters/demo.mjs");
+  const { reduceDashboard, toFloorModel } = await import("../reducer.mjs");
+  const KINDS = new Set(["text", "data", "raw", "url", "message"]);
+  for (const fixture of await loadFloorDemoFixtures()) {
+    for (const [key, art] of Object.entries(fixture.artifacts)) assert.ok(Array.isArray(art.gems) && art.gems.length && art.gems.every(k => KINDS.has(k)), `${fixture.id}.${key} declares illustrative gems`);
+    const frames = [], adapter = await createDemoAdapter({ fixtures:[fixture] });
+    adapter.observe(fixture.id, null, null, frame => frames.push(frame));
+    const floor = toFloorModel(frames.reduce((s, f) => reduceDashboard(s, f), { source:"demo" }), {});
+    assert.equal(floor.illustrative, true);
+    assert.deepEqual(JSON.parse(JSON.stringify(floor.artifacts)), JSON.parse(JSON.stringify(fixture.artifacts)), "gems survive the shared path");
+  }
+  assert.ok(Object.values((await loadFloorDemoFixtures()).flatMap(f => Object.values(f.artifacts))).some(a => a.gems.length > 4), "a Demo carrier shows the +N badge");
+  const demo = html.slice(html.indexOf("  function demoCarrier("), html.indexOf("  function compile(f, run){"));
+  assert.match(demo, /evidence:'illustrative'/);
+  assert.match(demo, /!f\.actual/, "never for Live or Recorded floors");
+  assert.ok(html.includes("Demo gems are illustrative, like the rest of the Demo: no hand-off was recorded."));
+});

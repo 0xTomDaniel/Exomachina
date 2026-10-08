@@ -741,7 +741,22 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
       <ul>
         <li class="wide"><svg width="120" height="16" viewBox="0 0 120 16"><circle cx="8" cy="8" r="6" fill="var(--w-item)" stroke="var(--w-item-edge)"/><rect x="21" y="2" width="12" height="12" rx="2" fill="var(--w-item)" stroke="var(--w-item-edge)"/><path d="M46 2l6 12h-12z" fill="var(--w-item)" stroke="var(--w-item-edge)"/><path d="M66 2l6 3.5v7L66 16l-6-3.5v-7z" fill="var(--w-item)" stroke="var(--w-item-edge)"/><path d="M86 2l6 4.4-2.3 7.1h-7.4L80 6.4z" fill="var(--w-item)" stroke="var(--w-item-edge)"/><rect x="99" y="4" width="18" height="9" rx="4.5" fill="var(--w-item)" stroke="var(--w-item-edge)"/></svg></li>
         <li class="wide">Shape = kind of artifact. The label is its revision.</li>
-        <li class="wide" x-show="$store.floor.sourceMode !== 'demo'">Live: circle T = Task, capsule TO = Task output (artifact not recorded; hand-off inferred from graph order), square R1/R2 = report artifact evidenced by sha256. Belt dwell is the observed gap; hops under 0.8 s are shown at 0.8 s. Branch pods are derived from observed assignments.</li>
+      </ul>
+      <h4>Gems · what a carrier holds</h4>
+      <ul>
+        <li><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="var(--w-gem-sapphire)" stroke="var(--w-item-edge)" stroke-width=".8"/><path d="M4.4 4.6l1.8 1.8" stroke="#fff" stroke-width="1.2"/></svg>Sapphire, round · text</li>
+        <li><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2h6l2 2v6l-2 2H4l-2-2V4z" fill="var(--w-gem-emerald)" stroke="var(--w-item-edge)" stroke-width=".8"/><path d="M4.6 4.6l1.4 1.4" stroke="#fff" stroke-width="1.2"/></svg>Emerald, square · data</li>
+        <li><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7Q7 0 13 7Q7 14 1 7z" fill="var(--w-gem-amethyst)" stroke="var(--w-item-edge)" stroke-width=".8"/><path d="M4.4 5.6l1.6 .4" stroke="#fff" stroke-width="1.2"/></svg>Amethyst, marquise · binary</li>
+        <li><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1.5L12.5 11.5H1.5z" fill="var(--w-gem-topaz)" stroke="var(--w-item-edge)" stroke-width=".8"/><path d="M5.6 6.8l1-1.6" stroke="#fff" stroke-width="1.2"/></svg>Topaz, triangle · link</li>
+        <li><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1l5.5 6L7 13 1.5 7z" fill="var(--w-gem-diamond)" stroke="var(--w-item-edge)" stroke-width=".8"/><path d="M4.6 6l1.6-1.8" stroke="#fff" stroke-width="1.2"/></svg>Clear diamond · message</li>
+        <li><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="var(--w-bay)" stroke="var(--w-item-edge)" stroke-width=".8"/></svg>Empty socket · still filling</li>
+        <li class="wide"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="var(--w-gem-cloud)" opacity=".8" stroke="var(--w-item-edge)" stroke-width=".8"/><path d="M4 4.5l2.6 2.4-1 1.6 3 2" stroke="var(--w-item-edge)" stroke-width="1" fill="none"/></svg>Cloudy, chipped · contents not recorded (inferred from graph order)</li>
+        <li class="wide">Flawless with a glint · recorded hand-off whose digests match producer to consumer. Cut carries the meaning; colour only repeats it.</li>
+        <li><span class="mono" style="font-size:9.5px;padding:0 4px;border-radius:5px;background:var(--w-bay);color:#fff">+3</span>More than four items</li>
+        <li><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="var(--w-done)"/><path d="M4.4 7.2l1.8 1.9 3.4-3.6" stroke="#fff" stroke-width="1.4" fill="none"/></svg><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="var(--advisory)"/><path d="M4.8 4.8l4.4 4.4M9.2 4.8l-4.4 4.4" stroke="#fff" stroke-width="1.4"/></svg>Gate seal</li>
+        <li class="wide">A gate verdict seals the same carrier (accepted or rejected); it is not a gem. Carriers merge at a join into one carrier holding every gem. The inspector lists each item's source, part kinds, media type, size, short digest and ready time, never its content.</li>
+        <li class="wide" x-show="$store.floor.sourceMode === 'demo'">Demo gems are illustrative, like the rest of the Demo: no hand-off was recorded.</li>
+        <li class="wide" x-show="$store.floor.sourceMode !== 'demo'">Live: circle T = Task; a recorded hand-off is a carrier shaped by its producing node, with flawless gems; without records, capsule TO = Task output (artifact not recorded; hand-off inferred from graph order) and square R1/R2 = report artifact evidenced by sha256, each with one cloudy socket. Belt dwell is the observed gap; hops under 0.8 s are shown at 0.8 s. Branch pods are derived from observed assignments.</li>
       </ul>
       <h4>Many jobs</h4>
       <ul>
@@ -753,7 +768,8 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
       </ul>
       <h4>Lines</h4>
       <ul>
-        <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--w-belt-edge)" stroke-width="8" stroke-linecap="round"/><path d="M2 5h26" stroke="var(--w-belt)" stroke-width="5" stroke-linecap="round"/></svg>Work belt</li>
+        <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--w-belt-edge)" stroke-width="8" stroke-linecap="round"/><path d="M2 5h26" stroke="var(--w-belt)" stroke-width="5" stroke-linecap="round"/></svg>Material belt · carries hand-offs</li>
+        <li class="wide"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h24" stroke="var(--w-belt-mark)" stroke-width="1.6" stroke-linecap="round"/><circle cx="26.5" cy="5" r="2.2" fill="var(--w-belt-mark)"/></svg>Control edge · sequences work, carries no items (side-effect nodes have only these out)</li>
         <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--w-signal)" stroke-width="1.5" stroke-dasharray="4 3"/></svg>Director signal</li>
         <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h22" stroke="var(--w-signal)" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/><circle cx="26" cy="5" r="2.6" fill="var(--w-signal)"/></svg>Your line</li>
         <li class="wide"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--w-bracket)" stroke-width="1.4" stroke-dasharray="1 5"/></svg>View link · presentation only; no message</li>
@@ -1257,7 +1273,8 @@ const FACTORIES = [
       'synthesizer':{name:'synthesizer',contract:'report.synthesis@1',rev:'svc 2026.09.24-b',cap:6,price:{sec:.018},others:[[-999,2]],sharedWith:['Market Brief','Supplier Due Diligence']},
       'quality-reviewer':{name:'quality-reviewer',contract:'report.review@2',rev:'svc 2026.09.25-a',cap:3,price:{task:.19},note:'Separate identity and Task store from the author.'},
     },
-    artifacts:{brief:{name:'Assignment brief',shape:'circle'},findings:{name:'Findings',shape:'square'},risks:{name:'Risks',shape:'triangle'},bundle:{name:'Joined inputs',shape:'capsule'},report:{name:'Report',shape:'hexagon'}},
+    // gems: illustrative item kinds per artifact (Demo only; never recorded facts)
+    artifacts:{brief:{name:'Assignment brief',shape:'circle',gems:['text']},findings:{name:'Findings',shape:'square',gems:['text','data','url']},risks:{name:'Risks',shape:'triangle',gems:['text','data']},bundle:{name:'Joined inputs',shape:'capsule',gems:['text','data','url','text','data']},report:{name:'Report',shape:'hexagon',gems:['text','url']}},
     steps:[
       {id:'intake',kind:'intake',name:'Caller Task',short:'Start',sub:'A2A entry',outs:['brief','brief']},
       {id:'rf',kind:'assign',name:'Research findings',short:'Findings',agent:'research-findings',dept:'production',out:'findings'},
@@ -1300,7 +1317,7 @@ const FACTORIES = [
       'risk-scorer':{name:'risk-scorer',contract:'supplier.score@1',rev:'svc 2026.09.18',cap:2,price:{task:.35}},
       'policy-checker':{name:'policy-checker',contract:'procurement.policy@3',rev:'svc 2026.09.22',cap:2,price:{task:.15},note:'Separate identity from the scorer.'},
     },
-    artifacts:{brief:{name:'Request',shape:'circle'},list:{name:'Shortlist',shape:'capsule'},supplier:{name:'Supplier',shape:'pentagon'},assessment:{name:'Assessment',shape:'square'},dossier:{name:'Dossier',shape:'capsule'},scorecard:{name:'Scorecard',shape:'hexagon'}},
+    artifacts:{brief:{name:'Request',shape:'circle',gems:['message']},list:{name:'Shortlist',shape:'capsule',gems:['data']},supplier:{name:'Supplier',shape:'pentagon',gems:['data','url']},assessment:{name:'Assessment',shape:'square',gems:['text','data']},dossier:{name:'Dossier',shape:'capsule',gems:['text','raw','raw','data','url','text']},scorecard:{name:'Scorecard',shape:'hexagon',gems:['data','text']}},
     steps:[
       {id:'intake',kind:'intake',name:'Caller Task',sub:'A2A entry'},
       {id:'shortlist',kind:'assign',name:'Build shortlist',agent:'sourcing-scout',dept:'sourcing'},
@@ -1368,7 +1385,7 @@ const FACTORIES = [
     admission:{ limit:8, when:'queue' },
     budget:{ day:400, perJob:3, estimatePerJob:.3, spentAt:{ t:0, usd:58.2 }, director:0.02 },
     agents:{'translator':{name:'translator',contract:'document.translate@2',rev:'svc 2026.09.12',cap:3,price:{sec:.012}}},
-    artifacts:{source:{name:'Source document',shape:'circle'},translation:{name:'Translation',shape:'hexagon'}},
+    artifacts:{source:{name:'Source document',shape:'circle',gems:['raw']},translation:{name:'Translation',shape:'hexagon',gems:['text','raw']}},
     steps:[
       {id:'intake',kind:'intake',name:'Caller Task',sub:'A2A entry'},
       {id:'translate',kind:'assign',name:'Translate',agent:'translator'},
@@ -2395,7 +2412,7 @@ const Floor = (() => {
   function demoCarrier(f, e){
     const gems = !f.actual && f.artifacts[e.art]?.gems;
     if (!Array.isArray(gems) || !gems.length) return null;
-    return { evidence:'illustrative', sockets:gems.length, items:gems.map((gem, k) => ({ index:k, gem, ready_t:e.t + .12 * k })), consumers:[] };
+    return { evidence:'illustrative', sockets:gems.length, items:gems.map((kind, k) => ({ index:k, gem:kind === 'message' ? 'diamond' : gemOfKinds('artifact', [kind]), ready_t:e.t + .12 * k })), consumers:[] };
   }
   function compile(f, run){
     const G = S.L, multi = !!run.multi;
