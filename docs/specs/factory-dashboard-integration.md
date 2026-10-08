@@ -1066,9 +1066,12 @@ is authoritative; this section states its dashboard consequences.
 - **Timing.** A carrier fills in its station: empty sockets fill at each item's
   observed ready time. It leaves when the hand-off is produced and rides the
   belt until its observed consumption, with the 0.8 s minimum visible hop as
-  the only adjustment. Carriers merge at joins. A gate verdict (Quality) is a
-  seal on the forwarded carrier, not a new carrier. Revision labels (R1, R2, …)
-  remain.
+  the only adjustment. Carriers merge at joins. A gate's verdict (Quality) is
+  drawn as a seal on the carrier it judged, which keeps its identity and
+  continues downstream. The gate's own verdict-and-findings artifact is a
+  separate carrier. On a rejection it rides the quality→repair belt with the
+  judged draft; on an acceptance it has no consumer and retires at the gate.
+  Revision labels (R1, R2, …) remain.
 - **Material and control edges.**
   - Only material edges are belts with items.
   - Control edges, including route-node transitions to repair, Director waits,
