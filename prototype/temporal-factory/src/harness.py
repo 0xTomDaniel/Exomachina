@@ -38,7 +38,7 @@ from uuid import uuid4
 import uvicorn
 from fastapi import Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
-from a2a.types import (AgentCapabilities, AgentCard, AgentExtension, AgentSkill, Artifact,
+from a2a.types import (AgentCapabilities, AgentCard, AgentSkill, Artifact,
                        Task, TaskStatus)
 from strands import Agent
 from temporalio.client import Client
@@ -77,11 +77,8 @@ from agent_binding import digest as agent_contract_digest  # noqa: E402
 from agent_binding import resolve as resolve_agent_binding  # noqa: E402
 from admission import AdmissionQueue  # noqa: E402
 from supplier_protocol import (  # noqa: E402
-    SupplierEnvelopeError,
-    nested_factory_fingerprint,
-    parse_nested_factory_envelope,
-    project_supplier_echo,
-    supplier_assignment_echo_declaration,
+    SupplierRequestError,
+    parse_nested_request,
 )
 
 TOKEN = "Bearer fixture-token"
@@ -119,10 +116,10 @@ def _dashboard_js_content_digest(directory: Path) -> str:
 USAGE_CATEGORIES = ("input_tokens", "output_tokens", "cache_read_tokens",
                     "cache_write_tokens", "total_tokens")
 USAGE_CALL_SCOPES = {"authoring_overhead", "director_call", "assignment_call"}
-# The nested-supplier mode is this factory's own caller-facing A2A server (a
-# factory service, not an agent service); it keeps its own action extension.
-A2A_ACTION_EXTENSION_URI = "urn:exomachina:a2a-action-contract:v1"
-A2A_ACTION_CONTRACT = "action-idempotent-async@1"
+# The nested-supplier entry makes this factory an ordinary A2A agent service
+# for any client (A2A decisions 7 and 9): a plain Message carrying its run
+# inputs, no extension, no caller identifiers. Its internal command label:
+NESTED_SUPPLY_OP = "nested_factory"
 # provider_reported: this factory's own model calls; agent_reported: an agent
 # service's A2A budget-extension report recorded by the factory's on-complete hook.
 USAGE_EVIDENCE = {"provider_reported", "agent_reported", "unknown"}
@@ -1039,14 +1036,6 @@ class Director:
                     model_calls INTEGER NOT NULL, tool_calls INTEGER NOT NULL,
                     result_json TEXT NOT NULL, created_at REAL NOT NULL);
             """)
-            if self.nested_supplier_enabled:
-                db.execute("""CREATE TABLE IF NOT EXISTS supplier_assignments (
-                    action_id TEXT PRIMARY KEY,
-                    run_id TEXT NOT NULL UNIQUE,
-                    fingerprint TEXT NOT NULL,
-                    task_id TEXT NOT NULL,
-                    context_id TEXT NOT NULL,
-                    echo_json TEXT NOT NULL)""")
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT * FROM identity WHERE singleton=1").fetchone()
             if row:
@@ -1120,25 +1109,12 @@ class Director:
                              "ORDER BY rowid LIMIT 1", (run_id,)).fetchone()
         return row["action_id"] if row else None
 
-    def supplier_assignment(self, run_id: str) -> dict | None:
-        """Return the durable opt-in supplier binding for a run, if present."""
-        if not self.nested_supplier_enabled:
-            return None
+    def supplied_run(self, run_id: str) -> bool:
+        """True when a run was started by a plain A2A nested-supplier request."""
         with self.connect() as db:
-            row = db.execute("SELECT * FROM supplier_assignments WHERE run_id=?",
-                             (run_id,)).fetchone()
-        if row is None:
-            return None
-        value = dict(row)
-        try:
-            echo = json.loads(value.pop("echo_json"))
-            projected = project_supplier_echo(echo)
-        except (json.JSONDecodeError, SupplierEnvelopeError) as error:
-            raise Rejected("stored nested_factory binding is invalid") from error
-        if set(echo) != set(projected) or echo != projected:
-            raise Rejected("stored nested_factory binding contains unapproved fields")
-        value["echo"] = projected
-        return value
+            row = db.execute("SELECT 1 FROM commands WHERE run_id=? AND op=?",
+                             (run_id, NESTED_SUPPLY_OP)).fetchone()
+        return row is not None
 
     async def _dispatch_admitted(self, request: Mapping) -> dict | None:
         if request.get("state") != "admitted":
@@ -1558,20 +1534,35 @@ class Director:
             return dict(db.execute("SELECT * FROM incidents WHERE run_id=?",
                                    (incident["run_id"],)).fetchone())
 
-    def _nested_factory(self, command: Mapping, task_id: str, context_id: str) -> dict:
-        """Accept one pinned nested run on the original receiving A2A Task."""
+    def supply(self, parts: list, task_id: str, context_id: str, message_id: str) -> dict:
+        """Accept one plain A2A request as a run of this factory's active root.
+
+        The factory acts as an ordinary agent service (A2A decisions 7 and 9):
+        the Message's brief Part is the root's run inputs, and nothing else is
+        read from the caller. The action identity is derived here from the
+        caller and its A2A ``messageId`` (retry deduplication is A2A's own),
+        the run identity from that action, and the definition is this
+        factory's active publication. A resent messageId on its original Task
+        replays the binding; a different Message under the same messageId, or
+        the same messageId on another Task, is refused without a new run.
+        """
         if not self.nested_supplier_enabled:
-            raise Rejected("nested_factory is not enabled for this factory")
+            raise Rejected("this factory does not accept nested-supplier requests")
         actor = CURRENT_ACTOR.get()
         if actor is None:
             raise Rejected("authenticated caller required")
         if not isinstance(task_id, str) or not task_id or not isinstance(context_id, str) or not context_id:
-            raise Rejected("nested_factory requires the receiving A2A Task/context")
+            raise Rejected("a nested-supplier request requires the receiving A2A Task/context")
+        if not isinstance(message_id, str) or not message_id:
+            raise Rejected("messageId is required")
         try:
-            envelope = parse_nested_factory_envelope(command)
-            request_fingerprint = nested_factory_fingerprint(envelope)
-        except SupplierEnvelopeError as error:
+            request = parse_nested_request(parts)
+        except SupplierRequestError as error:
             raise Rejected(str(error)) from error
+        fingerprint = request.fingerprint()
+        action_id = "a2a-message:" + hashlib.sha256(canonical(
+            {"actor": actor, "message_id": message_id}).encode()).hexdigest()
+        run_id = self.run_id_for(action_id)
 
         publication = package = run = None
         replayed = False
@@ -1579,55 +1570,34 @@ class Director:
             db.execute("BEGIN IMMEDIATE")
             self.fence(db)
             prior_command = db.execute(
-                "SELECT * FROM commands WHERE action_id=?", (envelope.action_id,)).fetchone()
-            prior_run = db.execute(
-                "SELECT * FROM runs WHERE run_id=?", (envelope.run_id,)).fetchone()
-            prior_assignment = db.execute(
-                "SELECT * FROM supplier_assignments WHERE action_id=?",
-                (envelope.action_id,)).fetchone()
-            assignment_for_run = db.execute(
-                "SELECT * FROM supplier_assignments WHERE run_id=?",
-                (envelope.run_id,)).fetchone()
+                "SELECT * FROM commands WHERE action_id=?", (action_id,)).fetchone()
+            prior_run = db.execute("SELECT * FROM runs WHERE run_id=?", (run_id,)).fetchone()
             alias = db.execute("SELECT * FROM aliases WHERE task_id=?", (task_id,)).fetchone()
-
             if prior_command is not None:
-                if (prior_command["op"] != "nested_factory" or prior_assignment is None or
-                        prior_command["fingerprint"] != request_fingerprint or
-                        prior_command["run_id"] != envelope.run_id or
-                        prior_assignment["run_id"] != envelope.run_id or
-                        prior_assignment["fingerprint"] != request_fingerprint or
-                        prior_assignment["task_id"] != task_id or
-                        prior_assignment["context_id"] != context_id or
-                        prior_assignment["echo_json"] != canonical(envelope.echo_tuple()) or
-                        prior_run is None or prior_run["task_id"] != task_id or
+                if (prior_command["op"] != NESTED_SUPPLY_OP or
+                        prior_command["fingerprint"] != fingerprint or
+                        prior_command["run_id"] != run_id):
+                    raise Rejected("messageId was already used with a different Message")
+                if (prior_run is None or prior_run["task_id"] != task_id or
                         prior_run["context_id"] != context_id or
                         prior_run["authorized_actor"] != actor or alias is None or
-                        alias["run_id"] != envelope.run_id or
-                        alias["context_id"] != context_id):
-                    raise Rejected("nested_factory action_id conflicts with its accepted binding")
+                        alias["run_id"] != run_id or alias["context_id"] != context_id):
+                    raise Rejected("messageId is already bound to another Task")
                 replayed = True
                 run = dict(prior_run)
                 try:
                     publication = self.module.publications.get(run["manifest_digest"])
                     package = self.module.package(run["package_digest"])
                 except Exception as error:
-                    raise Rejected("nested_factory pinned publication is unavailable") from error
+                    raise Rejected("the run's pinned publication is unavailable") from error
                 if (publication.get("manifest_digest") != run["manifest_digest"] or
-                        publication.get("package_digest") != run["package_digest"] or
-                        digest(package.get("root", {})) != envelope.definition_digest):
-                    raise Rejected("nested_factory pinned publication changed")
+                        publication.get("package_digest") != run["package_digest"]):
+                    raise Rejected("the run's pinned publication changed")
             else:
-                if prior_assignment is not None or assignment_for_run is not None:
-                    raise Rejected("nested_factory run or action ID is already bound")
                 if prior_run is not None:
-                    # Explicit supplier run IDs may not collide with ordinary starts
-                    # or with a different nested assignment.
-                    raise Rejected("nested_factory run_id is already in use")
+                    raise Rejected("derived run identity is already in use")
                 if alias is not None:
                     raise Rejected("receiving A2A Task is already bound to another run")
-                if db.execute("SELECT 1 FROM aliases WHERE task_id=?", (task_id,)).fetchone():
-                    raise Rejected("receiving A2A Task binding conflict")
-
                 try:
                     publication = self.module.publications.active()
                     if (not isinstance(publication, Mapping) or
@@ -1637,12 +1607,11 @@ class Director:
                     package = self.module.package(publication["package_digest"])
                 except Exception as error:
                     raise Rejected("active publication is unavailable") from error
-                root = package.get("root")
-                if not isinstance(root, Mapping) or digest(root) != envelope.definition_digest:
-                    raise Rejected("nested_factory definition_digest is not the active root")
+                if not isinstance(package.get("root"), Mapping):
+                    raise Rejected("active publication has no root definition")
                 try:
                     run_inputs, authority = authorize_run_inputs(
-                        package["run_inputs"], envelope.inputs, actor)
+                        package["run_inputs"], request.inputs, actor)
                 except ValueError as error:
                     raise Rejected(str(error)) from error
                 inputs_digest = digest(run_inputs)
@@ -1650,41 +1619,34 @@ class Director:
                     "INSERT INTO runs (run_id, task_id, context_id, package_digest, "
                     "manifest_digest, build_id, label, run_inputs_json, run_inputs_digest, "
                     "authorized_actor, input_authority_json) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                    (envelope.run_id, task_id, context_id, publication["package_digest"],
+                    (run_id, task_id, context_id, publication["package_digest"],
                      publication["manifest_digest"], publication["build_id"],
                      publication.get("label", ""), canonical(run_inputs), inputs_digest,
                      actor, canonical(authority)))
-                run = dict(db.execute("SELECT * FROM runs WHERE run_id=?",
-                                      (envelope.run_id,)).fetchone())
-                db.execute("INSERT INTO commands VALUES (?, ?, ?, 'nested_factory')",
-                           (envelope.action_id, request_fingerprint, envelope.run_id))
-                db.execute("INSERT INTO aliases VALUES (?, ?, ?)",
-                           (task_id, envelope.run_id, context_id))
-                db.execute("INSERT INTO supplier_assignments "
-                           "(action_id,run_id,fingerprint,task_id,context_id,echo_json) "
-                           "VALUES (?,?,?,?,?,?)",
-                           (envelope.action_id, envelope.run_id, request_fingerprint,
-                            task_id, context_id, canonical(envelope.echo_tuple())))
+                run = dict(db.execute("SELECT * FROM runs WHERE run_id=?", (run_id,)).fetchone())
+                db.execute("INSERT INTO commands VALUES (?, ?, ?, ?)",
+                           (action_id, fingerprint, run_id, NESTED_SUPPLY_OP))
+                db.execute("INSERT INTO aliases VALUES (?, ?, ?)", (task_id, run_id, context_id))
 
         if run is None or package is None or publication is None:
-            raise Rejected("nested_factory acceptance did not persist a runnable binding")
+            raise Rejected("nested-supplier acceptance did not persist a runnable binding")
         if run["closed"]:
             prior_outcome = json.loads(run["outcome_json"] or "{}")
             outcome = prior_outcome.get("state", "terminal")
             admission_state = "released"
         elif self.admission_queue is not None:
-            admission = self.admission_queue.enqueue(envelope.action_id, task_id=task_id)
+            admission = self.admission_queue.enqueue(action_id, task_id=task_id)
             admission_state = admission["state"]
             if admission_state == "admitted":
                 sync(self._dispatch_admitted(admission))
             outcome = {"queued": "queued", "admitted": "admitted",
                        "released": "terminal"}.get(admission_state, "unavailable")
         else:
-            self.ensure_runner(f"nested-factory:{envelope.run_id}", publication["build_id"])
+            self.ensure_runner(f"nested-supplier:{run_id}", publication["build_id"])
             sync(self._start(run, package, publication))
-            outcome, admission_state = "nested_factory", None
-        return {"run_id": envelope.run_id, "accepted_command": "nested_factory",
-                "command_id": envelope.action_id, "lifecycle": "applied",
+            outcome, admission_state = NESTED_SUPPLY_OP, None
+        return {"run_id": run_id, "accepted_command": NESTED_SUPPLY_OP,
+                "command_id": action_id, "lifecycle": "applied",
                 "outcome": outcome, "admission_state": admission_state,
                 "replayed": replayed}
 
@@ -1826,8 +1788,6 @@ class Director:
                                else "submission unavailable before model scheduling")},
                     uncertain=model_started)
                 raise
-        if isinstance(command, Mapping) and command.get("op") == "nested_factory":
-            return self._nested_factory(command, task_id, context_id)
         if self.config.get("legacy_structured_commands") is not True:
             raise Rejected("factory caller messages must contain text parts only")
         agent = Agent(name="Factory Director", model=ToolCallingModelFixture(),
@@ -1989,25 +1949,23 @@ class FactoryTaskStore(ProjectionTaskStore):
         state, result, status = projection["state"], projection["result"], projection["status"]
         artifacts = None
         message = None
-        supplier_assignment = self.director.supplier_assignment(record["run_id"])
-        supplier_echo = (supplier_assignment or {}).get("echo")
+        supplied = (self.director.nested_supplier_enabled and
+                    self.director.supplied_run(record["run_id"]))
         if state == "completed" and result and result.get("status") == "accepted":
             accepted = result.get("artifact") or {}
             content = accepted.get("content")
-            if supplier_echo is not None:
-                revision = accepted.get("revision")
+            if supplied:
+                # As an ordinary agent service: one artifact whose single Part
+                # is the accepted work product itself (decision 9). The caller
+                # digests the bytes it received; nothing echoes its identifiers.
                 accepted_sha256 = accepted.get("sha256")
                 if (not isinstance(content, str) or not content or
-                        not isinstance(revision, str) or not revision or
                         not isinstance(accepted_sha256, str) or
                         not re.fullmatch(r"[0-9a-f]{64}", accepted_sha256) or
                         hashlib.sha256(content.encode("utf-8")).hexdigest() != accepted_sha256):
                     raise ValueError("accepted supplier artifact bytes do not match their digest")
-                payload = {**supplier_echo, "revision": revision,
-                           "sha256": accepted_sha256, "author": self.director.identity,
-                           "content": content}
                 artifacts = [Artifact(artifact_id=accepted_sha256,
-                                      parts=[data_part(payload)])]
+                                      parts=[text_part(content, "application/json")])]
             else:
                 report = None
                 if isinstance(content, str):
@@ -2060,8 +2018,9 @@ class FactoryTaskStore(ProjectionTaskStore):
                         "package_digest": record["package_digest"],
                         "interpreter_build": record["build_id"],
                         "run_inputs_digest": record["run_inputs_digest"]}
-        if supplier_echo is not None:
-            metadata.update(supplier_echo)
+        if supplied:
+            # Factory concepts stay on this side of the wire for a plain client.
+            metadata = None
         # A2A Adapter boundary: the version-neutral projection state becomes TASK_STATE_*.
         return Task(id=task_id, context_id=context_id,
                     status=TaskStatus(state=task_state(state), message=message),
@@ -2267,40 +2226,13 @@ def create_app(instance_dir: Path, *, commercial_reader=None, usage_broker=None)
     store = FactoryTaskStore(director)
     capability = config["capability"]
     nested_supplier_enabled = director.nested_supplier_enabled
-    card_extensions = []
-    supplier_contract = None
-    if nested_supplier_enabled:
-        supplier_contract = {
-            "name": A2A_ACTION_CONTRACT,
-            "protocol": a2a_v1.PROTOCOL,
-            "request": {"method": a2a_v1.SEND_MESSAGE, "returnImmediately": True,
-                        "data": {"op": "nested_factory", "fields": sorted((
-                            "action_id", "run_id", "definition_digest", "parent_task_id",
-                            "parent_run_id", "parent_definition_digest", "parent_assignment_id",
-                            "parent_attempt_id", "assignment_id", "attempt_id", "payload"))}},
-            "response": {"result": "task", "metadata": sorted((
-                "action_id", "run_id", "definition_digest", "parent_task_id", "parent_run_id", "parent_definition_digest",
-                "parent_assignment_id", "parent_attempt_id", "assignment_id", "attempt_id"))},
-            "completion": {"method": a2a_v1.GET_TASK, "state": a2a_v1.wire_state("completed"),
-                           "artifact_count": 1, "data": sorted((
-                               "revision", "sha256", "author", "content", "action_id",
-                               "run_id", "definition_digest", "parent_task_id",
-                               "parent_run_id", "parent_definition_digest",
-                               "parent_assignment_id", "parent_attempt_id",
-                               "assignment_id", "attempt_id"))},
-            "supplier_assignment_echo": supplier_assignment_echo_declaration(),
-            "reconcile": "opaque",
-        }
-        card_extensions = [AgentExtension(
-            uri=A2A_ACTION_EXTENSION_URI, required=True,
-            params={"identity": director.identity, "contract": A2A_ACTION_CONTRACT,
-                    "contract_digest": agent_contract_digest(supplier_contract)})]
     card = AgentCard(
         name=config["name"], description=capability["description"],
         supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="0.1.0",
         default_input_modes=["application/json"], default_output_modes=["application/json"],
-        capabilities=(AgentCapabilities(streaming=False, extensions=card_extensions)
-                      if nested_supplier_enabled else AgentCapabilities(streaming=False)),
+        # No extension: a plain A2A client needs nothing Exomachina-specific,
+        # including for the nested-supplier entry (decisions 7 and 9).
+        capabilities=AgentCapabilities(streaming=False),
         skills=[AgentSkill(id=capability["id"], name=capability["name"],
                            description=capability["description"], tags=capability.get("tags", []))],
         **(cookie_security("loopbackSession", QA_SESSION_COOKIE) if loopback_qa_session
@@ -2310,10 +2242,6 @@ def create_app(instance_dir: Path, *, commercial_reader=None, usage_broker=None)
             config.get("legacy_structured_commands") is True or nested_supplier_enabled)
     ), store, card))
     _auth(app, sessions)
-    if nested_supplier_enabled:
-        @app.get("/contract")
-        def supplier_contract_document():
-            return supplier_contract
     if commercial_reader is None:
         # Factory instances share one local ledger at EXO_HOME. The ledger
         # constructor initializes empty accounting tables only; no commercial

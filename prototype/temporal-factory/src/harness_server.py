@@ -30,6 +30,7 @@ from strands.plugins import Plugin
 
 from google.protobuf.json_format import MessageToDict
 import a2a_v1
+from supplier_protocol import is_nested_request
 from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore, agent_message,
                            bearer_security, build_app, data_part, interfaces, part_content,
                            part_data, task_state, text_part)
@@ -302,11 +303,23 @@ class HarnessExecutor(AgentExecutor):
                     part_content(part) != "text" for part in context.message.parts):
                 raise Rejected("factory caller messages must contain text parts only")
             if hasattr(self.harness, "inspect_bound_run"):
-                # Factory mode. A factory is not an agent service: its opted-in
-                # nested-supplier entry keeps its structured command.
+                # Factory mode. With the nested-supplier entry enabled, the
+                # factory acts as an ordinary agent service: a plain A2A
+                # Message whose brief Part is its run inputs (A2A decisions 7
+                # and 9). No extension, metadata or caller identifier is used.
+                received = [a2a_v1.normalize_numbers(MessageToDict(part))
+                            for part in context.message.parts]
+                legacy_op = (self.harness.config.get("legacy_structured_commands") is True
+                             and isinstance(received[:1] and received[0].get("data"), dict)
+                             and "op" in received[0]["data"])
                 command = next((part_data(part) for part in context.message.parts
                                 if part_content(part) == "data"), None)
-                if command is not None:
+                if (getattr(self.harness, "nested_supplier_enabled", False) and not legacy_op
+                        and is_nested_request(received)):
+                    result = self.harness.supply(received, context.task_id,
+                                                 context.context_id,
+                                                 context.message.message_id)
+                elif command is not None:
                     result = await self.harness.invoke(command, context.task_id,
                                                        context.context_id)
                 else:
