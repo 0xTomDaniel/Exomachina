@@ -931,10 +931,11 @@ def _route(base: str, instance: Path, question: str, number: int,
 
 
 def _import_audit() -> dict:
-    # The A2A v1 wire Adapters are shared protocol code and the admission queue
-    # is a self-contained capacity store each service owns; neither is factory
-    # state. They stay shared only while they import no other factory module.
-    shared = {"a2a_v1", "a2a_v1_server", "admission"}
+    # The A2A v1 wire Adapters are shared protocol code, not factory state; they
+    # stay shared only while they import no other factory module. The admission
+    # queue is factory-only: WIP limits are factory settings and agent services
+    # hold no capacity queue (operator decision, 8 Oct 2026).
+    shared = {"a2a_v1", "a2a_v1_server"}
     src_names = {p.stem for p in SRC.glob("*.py")} - shared - {"model_broker"}
     def names(path: Path) -> set[str]:
         tree = ast.parse(path.read_text())
