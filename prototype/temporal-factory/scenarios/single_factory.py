@@ -36,7 +36,15 @@ import a2a_v1  # noqa: E402
 FOLLOW_UP = "The factory is waiting for a Director decision on this request. Please review the run and decide."
 CHECK_IDS = ("SF-0", "SF-1", "SF-2", "SF-3", *(f"R1-{x}" for x in "abcde"),
              *(f"R2-{x}" for x in "abcd"), *(f"R3-{x}" for x in "abcde"),
-             *(f"G-{x}" for x in (1, 2, 3, 4, 5, 7)))
+             *(f"G-{x}" for x in (1, 2, 3, 4, 5, 7, 8)))
+# G-8 (A2A v1 mediation decision 4): content-free hand-off records observed
+# at the factory boundary, digests chaining from producer to consumer.
+HANDOFF_TYPES = {"produced": "com.exomachina.handoff.produced.v1",
+                 "consumed": "com.exomachina.handoff.consumed.v1",
+                 "ready": "com.exomachina.handoff.item_ready.v1"}
+HANDOFF_CONTENT_KEYS = {"text", "data", "raw", "bytes", "name", "description", "artifactId",
+                        "filename", "url", "metadata", "content", "parts", "task_id",
+                        "context_id"}
 AGENTS = ("research_findings", "research_risks", "synthesizer", "quality")
 SERVICES = (*AGENTS, "release")
 REPO = ROOT.parents[1]
@@ -785,6 +793,19 @@ def check_evidence(e: dict) -> dict[str, dict]:
             for row in cleanup["started_processes"]) and
         cleanup.get("stop_results_valid") is True and stop_results_valid and
         e.get("broker_pid_before") == e.get("broker_pid_after"), cleanup, label)
+    handoff_routes = {}
+    for number in ("1", "2", "3"):
+        audit = (e.get("routes", {}).get(number) or {}).get("handoff_audit") or {}
+        chain = _handoff_chain(audit)
+        handoff_routes[number] = {**chain, **{key: audit.get(key) for key in (
+            "key_configured", "key_absent_history", "key_absent_events",
+            "dashboard_contract_valid", "histories_checked")}}
+    c["G-8"] = verdict(all(
+        row["produced"] >= 3 and row["consumed"] >= 2 and row["chain_ok"] and
+        row["report_items"] >= 1 and row["content_free"] and
+        row["key_configured"] is True and row["key_absent_history"] is True and
+        row["key_absent_events"] is True and row["dashboard_contract_valid"] is True
+        for row in handoff_routes.values()), handoff_routes, label)
     synthetic = e.get("synthetic_scenario") or {}
     synthetic_attestation = synthetic.get("attestation") or {}
     synthetic_record = synthetic.get("record") or {}
@@ -1066,6 +1087,111 @@ def _history_summary(histories: dict, route: dict) -> list[dict]:
              **(value.get("redaction") or {}),
              "history_path": value.get("history_path")}
             for name, value in histories.get("workflows", {}).items()]
+
+
+def _history_dict_events(document: dict) -> list[dict]:
+    """Temporal JSON history -> the Runtime source's decoded event shape."""
+    def decode(holder):
+        payloads = (holder or {}).get("payloads") or []
+        values = [json.loads(base64.b64decode(p["data"])) for p in payloads if p.get("data")]
+        return values[0] if len(values) == 1 else (values or None)
+    events = []
+    for event in document.get("events") or []:
+        name = str(event.get("eventType", "")).removeprefix("EVENT_TYPE_")
+        attrs: dict = {}
+        if name == "WORKFLOW_EXECUTION_STARTED":
+            attrs["input"] = decode(event["workflowExecutionStartedEventAttributes"].get("input"))
+        elif name == "ACTIVITY_TASK_SCHEDULED":
+            raw = event["activityTaskScheduledEventAttributes"]
+            attrs = {"activity_id": raw.get("activityId"),
+                     "activity_type": (raw.get("activityType") or {}).get("name"),
+                     "input": decode(raw.get("input"))}
+        elif name == "ACTIVITY_TASK_STARTED":
+            raw = event["activityTaskStartedEventAttributes"]
+            attrs = {"scheduled_event_id": int(raw["scheduledEventId"]),
+                     "attempt": int(raw.get("attempt", 1))}
+        elif name == "ACTIVITY_TASK_COMPLETED":
+            raw = event["activityTaskCompletedEventAttributes"]
+            attrs = {"scheduled_event_id": int(raw["scheduledEventId"]),
+                     "started_event_id": int(raw["startedEventId"]),
+                     "result": decode(raw.get("result"))}
+        else:
+            continue
+        events.append({"event_id": int(event["eventId"]), "event_type": name,
+                       "time": event.get("eventTime"), "attributes": attrs})
+    return events
+
+
+def _handoff_audit(raw_paths: list[tuple[str, Path]], factory_id: str, key_path: Path,
+                   scratch: Path) -> dict:
+    """Project hand-off facts from the run's raw histories through the Runtime
+    source and Observation allowlist, validate them with the dashboard contract,
+    and confirm the instance digest key appears in neither histories nor events.
+    Only the projected, content-free event data is kept as evidence."""
+    from types import SimpleNamespace
+    from observation import project_source_record
+    from observation_source import RuntimeObservationSource
+    key = key_path.read_bytes() if key_path.is_file() else b""
+    markers = [key.hex(), base64.b64encode(key).decode()] if key else []
+    key_absent_history = bool(key)
+    events = []
+    source = RuntimeObservationSource.__new__(RuntimeObservationSource)
+    source.director = SimpleNamespace(identity=factory_id)
+    source.database = scratch / "handoff-audit.sqlite3"
+    for workflow_id, raw_path in raw_paths:
+        text = raw_path.read_text()
+        document = json.loads(text)
+        decoded = list(_decoded_payloads(document))
+        if any(m in text for m in markers) or any(
+                key in blob or any(m.encode() in blob for m in markers) for blob in decoded):
+            key_absent_history = False
+        for record in source._history_records(workflow_id, _history_dict_events(document),
+                                              None, None):
+            if record.get("event_type") in HANDOFF_TYPES.values():
+                events.append(project_source_record(record, factory_id)[3])
+    encoded = json.dumps(events, sort_keys=True)
+    contract = subprocess.run([os.environ.get("EXO_NODE", "node"), "--input-type=module", "-e",
+        "import {validateCloudEvent} from './dashboard/contract.mjs';"
+        "import fs from 'node:fs';"
+        "for (const e of JSON.parse(fs.readFileSync(0,'utf8'))) validateCloudEvent(e);"
+        "console.log('ok');"], cwd=ROOT, input=encoded, capture_output=True, text=True, timeout=60)
+    return {"events": [{"type": e["type"], "time": e["time"], "data": e["data"]} for e in events],
+            "key_configured": bool(key), "key_absent_history": key_absent_history,
+            "key_absent_events": bool(key) and not any(m in encoded for m in markers),
+            "dashboard_contract_valid": contract.returncode == 0 and contract.stdout.strip() == "ok",
+            "histories_checked": len(raw_paths)}
+
+
+def _handoff_chain(audit: dict) -> dict:
+    """Recompute the producer-to-consumer digest chain from recorded event data."""
+    rows = [e for e in (audit or {}).get("events") or [] if isinstance(e, dict)]
+    produced = [e["data"] for e in rows if e.get("type") == HANDOFF_TYPES["produced"]]
+    consumed = [e["data"] for e in rows if e.get("type") == HANDOFF_TYPES["consumed"]]
+    def keys(value):
+        if isinstance(value, dict):
+            yield from value
+            for child in value.values():
+                yield from keys(child)
+        elif isinstance(value, list):
+            for child in value:
+                yield from keys(child)
+    links = []
+    for row in consumed:
+        for entry in row.get("inputs") or []:
+            revisions = [p for p in produced if p.get("handoff_id") == entry.get("handoff_id")
+                         and p.get("produced_at", "") <= row.get("consumed_at", "")]
+            source = next((p for p in reversed(revisions)
+                           if [i.get("digest") for i in p.get("items") or []] ==
+                           entry.get("item_digests")), None)
+            links.append({"consumer": row.get("node"), "handoff_id": entry.get("handoff_id"),
+                          "revision": source.get("handoff_revision") if source else None,
+                          "match": source is not None})
+    reports = [i for p in produced for i in p.get("items") or [] if "artifact_sha256" in i]
+    return {"produced": len(produced), "consumed": len(consumed), "links": links,
+            "chain_ok": bool(links) and all(link["match"] for link in links),
+            "report_items": len(reports),
+            "content_free": all(set(e) == {"type", "time", "data"} for e in rows) and
+                not (set(keys([e["data"] for e in rows])) & HANDOFF_CONTENT_KEYS)}
 
 
 def _history_control_audit(path: Path) -> bool:
@@ -1362,6 +1488,10 @@ def main() -> int:
             route["director_turn_count"] = len(route["director_turns"])
             route["history_control_clean"] = all(_history_control_audit(Path(w["raw_path"]))
                 for w in route["workflows"])
+            route["handoff_audit"] = _handoff_audit(
+                [(w["workflow_id"], Path(w["raw_path"])) for w in route["workflows"]],
+                testbed.get("factory_id") or "report-factory", home / "handoff-digest.key",
+                home)
             director_stream_windows.extend(x for x in
                 jsonl(model_home / "broker-events.jsonl")[route_event_before:]
                 if x.get("event") == "stream")

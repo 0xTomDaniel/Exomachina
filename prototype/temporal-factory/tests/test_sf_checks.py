@@ -48,6 +48,34 @@ def as_a2a_v1(value):
     return value
 
 
+def handoff_audit() -> dict:
+    """In-memory G-8 hand-off evidence for preserved observations.
+
+    The preserved scripted-7 run predates hand-off records (7 Oct 2026), so its
+    false-pass probes carry a minimal recorded chain: two research hand-offs
+    consumed by synthesis, the report draft consumed by Quality and release.
+    """
+    base = {"schema_version": 1, "factory_id": "report-factory", "run_id": "run",
+            "assignment_id": "a", "attempt_id": "1"}
+    item = lambda digest, **extra: {"item_index": 0, "source": "artifact", "part_kinds": ["data"],
+        "media_type": None, "byte_length": 9, "ready_at": "2026-10-07T12:00:01.000Z",
+        "digest": digest, **extra}
+    produced = lambda node, hid, digest, at, **extra: {"type": "com.exomachina.handoff.produced.v1",
+        "time": at, "data": {**base, "node": node, "handoff_id": hid, "handoff_revision": 1,
+                             "produced_at": at, "items": [item(digest, **extra)]}}
+    consumed = lambda node, at, inputs: {"type": "com.exomachina.handoff.consumed.v1", "time": at,
+        "data": {**base, "node": node, "consumed_at": at,
+                 "inputs": [{"handoff_id": h, "item_digests": [d]} for h, d in inputs]}}
+    events = [produced("gather", "gather.f", "1" * 64, "2026-10-07T12:00:01.000Z"),
+              produced("gather", "gather.r", "2" * 64, "2026-10-07T12:00:01.000Z"),
+              consumed("draft", "2026-10-07T12:00:02.000Z", [("gather.f", "1" * 64), ("gather.r", "2" * 64)]),
+              produced("draft", "draft", "3" * 64, "2026-10-07T12:00:03.000Z",
+                       artifact_revision="r1", artifact_sha256="4" * 64),
+              consumed("independent_quality", "2026-10-07T12:00:04.000Z", [("draft", "3" * 64)])]
+    return {"events": events, "key_configured": True, "key_absent_history": True,
+            "key_absent_events": True, "dashboard_contract_valid": True, "histories_checked": 2}
+
+
 class ReviewTwoCheckerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -66,6 +94,8 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.e["leak_scan"]["sensitive_fields_redacted"] = {"pass": True, "files_checked": 9,
             "decoded_payloads_checked": 0, "redaction_objects_checked": 1}
         self.e["leak_scan"]["exported_file_count"] = 9
+        for route in self.e["routes"].values():
+            route["handoff_audit"] = handoff_audit()
         self.temp = tempfile.TemporaryDirectory(prefix="exo-sf-check-", dir="/tmp")
         self.addCleanup(self.temp.cleanup)
         self.assertTrue(all(v["pass"] for v in check_evidence(self.e).values()))
@@ -77,6 +107,26 @@ class ReviewTwoCheckerTests(unittest.TestCase):
 
     def fails(self, check: str):
         self.assertFalse(check_evidence(self.e)[check]["pass"], check)
+
+    def test_g8_requires_chained_content_free_keyed_handoffs(self):
+        audit = self.e["routes"]["2"]["handoff_audit"]
+        checks = check_evidence(self.e)
+        self.assertTrue(checks["G-8"]["pass"])
+        self.assertEqual(checks["G-8"]["decisive_evidence"]["2"]["links"][0]["revision"], 1)
+        audit["events"][4]["data"]["inputs"][0]["item_digests"] = ["9" * 64]
+        self.fails("G-8"); self.fails("G-7")
+        for key in ("key_absent_history", "key_absent_events", "dashboard_contract_valid",
+                    "key_configured"):
+            self.e["routes"]["2"]["handoff_audit"] = {**handoff_audit(), key: False}
+            self.fails("G-8")
+        leaked = handoff_audit()
+        leaked["events"][0]["data"]["items"][0]["name"] = "secret"
+        self.e["routes"]["2"]["handoff_audit"] = leaked
+        self.fails("G-8")
+        self.e["routes"]["2"]["handoff_audit"] = {**handoff_audit(), "events": handoff_audit()["events"][:2]}
+        self.fails("G-8")
+        del self.e["routes"]["3"]["handoff_audit"]
+        self.fails("G-8")
 
     def test_model_selection_must_match_authoring_and_agent_observations(self):
         self.e["model_id"] = "gpt-6-luna"
@@ -279,6 +329,8 @@ class ReviewTwoCheckerTests(unittest.TestCase):
 
     def _live_with_synthetic_prerequisite(self) -> dict:
         path = ROOT / "evidence" / "single-factory" / "scripted-7.json"
+        # scripted-7 predates G-8; the in-memory prerequisite carries its G-8 result.
+        self.e["checks"] = {**self.e["checks"], "G-8": check_evidence(self.e)["G-8"]}
         synthetic = {key: self.e[key] for key in ("status", "provider", "checks",
             "git_commit", "checker_sha256", "interpreter_build", "manifest_digest", "route_inventory")}
         synthetic["evidence_path"] = str(path)
