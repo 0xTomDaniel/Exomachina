@@ -3094,7 +3094,7 @@ const Floor = (() => {
   /* ---------- jobs: rail, HUD strip and board ---------- */
   const shortName = g => g.s.short || g.s.name.split(' ')[0];
   const verLabel = j => j.version && j.version !== S.f.version ? j.version : '';
-  const outcomeText = outcome => outcome === 'released' ? 'Delivered' : ({'delivery-unverified':'Delivery unverified','local-file-delivered':'Saved to local destination','fixture-received':'Delivered to fixture',accepted:'Accepted · delivery unreported',completed:'Completed · delivery unreported',aborted:'Aborted',expired:'Expired',failed:'Failed',cancelled:'Cancelled',canceled:'Cancelled',closed:'Closed'}[outcome] || 'Closed · outcome unreported');
+  const outcomeText = outcome => outcome === 'released' ? 'Delivered' : ({'delivery-fault':'Delivery fault','delivery-unverified':'Delivery unverified','local-file-delivered':'Saved to local destination','fixture-received':'Delivered to fixture',accepted:'Accepted · delivery unreported',completed:'Completed · delivery unreported',aborted:'Aborted',expired:'Expired',failed:'Failed',cancelled:'Cancelled',canceled:'Cancelled',closed:'Closed'}[outcome] || 'Closed · outcome unreported');
   function jobTone(j, places, t){
     if (places.some(p => p.mode === 'decision')) return places.some(p => p.human) ? 'action' : 'alarm';
     if (places.some(p => p.mode === 'queued' && t - p.since >= QADV()) || (j.admit != null && t - j.admit > SLA())) return 'advisory';
@@ -4166,7 +4166,7 @@ function renderSchemaView(){
     if(currentSource==='live'){
       const refresh=document.createElement('button');refresh.type='button';refresh.textContent='Refresh token measurements';refresh.disabled=store.measurementStatus==='loading'||typeof adapter?.measurements!=='function';refresh.addEventListener('click',()=>void refreshMeasurements());panel.append(refresh);
       addRows('Measurement coverage',store.measurementCoverage?[store.measurementCoverage]:[],'Coverage has not been read.');
-      addRows('Token measurements',(store.measurementRows||[]).map(row=>{const token=key=>row.usage?.[key]?.status==='reported'?String(row.usage[key].value):'unknown';const viewRow={...row};Object.defineProperty(viewRow,'display',{value:[row.call_scope??'unknown',row.service_identity??'unknown',row.model_id??'unknown',row.measurement_id??'unknown',`input ${token('input_tokens')}`,`output ${token('output_tokens')}`,`assignment ${row.assignment_id??'unavailable'}`,`attempt ${row.attempt_id??'unavailable'}`].join(' · ')});return viewRow;}),'No factory-scoped measurement facts are available; this does not establish zero usage.');
+      addRows('Token measurements',(store.measurementRows||[]).map(row=>{const token=key=>row.usage?.[key]?.status==='reported'?String(row.usage[key].value):'unknown';const viewRow={...row};Object.defineProperty(viewRow,'display',{value:[row.call_scope??'unknown',row.service_identity??'unknown',row.usage_label??row.model_id??'unknown',row.measurement_id??'unknown',`input ${token('input_tokens')}`,`output ${token('output_tokens')}`,`assignment ${row.assignment_id??'unavailable'}`,`attempt ${row.attempt_id??'unavailable'}`].join(' · ')});return viewRow;}),'No factory-scoped measurement facts are available; this does not establish zero usage.');
     }
   }
   if(focusedHeading)panel.querySelector(focusedHeading)?.focus({preventScroll:true});
