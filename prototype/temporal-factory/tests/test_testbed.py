@@ -13,9 +13,13 @@ sys.path.insert(0, str(ROOT / "services"))
 from authoring import materialize  # noqa: E402
 from definition import digest, validate  # noqa: E402
 from testbed import (QUALITY_POLICY, SERVICE_NAMES, REPORT_CAPABILITIES, REPORT_NAMES,
-                     REPORT_QUALITY_POLICY, binding_records, command_for, contract_records,
-                     down, report_bindings, report_contracts, require_distinct_identities,
-                     role_for, up, write_metadata)  # noqa: E402
+                     REPORT_QUALITY_POLICY, alive, binding_records, command_for,
+                     contract_records, down, plan, port_holders, report_bindings,
+                     report_contracts, require_distinct_identities, role_for, up,
+                     write_metadata)  # noqa: E402
+import shutil  # noqa: E402
+import subprocess  # noqa: E402
+import time  # noqa: E402
 from agent_binding import card_identity, digest as card_digest, resolve  # noqa: E402
 from a2a_v1_server import card_pin_projection  # noqa: E402
 import harness_server  # noqa: E402
@@ -146,6 +150,97 @@ class TestbedTests(unittest.TestCase):
                                                "capability", 45100, ["fixture", "capability"])
             identities.add(card_identity(card_digest(card_pin_projection(card))))
         self.assertEqual(len(identities), 4)
+
+
+def _rewrite_pids(home: Path, change) -> dict:
+    path = home / "testbed" / "pids.json"
+    pids = json.loads(path.read_text())
+    change(pids)
+    path.write_text(json.dumps(pids, indent=2, sort_keys=True) + "\n")
+    return pids
+
+
+class ProcessOwnershipTests(unittest.TestCase):
+    """down/up act only on this home's verified processes (real processes)."""
+
+    def home(self, prefix: str) -> Path:
+        home = Path(tempfile.mkdtemp(prefix=prefix, dir="/tmp"))
+        self.addCleanup(shutil.rmtree, home, True)
+        self.addCleanup(down, home)
+        return home
+
+    def foreign_listener(self, port: int) -> subprocess.Popen:
+        process = subprocess.Popen(
+            [sys.executable, "-c", "import socket,time\ns=socket.socket()\n"
+             "s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)\n"
+             f"s.bind(('127.0.0.1',{port}))\ns.listen()\ntime.sleep(120)"])
+        self.addCleanup(lambda: (process.kill(), process.wait()))
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline and process.pid not in port_holders(port):
+            time.sleep(0.05)
+        self.assertIn(process.pid, port_holders(port))
+        return process
+
+    def test_down_stops_own_processes_whose_recorded_identity_no_longer_matches(self):
+        home, port_base = self.home("exo-tb-identity-"), 45750
+        started = up(home, port_base, profile="report", model_provider="scripted")
+        # An identity-scheme change: every record names an identity the card no
+        # longer derives. Ownership is pid + command line + port + home, so all stop.
+        _rewrite_pids(home, lambda pids: [record.update(identity="a2a-card-retired")
+                                          for record in pids.values()])
+        result = down(home)
+        self.assertEqual(result, {name: "stopped" for name in REPORT_NAMES})
+        for index, name in enumerate(REPORT_NAMES):
+            self.assertFalse(alive(started["pids"][name]["pid"]))
+            self.assertEqual(port_holders(port_base + index), set())
+        self.assertEqual(down(home), {name: "already-stopped" for name in REPORT_NAMES})
+
+    def test_down_never_touches_a_foreign_process_named_by_a_record(self):
+        home = self.home("exo-tb-foreign-")
+        listener = self.foreign_listener(45770)
+        (home / "testbed").mkdir()
+        # A reused pid or a hand-edited record: the recorded pid is alive and
+        # holds the recorded port, but its command line is not this home's.
+        (home / "testbed" / "pids.json").write_text(json.dumps(
+            {"release": {"pid": listener.pid, "port": 45770, "identity": "a2a-card-x"}}))
+        self.assertEqual(down(home), {"release": "not-touched:foreign-process"})
+        self.assertIsNone(listener.poll())
+        self.assertEqual(port_holders(45770), {listener.pid})
+        # up refuses to start over a port held outside this home, untouched.
+        with self.assertRaisesRegex(RuntimeError, "held by a process outside this home"):
+            up(home, 45766, profile="report", model_provider="scripted")
+        self.assertIsNone(listener.poll())
+
+    def test_up_after_a_card_change_replaces_only_that_agent_and_repins_it(self):
+        home, port_base = self.home("exo-tb-upgrade-"), 45760
+        first = up(home, port_base, profile="report", model_provider="scripted")
+        self.assertEqual((first["restarted"], first["identity_changed"]), ([], []))
+        before = json.loads((home / "testbed" / "approved_bindings.json").read_text())
+        # Unchanged: everything is reused.
+        self.assertEqual({name: value["action"] for name, value in
+                          plan(home, port_base, model_provider="scripted").items()},
+                         {name: "reuse" for name in REPORT_NAMES})
+        # A contract change: the synthesizer now declares an extra extension,
+        # so its command and Agent Card (hence identity) change.
+        planned = plan(home, port_base, model_provider="scripted", test_controls=True)
+        self.assertEqual(planned["synthesizer"]["action"], "replace")
+        self.assertTrue(planned["synthesizer"]["upgrade"])
+        second = up(home, port_base, profile="report", model_provider="scripted",
+                    test_controls=True)
+        self.assertEqual(second["restarted"], ["synthesizer"])
+        self.assertEqual(second["identity_changed"], ["synthesizer"])
+        self.assertFalse(alive(first["pids"]["synthesizer"]["pid"]))
+        for name in REPORT_NAMES:
+            if name != "synthesizer":
+                self.assertEqual(second["pids"][name]["pid"], first["pids"][name]["pid"])
+        after = json.loads((home / "testbed" / "approved_bindings.json").read_text())
+        self.assertNotEqual(after["synthesizer"]["identity"], before["synthesizer"]["identity"])
+        self.assertEqual({k: v for k, v in after.items() if k != "synthesizer"},
+                         {k: v for k, v in before.items() if k != "synthesizer"})
+        # A record from an older launcher schema (no build) is an upgrade too.
+        _rewrite_pids(home, lambda pids: pids["release"].pop("build"))
+        self.assertEqual(plan(home, port_base, model_provider="scripted",
+                              test_controls=True)["release"]["reason"], "unrecorded-build")
 
 
 if __name__ == "__main__":

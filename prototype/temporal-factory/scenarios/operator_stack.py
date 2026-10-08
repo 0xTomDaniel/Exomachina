@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """Repeatable launcher for the operator's local factory stack (A2A v1).
 
-``up`` provisions a durable home on first use and reuses it afterwards,
-republishing the shipped report definition only when the template or the
-interpreter build changed. Every process starts detached with its log in the
-home. ``down`` stops them gracefully. ``status`` reports processes, ports, the
-v1 Agent Cards, runner/Temporal/PostgreSQL health and the broker's signed-in
-flags only.
+``up`` provisions a durable home on first use and upgrades it in place
+afterwards: agents whose command or code changed are restarted, changed Agent
+Card pins are re-pinned and republished, and the shipped report definition is
+republished when the template or the interpreter build changed, while the
+instance's Observation history and digest key stay. An upgrade that would
+break unfinished work or that this launcher cannot migrate is refused with the
+exact ``--reprovision`` flag, which moves the old home aside to a timestamped
+backup (never deleted) and provisions a fresh one. Every process starts
+detached with its log in the home. ``down`` stops every process recorded in the
+home after verifying it is this home's (pid, command line, port, home path),
+never touches anything else, and confirms the ports are free. ``status``
+reports processes, ports, the v1 Agent Cards, runner/Temporal/PostgreSQL health
+and the broker's signed-in flags only.
 
 This launcher never submits work and never calls a model. Model agents start
 with the subscription provider; their startup only recovers ``working`` rows
@@ -32,7 +39,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 SERVICES = ROOT / "services"
 sys.path.insert(0, str(SRC))
+sys.path.insert(0, str(SERVICES))
 from runner import port_map  # noqa: E402
+from testbed import in_home, port_holders, terminate as _stop_verified  # noqa: E402
 
 DEFAULT_HOME = Path.home() / ".exomachina" / "operator-stack"
 DEFAULT_PYTHON = Path("/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/"
@@ -61,17 +70,50 @@ INSTANCE_OPTIONS = {
     "operations_max_list_limit": 128,
     "director_model": {"provider": MODEL_PROVIDER, "model": MODEL},
 }
+# Version of operator-stack.json and run/harness.json this launcher writes. An
+# older home is migrated in place; a newer one is refused.
+LAUNCHER_SCHEMA = 2
+REPROVISION_FLAG = "--reprovision"
+PIN_FILES = ("approved_bindings.json", "contracts.json", "quality_policy.json")
+
+
+def instance_options(model_provider: str = MODEL_PROVIDER) -> dict:
+    """Instance options for the selected agent provider.
+
+    ``scripted`` is for throwaway launcher proofs only: agents answer from
+    fixtures and the Director has no model, so nothing calls a model broker.
+    """
+    if model_provider == MODEL_PROVIDER:
+        return dict(INSTANCE_OPTIONS)
+    return {**INSTANCE_OPTIONS, "director_model": {"provider": "fixture"}}
+
+
+class Refused(RuntimeError):
+    """An upgrade this launcher will not apply in place."""
+
+    def __init__(self, reason: str):
+        super().__init__(f"{reason}. Nothing was changed. To start over, rerun `up` with "
+                         f"{REPROVISION_FLAG}: it stops this home's processes, moves the home "
+                         "aside to <home>.backup-<UTC timestamp> (never deleted) and "
+                         "provisions a fresh one.")
 # The macOS temp cleaners empty these trees; durable state must not live there.
 TEMP_ROOTS = (Path("/tmp"), Path("/private/tmp"), Path("/var/folders"),
               Path("/private/var/folders"))
 STRIPPED_ENV = ("EXO_MODEL_HOME", "EXO_CODEX_BASE_URL", "PYTHONPATH", "EXO_HOME")
 
 
-def validate_home(home: Path) -> Path:
-    """Return the resolved home, refusing temporary trees. Touches nothing."""
+def validate_home(home: Path, *, scratch: bool = False) -> Path:
+    """Return the resolved home, refusing temporary trees. Touches nothing.
+
+    ``scratch`` admits a temporary home for throwaway launcher proofs.
+    """
     if not str(home):
         raise ValueError("home is required")
     resolved = Path(os.path.expanduser(str(home))).resolve()
+    if resolved == Path(resolved.anchor):
+        raise ValueError("home must not be the filesystem root")
+    if scratch:
+        return resolved
     roots = list(TEMP_ROOTS)
     tmpdir = os.environ.get("TMPDIR")
     if tmpdir:
@@ -165,6 +207,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--runner-port-base", type=int, default=DEFAULT_RUNNER_PORT_BASE)
     parser.add_argument("--runner-member-base", type=int, default=DEFAULT_RUNNER_MEMBER_BASE,
                         help="PostgreSQL and Temporal membership ports; base+4 must be <= 32767")
+    parser.add_argument(REPROVISION_FLAG, action="store_true",
+                        help="up only: stop this home's processes, move the home aside to "
+                             "<home>.backup-<UTC timestamp> (never deleted), provision fresh")
+    parser.add_argument("--model-provider", choices=(MODEL_PROVIDER, "scripted"),
+                        default=MODEL_PROVIDER,
+                        help="scripted: fixture agents and no Director model (throwaway proofs)")
+    parser.add_argument("--scratch-home", action="store_true",
+                        help="allow a temporary home (throwaway launcher proofs only)")
     return parser
 
 
@@ -172,7 +222,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        args.home = validate_home(args.home)
+        args.home = validate_home(args.home, scratch=args.scratch_home)
         args.plan = port_plan(harness_port=args.harness_port,
                               agent_port_base=args.agent_port_base,
                               runner_port_base=args.runner_port_base,
@@ -181,6 +231,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         parser.error(str(error))
     if not args.python.is_absolute():
         parser.error("--python must be an absolute path")
+    if args.reprovision and args.command != "up":
+        parser.error(f"{REPROVISION_FLAG} applies to up only")
     return args
 
 
@@ -259,11 +311,34 @@ def _harness_record(home: Path) -> dict:
 
 
 def _harness_pid(home: Path) -> int | None:
-    pid = _harness_record(home).get("pid")
-    if _alive(pid) and "harness.py serve" in _command_line(pid) and \
-            str(_instance_dir(home)) in _command_line(pid):
-        return pid
-    return None
+    """The recorded harness, only if it is verifiably this home's.
+
+    Verified by pid, command line (``harness.py serve`` for this home's
+    instance), port (the recorded port is free or held by this pid) and home
+    path; never by card identity.
+    """
+    record = _harness_record(home)
+    pid, port = record.get("pid"), record.get("port")
+    if not _alive(pid):
+        return None
+    text = _command_line(pid)
+    if "harness.py serve" not in text or f"--instance-dir {_instance_dir(home)}" not in text:
+        return None
+    holders = port_holders(port) if type(port) is int else set()
+    if holders and pid not in holders:
+        return None
+    return pid
+
+
+def _runner_pids(home: Path) -> dict[str, int]:
+    """Runner supervisor, PostgreSQL, Temporal and worker pids the home records."""
+    ready = _read_json(home / "runner" / "runner-ready.json")
+    pids = {"runner": ready.get("pid")}
+    pids.update({f"runner.{name}": pid for name, pid in (ready.get("pids") or {}).items()})
+    pids.update({f"worker.{build_id}": build.get("pid")
+                 for build_id, build in (ready.get("builds") or {}).items()
+                 if isinstance(build, dict)})
+    return {name: pid for name, pid in pids.items() if type(pid) is int}
 
 
 def _own_pids(home: Path) -> set[int]:
@@ -271,12 +346,32 @@ def _own_pids(home: Path) -> set[int]:
     for record in _read_json(home / "testbed" / "pids.json").values():
         if isinstance(record, dict):
             pids.add(record.get("pid"))
-    ready = _read_json(home / "runner" / "runner-ready.json")
-    pids.add(ready.get("pid"))
-    pids.update((ready.get("pids") or {}).values())
-    pids.update(build.get("pid") for build in (ready.get("builds") or {}).values()
-                if isinstance(build, dict))
-    return {pid for pid in pids if _alive(pid)}
+    pids.update(_runner_pids(home).values())
+    return {pid for pid in pids if _alive(pid) and in_home(pid, home)}
+
+
+def _unfinished_runs(home: Path) -> int:
+    """Open runs in the instance's Director ledger (read-only)."""
+    import sqlite3
+    database = _instance_dir(home) / "director.sqlite3"
+    if not database.exists():
+        return 0
+    try:
+        db = sqlite3.connect(f"file:{database}?mode=ro", uri=True, timeout=15)
+        try:
+            return int(db.execute("SELECT count(*) FROM runs WHERE closed=0").fetchone()[0])
+        finally:
+            db.close()
+    except sqlite3.Error:
+        return 0
+
+
+def _pins_sha256(directory: Path) -> str:
+    value = hashlib.sha256()
+    for name in PIN_FILES:
+        value.update(name.encode() + b"\0" + json.dumps(_read_json(directory / name),
+                                                       sort_keys=True).encode() + b"\0")
+    return value.hexdigest()
 
 
 def _check_binaries(args: argparse.Namespace) -> None:
@@ -329,59 +424,130 @@ def _terminate(pid: int, *, grace: float = 30) -> str:
 
 # --------------------------------------------------------------------------- commands
 
+def _testbed_flags(args: argparse.Namespace) -> list[str]:
+    return ["--home", str(args.home), "--port-base", str(args.plan[SERVICE_NAMES[0]]),
+            "--profile", "report", "--model-provider", args.model_provider, "--model", MODEL]
+
+
+def preflight(args: argparse.Namespace, env: dict, state: dict) -> dict:
+    """Decide whether this home can be upgraded in place; changes nothing.
+
+    Refuses (naming ``--reprovision``) what an in-place upgrade cannot carry:
+    a newer launcher schema, a different port plan or Temporal runtime, and
+    agent upgrades while runs are unfinished (their pinned agents would vanish
+    under them). A port held outside this home is refused without the flag:
+    a fresh home would not free it.
+    """
+    home, plan = args.home, args.plan
+    schema = state.get("schema", 1)
+    if type(schema) is not int or schema > LAUNCHER_SCHEMA:
+        raise Refused(f"this home was written by a newer launcher (schema {schema!r} > "
+                      f"{LAUNCHER_SCHEMA}); this launcher cannot migrate it")
+    if state.get("ports") and state["ports"] != plan:
+        raise Refused("the port plan differs from this home's recorded plan "
+                      f"({state['ports']}); rerun with the recorded ports")
+    if state.get("temporal") and state["temporal"] != str(args.temporal):
+        raise Refused(f"the Temporal runtime differs from this home's ({state['temporal']}); "
+                      "its persisted database is not migrated in place")
+    conflicts = port_conflicts(plan, listening_ports(), _own_pids(home))
+    if conflicts:
+        raise RuntimeError(f"planned ports are held by processes outside this home (never "
+                           f"touched): {conflicts}")
+    agents = _cli(args, env, str(SERVICES / "testbed.py"), "plan", *_testbed_flags(args))
+    upgrades = sorted(name for name, value in agents.items() if value.get("upgrade"))
+    unfinished = _unfinished_runs(home)
+    if upgrades and unfinished:
+        raise Refused(f"agents {upgrades} changed while {unfinished} run(s) are unfinished; "
+                      "replacing the agents those runs pinned would break them. Let the "
+                      "runs finish and rerun up")
+    return {"agents": agents, "upgrades": upgrades, "unfinished_runs": unfinished}
+
+
+def _backup_path(home: Path) -> Path:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    candidate = home.with_name(f"{home.name}.backup-{stamp}")
+    index = 1
+    while candidate.exists():
+        index += 1
+        candidate = home.with_name(f"{home.name}.backup-{stamp}-{index}")
+    return candidate
+
+
+def reprovision(args: argparse.Namespace) -> dict:
+    """Stop this home's processes, then move the home aside; never delete it."""
+    home = args.home
+    if not home.exists():
+        return {"backup": None, "down": {"result": "no-home"}}
+    stopped = down(args)
+    remaining = sorted(_own_pids(home))
+    if remaining or stopped.get("ports_still_held_by_this_home"):
+        raise RuntimeError(f"this home's processes are still running ({remaining}, "
+                           f"{stopped.get('ports_still_held_by_this_home')}); "
+                           "not moving the home aside")
+    backup = _backup_path(home)
+    os.rename(home, backup)
+    return {"backup": str(backup), "down": stopped}
+
+
 def up(args: argparse.Namespace) -> dict:
     home, plan = args.home, args.plan
     _check_binaries(args)
+    reprovisioned = reprovision(args) if args.reprovision else None
     home.mkdir(mode=0o700, parents=True, exist_ok=True)
     for name in ("logs", "run", "tmp"):
         (home / name).mkdir(mode=0o700, exist_ok=True)
     env = stack_env(home, plan, temporal=args.temporal, pg_bin=args.pg_bin)
+    options = instance_options(args.model_provider)
     with (home / "operator-stack.lock").open("a+") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         state_path = home / "operator-stack.json"
         state = _read_json(state_path)
-        if state.get("ports") and state["ports"] != plan:
-            raise RuntimeError("port plan differs from this home's recorded plan; "
-                               "use the recorded ports or a new home")
-        conflicts = port_conflicts(plan, listening_ports(), _own_pids(home))
-        if conflicts:
-            raise RuntimeError(f"planned ports are held by other processes: {conflicts}")
-        actions = []
+        checked = preflight(args, env, state)
+        actions = ["reprovisioned"] if reprovisioned else []
 
-        # 1. Model agents and release receiver (idempotent; durable identities).
-        _cli(args, env, str(SERVICES / "testbed.py"), "up", "--home", str(home),
-             "--port-base", str(plan[SERVICE_NAMES[0]]), "--profile", "report",
-             "--model-provider", MODEL_PROVIDER, "--model", MODEL)
+        # 1. Model agents and release receiver: reused when current, replaced on
+        #    an upgrade (command, code or record schema); pins follow the cards.
+        agents = _cli(args, env, str(SERVICES / "testbed.py"), "up", *_testbed_flags(args))
         actions.append("testbed-up")
+        if agents.get("restarted"):
+            actions.append("agents-upgraded")
 
-        # 2. Factory instance: provision once, then verify the pins still hold.
+        # 2. Factory instance: provision once; afterwards apply option drift and
+        #    re-pin changed cards in place, keeping Observation history and key.
         instance = _instance_dir(home)
         config_path = instance / "instance.json"
+        repinned = False
         if not config_path.exists():
             _cli(args, env, str(SRC / "admin.py"), "provision", "--instance-dir", str(instance),
                  "--name", INSTANCE, "--port", str(plan["harness"]), "--home", str(home),
                  "--testbed", str(home / "testbed"), "--wait-seconds", "900",
                  "--evidence-packet", str(PACKET))
             config = json.loads(config_path.read_text())
-            config.update(INSTANCE_OPTIONS)
+            config.update(options)
             _write_json(config_path, config)
             actions.append("provisioned")
         else:
             config = json.loads(config_path.read_text())
-            drift = {key: config.get(key) for key, value in INSTANCE_OPTIONS.items()
-                     if config.get(key) != value}
-            if config.get("port") != plan["harness"] or drift:
-                raise RuntimeError(f"instance.json differs from the operator stack: {drift}")
-            for name in ("approved_bindings.json", "contracts.json", "quality_policy.json"):
-                if _read_json(instance / "catalog" / name) != _read_json(home / "testbed" / name):
-                    raise RuntimeError(f"agent pins drifted ({name}); the served Agent Cards no "
-                                       "longer match the publication. Re-provision deliberately "
-                                       "in a new home.")
+            if config.get("port") != plan["harness"]:
+                raise Refused(f"instance.json serves port {config.get('port')}, not "
+                              f"{plan['harness']}")
+            drift = sorted(key for key, value in options.items() if config.get(key) != value)
+            if drift:
+                config.update(options)
+                _write_json(config_path, config)
+                actions.append("instance-options-updated")
+            if _pins_sha256(instance / "catalog") != _pins_sha256(home / "testbed"):
+                if _unfinished_runs(home):
+                    raise Refused("served Agent Cards changed while runs are unfinished")
+                _cli(args, env, str(SRC / "admin.py"), "repin", "--instance-dir", str(instance),
+                     "--testbed", str(home / "testbed"))
+                repinned = True
+                actions.append("repinned")
 
-        # 3. Publication: only when the shipped definition or the build changed.
+        # 3. Publication: when the pins, the shipped definition or the build changed.
         desired = {"template_sha256": _sha256(TEMPLATE), "build_id": _desired_build_id()}
         active = _active_publication(home)
-        if (active is None or active.get("build_id") != desired["build_id"]
+        if (repinned or active is None or active.get("build_id") != desired["build_id"]
                 or state.get("template_sha256") != desired["template_sha256"]):
             _cli(args, env, str(SRC / "admin.py"), "publish-template", "--instance-dir",
                  str(instance), "--template", str(TEMPLATE), "--label", LABEL)
@@ -396,8 +562,18 @@ def up(args: argparse.Namespace) -> dict:
         _worker(home, active["build_id"], timeout=90)
         actions.append("runner-ready")
 
-        # 5. Harness.
-        if _harness_pid(home) is None:
+        # 5. Harness: restarted when its build, pins, configuration or interpreter changed.
+        serving = {"build_id": active["build_id"], "manifest_digest": active.get("manifest_digest"),
+                   "pins_sha256": _pins_sha256(instance / "catalog"),
+                   "config_sha256": _sha256(config_path), "python": str(args.python),
+                   "schema": LAUNCHER_SCHEMA}
+        pid = _harness_pid(home)
+        record = _harness_record(home)
+        if pid is not None and any(record.get(key) != value for key, value in serving.items()):
+            _terminate(pid)
+            pid = None
+            actions.append("harness-restarted")
+        if pid is None:
             log = (home / "logs" / "harness.log").open("a")
             process = subprocess.Popen([str(args.python), "-B", str(SRC / "harness.py"), "serve",
                                         "--instance-dir", str(instance)],
@@ -405,14 +581,16 @@ def up(args: argparse.Namespace) -> dict:
                                        stdout=log, stderr=log, start_new_session=True)
             log.close()
             _write_json(home / "run" / "harness.json",
-                        {"pid": process.pid, "port": plan["harness"], "started_at": _now()})
+                        {"pid": process.pid, "port": plan["harness"], "started_at": _now(),
+                         **serving})
             health_url = f"http://127.0.0.1:{plan['harness']}/health"
             if not _wait(lambda: _http_json(health_url)[0] == 200 or process.poll() is not None,
                          90, .5) or process.poll() is not None:
                 raise RuntimeError(f"harness did not become healthy; see {home / 'logs'}")
             actions.append("harness-started")
-        state.update({"schema": 1, "ports": plan, "instance": INSTANCE, "label": LABEL,
-                      "python": str(args.python), "temporal": str(args.temporal),
+        state.update({"schema": LAUNCHER_SCHEMA, "ports": plan, "instance": INSTANCE,
+                      "label": LABEL, "python": str(args.python), "temporal": str(args.temporal),
+                      "model_provider": args.model_provider,
                       "template_sha256": desired["template_sha256"],
                       "build_id": active["build_id"],
                       "manifest_digest": active.get("manifest_digest"),
@@ -420,7 +598,11 @@ def up(args: argparse.Namespace) -> dict:
         state.setdefault("created_at", state["updated_at"])
         _write_json(state_path, state)
         fcntl.flock(lock, fcntl.LOCK_UN)
-    return {"actions": actions, **status(args)}
+    upgrade = {"agents_restarted": agents.get("restarted", []),
+               "identity_changed": agents.get("identity_changed", []),
+               "planned": {name: value.get("action") for name, value in checked["agents"].items()}}
+    return {"actions": actions, "upgrade": upgrade,
+            **({"reprovision": reprovisioned} if reprovisioned else {}), **status(args)}
 
 
 def _worker(home: Path, build_id: str, *, timeout: float) -> dict:
@@ -428,27 +610,64 @@ def _worker(home: Path, build_id: str, *, timeout: float) -> dict:
     return Runner(home).wait_worker(build_id, timeout=timeout)
 
 
+def confirm_ports(home: Path, plan: dict[str, int], *, wait: float = 15) -> dict:
+    """Wait for this home's listeners to go; report anything else, never touch it."""
+    def own_holders() -> dict[str, list[int]]:
+        held = {}
+        for name, port in plan.items():
+            pids = sorted(pid for pid in port_holders(port) if in_home(pid, home))
+            if pids:
+                held[name] = pids
+        return held
+    _wait(lambda: not own_holders(), wait, .25)
+    own = own_holders()
+    foreign = {}
+    for name, port in plan.items():
+        pids = sorted(pid for pid in port_holders(port) if pid not in own.get(name, []))
+        if pids:
+            foreign[name] = {"port": port, "pids": pids}
+    return {"ports_free": not own and not foreign,
+            "ports_still_held_by_this_home": {name: {"port": plan[name], "pids": pids}
+                                              for name, pids in own.items()},
+            "ports_held_outside_this_home": foreign}
+
+
 def down(args: argparse.Namespace) -> dict:
+    """Stop every process this home records, each verified as this home's.
+
+    Harness, agents and runner are each checked by pid, command line, port and
+    home path before any signal (card identity plays no part); a process that
+    fails the check is reported and never signalled. The planned ports are
+    then confirmed free.
+    """
     home = args.home
-    if not (home / "operator-stack.json").exists():
-        return {"home": str(home), "result": "not-provisioned"}
+    if not home.exists():
+        return {"home": str(home), "result": "no-home"}
+    (home / "logs").mkdir(mode=0o700, exist_ok=True)
     env = stack_env(home, args.plan, temporal=args.temporal, pg_bin=args.pg_bin)
-    result: dict[str, object] = {}
+    result: dict[str, object] = {"home": str(home)}
     with (home / "operator-stack.lock").open("a+") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         pid = _harness_pid(home)
-        result["harness"] = _terminate(pid) if pid else "not-running"
-        result["services"] = _cli(args, env, str(SERVICES / "testbed.py"), "down",
-                                  "--home", str(home), timeout=120)
-        for name, outcome in list(result["services"].items()):
-            record = _read_json(home / "testbed" / "pids.json").get(name) or {}
-            if outcome == "timeout" and _alive(record.get("pid")):
-                result["services"][name] = _terminate(record["pid"], grace=15)
+        recorded = _harness_record(home).get("pid")
+        result["harness"] = (_terminate(pid) if pid else
+                             "not-touched:unverified" if _alive(recorded) else "not-running")
+        if (home / "testbed" / "pids.json").exists():
+            result["services"] = _cli(args, env, str(SERVICES / "testbed.py"), "down",
+                                      "--home", str(home), timeout=180)
         if (home / "runner-config.json").exists():
             runner = _cli(args, env, str(SRC / "runner.py"), "stop", "--home", str(home),
                           timeout=120)
             result["runner"] = {"running": runner.get("running")}
+        leftovers = {}
+        for name, pid in _runner_pids(home).items():
+            if _alive(pid):
+                leftovers[name] = (_stop_verified(pid) if in_home(pid, home)
+                                   else "not-touched:outside-home")
+        if leftovers:
+            result["runner_leftovers"] = leftovers
         fcntl.flock(lock, fcntl.LOCK_UN)
+    result.update(confirm_ports(home, args.plan))
     listening = listening_ports()
     result["ports_still_listening"] = {name: port for name, port in args.plan.items()
                                        if port in listening}
@@ -547,7 +766,8 @@ def status(args: argparse.Namespace) -> dict:
         except Exception as error:  # noqa: BLE001 - status reports, never raises
             report["runner"]["worker"] = {"build_id": active["build_id"], "polling": False,
                                           "error": type(error).__name__}
-    report["broker"] = _broker_flags()
+    provider = _read_json(home / "operator-stack.json").get("model_provider", MODEL_PROVIDER)
+    report["broker"] = _broker_flags() if provider == MODEL_PROVIDER else {"used": False}
     return report
 
 
@@ -587,7 +807,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         value = command(args)
     except (RuntimeError, ValueError, TimeoutError) as error:
-        print(json.dumps({"command": args.command, "error": str(error)}, indent=2))
+        print(json.dumps({"command": args.command, "error": str(error),
+                          **({"refused": True} if isinstance(error, Refused) else {})},
+                         indent=2))
         return 1
     print(json.dumps(value, indent=2, sort_keys=True, default=str))
     return 0

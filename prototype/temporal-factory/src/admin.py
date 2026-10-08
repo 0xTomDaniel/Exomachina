@@ -50,6 +50,30 @@ def provision(instance_dir: Path, *, name: str, port: int, home: Path, testbed: 
     return config
 
 
+def repin(instance_dir: Path, *, testbed: Path) -> dict:
+    """Re-pin the instance catalog to the testbed's current Agent Card pins.
+
+    The deliberate step after an agent upgrade changed a served card (the
+    operator stack calls it only when no run is unfinished). It rewrites only
+    the three pin files; the instance's identity, Observation history, digest
+    key and earlier publications stay as they are, and the next publication
+    pins the new cards.
+    """
+    catalog = instance_dir / "catalog"
+    if not (instance_dir / "instance.json").exists() or not catalog.is_dir():
+        raise ValueError("instance is not provisioned")
+    changed = []
+    for file in ("approved_bindings.json", "contracts.json", "quality_policy.json"):
+        source = json.loads((testbed / file).read_text())
+        target = catalog / file
+        if not target.exists() or json.loads(target.read_text()) != source:
+            temporary = target.with_name(target.name + ".tmp")
+            temporary.write_text(json.dumps(source, indent=2, sort_keys=True) + "\n")
+            os.replace(temporary, target)
+            changed.append(file)
+    return {"repinned": changed}
+
+
 def publish_template(instance_dir: Path, template_path: Path, *, label: str,
                      approver: str) -> dict:
     from authoring import approve, materialize
@@ -144,6 +168,9 @@ def main() -> None:
     p.add_argument("--evidence-packet", type=Path, required=True)
     p.add_argument("--mode", choices=["agent", "factory"], default="factory")
     p.add_argument("--wait-seconds", type=int, default=900)
+    p = sub.add_parser("repin")
+    p.add_argument("--instance-dir", type=Path, required=True)
+    p.add_argument("--testbed", type=Path, required=True)
     p = sub.add_parser("publish-template")
     p.add_argument("--instance-dir", type=Path, required=True)
     p.add_argument("--template", type=Path, required=True)
@@ -169,6 +196,8 @@ def main() -> None:
         value = provision(args.instance_dir, name=args.name, port=args.port, home=args.home,
                           testbed=args.testbed, mode=args.mode, wait_seconds=args.wait_seconds,
                           evidence_packet=args.evidence_packet)
+    elif args.command == "repin":
+        value = repin(args.instance_dir, testbed=args.testbed)
     elif args.command == "publish-template":
         value = publish_template(args.instance_dir, args.template, label=args.label,
                                  approver=args.approver)

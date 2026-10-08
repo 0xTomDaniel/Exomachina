@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import signal
@@ -189,11 +190,124 @@ def require_distinct_identities(health: dict[str, dict]) -> None:
 
 
 def alive(pid: int) -> bool:
+    if type(pid) is not int or pid <= 0:
+        return False
     try:
         os.kill(pid, 0)
         return True
     except ProcessLookupError:
         return False
+    except PermissionError:
+        return True
+
+
+# --------------------------------------------------------------------------- process ownership
+# A recorded pid is acted on only after verifying the process is this home's:
+# it is alive, its command line names this home's service state directory and
+# its recorded port, and no other process holds that port. Card identity is
+# never part of the check, so an identity-scheme change cannot strand a
+# process, and a foreign process (or a reused pid) is never signalled.
+
+def command_line(pid: int) -> str:
+    try:
+        result = subprocess.run(["ps", "-ww", "-o", "command=", "-p", str(pid)],
+                                capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return result.stdout.strip()
+
+
+def process_cwd(pid: int) -> str:
+    try:
+        output = subprocess.run(["lsof", "-a", "-p", str(pid), "-d", "cwd", "-Fn"],
+                                capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return next((line[1:] for line in output.splitlines() if line.startswith("n")), "")
+
+
+def port_holders(port: int) -> set[int]:
+    """Every pid listening on a local TCP port."""
+    try:
+        output = subprocess.run(["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN", "-t"],
+                                capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return set()
+    return {int(line) for line in output.split() if line.strip().isdigit()}
+
+
+def _home_forms(path: Path) -> set[str]:
+    forms = {str(path)}
+    try:
+        forms.add(str(path.resolve()))
+    except OSError:
+        pass
+    return forms
+
+
+def in_home(pid: int, home: Path) -> bool:
+    """The process names this home in its command line or runs inside it."""
+    text, cwd = command_line(pid), process_cwd(pid)
+    return any(form + "/" in text + "/" or cwd == form or cwd.startswith(form + "/")
+               for form in _home_forms(home))
+
+
+def owned_service(home: Path, name: str, record: dict | None) -> tuple[bool, str]:
+    """(True, "owned") only for this home's recorded service process."""
+    if not isinstance(record, dict):
+        return False, "unrecorded"
+    pid, port = record.get("pid"), record.get("port")
+    if not alive(pid):
+        return False, "not-running"
+    text = command_line(pid)
+    states = _home_forms(home / "services" / name)
+    if not any(f"--state {state}" in text for state in states) or f"--port {port}" not in text:
+        return False, "foreign-process"
+    holders = port_holders(port) if type(port) is int else set()
+    if holders and pid not in holders:
+        return False, "port-held-by-another-process"
+    return True, "owned"
+
+
+def terminate(pid: int, *, grace: float = 15) -> str:
+    """SIGTERM, wait for the process to exit, then SIGKILL; reaps our own children."""
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return "already-stopped"
+    child = _CHILDREN.pop(pid, None)
+    deadline = time.monotonic() + grace
+    while time.monotonic() < deadline:
+        if child is not None and child.poll() is not None:
+            return "stopped"
+        if child is None and not alive(pid):
+            return "stopped"
+        time.sleep(0.1)
+    os.kill(pid, signal.SIGKILL)
+    if child is not None:
+        child.wait(timeout=5)
+    else:
+        end = time.monotonic() + 5
+        while time.monotonic() < end and alive(pid):
+            time.sleep(0.1)
+    return "killed-after-sigterm-timeout"
+
+
+SOURCE_DIRS = (ROOT / "services", ROOT / "src")
+
+
+def service_build(command: list[str]) -> str:
+    """What a service process runs: its command line and the code it loads.
+
+    A different interpreter, arguments or any service/interpreter source file
+    is an upgrade; the running process is replaced on the next ``up``.
+    """
+    value = hashlib.sha256(json.dumps(command, separators=(",", ":")).encode())
+    for directory in SOURCE_DIRS:
+        for path in sorted(directory.glob("*.py")):
+            value.update(path.relative_to(ROOT).as_posix().encode() + b"\0")
+            value.update(path.read_bytes() + b"\0")
+    return value.hexdigest()
 
 
 def command_for(name: str, state: Path, port: int, *, delayed_agent: bool = False,
@@ -223,38 +337,110 @@ def command_for(name: str, state: Path, port: int, *, delayed_agent: bool = Fals
     return [sys.executable, "-B", str(script), "--state", str(state), "--port", str(port), *extra]
 
 
-def up(home: Path, port_base: int, *, delayed_agent: bool = False,
-       delay_seconds: float = 15, profile: str = "report",
-       model_provider: str = "scripted", model: str = DEFAULT_MODEL_ID,
-       test_controls: bool = False) -> dict:
+def _names(profile: str, delayed_agent: bool) -> tuple[str, ...]:
     if delayed_agent:
         profile = "legacy"
     if profile not in {"report", "legacy"}:
         raise ValueError("unknown testbed profile")
-    names = REPORT_NAMES if profile == "report" else SERVICE_NAMES
+    return REPORT_NAMES if profile == "report" else SERVICE_NAMES
+
+
+def plan(home: Path, port_base: int, *, delayed_agent: bool = False,
+         delay_seconds: float = 15, profile: str = "report",
+         model_provider: str = "scripted", model: str = DEFAULT_MODEL_ID,
+         test_controls: bool = False) -> dict[str, dict]:
+    """What ``up`` would do to each service, without touching any process.
+
+    ``reuse``: this home's process runs the current command and code.
+    ``replace``: this home's process is from an older build, command or
+    record schema (an upgrade) and will be stopped and restarted.
+    ``start``: nothing of this home's is running. ``blocked``: the port is
+    held by a process outside this home, which is never touched.
+    """
+    if delayed_agent:
+        profile = "legacy"
+    pids = read_pids(home)
+    result = {}
+    for index, name in enumerate(_names(profile, delayed_agent)):
+        port = port_base + index
+        command = command_for(name, home / "services" / name, port,
+                              delayed_agent=delayed_agent, delay_seconds=delay_seconds,
+                              profile=profile, model_provider=model_provider, model=model,
+                              test_controls=test_controls)
+        prior = pids.get(name)
+        build = service_build(command)
+        # An upgrade: this home ran the service from another build, command or
+        # record schema, whether or not it is running now.
+        upgrade = isinstance(prior, dict) and prior.get("build") != build
+        owned, reason = owned_service(home, name, prior)
+        holders = port_holders(port)
+        if owned and prior.get("port") == port:
+            result[name] = {"action": "replace" if upgrade else "reuse",
+                            "reason": ("current" if not upgrade else "unrecorded-build"
+                                       if "build" not in prior else "build-changed"),
+                            "pid": prior["pid"], "upgrade": upgrade}
+        elif holders:
+            result[name] = {"action": "blocked", "reason": "port held outside this home",
+                            "holders": sorted(holders), "upgrade": upgrade}
+        else:
+            result[name] = {"action": "start", "reason": reason, "upgrade": upgrade}
+    return result
+
+
+def up(home: Path, port_base: int, *, delayed_agent: bool = False,
+       delay_seconds: float = 15, profile: str = "report",
+       model_provider: str = "scripted", model: str = DEFAULT_MODEL_ID,
+       test_controls: bool = False) -> dict:
+    """Start or upgrade every service; identities follow the served cards.
+
+    This home's own processes are reused when current and replaced when their
+    command or code changed (or the card no longer answers); a changed card
+    identity is reported in ``identity_changed`` for the caller to re-pin. A
+    port held by a process outside this home is refused and never touched.
+    """
+    names = _names(profile, delayed_agent)
+    if delayed_agent:
+        profile = "legacy"
     pids = read_pids(home)
     health = {}
+    restarted, identity_changed = [], []
     for index, name in enumerate(names):
         port = port_base + index
+        state = home / "services" / name
+        command = command_for(name, state, port, delayed_agent=delayed_agent,
+                              delay_seconds=delay_seconds, profile=profile,
+                              model_provider=model_provider, model=model,
+                              test_controls=test_controls)
+        build = service_build(command)
         prior = pids.get(name)
-        observed = observe(name, port)
-        if observed is not None:
-            if (not prior or prior.get("port") != port or not alive(prior["pid"])
-                    or prior.get("identity") != observed.get("identity")):
-                raise RuntimeError(f"{name}: occupied port does not match recorded service")
+        owned, _reason = owned_service(home, name, prior)
+        observed = observe(name, port) if owned else None
+        if (owned and prior.get("port") == port and prior.get("build") == build
+                and observed is not None and observed.get("identity") == prior.get("identity")):
+            health[name] = observed
         else:
-            if prior and alive(prior["pid"]):
-                raise RuntimeError(f"{name}: recorded process is alive but unhealthy")
-            state = home / "services" / name
+            if owned:
+                # This home's process from an older build, command or record
+                # schema (or no longer answering): an upgrade replaces it.
+                terminate(prior["pid"])
+                restarted.append(name)
+            holders = port_holders(port)
+            if holders:
+                raise RuntimeError(f"{name}: port {port} is held by a process outside this "
+                                   f"home (pids {sorted(holders)}); refusing to touch it")
             state.mkdir(parents=True, exist_ok=True)
             with (state / "service.log").open("a") as log:
-                process = subprocess.Popen(command_for(name, state, port,
-                    delayed_agent=delayed_agent, delay_seconds=delay_seconds,
-                    profile=profile, model_provider=model_provider, model=model,
-                    test_controls=test_controls), stdout=log, stderr=log,
+                process = subprocess.Popen(command, stdout=log, stderr=log,
                                            start_new_session=True)
                 _CHILDREN[process.pid] = process
+            # Record each start so a later startup failure leaves a usable down command.
+            pids[name] = {"pid": process.pid, "port": port, "build": build,
+                          "identity": (prior or {}).get("identity")}
+            directory = home / "testbed"
+            directory.mkdir(parents=True, exist_ok=True)
+            (directory / "pids.json").write_text(json.dumps(pids, indent=2, sort_keys=True) + "\n")
             deadline = time.monotonic() + 30
+            observed = None
             while time.monotonic() < deadline:
                 observed = observe(name, port)
                 if observed is not None:
@@ -265,11 +451,9 @@ def up(home: Path, port_base: int, *, delayed_agent: bool = False,
             if observed is None:
                 raise RuntimeError(f"{name}: startup timed out; inspect {state / 'service.log'}")
             if prior and prior.get("identity") != observed.get("identity"):
-                raise RuntimeError(f"{name}: durable identity changed")
-            pids[name] = {"pid": process.pid, "port": port, "identity": observed["identity"]}
-            # Record each start so a later startup failure leaves a usable down command.
-            directory = home / "testbed"
-            directory.mkdir(parents=True, exist_ok=True)
+                identity_changed.append(name)
+            pids[name] = {"pid": process.pid, "port": port, "build": build,
+                          "identity": observed["identity"]}
             (directory / "pids.json").write_text(json.dumps(pids, indent=2, sort_keys=True) + "\n")
         if name == "release" and observed.get("reconcile") != "a2a-idempotent-resend":
             raise RuntimeError("release: Agent Card does not offer messageId idempotency")
@@ -296,33 +480,31 @@ def up(home: Path, port_base: int, *, delayed_agent: bool = False,
             contracts["counter_beta"]["input"]["returnImmediately"] = True
     write_metadata(home, bindings, pids, contracts, snapshot=True,
                    quality_policy=REPORT_QUALITY_POLICY if profile == "report" else None)
-    return {"bindings": bindings, "health": health, "pids": pids}
+    return {"bindings": bindings, "health": health, "pids": pids,
+            "restarted": restarted, "identity_changed": identity_changed}
 
 
 def down(home: Path) -> dict:
+    """Stop every service this home's pid records name, verified as this home's.
+
+    Each process is checked by pid, command line (this home's state directory
+    and its recorded port) and port holder, never by card identity; a process
+    that fails the check is reported and never signalled. Each stopped
+    service's port is then confirmed free.
+    """
     pids = read_pids(home)
     result = {}
-    for name in pids:
-        record = pids.get(name)
-        if not record:
-            result[name] = "unrecorded"
+    for name, record in pids.items():
+        owned, reason = owned_service(home, name, record)
+        if not owned:
+            result[name] = {"unrecorded": "unrecorded", "not-running": "already-stopped"}.get(
+                reason, f"not-touched:{reason}")
             continue
-        pid = record["pid"]
-        observed = observe(name, record["port"])
-        if observed is not None and observed.get("identity") != record["identity"]:
-            result[name] = "identity-mismatch"
-            continue
-        if not alive(pid):
-            result[name] = "already-stopped"
-            continue
-        os.kill(pid, signal.SIGTERM)
-        deadline = time.monotonic() + 15
-        while time.monotonic() < deadline and observe(name, record["port"]) is not None:
-            time.sleep(0.2)
-        child = _CHILDREN.pop(pid, None)
-        if child is not None:
-            child.wait(timeout=5)
-        result[name] = "stopped" if observe(name, record["port"]) is None else "timeout"
+        outcome = terminate(record["pid"])
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline and port_holders(record["port"]):
+            time.sleep(0.1)
+        result[name] = outcome if not port_holders(record["port"]) else f"{outcome}:port-still-held"
     return result
 
 
@@ -344,7 +526,7 @@ def status(home: Path, port_base: int, *, profile: str = "report") -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=("up", "down", "status"))
+    parser.add_argument("command", choices=("up", "down", "status", "plan"))
     parser.add_argument("--home", type=Path, required=True)
     parser.add_argument("--port-base", type=int, default=45200)
     parser.add_argument("--profile", choices=("report", "legacy"), default="report")
@@ -363,6 +545,11 @@ def main() -> None:
                    test_controls=args.test_controls)
     elif args.command == "down":
         value = down(args.home)
+    elif args.command == "plan":
+        value = plan(args.home, args.port_base, delayed_agent=args.delayed_agent,
+                     delay_seconds=args.delay_seconds, profile=args.profile,
+                     model_provider=args.model_provider, model=args.model,
+                     test_controls=args.test_controls)
     else:
         value = status(args.home, args.port_base, profile=args.profile)
     print(json.dumps(value, indent=2, sort_keys=True))
