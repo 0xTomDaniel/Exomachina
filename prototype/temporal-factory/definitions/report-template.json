@@ -6,7 +6,7 @@
   "root": {
     "name": "parent_verified_report", "revision": "v1", "start": "invoke_child",
     "nodes": {
-      "invoke_child": {"type": "nested_factory", "child": "verified_report", "child_digest": "@child", "next": "done"},
+      "invoke_child": {"type": "nested_factory", "child": "verified_report", "child_digest": "@child", "next": "done", "edges": {"done": "control"}},
       "done": {"type": "complete"}
     }
   },
@@ -19,12 +19,12 @@
       }, "next": "join_evidence"},
       "join_evidence": {"type": "join", "branches": ["research_findings", "research_risks"], "next": "draft"},
       "draft": {"type": "synthesize", "service": "synthesizer", "next": "independent_quality"},
-      "independent_quality": {"type": "quality", "next": "route_verdict"},
-      "route_verdict": {"type": "route", "field": "verdict.accepted", "cases": {"true": "publish", "false": "repair"}},
-      "repair": {"type": "repair", "max_repairs": 2, "next": "draft", "exhausted": "director"},
-      "director": {"type": "director_wait", "reason": "repair_exhausted", "next": "abort"},
+      "independent_quality": {"type": "quality", "next": "route_verdict", "edges": {"route_verdict": "control", "publish": "material"}},
+      "route_verdict": {"type": "route", "field": "verdict.accepted", "cases": {"true": "publish", "false": "repair"}, "edges": {"publish": "control", "repair": "control"}},
+      "repair": {"type": "repair", "max_repairs": 2, "next": "draft", "exhausted": "director", "edges": {"draft": "control", "director": "control"}},
+      "director": {"type": "director_wait", "reason": "repair_exhausted", "next": "abort", "edges": {"abort": "control"}},
       "abort": {"type": "abort"},
-      "publish": {"type": "release", "service": "release", "next": "done"},
+      "publish": {"type": "release", "service": "release", "next": "done", "edges": {"done": "control"}},
       "done": {"type": "complete"}
     }
   }

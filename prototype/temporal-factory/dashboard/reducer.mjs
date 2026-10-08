@@ -23,6 +23,9 @@ function addHandoff(run, type, data) {
   if (index >= 0) rows[index] = clone(data); else rows.push(clone(data));
   if (rows.length > 256) rows.splice(0, rows.length - 256);
 }
+// Event-stream graph nodes list every pinned edge in `next`; a node that also
+// declares `control` gives each edge its kind (the subset only sequences work).
+const graphNodeEdges = n => (n.next ?? []).map(to => Array.isArray(n.control) ? { from:n.id, to, kind:n.control.includes(to) ? "control" : "material" } : { from:n.id, to });
 function addBounded(rows, data, key) {
   const id = key ? data[key] : null;
   const index = id ? rows.findIndex(row => row[key] === id) : -1;
@@ -100,7 +103,7 @@ function mergeCloudEvent(state, event) {
     state.publication = clone(d);
     if(Array.isArray(d.graph_nodes)){
       const nodes=d.graph_nodes.map(n=>({id:n.id,name:n.name??n.id,type:n.type,kind:n.type,...(n.capability?{capability:n.capability,agent:n.capability}:{}),...(n.output?{output:n.output}:{})}));
-      const edges=d.graph_nodes.flatMap(n=>(n.next??[]).map(to=>({from:n.id,to})));
+      const edges=d.graph_nodes.flatMap(graphNodeEdges);
       state.factory={...(state.factory??{}),id:state.factoryId,name:state.factory?.name??state.factoryId,graph:{nodes,edges},agent_bindings:clone(d.service_bindings??[])};
     }
   }
@@ -121,7 +124,7 @@ function mergeCloudEvent(state, event) {
     run.pinned[k] = d[k];
   }
   if(event.type === eventType("run.created") && Array.isArray(d.graph_nodes)){
-    const graph={nodes:d.graph_nodes.map(n=>({id:n.id,kind:n.type,...(n.capability?{capability:n.capability}: {}),...(n.output?{output:n.output}:{})})),edges:d.graph_nodes.flatMap(n=>(n.next??[]).map(to=>({from:n.id,to})))};
+    const graph={nodes:d.graph_nodes.map(n=>({id:n.id,kind:n.type,...(n.capability?{capability:n.capability}: {}),...(n.output?{output:n.output}:{})})),edges:d.graph_nodes.flatMap(graphNodeEdges)};
     if(run.graph && JSON.stringify(run.graph)!==JSON.stringify(graph))throw new DashboardContractError("pinned run graph changed","$event.data.graph_nodes");
     run.graph=graph;
   }

@@ -53,8 +53,11 @@ def report_role(name: str) -> str:
 
 
 def report_bindings(health: dict[str, dict], port_base: int) -> dict[str, dict]:
+    # The HTTP release receiver is a side-effect node: output "none" (A2A v1
+    # mediation decision 3); A2A agents keep the strict artifacts default.
     return {name: {"role": report_role(name), "url": f"http://127.0.0.1:{port_base + index}",
-                   "identity": health[name]["identity"], "approved": True}
+                   "identity": health[name]["identity"], "approved": True,
+                   **({"output": "none"} if name == "release" else {})}
             for index, name in enumerate(REPORT_NAMES)}
 
 

@@ -18,7 +18,8 @@ from strands import Agent, tool
 from strands.models import Model
 from strands.types.exceptions import ModelThrottledException
 
-from definition import ALLOWED, INPUT_SOURCES, INPUT_TYPES, RESULT_TYPES, ROUTE_VALUES
+from definition import ALLOWED, EDGE_KINDS, INPUT_SOURCES, INPUT_TYPES, NODE_OUTPUTS, RESULT_TYPES, ROUTE_VALUES
+from definition import binding_output
 from definition import digest, validate
 from model_broker import (DEFAULT_MODEL_ID, BrokerLost, SubscriptionAuthRequired,
                           SubscriptionQuotaExhausted,
@@ -62,13 +63,19 @@ def authoring_vocabulary(approved_bindings: dict) -> dict:
         "input_sources": sorted(INPUT_SOURCES),
         "bounds": {"nodes_per_definition": 32, "parallel_branches": [2, 4],
                    "max_repairs": [1, 2], "run_input_fields": 16},
-        "bindings": {name: {"role": binding["role"], "approved": binding.get("approved") is True}
+        "bindings": {name: {"role": binding["role"], "approved": binding.get("approved") is True,
+                            "output": binding_output(binding)}
                      for name, binding in approved_bindings.items()},
+        "optional_node_fields": {"edges": "map of target node to material or control; "
+                                          "a non-execution target is a material bypass edge"},
+        "node_outputs": list(NODE_OUTPUTS), "edge_kinds": list(EDGE_KINDS),
         "rules": ["All route cases must cover their typed values.",
                   "Packet findings and risks must meet at a typed join.",
                   "Quality must review a candidate before release.",
                   "Repair must have a bounded exhausted edge to Director wait and abort.",
-                  "The root may only invoke its digest-pinned child and complete."],
+                  "The root may only invoke its digest-pinned child and complete.",
+                  "A side-effect node (output none) may have only control outgoing edges.",
+                  "Route transitions to repair, Director wait, release and terminal are control edges."],
     }
 
 

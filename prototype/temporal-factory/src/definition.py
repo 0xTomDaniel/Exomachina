@@ -30,6 +30,64 @@ RESULT_TYPES = {"packet_findings": "packet_findings@1",
 ROUTE_VALUES = {"verdict.accepted": {"true", "false"}}
 INPUT_TYPES = {"string", "integer", "number", "boolean"}
 INPUT_SOURCES = {"caller", "director", "verified_artifact"}
+# A2A v1 mediation decisions 3 and 5. Both are optional so publications made
+# before 7 Oct 2026 keep their exact documents and digests; an absent value is
+# the default (strict artifacts, material edge).
+NODE_OUTPUTS = ("artifacts", "message", "none")
+EDGE_KINDS = ("material", "control")
+
+
+def binding_output(binding: dict) -> str:
+    """The declared output contract of one node binding (default strict)."""
+    return binding.get("output", "artifacts") if isinstance(binding, dict) else "artifacts"
+
+
+def node_output(node: dict, bindings: dict) -> str | None:
+    """Output mode of a node from its pinned binding; None for bindingless nodes."""
+    kind = node.get("type")
+    if kind in {"synthesize", "release"}:
+        return binding_output(bindings.get(node.get("service")))
+    if kind == "quality":
+        return next((binding_output(b) for b in bindings.values()
+                     if isinstance(b, dict) and b.get("role") == "quality"), "artifacts")
+    if kind == "parallel":
+        outputs = {binding_output(bindings.get(branch.get("service")))
+                   for branch in node.get("branches", {}).values() if isinstance(branch, dict)}
+        return outputs.pop() if len(outputs) == 1 else "artifacts"
+    return None
+
+
+def execution_targets(node: dict) -> list[str]:
+    """Targets the interpreter can transfer control to, in declaration order."""
+    targets = []
+    for key in ("next", "exhausted"):
+        if isinstance(node.get(key), str):
+            targets.append(node[key])
+    if isinstance(node.get("cases"), dict):
+        targets.extend(value for value in node["cases"].values() if isinstance(value, str))
+    return list(dict.fromkeys(targets))
+
+
+def declared_edges(node: dict) -> list[tuple[str, str]]:
+    """Every pinned edge of a node with its kind.
+
+    Execution targets default to material unless `edges` declares them
+    control. An `edges` entry naming a node that is not an execution target is
+    a material bypass edge: it carries an earlier hand-off directly to a later
+    consumer and never transfers control.
+    """
+    kinds = node.get("edges") or {}
+    edges = [(target, kinds.get(target, "material")) for target in execution_targets(node)]
+    seen = {target for target, _ in edges}
+    edges.extend((target, kind) for target, kind in kinds.items() if target not in seen)
+    return edges
+
+
+def declares_handoff_graph(document: dict, bindings: dict) -> bool:
+    """True when a definition uses the 7 Oct 2026 output/edge-kind declarations."""
+    return (any(isinstance(node, dict) and "edges" in node
+                for node in (document.get("nodes") or {}).values())
+            or any(isinstance(b, dict) and "output" in b for b in (bindings or {}).values()))
 
 
 def validate_input_schema(schema: dict) -> None:
@@ -174,10 +232,10 @@ def _definition(document: dict, children: dict, bindings: dict, *, parent: bool)
         kind = node.get("type")
         if kind not in ALLOWED:
             raise ValueError("arbitrary code or unsupported block")
-        if kind == "director_wait" and "human" in node:
-            _keys(node, ALLOWED[kind] | {"human"}, name)
-        else:
-            _keys(node, ALLOWED[kind], name)
+        optional = {key for key in ("human", "edges") if key in node}
+        if "human" in optional and kind != "director_wait":
+            raise ValueError(f"{name}: human escalation policy outside a Director wait")
+        _keys(node, ALLOWED[kind] | optional, name)
         targets = []
         if "next" in node:
             targets.append(node["next"])
@@ -249,6 +307,21 @@ def _definition(document: dict, children: dict, bindings: dict, *, parent: bool)
             raise ValueError("parent may use only pinned nested factory and completion")
         if not parent and kind == "nested_factory":
             raise ValueError("nested child must not call an unpinned grandchild")
+        if "edges" in node:
+            edges = node["edges"]
+            if not isinstance(edges, dict) or not edges or len(edges) > 8:
+                raise ValueError(f"{name}: edge kinds must be a bounded target map")
+            for target, edge_kind in edges.items():
+                if target not in nodes or target == name:
+                    raise ValueError(f"{name}: edge kind names a missing or self target")
+                if edge_kind not in EDGE_KINDS:
+                    raise ValueError(f"{name}: edge kind must be material or control")
+                if target not in execution_targets(node) and edge_kind != "material":
+                    raise ValueError(f"{name}: a bypass edge must be material")
+        # A side-effect node has incoming material only (decision 5).
+        if node_output(node, bindings) == "none" and any(
+                edge_kind == "material" for _, edge_kind in declared_edges(node)):
+            raise ValueError(f"{name}: side-effect node may not have an outgoing material edge")
 
     # Bounded abstract execution checks *every* route and verdict outcome.
     # Only repair may revisit a node; the state includes its bounded count.
@@ -367,7 +440,11 @@ def validate(package: dict, approved_bindings: dict | None = None) -> str:
     if not isinstance(bindings, dict):
         raise ValueError("missing approved bindings")
     for name, binding in bindings.items():
-        _keys(binding, {"role", "url", "identity", "approved"}, f"binding {name}")
+        _keys(binding, {"role", "url", "identity", "approved"} | ({"output"} & set(binding)
+              if isinstance(binding, dict) else set()), f"binding {name}")
+        if "output" in binding and (binding["output"] not in NODE_OUTPUTS or (
+                binding["role"] == "release") != (binding["output"] == "none")):
+            raise ValueError("binding output must be artifacts or message, or none for a release receiver")
         if (binding["role"] not in {"capability", "quality", "release"}
                 or not isinstance(binding["url"], str)
                 or not binding["url"].startswith("http://127.0.0.1:")

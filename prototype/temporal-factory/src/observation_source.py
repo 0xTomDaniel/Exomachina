@@ -23,6 +23,7 @@ import re
 from observation import (ObservationForbidden, ObservationNotFound, SourceContractError,
                          SourcePage, project_source_record)
 from admission_observation import project_admission_observation
+from definition import declared_edges, declares_handoff_graph, node_output
 from wait_observation import project_public_wait_records
 
 _OPERATIONS_INCIDENT_LIMIT = 128
@@ -75,9 +76,30 @@ def _temporal_attempt(value: Any) -> str | None:
     return None
 
 
-def _graph_nodes(document: Any) -> list[dict[str, Any]]:
+def _graph_nodes(document: Any, bindings: Any = None) -> list[dict[str, Any]]:
     if not isinstance(document, Mapping) or not isinstance(document.get("nodes"), Mapping):
         return []
+    bindings = bindings if isinstance(bindings, Mapping) else {}
+    if declares_handoff_graph(dict(document), dict(bindings)):
+        # Definitions with output modes and edge kinds (7 Oct 2026) project every
+        # pinned edge, including route cases and material bypass edges, with
+        # the control subset and each node's declared output. Older pinned
+        # definitions keep their exact earlier projection below.
+        declared = []
+        for name, raw in document["nodes"].items():
+            if not isinstance(raw, Mapping) or not isinstance(raw.get("type"), str):
+                continue
+            edges = declared_edges(dict(raw))
+            item = {"id": str(name), "type": raw["type"],
+                    "next": [target for target, _ in edges],
+                    "control": [target for target, kind in edges if kind == "control"]}
+            if isinstance(raw.get("capability"), str):
+                item["capability"] = raw["capability"]
+            output = node_output(dict(raw), dict(bindings))
+            if output is not None:
+                item["output"] = output
+            declared.append(item)
+        return declared
     nodes: list[dict[str, Any]] = []
     for name, raw in document["nodes"].items():
         if not isinstance(raw, Mapping) or not isinstance(raw.get("type"), str):
@@ -617,7 +639,7 @@ class RuntimeObservationSource:
                     "package_digest": active["package_digest"],
                     "definition_digest": manifest["root_digest"],
                     "interpreter_build": active["build_id"],
-                    "graph_nodes": _graph_nodes(package.get("root")),
+                    "graph_nodes": _graph_nodes(package.get("root"), package.get("bindings")),
                     "service_bindings": bindings}))
 
     def _run_rows(self) -> list[dict[str, Any]]:
@@ -712,7 +734,7 @@ class RuntimeObservationSource:
                 definition = start_input.get("document") or {}
                 package = start_input.get("package") or {}
                 fields = {**pins, "state": "working", "started_at": at,
-                          "graph_nodes": _graph_nodes(definition)}
+                          "graph_nodes": _graph_nodes(definition, package.get("bindings"))}
                 records.append(self._record("temporal", f"{workflow_id}:{event_id}",
                     "com.exomachina.run.created.v1", at, run_id=workflow_id,
                     fields=fields, task_id=task_id))

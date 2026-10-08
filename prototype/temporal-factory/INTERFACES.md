@@ -767,3 +767,29 @@ item; `artifact_revision` and `artifact_sha256` appear together, only on an
 node with `output: "none"` and an outgoing material edge is rejected. The
 event-stream `graph_nodes` form accepts `output` but has no way to declare an
 edge kind yet.
+
+**Runtime phase: definition syntax (7 Oct 2026).**
+
+- `output` is an optional field of a package binding record
+  (`{"role", "url", "identity", "approved", "output"?}`); absent means
+  `artifacts`. A `release` binding may declare only `none`; a capability or
+  Quality binding may declare `artifacts` or `message`. A node's output is its
+  binding's (`synthesize`/`release` by `service`, `quality` by the Quality
+  binding, `parallel` when every branch binding agrees); route, repair, join,
+  Director wait, abort, complete and nested-factory nodes have none.
+- `edges` is an optional node field mapping a target node to `material` or
+  `control`. Execution targets (`next`, `exhausted`, route `cases`) default to
+  `material`; an `edges` key that is not an execution target declares a
+  material bypass edge (it never transfers control). A node whose output is
+  `none` may not have an outgoing material edge.
+- Both fields are optional, so publications made before this phase keep their
+  exact documents, digests and pins; their graph projection is unchanged (no
+  route-case edges, no kinds). New publications that declare either field get
+  new digests in the ordinary way. The shipped `definitions/report-template.json`
+  declares control route/repair/Director/release/terminal edges and the
+  `independent_quality → publish` material bypass; `services/testbed.py`
+  pins the release receiver binding with `output: "none"`.
+- Projection: for such definitions every `graph_nodes` entry lists all edges
+  in `next`, adds `control` (the control subset of `next`) and the node's
+  `output`; the snapshot graph carries `edges[].kind` and `nodes[].output`.
+  The dashboard accepts `graph_nodes[].control` (a distinct subset of `next`).

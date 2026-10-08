@@ -101,7 +101,9 @@
       "properties": {
         "id": {"$ref": "#/$defs/id"}, "type": {"$ref": "#/$defs/id"},
         "capability": {"$ref": "#/properties/capability"},
-        "next": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/id"}}
+        "next": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/id"}},
+        "control": {"type": "array", "maxItems": 100, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+        "output": {"enum": ["artifacts", "message", "none"]}
       }
     },
     "serviceBinding": {

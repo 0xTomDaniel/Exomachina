@@ -284,7 +284,8 @@ def _safe_nodes(value: Any) -> list[dict[str, Any]]:
         raise SourceContractError("invalid graph node projection")
     result = []
     for item in value:
-        if not isinstance(item, Mapping) or set(item) - {"id", "type", "next", "capability"}:
+        if not isinstance(item, Mapping) or set(item) - {
+                "id", "type", "next", "capability", "output", "control"}:
             raise SourceContractError("invalid graph node projection")
         node = {key: _string(key, item[key]) for key in ("id", "type") if key in item}
         if "id" not in node or "type" not in node:
@@ -298,6 +299,18 @@ def _safe_nodes(value: Any) -> list[dict[str, Any]]:
                            for target in targets)):
                 raise SourceContractError("invalid graph edge projection")
             node["next"] = list(targets)
+        if "output" in item:
+            if item["output"] not in {"artifacts", "message", "none"}:
+                raise SourceContractError("invalid graph node output mode")
+            node["output"] = item["output"]
+        if "control" in item:
+            # Control targets are the subset of `next` that only sequences work.
+            control = item["control"]
+            if (not isinstance(control, list) or len(control) > 100
+                    or any(target not in node.get("next", []) for target in control)
+                    or len(set(control)) != len(control)):
+                raise SourceContractError("invalid graph control edge projection")
+            node["control"] = list(control)
         result.append(node)
     return result
 
@@ -507,11 +520,21 @@ def _snapshot_graph(graph_nodes: list[Mapping[str, Any]]) -> dict[str, list[dict
         projected_node = {"id": node["id"], "kind": node["type"]}
         if "capability" in node:
             projected_node["capability"] = node["capability"]
+        if "output" in node:
+            projected_node["output"] = node["output"]
         nodes.append(projected_node)
+        control = node.get("control")
         for target in node.get("next", []):
             if target not in node_ids:
                 raise SourceContractError("pinned publication graph has an unknown edge target")
-            edges.append({"from": node["id"], "to": target})
+            edge = {"from": node["id"], "to": target}
+            if control is not None:
+                edge["kind"] = "control" if target in control else "material"
+            edges.append(edge)
+    side_effects = {node["id"] for node in nodes if node.get("output") == "none"}
+    if any(edge["from"] in side_effects and edge.get("kind", "material") == "material"
+           for edge in edges):
+        raise SourceContractError("side-effect node has an outgoing material edge")
     return {"nodes": nodes, "edges": edges}
 
 
