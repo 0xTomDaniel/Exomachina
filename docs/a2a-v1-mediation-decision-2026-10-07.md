@@ -283,6 +283,48 @@ Decisions:
 - These extensions are generic: an agent offers them to any A2A client. Nothing
   in them identifies a factory, run, or assignment.
 
+### 9. The agent wire contract
+
+Adopted by the operator on 8 October 2026. It applies to every agent service the
+factory binds, including Quality and release.
+
+- **Inputs are composed from upstream artifacts.**
+  - Each dispatched `SendMessage` carries the node's brief as a text part,
+    followed by the consumed hand-off items.
+  - Each item is a Part copied verbatim from the producing agent's artifact:
+    the same part kind, the same bytes, text, or data, and the same `mediaType`
+    and `filename`.
+  - The factory never re-encodes an item, embeds upstream content inside the
+    brief text, or replaces content with a factory reference such as a digest.
+    Acceptance criteria and policies are sent as their content; the factory
+    keeps their digests on its side as evidence.
+  - The `handoff.consumed` record lists exactly the hand-offs whose items the
+    Message carried.
+  - An input the factory cannot send within its declared size bound fails
+    loudly at the node; it is never truncated silently.
+- **Delivery is provably the accepted revision.** Release receives the accepted
+  report artifact's own parts. Its receipt reports the sha256 of the exact bytes
+  it delivered, which must equal the `artifact_sha256` that Quality accepted. A
+  mismatch fails the release node. Each delivery yields exactly one receipt
+  fact.
+- **Correlation and recovery stay inside the factory.**
+  - The factory journals its assignment and attempt against the A2A
+    `messageId`, `contextId`, and `taskId`.
+  - These values are opaque and carry no factory identifiers.
+  - Resending the identical Message (same `messageId`) is the retry.
+  - After a factory restart, the factory recovers with `GetTask` by the
+    journaled `taskId`. It never asks an agent about a run.
+- **Identity, trust, and authentication are standard A2A.**
+  - An agent's identity is its pinned Agent Card.
+  - Authentication uses the security schemes the card declares.
+  - The factory requires no Exomachina-specific extension or metadata from an
+    agent to dispatch, accept, pin, or correlate. The only Exomachina URI an
+    agent may offer is the generic budget extension (decision 8), and it is
+    optional.
+- **Conformance proof.** A test binds an agent built only on the A2A SDK, with
+  no Exomachina extensions or metadata, and runs an assignment through it end to
+  end. Any change that breaks this test violates decision 7.
+
 ## Delivery sequence
 
 1. **A2A v1 migration:** servers, clients, model agents, Quality, fixtures, and
@@ -299,7 +341,7 @@ Decisions:
    - gate seals;
    - removal of the inferred "Task output · artifact not recorded" items for
      runs that have records.
-4. **Agent decoupling (decisions 7 and 8):**
+4. **Agent decoupling (decisions 7, 8 and 9):**
    - remove agent-side capacity;
    - remove factory identifiers and private endpoints from agents;
    - make release delivery an A2A agent;

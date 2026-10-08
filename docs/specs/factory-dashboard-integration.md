@@ -694,6 +694,13 @@ lazily and which state survives restart. Stable configuration belongs in validat
 repository configuration; this spec does not add environment-variable defaults.
 Any Octo orchestration configuration follows its existing TOML policy.
 
+The operator's local factory stack keeps all durable state (runner, Postgres,
+Temporal configuration, instance, agent service state, and the hand-off digest
+key) under a durable home, by default `~/.exomachina/operator-stack/`. It never
+lives under `/tmp`, whose nightly cleaner deleted a retained stack's database and
+catalog on 8 October 2026. `scenarios/operator_stack.py up|status|down` is the
+only supported way to start, inspect, and stop it.
+
 Before payment qualification, additionally record provider activation, scheme and
 network availability, test assets and amount limits, trust/signing setup, and
 settlement/reconciliation readiness. If a method needs callbacks, webhooks,
@@ -1111,3 +1118,30 @@ These settle details the decision left open:
   "verdict time not recorded". A finished run replays until its last belt hop
   settles, because hops are drawn at 0.8 s or more and can outlast a sub-second
   run.
+
+#### Agent-reported usage and delivery evidence (operator decision, 8 Oct 2026)
+
+Following decisions 7–9 of the
+[A2A v1 decision](../a2a-v1-mediation-decision-2026-10-07.md), the factory
+reaches agents through A2A alone:
+
+- **Usage.**
+  - Per-agent usage comes from each agent's budget-extension report on its
+    terminal Task. The dashboard labels it *agent-reported*.
+  - Token categories an agent did not report stay unavailable, never zero.
+  - The factory cannot see an agent's model, provider, or individual model
+    calls. The dashboard must not show or imply them for agents; they stay
+    visible only for the factory's own Director calls.
+  - Money appears only when a reported cost or a payment record exists. A token
+    count is never a cost.
+- **Work-in-progress limits are factory settings.** The dashboard shows the
+  factory's own admission and capacity only; it shows no agent-side capacity or
+  occupancy.
+- **Delivery.**
+  - A delivered job shows exactly one receipt.
+  - Delivery is *verified* only when the receipt's sha256 equals the accepted
+    revision's `artifact_sha256`.
+  - The floor shows the delivered carrier as the same item Quality sealed, not
+    a re-encoded copy.
+  - A mismatch, or more than one receipt per delivery, shows as a delivery
+    fault, not as delivered.
