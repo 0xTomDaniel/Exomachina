@@ -26,7 +26,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 # Services consume the journal through the public src facade; model_usage is src-internal.
 from model_broker import (DEFAULT_MODEL_ID, ModelBroker, ModelUsageJournal, PiBrokerModel,
                           DEFAULT_REASONING_EFFORT, unavailable_usage)  # noqa: E402
-from admission import AdmissionQueue  # noqa: E402
 from agent_roles import ROLES  # noqa: E402
 import a2a_v1  # noqa: E402
 from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E402
@@ -225,11 +224,6 @@ class Ledger:
                     run_id TEXT NOT NULL, definition_digest TEXT NOT NULL, brief TEXT NOT NULL,
                     artifact TEXT, created_at REAL NOT NULL, updated_at REAL NOT NULL,
                     assignment_id TEXT, attempt_id TEXT, factory_id TEXT);
-                CREATE TABLE IF NOT EXISTS task_execution_claims(
-                    task_id TEXT PRIMARY KEY, claim_token TEXT NOT NULL UNIQUE,
-                    state TEXT NOT NULL CHECK(state IN ('claimed','provider_started','terminal')),
-                    claimed_at REAL NOT NULL, updated_at REAL NOT NULL,
-                    FOREIGN KEY(task_id) REFERENCES tasks(task_id));
                 CREATE TABLE IF NOT EXISTS model_calls (id INTEGER PRIMARY KEY AUTOINCREMENT,
                     task_id TEXT NOT NULL, session_id TEXT NOT NULL, provider TEXT NOT NULL,
                     model_id TEXT NOT NULL, live INTEGER NOT NULL, call_no INTEGER NOT NULL,
@@ -331,8 +325,7 @@ class Ledger:
                                         parts=[data_part(artifact)])]
                     if artifact else None)
 
-    def finish(self, task_id: str, artifact: dict | None, stimulus: dict | None = None,
-               *, execution_claim_token: str | None = None):
+    def finish(self, task_id: str, artifact: dict | None, stimulus: dict | None = None):
         if self.read_only:
             raise Rejected("read-only usage owner")
         with self.connect() as db:
@@ -356,50 +349,6 @@ class Ledger:
                                   time.time(), task_id))
             if updated.rowcount != 1:
                 raise ValueError("Task is no longer working")
-            claim = db.execute("SELECT claim_token FROM task_execution_claims WHERE task_id=?",
-                               (task_id,)).fetchone()
-            if claim is None and execution_claim_token is not None:
-                raise ValueError("Task execution claim disappeared before terminal commit")
-            if claim is not None:
-                if claim["claim_token"] != execution_claim_token:
-                    raise ValueError("Task execution claim fence mismatch")
-                db.execute("UPDATE task_execution_claims SET state='terminal',updated_at=? WHERE task_id=?",
-                           (time.time(), task_id))
-
-    def claim_execution(self, task_id: str) -> str | None:
-        """Atomically fence one worker; persisted claims are never auto-replayed."""
-        if self.read_only:
-            raise Rejected("read-only usage owner")
-        token = str(uuid4())
-        with self.connect() as db:
-            db.execute("BEGIN IMMEDIATE")
-            task = db.execute("SELECT state FROM tasks WHERE task_id=?", (task_id,)).fetchone()
-            if task is None or task["state"] != "working":
-                return None
-            existing = db.execute("SELECT 1 FROM task_execution_claims WHERE task_id=?",
-                                  (task_id,)).fetchone()
-            if existing is not None:
-                return None
-            now = time.time()
-            db.execute("INSERT INTO task_execution_claims VALUES (?,?,?,?,?)",
-                       (task_id, token, "claimed", now, now))
-        return token
-
-    def execution_claim(self, task_id: str) -> dict | None:
-        with self.connect() as db:
-            row = db.execute("SELECT state FROM task_execution_claims WHERE task_id=?",
-                             (task_id,)).fetchone()
-        return dict(row) if row is not None else None
-
-    def known_factory_ids(self) -> set[str]:
-        with self.connect() as db:
-            rows = db.execute("SELECT DISTINCT factory_id FROM tasks WHERE factory_id IS NOT NULL").fetchall()
-        return {row[0] for row in rows}
-
-    def task_factory_ids(self) -> dict[str, str | None]:
-        with self.connect() as db:
-            rows = db.execute("SELECT task_id,factory_id FROM tasks").fetchall()
-        return {row["task_id"]: row["factory_id"] for row in rows}
 
     def task_rows(self) -> list[dict]:
         with self.connect() as db:
@@ -411,20 +360,11 @@ class Ledger:
         return [dict(row) for row in rows]
 
     def call_start(self, task_id: str, session_id: str, provider: str, model_id: str,
-                   live: bool, *, execution_claim_token: str | None = None,
-                   require_execution_claim: bool = False) -> tuple[int, int]:
+                   live: bool) -> tuple[int, int]:
         if self.read_only:
             raise Rejected("read-only usage owner")
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            if require_execution_claim:
-                claim = db.execute("SELECT claim_token,state FROM task_execution_claims WHERE task_id=?",
-                                   (task_id,)).fetchone()
-                if (claim is None or claim["claim_token"] != execution_claim_token
-                        or claim["state"] not in {"claimed", "provider_started"}):
-                    raise Rejected("model start is outside the Task execution claim")
-                db.execute("UPDATE task_execution_claims SET state='provider_started',updated_at=? WHERE task_id=?",
-                           (time.time(), task_id))
             call_no = db.execute("SELECT COUNT(*) FROM model_calls WHERE task_id=?", (task_id,)).fetchone()[0] + 1
             if call_no > MAX_CALLS:
                 raise RuntimeError("model call budget exhausted")
@@ -561,14 +501,10 @@ class RecordedModel(Model):
                  usage_journal: ModelUsageJournal | None = None,
                  service_identity: str | None = None, action_id: str | None = None,
                  run_id: str | None = None, definition_digest: str | None = None,
-                 assignment_id: str | None = None, attempt_id: str | None = None,
-                 execution_claim_token: str | None = None,
-                 require_execution_claim: bool = False):
+                 assignment_id: str | None = None, attempt_id: str | None = None):
         self.inner, self.ledger, self.task_id = inner, ledger, task_id
         self.session_id, self.provider, self.model_id = session_id, provider, model_id
         self.deadline = deadline
-        self.execution_claim_token = execution_claim_token
-        self.require_execution_claim = require_execution_claim
         self.usage_journal = usage_journal
         self.usage_binding = {"service_identity": service_identity, "task_id": task_id,
                               "action_id": action_id, "run_id": run_id,
@@ -606,9 +542,7 @@ class RecordedModel(Model):
         if remaining <= 0:
             raise RuntimeError("agent deadline exhausted")
         call_id, _ = self.ledger.call_start(self.task_id, self.session_id, self.provider,
-                                             self.model_id, self.provider == "codex-subscription",
-                                             execution_claim_token=self.execution_claim_token,
-                                             require_execution_claim=self.require_execution_claim)
+                                             self.model_id, self.provider == "codex-subscription")
         public_call_id = self.ledger.public_model_call_id(call_id)
         measurement_recorded = False
         reasoning_effort = getattr(self.inner, "reasoning_effort", None)
@@ -647,9 +581,7 @@ class RecordedModel(Model):
 class Service:
     def __init__(self, state: Path, role_name: str, capability: str, provider: str,
                  model_id: str, test_controls: bool, roles: dict | None = None,
-                 deadline_seconds: float = DEADLINE_SECONDS, *,
-                 admission_database: Path | None = None,
-                 execution_capacity: int | None = None):
+                 deadline_seconds: float = DEADLINE_SECONDS):
         if role_name not in {"research", "synthesis", "quality"}:
             raise ValueError("invalid role")
         if provider not in {"codex-subscription", "synthetic-loopback", "scripted"}:
@@ -664,125 +596,30 @@ class Service:
                 raise ValueError("synthetic-loopback requires a marked fixture home and loopback endpoint")
         if test_controls and role_name != "synthesis":
             raise ValueError("test controls are for synthesis only")
-        if (admission_database is None) != (execution_capacity is None):
-            raise ValueError("--admission-db and --execution-capacity must be configured together")
-        if execution_capacity is not None and (type(execution_capacity) is not int or execution_capacity < 0):
-            raise ValueError("execution capacity must be an explicit non-negative integer")
         self.ledger = Ledger(state)
         self.usage = ModelUsageJournal(self.ledger.database)
-        self.admission_queue = (AdmissionQueue(admission_database, factory_id=self.ledger.identity,
-                                               capacity=execution_capacity)
-                                if admission_database is not None else None)
-        self.ledger.require_execution_claims = self.admission_queue is not None
-        # Enumerate durable caller scopes at startup; new accepted IDs are added below.
-        self.known_factory_ids = self.ledger.known_factory_ids()
         self.role_name, self.capability, self.provider, self.model_id = role_name, capability, provider, model_id
         self.role = (roles if roles is not None else ROLES)[role_name]
         self.test_controls = test_controls
         self.max_calls, self.deadline_seconds = MAX_CALLS, deadline_seconds
         self.running: dict[str, asyncio.Task] = {}
-        self.capacity_monitor: asyncio.Task | None = None
-
 
     def schedule(self, task_id: str):
-        if self.admission_queue is not None:
-            row = self.ledger.row(task_id)
-            if row is None or row["state"] != "working" or not row["factory_id"]:
-                return
-            admitted = self.admission_queue.enqueue(task_id, task_id=task_id)
-            if admitted["state"] != "admitted" or self.ledger.execution_claim(task_id) is not None:
-                return
+        """Run an accepted Task immediately; agents hold no capacity queue."""
         if task_id not in self.running:
             task = asyncio.create_task(self.work(task_id))
             self.running[task_id] = task
             task.add_done_callback(lambda _: self.running.pop(task_id, None))
 
     def recover(self):
-        rows = self.ledger.task_rows()
-        self.known_factory_ids = self.ledger.known_factory_ids()
-        for row in rows:
-            if self.admission_queue is not None and row["state"] != "working":
-                request = self.admission_queue.get(row["task_id"])
-                if request is not None and request["state"] == "admitted":
-                    self._release_terminal(row["task_id"])
-            elif row["state"] == "working":
+        for row in self.ledger.task_rows():
+            if row["state"] == "working":
                 self.schedule(row["task_id"])
-        if self.admission_queue is not None and self.capacity_monitor is None:
-            try:
-                self.capacity_monitor = asyncio.get_running_loop().create_task(self._monitor_capacity())
-            except RuntimeError:
-                pass
-
-    async def _monitor_capacity(self):
-        while True:
-            queue = self.admission_queue
-            if queue is None:
-                return
-            queue.admit_waiting()
-            for item in queue.list_requests(state="admitted"):
-                row = self.ledger.row(item["task_id"])
-                if row is not None and row["state"] == "working":
-                    self.schedule(item["task_id"])
-                elif row is not None:
-                    self._release_terminal(item["task_id"])
-            await asyncio.sleep(0.1)
-
-    def _release_terminal(self, task_id: str):
-        queue = self.admission_queue
-        if queue is None:
-            return
-        item = queue.get(task_id)
-        if item is None or item["state"] != "admitted":
-            return
-        result = queue.release(task_id, release_id=f"task-terminal:{task_id}")
-        for admitted in result["admitted"]:
-            self.schedule(admitted["task_id"])
-
-    def capacity_snapshot(self, caller_factory_id: str) -> dict | None:
-        queue = self.admission_queue
-        if (queue is None or not isinstance(caller_factory_id, str)
-                or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,255}",
-                                caller_factory_id) is None):
-            return None
-        current_factory_ids = self.ledger.known_factory_ids()
-        self.known_factory_ids.update(current_factory_ids)
-        if caller_factory_id not in current_factory_ids:
-            return None
-        snapshot = queue.read_snapshot()
-        entries = snapshot["requests"]
-        factory_by_task = self.ledger.task_factory_ids()
-        counts = {scope: {state: 0 for state in ("admitted", "queued", "released")}
-                  for scope in ("totals", "own", "other")}
-        unresolved = {scope: 0 for scope in ("own", "other")}
-        for entry in entries:
-            state = entry["state"]
-            scope = "own" if factory_by_task.get(entry["task_id"]) == caller_factory_id else "other"
-            counts["totals"][state] += 1
-            counts[scope][state] += 1
-            if state == "admitted":
-                claim = self.ledger.execution_claim(entry["task_id"])
-                if claim is not None and claim["state"] != "terminal":
-                    unresolved[scope] += 1
-        return {"service_identity": queue.factory_id, "factory_id": caller_factory_id,
-                "capacity": snapshot["capacity"],
-                "available_slots": snapshot["available_slots"],
-                "totals": counts["totals"], "own": counts["own"], "other": counts["other"],
-                "unresolved_execution": unresolved, "auth_status": "fixture_only_unqualified"}
 
     async def work(self, task_id: str):
         row = self.ledger.row(task_id)
         if row is None or row["state"] != "working":
             return
-        execution_claim_token = None
-        if self.admission_queue is not None:
-            if not row["factory_id"]:
-                return
-            admitted = self.admission_queue.get(task_id)
-            if admitted is None or admitted["state"] != "admitted":
-                return
-            execution_claim_token = self.ledger.claim_execution(task_id)
-            if execution_claim_token is None:
-                return
         try:
             brief = json.loads(row["brief"])
             recovered = (self.ledger.logged_stimulus(task_id, brief["revision"])
@@ -810,9 +647,7 @@ class Service:
                                               action_id=row["action_id"], run_id=row["run_id"],
                                               definition_digest=row["definition_digest"],
                                               assignment_id=row["assignment_id"],
-                                              attempt_id=row["attempt_id"],
-                                              execution_claim_token=execution_claim_token,
-                                              require_execution_claim=self.admission_queue is not None)
+                                              attempt_id=row["attempt_id"])
                         agent = Agent(name=f"{self.role_name} agent", model=model, tools=[],
                                       system_prompt=self.role.system_prompt(self.capability),
                                       callback_handler=None)
@@ -837,22 +672,12 @@ class Service:
                         "author": self.ledger.identity, "content": rendered,
                         "action_id": row["action_id"], "run_id": row["run_id"],
                         "definition_digest": row["definition_digest"]}
-            if execution_claim_token is None:
-                self.ledger.finish(task_id, artifact, stimulus)
-            else:
-                self.ledger.finish(task_id, artifact, stimulus,
-                                   execution_claim_token=execution_claim_token)
-            self._release_terminal(task_id)
+            self.ledger.finish(task_id, artifact, stimulus)
         except asyncio.CancelledError:
             # A stopped process leaves the committed Task working for recovery.
             raise
         except Exception:
-            if execution_claim_token is None:
-                self.ledger.finish(task_id, None)
-            else:
-                self.ledger.finish(task_id, None,
-                                   execution_claim_token=execution_claim_token)
-            self._release_terminal(task_id)
+            self.ledger.finish(task_id, None)
 
     def _last_call_id(self, task_id: str) -> int:
         with self.ledger.connect() as db:
@@ -981,14 +806,9 @@ class Handler(LegacyRequestHandler):
             raise InvalidParamsError(message="read-only usage owner")
         try:
             command, _ = command_from_params(params)
-            if (self.service.admission_queue is not None
-                    and not command.get("factory_id")):
-                raise Rejected("factory_id is required when execution capacity is enabled")
             async with self.send_lock:
                 task_id, created = self.service.ledger.accept(command, str(uuid4()),
                                   params.message.context_id or str(uuid4()))
-                if command.get("factory_id"):
-                    self.service.known_factory_ids.add(command["factory_id"])
                 if created:
                     self.service.schedule(task_id)
                 return self.service.ledger.task(task_id)
@@ -1093,12 +913,8 @@ def create_app(state: Path, port: int, *, role: str, capability: str,
                protocol_document: Path | None = None,
                expected_descriptor_digest: str | None = None,
                expected_protocol_digest: str | None = None,
-               expected_identity: str | None = None,
-               admission_database: Path | None = None,
-               execution_capacity: int | None = None):
+               expected_identity: str | None = None):
     if read_only_usage:
-        if admission_database is not None or execution_capacity is not None:
-            raise ValueError("read-only usage mode cannot configure execution capacity")
         if test_controls:
             raise ValueError("test controls are unavailable in read-only usage mode")
         if (pinned_descriptor_document is None or protocol_document is None
@@ -1118,8 +934,7 @@ def create_app(state: Path, port: int, *, role: str, capability: str,
                                                 expected_protocol_digest, expected_identity)):
             raise ValueError("pinned read-only contract inputs are only valid in read-only mode")
         service = Service(state, role, capability, model_provider, model, test_controls,
-                          roles, deadline_seconds, admission_database=admission_database,
-                          execution_capacity=execution_capacity)
+                          roles, deadline_seconds)
         contract = contract_for(capability)
     card = agent_card(role, capability, port, service.ledger.identity, contract)
     if read_only_usage and agent_card_digest(card) != service.descriptor["card_sha256"]:
@@ -1131,15 +946,6 @@ def create_app(state: Path, port: int, *, role: str, capability: str,
         @app.on_event("startup")
         async def recover():
             service.recover()
-
-        @app.on_event("shutdown")
-        async def stop_capacity_monitor():
-            if service.capacity_monitor is not None:
-                service.capacity_monitor.cancel()
-                try:
-                    await service.capacity_monitor
-                except asyncio.CancelledError:
-                    pass
 
     @app.middleware("http")
     async def fixture_auth(request: Request, call_next):
@@ -1178,16 +984,6 @@ def create_app(state: Path, port: int, *, role: str, capability: str,
     @app.get("/contract")
     def served_contract():
         return contract
-
-    if not read_only_usage and service.admission_queue is not None:
-        @app.get("/admission/capacity")
-        def admission_capacity(factory_id: str):
-            if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,255}", factory_id) is None:
-                return JSONResponse({"error": "capacity scope unavailable"}, status_code=404)
-            snapshot = service.capacity_snapshot(factory_id)
-            if snapshot is None:
-                return JSONResponse({"error": "capacity scope unavailable"}, status_code=404)
-            return snapshot
 
     @app.get("/fixture/actions/{action_id}")
     def action(action_id: str):
@@ -1243,10 +1039,6 @@ def main():
                         choices=("codex-subscription", "synthetic-loopback", "scripted"))
     parser.add_argument("--model", default=DEFAULT_MODEL_ID)
     parser.add_argument("--test-controls", action="store_true")
-    parser.add_argument("--admission-db", type=Path,
-                        help="durable shared execution admission database (requires --execution-capacity)")
-    parser.add_argument("--execution-capacity", type=int,
-                        help="explicit non-negative global worker capacity for this service identity")
     parser.add_argument("--read-only-usage", action="store_true",
                         help="serve existing usage records without Task recovery or model startup")
     parser.add_argument("--read-only-pin-document", type=Path,
@@ -1260,12 +1052,6 @@ def main():
     parser.add_argument("--read-only-expected-identity",
                         help="expected identity from the existing owner pin")
     args = parser.parse_args()
-    if (args.admission_db is None) != (args.execution_capacity is None):
-        parser.error("--admission-db and --execution-capacity must be configured together")
-    if args.execution_capacity is not None and args.execution_capacity < 0:
-        parser.error("--execution-capacity must be non-negative")
-    if args.read_only_usage and (args.admission_db is not None or args.execution_capacity is not None):
-        parser.error("read-only usage mode cannot configure execution capacity")
     if not args.read_only_usage and args.model_provider is None:
         parser.error("--model-provider is required unless --read-only-usage is set")
     if args.read_only_usage and any(value is None for value in (
@@ -1281,9 +1067,7 @@ def main():
                      protocol_document=args.read_only_protocol_document,
                      expected_descriptor_digest=args.read_only_descriptor_digest,
                      expected_protocol_digest=args.read_only_protocol_digest,
-                     expected_identity=args.read_only_expected_identity,
-                     admission_database=args.admission_db,
-                     execution_capacity=args.execution_capacity)
+                     expected_identity=args.read_only_expected_identity)
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="warning")
 
 
