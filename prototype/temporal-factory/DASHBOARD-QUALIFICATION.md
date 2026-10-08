@@ -1695,3 +1695,14 @@ Earlier entries and status rows are preserved as recorded; this entry changes no
 - **Gates** under `/tmp/exo-qual-suite.lock`: dashboard 195/195, broker 20/20, Python 559 OK.
 - **`single_factory.py --provider scripted`** (attempt `final-a1`, fresh `/tmp/exo-sf-*` home, ports 44640/31520/44974/45880/46420, no model inference): all 25 checks passed (SF-0..3, R1-a..e, R2-a..d, R3-a..e, G-1..5, G-7, G-8). Routes 1 and 2 each have exactly one receipt whose sha256 equals the accepted draft's `artifact_sha256` (r1 on route 1, the repaired r2 on route 2); route 3 has none; the release agent recorded one effect and one send per delivery; no listener remained.
 
+
+### Remaining coupling removed: findings hand-off, plain nested supplier, launcher upgrades (2026-10-08)
+
+Earlier entries and status rows are preserved as recorded; this entry changes no row status. Branch `fix/remaining-coupling` (details under "Quality findings, nested supplier and launcher upgrades" in INTERFACES.md).
+- **Findings.** Quality's verdict artifact is recorded as Quality's own `handoff.produced`; the definition declares material edges `draft → repair` and `independent_quality → repair`, and a repair dispatch carries the rejected draft and the verdict as verbatim Parts after a brief that no longer embeds findings. The `quality.verdict` Observation and the seal stay on the judged draft's carrier; a findings carrier spawns at Quality and rides into repair (`dashboard/test/floor-carriers.test.mjs`).
+- **Nested supplier.** The factory's nested-supplier entry is a plain A2A agent service: no required extension, no `/contract`, no parent/child tuple; any client sends one JSON-object brief Part and idempotency is `messageId`.
+- **Guards.** No agent or factory-service card declares a required or non-budget Exomachina extension; no dispatch brief contains another node's output text.
+- **Launcher.** `operator_stack.py down` stops only verified processes of the home and confirms its ports free; `up` upgrades agents, pins, publication and harness in place, and refuses unmigratable changes naming `--reprovision` (home moved to a timestamped backup, never deleted). Proven on a throwaway scripted home on private ports: up, in-place contract upgrade, down, up, refusal, `--reprovision`, down; no listener remained.
+- **Recorded evidence that predates this wire** stays as recorded: route-2 repair rows citing findings in the synthesis brief describe the earlier wire.
+- **Gates** under `/tmp/exo-qual-suite.lock`: dashboard 196/196, broker 20/20, Python 576 OK.
+- **`single_factory.py --provider scripted`** (attempt `coupling-final1`, fresh `/tmp/exo-sf-*` home, ports 44640/31520/44974/45880/46420, no model inference): all 25 checks passed (SF-0..3, R1-a..e, R2-a..d, R3-a..e, G-1..5, G-7, G-8). Route 2's repair and both route-3 repairs consumed `gather.research_findings`, `gather.research_risks`, `draft` and `independent_quality`; no listener remained.

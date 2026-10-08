@@ -536,6 +536,11 @@ by itself.
 
 ### Bounded supplier destination allocation (implementation in progress)
 
+*Superseded on 8 Oct 2026 by "Nested supplier as a plain A2A agent service"
+below: the parent/child binding tuple, `/contract`, the Task metadata echo and
+the factory-to-factory extension are removed. The paragraphs below are kept as
+the historical allocation.*
+
 Commerce owns `src/supplier_protocol.py` and its focused tests; Runtime owns the
 normal factory harness/Director destination integration. An explicitly enabled
 `nested_supplier_enabled` profile may accept `nested_factory` with the exact
@@ -702,8 +707,9 @@ operator approval.
   answers `InvalidParams` (-32602). A send that does not list every required
   card extension in `A2A-Extensions` answers `ExtensionSupportRequiredError`
   (-32008). Since agent decoupling (8 Oct 2026) no agent card requires an
-  extension; `urn:exomachina:a2a-action-contract:v1` remains only on the
-  factory's own opted-in nested-supplier entry. Asynchronous sends use
+  extension, and since 8 Oct 2026 (`fix/remaining-coupling`) neither does the
+  factory's nested-supplier entry: `urn:exomachina:a2a-action-contract:v1` is
+  removed. Asynchronous sends use
   `configuration.returnImmediately: true` and poll `GetTask`.
 - Services use the SDK `LegacyRequestHandler` (TaskStore-authoritative flow),
   because their ledger-backed stores acknowledge only Tasks the ledger already
@@ -926,9 +932,11 @@ stack may instead be re-provisioned with `operator_stack.py`.
 **Remaining coupling.** Resolved on `feat/decouple-integration` (see
 decision 9 below): the Quality brief carries the acceptance criteria content,
 not `policy_digest`, and the unused `quality_authority.decide_quality` is
-deleted. The harness nested-supplier entry is a factory service, not an agent:
-it keeps its structured parent/child protocol, `/contract` and its required
-factory-to-factory extension carrying the Director identity.
+deleted. Resolved on `fix/remaining-coupling` (see "Quality findings,
+nested supplier and launcher upgrades" below): repair receives Quality's
+findings as Quality's own hand-off instead of brief text, and the nested
+supplier is a plain A2A agent service with no required extension, `/contract`
+or parent/child tuple.
 
 ## A2A release agent (operator rule, 8 Oct 2026)
 
@@ -1004,17 +1012,18 @@ every agent the factory binds, Quality and release included.
 `[brief Part] + [consumed upstream item Parts]`:
 
 - The brief is one `text` Part, `mediaType: application/json`, holding only the
-  node's own assignment (kind, revision, question, evidence packet, repair
-  findings, acceptance criteria). It embeds no upstream artifact content and no
-  factory reference in place of content.
+  node's own assignment (kind, revision, question, evidence packet, acceptance
+  criteria). It embeds no upstream artifact content and no factory reference in
+  place of content; repair findings arrive as Quality's verdict artifact, not
+  in the brief (see "Quality findings, nested supplier and launcher upgrades").
 - Each consumed hand-off item follows as the producing artifact's Parts copied
   verbatim: same part kind, the same text/data/raw bytes, `mediaType` and
   `filename`, never re-encoded (`handoff.compose_parts`). Producing Activities
   return `item_parts`; the Workflow passes `upstream: [{handoff_id,
   item_parts}]` built from the same carriers as `consumes`
   (`factory.carrier`/`upstream_inputs`/`consumed_from`).
-- Synthesis receives both research artifacts (and the rejected draft on
-  repair); Quality receives the draft; release receives the accepted draft's
+- Synthesis receives both research artifacts (and, on repair, the rejected
+  draft and Quality's verdict artifact); Quality receives the draft; release receives the accepted draft's
   Part alone (no brief). Agents identify inputs by their JSON content `kind`.
 - With hand-off records on, the Activity verifies that `consumes` names exactly
   the included hand-offs, in order, with item digests equal to the keyed
@@ -1076,3 +1085,83 @@ agent model or provider.
 `spike_b_two_instances.py`, `spike_c_director.py` and `sf_agent_probe.py` read
 the retired HTTP release receiver or the old agent envelope. They are kept as
 non-runnable records of their cited results; no gate imports them.
+
+## Quality findings, nested supplier and launcher upgrades (8 Oct 2026)
+
+Branch `fix/remaining-coupling`. Completes the operator rule "A2A only; agents
+are factory-unaware" (decisions 4, 5 as amended, 7 and 9 of
+`docs/a2a-v1-mediation-decision-2026-10-07.md`).
+
+**Quality findings are a hand-off (amended decision 5).** Quality's result is
+one strict artifact, the verdict `{kind: "quality_verdict@1", candidate,
+accepted, decided_by, findings, rubric, rubric_digest}`. With the patch
+`exo-quality-findings-handoff-v1`, the factory records it as Quality's own
+`handoff.produced` (`handoff_id` = the Quality node, `revision` = the attempt)
+and keeps the `quality.verdict` Observation and the floor seal on the judged
+draft's carrier. `definitions/report-template.json` declares material edges
+`draft → repair` and `independent_quality → repair` (and `repair → draft`
+material). A repair dispatch is `[brief] + [research findings, research risks,
+rejected draft, Quality verdict]`, each Part verbatim, and its
+`handoff.consumed` lists all four, the draft and the verdict hand-offs
+included. The synthesis brief no longer carries `quality_findings`
+(`report_contract.synthesis_assignment(revision, question, packet)`); the
+synthesizer reads findings from the received `quality_verdict@1` Part. Runs
+started before the patch keep the embedded-findings behaviour on replay. On the
+floor the findings carrier (`carrier:h-quality:<attempt>`) spawns at Quality and
+rides the material path into repair; an accepted verdict's carrier retires at
+the gate. `single_factory.py` R2-c requires the four inputs and no findings in
+the brief; G-8 requires each repair's `handoff.consumed` to name the draft and
+Quality hand-offs.
+
+**Nested supplier as a plain A2A agent service.** With
+`nested_supplier_enabled`, the harness card declares no extension and serves no
+`/contract`. Any A2A client sends an ordinary `SendMessage` whose single brief
+Part is the run inputs object (a `data` Part, or a `text` Part with
+`mediaType: application/json`); plain text briefs still go to the Director.
+`src/supplier_protocol.py` validates the shape (one JSON object, 128 KiB
+canonical UTF-8, depth 32). The factory derives the run from the caller's
+`messageId` (`action_id = "a2a-message:" + sha256({actor, messageId})`): a
+resent identical Message returns the same Task, a different Message under a
+used `messageId` is refused. The run executes the active publication through
+normal admission, and the Task's result is one artifact whose single Part is
+the run's output (`application/json` text) with no metadata. No parent or
+child run, assignment, definition or Director identity crosses the wire.
+
+**Guards.** `tests/test_agent_service_guards.py` asserts that no agent or
+factory-service card (factory mode with and without the nested supplier)
+declares a required extension or any Exomachina extension other than the
+optional budget one, that `a2a-action-contract` appears nowhere in `src/` or
+`services/`, and that no research, draft, repair or Quality dispatch brief
+contains another node's output text (upstream content travels only as the
+verbatim Parts after the brief). A grep of `services/` for run/assignment/
+attempt/action/definition/factory/policy identifiers finds none; remaining
+`findings` hits are domain vocabulary (the `packet_findings@1` skill, the
+`research_findings` service name, Quality's own verdict field and the
+synthesizer reading findings from the received verdict Part).
+
+**Operator stack upgrades (`scenarios/operator_stack.py`).**
+
+- `down` stops every process the home records (harness `run/harness.json`,
+  agents `testbed/pids.json`, runner supervisor, PostgreSQL, Temporal and build
+  workers `runner/runner-ready.json`) only after verifying pid, command line
+  (this home's state directory or instance), port holder and home path; card
+  identity plays no part. A process that fails the check is reported
+  (`not-touched:<reason>`) and never signalled. It then waits for this home's
+  listeners to go and reports `ports_free`, `ports_still_held_by_this_home` and
+  `ports_held_outside_this_home`.
+- `up` upgrades in place. `testbed.py plan` reports per agent `reuse`,
+  `replace` (an upgrade: command, code or record schema changed), `start` or
+  `blocked` (port held outside the home, never touched). Replaced agents
+  restart; when the served cards no longer match the instance's pins,
+  `admin.py repin` rewrites the three catalog pin files and the definition is
+  republished with fresh card pins. Instance option drift is applied. The
+  harness restarts when its build, manifest, pins, configuration or
+  interpreter differs from `run/harness.json`. The instance's Observation
+  databases, Director ledger and `handoff-digest.key` are kept.
+- Refused, naming `--reprovision`, with nothing changed: a home written by a
+  newer launcher schema (current `2`), a different port plan, a different
+  Temporal runtime, or an agent upgrade while runs are unfinished.
+  `up --reprovision` stops the home's verified processes, renames the home to
+  `<home>.backup-<UTC yyyymmddThhmmssZ>` (never deleted) and provisions fresh.
+- `--scratch-home` and `--model-provider scripted` exist for throwaway proofs
+  only (fixture agents, Director `fixture`, no broker call).

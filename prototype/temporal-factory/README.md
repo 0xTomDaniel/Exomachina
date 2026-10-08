@@ -94,10 +94,14 @@ The operator's long-running local factory (A2A v1) is managed by `scenarios/oper
 
 ```sh
 PY=/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-10-07/a2a-v1/.venv/bin/python
-$PY -B scenarios/operator_stack.py up       # provision once, then reuse; republish only on a template or build change
+$PY -B scenarios/operator_stack.py up       # provision once, then upgrade in place (see below)
 $PY -B scenarios/operator_stack.py status   # processes, ports, v1 cards, runner/Temporal/Postgres, pollers, readiness, broker flags
-$PY -B scenarios/operator_stack.py down     # graceful stop: harness, agents, runner
+$PY -B scenarios/operator_stack.py down     # verified stop of this home's harness, agents and runner; confirms ports free
+$PY -B scenarios/operator_stack.py up --reprovision   # only when up refuses: move the home aside, provision fresh
 ```
+
+- **Upgrades.** `up` reuses current processes and upgrades the rest in place: agents whose command or code changed are restarted, changed Agent Card pins are re-pinned and republished, and the harness restarts when its build, pins or configuration changed. The instance's Observation history, Director ledger and hand-off digest key are kept. If an upgrade cannot be applied in place (a newer launcher schema, different ports or Temporal runtime, or agents that changed while runs are unfinished), `up` changes nothing and says so, naming `--reprovision`. That flag stops the home's processes and renames the home to `<home>.backup-<UTC timestamp>`; it never deletes it.
+- **Stopping.** `down` signals only processes it verifies as this home's (pid, command line, port, home path); anything else holding a planned port is reported and left alone.
 
 - **Ports.** Harness `report-factory` (`verified-research@1`) and `/floor` are on `127.0.0.1:47053`. The model agents are on 47100–47103: two research agents, the synthesizer and Quality, all `codex-subscription` `gpt-6-luna`. Production agents start without `--test-controls`; only qualification runs (`single_factory.py`; formerly `sf_agent_probe.py`, now a historical record) start the synthesizer with the test-only stimulus extension. The release receiver (`--mode participating`) is on 47104. Runner port base 47020 puts the Temporal frontend on 47022; member base 32620 puts PostgreSQL on 32620.
 - **State and runtime.** Every process runs detached, and its log stays in the home: `logs/`, `services/*/service.log` and `runner/*.log`. The hand-off digest key is created as `handoff-digest.key` on first use. Temporal Server 1.32.0 and the CLI are durable copies under `~/.exomachina/temporal/1.32.0`. PostgreSQL comes from `/opt/homebrew/opt/postgresql@16/bin`.
