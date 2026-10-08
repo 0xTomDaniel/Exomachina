@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Mapping
 
+import a2a_v1
+
 
 class QualityKind(StrEnum):
     POSITIVE = "positive"
@@ -73,9 +75,9 @@ def _task_verdict(task: Mapping[str, Any]) -> Mapping[str, Any] | None:
         artifacts = task["artifacts"]
         if len(artifacts) != 1 or len(artifacts[0]["parts"]) != 1:
             return None
-        verdict = artifacts[0]["parts"][0]["data"]
+        verdict = a2a_v1.part_data(artifacts[0]["parts"][0])
         return verdict if isinstance(verdict, Mapping) else None
-    except (KeyError, TypeError, IndexError):
+    except (KeyError, TypeError, IndexError, a2a_v1.ProtocolError):
         return None
 
 
@@ -86,9 +88,9 @@ def decide_quality(*, binding: Mapping[str, Any], observed_endpoint: str,
                    send_payload: Mapping[str, Any] | None = None) -> QualityDecision:
     """Fail closed on any disagreement before Workflow records acceptance.
 
-    ``task`` is the actual A2A Task (send response or tasks/get), ``lookup`` is
-    the independent caller-action-ID record. ``send_payload`` preserves the
-    first message/send verdict when a subsequent tasks/get is also performed.
+    ``task`` is the actual A2A v1 Task (SendMessage ``task`` or GetTask), ``lookup``
+    is the independent caller-action-ID record. ``send_payload`` preserves the
+    first SendMessage verdict when a subsequent GetTask is also performed.
     """
     problems: list[str] = []
     artifact = command.get("artifact")
@@ -116,8 +118,11 @@ def decide_quality(*, binding: Mapping[str, Any], observed_endpoint: str,
     metadata = task.get("metadata")
     if not isinstance(metadata, Mapping):
         metadata = {}
-    status = task.get("status")
-    if not isinstance(status, Mapping) or status.get("state") != "completed":
+    try:
+        completed = a2a_v1.task_state(dict(task)) == "completed"
+    except (a2a_v1.ProtocolError, TypeError, ValueError):
+        completed = False
+    if not completed:
         problems.append("task-not-completed")
     for key, expected in (("action_id", expected_action), ("run_id", expected_run),
                           ("definition_digest", expected_definition)):

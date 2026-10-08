@@ -38,11 +38,8 @@ from uuid import uuid4
 import uvicorn
 from fastapi import Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
-from a2a.server.apps import A2AFastAPIApplication
-from a2a.server.request_handlers import DefaultRequestHandler
-from a2a.server.tasks import TaskStore
-from a2a.types import (AgentCapabilities, AgentCard, AgentExtension, AgentSkill, Artifact, DataPart,
-                       Message, Part, Task, TaskStatus, TextPart)
+from a2a.types import (AgentCapabilities, AgentCard, AgentExtension, AgentSkill, Artifact,
+                       Task, TaskStatus)
 from strands import Agent
 from temporalio.client import Client
 from temporalio.common import PinnedVersioningOverride, WorkerDeploymentVersion
@@ -52,6 +49,10 @@ from fastapi.staticfiles import StaticFiles
 SRC = Path(__file__).resolve().parent
 sys.path.insert(0, str(SRC))
 import harness_server  # noqa: E402
+import a2a_v1  # noqa: E402
+from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E402
+                           agent_message, bearer_security, build_app, cookie_security,
+                           data_part, interfaces, task_state, text_part)
 from harness_server import (HarnessExecutor, HarnessPlugin, Rejected,  # noqa: E402
                             ToolCallingModelFixture, canonical)
 from binding import (DEPLOYMENT, NAMESPACE, QUEUE, PublicationStore,  # noqa: E402
@@ -1897,7 +1898,7 @@ class Director:
         return self.ensure_runner(f"recover-unfinished:{len(runs)}")
 
 
-class FactoryTaskStore(TaskStore):
+class FactoryTaskStore(ProjectionTaskStore):
     """Projects Temporal state onto the original A2A Task; Temporal stays authoritative."""
 
     def __init__(self, director: Director):
@@ -2021,7 +2022,7 @@ class FactoryTaskStore(TaskStore):
                            "sha256": accepted_sha256, "author": self.director.identity,
                            "content": content}
                 artifacts = [Artifact(artifact_id=accepted_sha256,
-                                      parts=[Part(root=DataPart(data=payload))])]
+                                      parts=[data_part(payload)])]
             else:
                 report = None
                 if isinstance(content, str):
@@ -2038,19 +2039,18 @@ class FactoryTaskStore(TaskStore):
                                "acceptance": result["acceptance"],
                                "release_receipt": result["receipt"]}
                     artifacts = [Artifact(artifact_id=accepted["sha256"], parts=[
-                        Part(root=TextPart(text=markdown)), Part(root=DataPart(data=payload))])]
+                        text_part(markdown, "text/markdown"), data_part(payload)])]
                 else:
-                    # The legacy structured fixture path still returns its original DataPart.
+                    # The legacy structured fixture path still returns its original data Part.
                     payload = {"capability": "verified-research@1", "status": result["status"],
                                "run_id": record["run_id"], "acceptance": result.get("acceptance"),
                                "release_receipt": result.get("receipt"), "report": accepted,
                                "interpreter_revision": result.get("interpreter_revision")}
                     artifact_id = hashlib.sha256(canonical(payload).encode()).hexdigest()
                     artifacts = [Artifact(artifact_id=artifact_id,
-                                          parts=[Part(root=DataPart(data=payload))])]
+                                          parts=[data_part(payload)])]
         if projection.get("incident"):
-            message = Message(message_id=str(uuid4()), role="agent",
-                              parts=[Part(root=DataPart(data={"incident": projection["incident"]}))])
+            message = agent_message([data_part({"incident": projection["incident"]})])
         elif state == "input-required" and status:
             decision_status = projection.get("decision_status") or status
             applied = decision_status.get("applied_decisions") or {}
@@ -2066,7 +2066,7 @@ class FactoryTaskStore(TaskStore):
                          "deadline": decision_status.get("deadline"),
                          "applied_decisions": safe_applied}
             wait = {"director_wait": wait_view}
-            message = Message(message_id=str(uuid4()), role="agent", parts=[Part(root=DataPart(data=wait))])
+            message = agent_message([data_part(wait)])
         metadata = {
                         "run_id": record["run_id"], "harness_identity": self.director.identity,
                         "capability": "verified-research@1",
@@ -2078,15 +2078,15 @@ class FactoryTaskStore(TaskStore):
         if supplier_echo is not None:
             metadata.update(supplier_echo)
             metadata["agent_identity"] = self.director.identity
-        return Task(id=task_id, context_id=context_id, status=TaskStatus(state=state, message=message),
+        # A2A Adapter boundary: the version-neutral projection state becomes TASK_STATE_*.
+        return Task(id=task_id, context_id=context_id,
+                    status=TaskStatus(state=task_state(state), message=message),
                     artifacts=artifacts, metadata=metadata)
 
     async def save(self, task, context=None):
         if self.director.task_binding(task.id) is None:
             raise Rejected("task has no durable factory binding")
 
-    async def delete(self, task_id, context=None):
-        raise NotImplementedError("Task deletion is outside the prototype")
 
 
 class LoopbackSessionAdapter:
@@ -2287,17 +2287,17 @@ def create_app(instance_dir: Path, *, commercial_reader=None, usage_broker=None)
     if nested_supplier_enabled:
         supplier_contract = {
             "name": A2A_ACTION_CONTRACT,
-            "protocol": "a2a/0.3.0",
-            "request": {"method": "message/send", "blocking": False,
+            "protocol": a2a_v1.PROTOCOL,
+            "request": {"method": a2a_v1.SEND_MESSAGE, "returnImmediately": True,
                         "data": {"op": "nested_factory", "fields": sorted((
                             "action_id", "run_id", "definition_digest", "parent_task_id",
                             "parent_run_id", "parent_definition_digest", "parent_assignment_id",
                             "parent_attempt_id", "assignment_id", "attempt_id", "payload"))}},
-            "response": {"kind": "task", "metadata": sorted((
+            "response": {"result": "task", "metadata": sorted((
                 "action_id", "run_id", "definition_digest", "agent_identity",
                 "parent_task_id", "parent_run_id", "parent_definition_digest",
                 "parent_assignment_id", "parent_attempt_id", "assignment_id", "attempt_id"))},
-            "completion": {"method": "tasks/get", "state": "completed",
+            "completion": {"method": a2a_v1.GET_TASK, "state": a2a_v1.wire_state("completed"),
                            "artifact_count": 1, "data": sorted((
                                "revision", "sha256", "author", "content", "action_id",
                                "run_id", "definition_digest", "parent_task_id",
@@ -2313,22 +2313,18 @@ def create_app(instance_dir: Path, *, commercial_reader=None, usage_broker=None)
                     "contract_digest": agent_contract_digest(supplier_contract)})]
     card = AgentCard(
         name=config["name"], description=capability["description"],
-        url=f"http://127.0.0.1:{port}/", version="0.1.0", protocol_version="0.3.0",
+        supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="0.1.0",
         default_input_modes=["application/json"], default_output_modes=["application/json"],
         capabilities=(AgentCapabilities(streaming=False, extensions=card_extensions)
                       if nested_supplier_enabled else AgentCapabilities(streaming=False)),
         skills=[AgentSkill(id=capability["id"], name=capability["name"],
                            description=capability["description"], tags=capability.get("tags", []))],
-        security_schemes=({"loopbackSession": {
-            "type": "apiKey", "in": "cookie", "name": QA_SESSION_COOKIE}}
-            if loopback_qa_session else
-            {"fixtureBearer": {"type": "http", "scheme": "bearer"}}),
-        security=([{"loopbackSession": []}] if loopback_qa_session
-                  else [{"fixtureBearer": []}]))
-    app = A2AFastAPIApplication(card, DefaultRequestHandler(HarnessExecutor(
+        **(cookie_security("loopbackSession", QA_SESSION_COOKIE) if loopback_qa_session
+           else bearer_security()))
+    app = build_app(card, LegacyRequestHandler(HarnessExecutor(
         director, store, allow_structured_commands=(
             config.get("legacy_structured_commands") is True or nested_supplier_enabled)
-    ), store)).build()
+    ), store, card))
     _auth(app, sessions)
     if nested_supplier_enabled:
         @app.get("/contract")
@@ -2543,7 +2539,7 @@ def create_app(instance_dir: Path, *, commercial_reader=None, usage_broker=None)
                                   **director.admission_queue.capacity_view()})
         return {"identity": director.identity, "incarnation": director.incarnation,
                 "role": "factory-harness", "name": config["name"],
-                "capability": capability["id"], "a2a_protocol": "0.3.0",
+                "capability": capability["id"], "a2a_protocol": a2a_v1.PROTOCOL_VERSION,
                 "runner_running": director.module.runner.is_running(),
                 "unfinished_runs": len(director.unfinished()), "startup": startup,
                 "admission": admission_status,

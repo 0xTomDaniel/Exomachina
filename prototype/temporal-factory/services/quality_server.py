@@ -13,12 +13,13 @@ from pathlib import Path
 
 import uvicorn
 from fastapi.responses import JSONResponse
-from a2a.server.apps import A2AFastAPIApplication
-from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.types import AgentCard, AgentCapabilities, AgentSkill
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 import harness_server as prior  # noqa: E402
+import a2a_v1  # noqa: E402
+from a2a_v1_server import (LegacyRequestHandler, bearer_security, build_app,  # noqa: E402
+                           interfaces)
 from fixture import canonical, quality_decision  # noqa: E402
 
 
@@ -69,16 +70,15 @@ def create_app(state: Path, port: int):
     store = prior.LedgerTaskStore(harness)
     card = AgentCard(
         name="Arbitration Quality", description="Deterministic independent Quality fixture",
-        url=f"http://127.0.0.1:{port}/", version="0.0.1", protocol_version="0.3.0",
+        supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="0.0.1",
         default_input_modes=["application/json"], default_output_modes=["application/json"],
         capabilities=AgentCapabilities(streaming=False),
         skills=[AgentSkill(id="quality", name="Quality", description="Exact candidate review",
                            tags=["fixture", "quality"])],
-        security_schemes={"fixtureBearer": {"type": "http", "scheme": "bearer"}},
-        security=[{"fixtureBearer": []}],
+        **bearer_security(),
     )
-    app = A2AFastAPIApplication(card, DefaultRequestHandler(
-        prior.HarnessExecutor(harness, store), store)).build()
+    app = build_app(card, LegacyRequestHandler(
+        prior.HarnessExecutor(harness, store), store, card))
 
     @app.middleware("http")
     async def fixture_auth(request, call_next):
@@ -91,7 +91,7 @@ def create_app(state: Path, port: int):
     @app.get("/health")
     def health():
         return {"identity": harness.identity, "incarnation": harness.incarnation,
-                "role": "quality", "a2a_protocol": "0.3.0"}
+                "role": "quality", "a2a_protocol": a2a_v1.PROTOCOL_VERSION}
 
     @app.get("/fixture/actions/{action_id}")
     def get_action(action_id: str):

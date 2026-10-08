@@ -7,6 +7,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+import a2a_v1
+
 
 EXTENSION_URI = "urn:exomachina:a2a-action-contract:v1"
 CONTRACT = "action-idempotent-async@1"
@@ -40,14 +42,18 @@ def read_json(url: str) -> dict:
 
 def card_observation(url: str) -> dict:
     card = read_json(url.rstrip("/") + "/.well-known/agent-card.json")
-    if card.get("url", "").rstrip("/") != url.rstrip("/"):
+    try:
+        endpoint = a2a_v1.card_url(card)
+    except a2a_v1.ProtocolError as error:
+        raise ValueError("Agent Card is not A2A v1.0 only: " + str(error)) from error
+    if endpoint.rstrip("/") != url.rstrip("/"):
         raise ValueError("Agent Card endpoint differs from snapshot")
     extensions = (card.get("capabilities") or {}).get("extensions") or []
     if len(extensions) != 1:
         raise ValueError("Agent Card must declare exactly one extension")
     extension = extensions[0]
     params = extension.get("params") or {}
-    without_url = {key: value for key, value in card.items() if key != "url"}
+    without_url = a2a_v1.card_without_endpoint(card)
     contract = read_json(url.rstrip("/") + "/contract")
     return {"url": url, "card_sha256": digest(without_url),
             "extension_uri": extension.get("uri"),

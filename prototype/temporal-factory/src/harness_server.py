@@ -1,6 +1,6 @@
 """Deterministic Strands+A2A fixture shared by the three runtime countertrials.
 
-This is a real Strands tool loop and A2A 0.3.0 server, with a fixture model and
+This is a real Strands tool loop and A2A v1.0 server, with a fixture model and
 fixture-specific action lookup. It does not claim real model quality or general
 A2A receiver idempotency.
 """
@@ -17,16 +17,15 @@ from uuid import uuid4
 import uvicorn
 from fastapi.responses import JSONResponse
 from a2a.server.agent_execution import AgentExecutor
-from a2a.server.apps import A2AFastAPIApplication
-from a2a.server.request_handlers import DefaultRequestHandler
-from a2a.server.tasks import TaskStore
-from a2a.types import (
-    AgentCard, AgentCapabilities, AgentSkill, Artifact, DataPart, Message, Part,
-    Task, TaskStatus, TextPart,
-)
+from a2a.types import AgentCard, AgentCapabilities, AgentSkill, Artifact, Task, TaskStatus
 from strands import Agent, tool
 from strands.models import Model
 from strands.plugins import Plugin
+
+import a2a_v1
+from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore, agent_message,
+                           bearer_security, build_app, data_part, interfaces, part_content,
+                           part_data, task_state)
 
 
 TOKEN = "Bearer fixture-token"
@@ -221,7 +220,7 @@ class HarnessPlugin(Plugin):
             return canonical({"error": str(error)})
 
 
-class LedgerTaskStore(TaskStore):
+class LedgerTaskStore(ProjectionTaskStore):
     def __init__(self, harness):
         self.harness = harness
 
@@ -231,9 +230,10 @@ class LedgerTaskStore(TaskStore):
             return None
         action, context_id = record
         artifact = action["artifact"]
-        return Task(id=task_id, context_id=context_id, status=TaskStatus(state="completed"),
+        return Task(id=task_id, context_id=context_id,
+                    status=TaskStatus(state=task_state("completed")),
                     artifacts=[Artifact(artifact_id=artifact["sha256"],
-                                        parts=[Part(root=DataPart(data=artifact))])],
+                                        parts=[data_part(artifact)])],
                     metadata={"action_id": action["action_id"], "run_id": action["run_id"],
                               "definition_digest": action["definition_digest"],
                               "harness_identity": self.harness.identity,
@@ -242,9 +242,6 @@ class LedgerTaskStore(TaskStore):
     async def save(self, task, context=None):
         if self.harness.task(task.id) is None:
             raise Rejected("task has no committed action")
-
-    async def delete(self, task_id, context=None):
-        raise NotImplementedError("deletion is outside this trial")
 
 
 class HarnessExecutor(AgentExecutor):
@@ -256,13 +253,13 @@ class HarnessExecutor(AgentExecutor):
     async def execute(self, context, event_queue):
         try:
             if not self.allow_structured_commands and any(
-                    not isinstance(part.root, TextPart) for part in context.message.parts):
+                    part_content(part) != "text" for part in context.message.parts):
                 raise Rejected("factory caller messages must contain text parts only")
-            command = next((part.root.data for part in context.message.parts
-                            if isinstance(part.root, DataPart)), None)
+            command = next((part_data(part) for part in context.message.parts
+                            if part_content(part) == "data"), None)
             if command is None:
-                brief = next((part.root.text for part in context.message.parts
-                              if isinstance(part.root, TextPart)), None)
+                brief = next((part.text for part in context.message.parts
+                              if part_content(part) == "text"), None)
                 if brief is None or not hasattr(self.harness, "inspect_bound_run"):
                     raise Rejected("structured data command required")
                 result = await self.harness.invoke(brief, context.task_id, context.context_id,
@@ -270,13 +267,11 @@ class HarnessExecutor(AgentExecutor):
             else:
                 result = await self.harness.invoke(command, context.task_id, context.context_id)
             if "error" in result:
-                await event_queue.enqueue_event(Message(message_id=str(uuid4()), role="agent",
-                    parts=[Part(root=DataPart(data=result))]))
+                await event_queue.enqueue_event(agent_message([data_part(result)]))
             else:
                 await event_queue.enqueue_event(await self.store.get(context.task_id))
         except Rejected as error:
-            await event_queue.enqueue_event(Message(message_id=str(uuid4()), role="agent",
-                parts=[Part(root=DataPart(data={"error": str(error)}))]))
+            await event_queue.enqueue_event(agent_message([data_part({"error": str(error)})]))
 
     async def cancel(self, context, event_queue):
         raise Rejected("fixture actions are immediate and cannot be cancelled")
@@ -287,15 +282,14 @@ def create_app(state: Path, role: str, port: int):
     store = LedgerTaskStore(harness)
     card = AgentCard(
         name="Decision round " + role, description="Deterministic Strands harness fixture",
-        url=f"http://127.0.0.1:{port}/", version="0.0.1", protocol_version="0.3.0",
+        supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="0.0.1",
         default_input_modes=["application/json"], default_output_modes=["application/json"],
         capabilities=AgentCapabilities(streaming=False),
         skills=[AgentSkill(id=role, name=role, description="Decision-round fixture role",
                            tags=["fixture", role])],
-        security_schemes={"fixtureBearer": {"type": "http", "scheme": "bearer"}},
-        security=[{"fixtureBearer": []}],
+        **bearer_security(),
     )
-    app = A2AFastAPIApplication(card, DefaultRequestHandler(HarnessExecutor(harness, store), store)).build()
+    app = build_app(card, LegacyRequestHandler(HarnessExecutor(harness, store), store, card))
 
     @app.middleware("http")
     async def fixture_auth(request, call_next):
@@ -308,7 +302,7 @@ def create_app(state: Path, role: str, port: int):
     @app.get("/health")
     def health():
         return {"identity": harness.identity, "incarnation": harness.incarnation,
-                "role": harness.role, "a2a_protocol": "0.3.0"}
+                "role": harness.role, "a2a_protocol": a2a_v1.PROTOCOL_VERSION}
 
     @app.get("/fixture/actions/{action_id}")
     def get_action(action_id: str):

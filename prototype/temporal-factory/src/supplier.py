@@ -246,7 +246,7 @@ class SupplierFanout:
             try:
                 url, observed = self._resolve(child)
                 # The special action endpoint is a fixture capability only.
-                # Generic A2A has tasks/get, which requires a known Task ID.
+                # Generic A2A has GetTask, which requires a known Task ID.
                 if (observed.get("contract_document") or {}).get("reconcile") != "fixture-lookup":
                     return self._view(parent, child, record)
                 prior = a2a.reconcile(url, child.action_id, child.run_id,

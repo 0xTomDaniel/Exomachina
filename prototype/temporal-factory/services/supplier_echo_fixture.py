@@ -20,13 +20,8 @@ from uuid import uuid4
 
 import uvicorn
 from a2a.server.agent_execution import AgentExecutor
-from a2a.server.apps import A2AFastAPIApplication
-from a2a.server.request_handlers import DefaultRequestHandler
-from a2a.server.tasks import TaskStore
 from a2a.types import (AgentCapabilities, AgentCard, AgentExtension, AgentSkill,
-                       Artifact, DataPart, InvalidParamsError, Part, Task,
-                       TaskState, TaskStatus)
-from a2a.utils.errors import ServerError
+                       Artifact, InvalidParamsError, Task, TaskStatus)
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
@@ -34,6 +29,10 @@ from fastapi.responses import JSONResponse
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 import agent_binding  # noqa: E402
+import a2a_v1  # noqa: E402
+from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E402
+                           bearer_security, build_app, data_part, interfaces, part_content,
+                           part_data, task_state)
 
 
 TOKEN = "Bearer fixture-token"
@@ -57,21 +56,22 @@ def digest(value: Any) -> str:
 
 CONTRACT = {
     "name": CONTRACT_NAME,
-    "protocol": "a2a/0.3.0",
+    "protocol": a2a_v1.PROTOCOL,
     "request": {
-        "method": "message/send", "blocking": False,
+        "method": a2a_v1.SEND_MESSAGE, "returnImmediately": True,
         "data": {"op": "nested_factory", "fields": sorted((
             "action_id", "run_id", "definition_digest", "parent_task_id",
             "parent_run_id", "parent_definition_digest", "parent_assignment_id",
             "parent_attempt_id", "assignment_id", "attempt_id", "payload"))},
     },
     "response": {
-        "kind": "task", "metadata": sorted((
+        "result": "task", "metadata": sorted((
             "action_id", "run_id", "definition_digest", "agent_identity",
             *PARENT_FIELDS, "assignment_id", "attempt_id")),
     },
     "completion": {
-        "method": "tasks/get", "state": "completed", "artifact_count": 1,
+        "method": a2a_v1.GET_TASK, "state": a2a_v1.wire_state("completed"),
+        "artifact_count": 1,
         "data": sorted(("revision", "sha256", "author", "content",
                          "action_id", "run_id", "definition_digest",
                          *PARENT_FIELDS, "assignment_id", "attempt_id")),
@@ -111,12 +111,12 @@ def checked_command(value: object) -> dict[str, Any]:
 
 
 def command_from_params(params) -> dict[str, Any]:
-    if not params.configuration or params.configuration.blocking is not False:
-        raise Rejected("configuration.blocking must be false")
-    data = [part.root.data for part in params.message.parts
-            if isinstance(part.root, DataPart)]
+    if not params.HasField("configuration") or params.configuration.return_immediately is not True:
+        raise Rejected("configuration.returnImmediately must be true")
+    data = [part_data(part) for part in params.message.parts
+            if part_content(part) == "data"]
     if len(params.message.parts) != 1 or len(data) != 1:
-        raise Rejected("exactly one DataPart is required")
+        raise Rejected("exactly one data Part is required")
     return checked_command(data[0])
 
 
@@ -245,9 +245,9 @@ class Ledger:
         artifact = {**bindings, "revision": REVISION, "sha256": sha256,
                     "author": self.identity, "content": content}
         return Task(id=row["task_id"], context_id=row["context_id"],
-                    status=TaskStatus(state=TaskState.completed), metadata=metadata,
+                    status=TaskStatus(state=task_state("completed")), metadata=metadata,
                     artifacts=[Artifact(artifact_id=sha256,
-                        parts=[Part(root=DataPart(data=artifact))])])
+                        parts=[data_part(artifact)])])
 
     def counts(self) -> dict[str, Any]:
         with self._connection() as db:
@@ -256,7 +256,7 @@ class Ledger:
                 "count": len(rows), "actions": [dict(row) for row in rows]}
 
 
-class LedgerTaskStore(TaskStore):
+class LedgerTaskStore(ProjectionTaskStore):
     def __init__(self, ledger: Ledger):
         self.ledger = ledger
 
@@ -267,9 +267,6 @@ class LedgerTaskStore(TaskStore):
         if self.ledger.task(task.id) is None:
             raise Rejected("Task has no committed supplier action")
 
-    async def delete(self, task_id, context=None):
-        raise NotImplementedError("Task deletion is outside this fixture")
-
 
 class Executor(AgentExecutor):
     def __init__(self, ledger: Ledger, store: LedgerTaskStore):
@@ -277,8 +274,8 @@ class Executor(AgentExecutor):
         self.store = store
 
     async def execute(self, context, event_queue):
-        command = checked_command(next(part.root.data for part in context.message.parts
-                                       if isinstance(part.root, DataPart)))
+        command = checked_command(next(part_data(part) for part in context.message.parts
+                                       if part_content(part) == "data"))
         task_id, _created, drop = self.ledger.accept(
             command, context.task_id, context.context_id)
         if drop:
@@ -287,12 +284,12 @@ class Executor(AgentExecutor):
         await event_queue.enqueue_event(await self.store.get(task_id))
 
     async def cancel(self, context, event_queue):
-        raise ServerError(error=InvalidParamsError(message="fixture Task cannot be cancelled"))
+        raise InvalidParamsError(message="fixture Task cannot be cancelled")
 
 
-class Handler(DefaultRequestHandler):
-    def __init__(self, ledger: Ledger, store: LedgerTaskStore):
-        super().__init__(Executor(ledger, store), store)
+class Handler(LegacyRequestHandler):
+    def __init__(self, ledger: Ledger, store: LedgerTaskStore, card: AgentCard):
+        super().__init__(Executor(ledger, store), store, card)
         self.ledger = ledger
         self._send_lock = asyncio.Lock()
 
@@ -318,7 +315,7 @@ class Handler(DefaultRequestHandler):
                     os._exit(23)
                 return self.ledger.task(task_id)
         except Rejected as error:
-            raise ServerError(error=InvalidParamsError(message=str(error))) from error
+            raise InvalidParamsError(message=str(error)) from error
 
 
 def create_app(state: Path, port: int):
@@ -329,16 +326,15 @@ def create_app(state: Path, port: int):
                 "contract_digest": CONTRACT_DIGEST})
     card = AgentCard(
         name="Supplier echo fixture", description="Local deterministic nested A2A supplier fixture",
-        url=f"http://127.0.0.1:{port}/", version="1.0.0", protocol_version="0.3.0",
+        supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="1.0.0",
         default_input_modes=["application/json"], default_output_modes=["application/json"],
         capabilities=AgentCapabilities(streaming=False, extensions=[extension]),
         skills=[AgentSkill(id="nested_factory@1", name="Nested factory fixture",
                            description="Returns a synthetic public artifact",
                            tags=["supplier-fixture", "nested-factory"])],
-        security_schemes={"fixtureBearer": {"type": "http", "scheme": "bearer"}},
-        security=[{"fixtureBearer": []}],
+        **bearer_security(),
     )
-    app = A2AFastAPIApplication(card, Handler(ledger, store)).build()
+    app = build_app(card, Handler(ledger, store, card))
 
     @app.middleware("http")
     async def fixture_auth(request: Request, call_next):
@@ -351,7 +347,8 @@ def create_app(state: Path, port: int):
     @app.get("/health")
     def health():
         return {"identity": ledger.identity, "incarnation": ledger.incarnation,
-                "role": "nested-supplier-echo-fixture", "a2a_protocol": "0.3.0"}
+                "role": "nested-supplier-echo-fixture",
+                "a2a_protocol": a2a_v1.PROTOCOL_VERSION}
 
     @app.get("/contract")
     def contract():

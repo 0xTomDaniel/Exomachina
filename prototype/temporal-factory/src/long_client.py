@@ -1,4 +1,9 @@
-"""Small A2A 0.3.0 client for the shared decision-round Strands fixture."""
+"""Small A2A v1.0 JSON-RPC client for the decision-round fixture and async agents.
+
+This is the client side of the A2A Adapter boundary: requests carry the
+``A2A-Version: 1.0`` header, Tasks arrive wrapped as ``{"task": ...}``, and
+``TASK_STATE_*`` values are mapped to version-neutral state names here.
+"""
 from __future__ import annotations
 
 import argparse
@@ -8,9 +13,9 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from uuid import uuid4
 
-from agent_binding import UnavailableBinding, resolve as resolve_pinned
+import a2a_v1
+from agent_binding import EXTENSION_URI, UnavailableBinding, resolve as resolve_pinned
 
 
 TOKEN = "Bearer fixture-token"
@@ -20,10 +25,11 @@ class UncertainSubmission(Exception):
     """The request may have committed remotely; reconcile before retrying."""
 
 
-def _request(url, method, data=None):
+def _request(url, method, data=None, extensions=()):
     payload = None if data is None else json.dumps(data).encode()
     request = urllib.request.Request(url, data=payload, method=method,
-        headers={"Authorization": TOKEN, "Content-Type": "application/json"})
+        headers={"Authorization": TOKEN, "Content-Type": "application/json",
+                 **a2a_v1.headers(extensions)})
     try:
         with urllib.request.urlopen(request, timeout=10) as response:
             return json.loads(response.read())
@@ -35,15 +41,18 @@ def _request(url, method, data=None):
 
 
 def send(url, command):
-    """Submit a DataPart over actual A2A message/send and extract its artifact."""
-    rpc = {"jsonrpc": "2.0", "id": str(uuid4()), "method": "message/send",
-           "params": {"message": {"role": "user", "messageId": str(uuid4()),
-                                  "parts": [{"kind": "data", "data": command}]}}}
+    """Submit a data Part over actual A2A v1 SendMessage and extract its artifact."""
+    rpc = a2a_v1.rpc(a2a_v1.SEND_MESSAGE, a2a_v1.send_params(
+        a2a_v1.user_message([a2a_v1.data_part(command)])))
     response = _request(url.rstrip("/") + "/", "POST", rpc)
     if "error" in response:
         raise RuntimeError("A2A error: " + json.dumps(response["error"]))
-    result = response["result"]
-    if result.get("kind") != "task" or result.get("status", {}).get("state") != "completed":
+    try:
+        shape, result = a2a_v1.unwrap_send_result(response["result"])
+        completed = shape == "task" and a2a_v1.task_state(result) == "completed"
+    except a2a_v1.ProtocolError as error:
+        raise RuntimeError("A2A v1 response invalid: " + str(error)) from error
+    if not completed:
         raise RuntimeError("A2A did not return a completed Task: " + json.dumps(result))
     metadata = result.get("metadata") or {}
     for field in ("action_id", "run_id", "definition_digest"):
@@ -52,29 +61,37 @@ def send(url, command):
     artifacts = result.get("artifacts") or []
     if len(artifacts) != 1:
         raise RuntimeError("expected one structured artifact")
-    artifact = artifacts[0]["parts"][0]["data"]
+    artifact = a2a_v1.part_data(artifacts[0]["parts"][0])
     if artifacts[0]["artifactId"] != artifact["sha256"]:
         raise RuntimeError("artifact digest mismatch")
     return {"action_id": command["action_id"], "run_id": command["run_id"],
             "definition_digest": command["definition_digest"], "task_id": result["id"],
             "artifact": artifact, "harness_identity": metadata.get("harness_identity"),
-            "harness_role": metadata.get("harness_role"), "a2a_protocol": "0.3.0"}
+            "harness_role": metadata.get("harness_role"),
+            "a2a_protocol": a2a_v1.PROTOCOL_VERSION}
 
 
 def send_async(url: str, command: dict) -> dict:
-    """Submit the pinned async contract; retain the Task, including its id."""
-    rpc = {"jsonrpc": "2.0", "id": str(uuid4()), "method": "message/send",
-           "params": {"message": {"role": "user", "messageId": str(uuid4()),
-                                  "parts": [{"kind": "data", "data": command}]},
-                      "configuration": {"blocking": False}}}
-    response = _request(url.rstrip("/") + "/", "POST", rpc)
+    """Submit the pinned async contract; retain the Task, including its id.
+
+    The send activates the required action-contract extension and asks the
+    agent to return immediately; the v1 ``{"task": ...}`` wrapper is removed.
+    """
+    rpc = a2a_v1.rpc(a2a_v1.SEND_MESSAGE, a2a_v1.send_params(
+        a2a_v1.user_message([a2a_v1.data_part(command)]), return_immediately=True))
+    response = _request(url.rstrip("/") + "/", "POST", rpc, extensions=[EXTENSION_URI])
     if "error" in response:
         raise RuntimeError("A2A error: " + json.dumps(response["error"]))
-    return response["result"]
+    try:
+        return a2a_v1.require_task(response["result"])
+    except a2a_v1.ProtocolError as error:
+        raise ValueError("A2A v1 response invalid: " + str(error)) from error
 
 
 def validate_async_task(task: dict, command: dict, identity: str) -> str:
-    if task.get("kind") != "task" or not isinstance(task.get("id"), str) or not task["id"]:
+    """Return the version-neutral state of a bound v1 Task."""
+    if (not isinstance(task, dict) or "kind" in task or not isinstance(task.get("id"), str)
+            or not task["id"]):
         raise ValueError("A2A response lacks Task id")
     metadata = task.get("metadata") or {}
     for key in ("action_id", "run_id", "definition_digest"):
@@ -82,7 +99,10 @@ def validate_async_task(task: dict, command: dict, identity: str) -> str:
             raise ValueError("A2A Task binding mismatch: " + key)
     if metadata.get("agent_identity") != identity:
         raise ValueError("A2A Task identity mismatch")
-    state = (task.get("status") or {}).get("state")
+    try:
+        state = a2a_v1.task_state(task)
+    except a2a_v1.ProtocolError as error:
+        raise ValueError("A2A Task state invalid") from error
     if state not in {"submitted", "working", "completed", "failed", "canceled", "rejected"}:
         raise ValueError("A2A Task state invalid")
     return state
@@ -95,10 +115,12 @@ def async_receipt(task: dict, command: dict, identity: str,
     artifacts = task.get("artifacts") or []
     if len(artifacts) != 1 or len(artifacts[0].get("parts") or []) != 1:
         raise ValueError("expected one structured artifact")
-    part = artifacts[0]["parts"][0]
-    if part.get("kind") != "data" or not isinstance(part.get("data"), dict):
-        raise ValueError("expected artifact DataPart")
-    artifact = part["data"]
+    try:
+        artifact = a2a_v1.part_data(artifacts[0]["parts"][0])
+    except a2a_v1.ProtocolError as error:
+        raise ValueError("expected artifact data Part") from error
+    if not isinstance(artifact, dict):
+        raise ValueError("expected artifact data Part")
     for key in ("action_id", "run_id", "definition_digest"):
         if artifact.get(key) != command[key]:
             raise ValueError("artifact binding mismatch: " + key)
@@ -112,7 +134,7 @@ def async_receipt(task: dict, command: dict, identity: str,
     return {"action_id": command["action_id"], "run_id": command["run_id"],
             "definition_digest": command["definition_digest"], "task_id": task["id"],
             "artifact": artifact, "harness_identity": identity,
-            "harness_role": role, "a2a_protocol": "0.3.0"}
+            "harness_role": role, "a2a_protocol": a2a_v1.PROTOCOL_VERSION}
 
 
 def reconcile(url, action_id, run_id=None, definition_digest=None):
@@ -128,12 +150,11 @@ def reconcile(url, action_id, run_id=None, definition_digest=None):
 
 
 def get_task(url, task_id):
-    rpc = {"jsonrpc": "2.0", "id": str(uuid4()), "method": "tasks/get",
-           "params": {"id": task_id}}
-    response = _request(url.rstrip("/") + "/", "POST", rpc)
+    rpc = a2a_v1.rpc(a2a_v1.GET_TASK, {"id": task_id})
+    response = _request(url.rstrip("/") + "/", "POST", rpc, extensions=[EXTENSION_URI])
     if "error" in response:
         raise RuntimeError("A2A task lookup error: " + json.dumps(response["error"]))
-    return response["result"]
+    return a2a_v1.normalize_numbers(response["result"])
 
 
 def main():

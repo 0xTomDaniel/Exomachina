@@ -11,21 +11,23 @@ import hashlib
 import json
 import os
 import sqlite3
+import sys
 import time
 from pathlib import Path
 from uuid import UUID, uuid4
 
 import uvicorn
 from a2a.server.agent_execution import AgentExecutor
-from a2a.server.apps import A2AFastAPIApplication
-from a2a.server.request_handlers import DefaultRequestHandler
-from a2a.server.tasks import TaskStore
 from a2a.types import (AgentCapabilities, AgentCard, AgentExtension, AgentSkill,
-                       Artifact, DataPart, InvalidParamsError, Part, Task,
-                       TaskState, TaskStatus)
-from a2a.utils.errors import ServerError
+                       Artifact, InvalidParamsError, Task, TaskStatus)
 from fastapi import Request
 from fastapi.responses import JSONResponse
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import a2a_v1  # noqa: E402
+from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E402
+                           bearer_security, build_app, data_part, interfaces, part_content,
+                           part_data, task_state)
 
 
 TOKEN = "Bearer fixture-token"
@@ -33,14 +35,15 @@ EXTENSION_URI = "urn:exomachina:a2a-action-contract:v1"
 CONTRACT_NAME = "action-idempotent-async@1"
 CONTRACT = {
     "name": CONTRACT_NAME,
-    "protocol": "a2a/0.3.0",
-    "request": {"method": "message/send", "blocking": False,
+    "protocol": a2a_v1.PROTOCOL,
+    "request": {"method": a2a_v1.SEND_MESSAGE, "returnImmediately": True,
                 "data": {"op": "assign", "fields": ["action_id", "run_id",
                                                     "definition_digest", "brief"]}},
-    "response": {"kind": "task", "initial_states": ["submitted", "working"],
+    "response": {"result": "task",
+                 "initial_states": [a2a_v1.wire_state("submitted"), a2a_v1.wire_state("working")],
                  "metadata": ["action_id", "run_id", "definition_digest",
                               "agent_identity"]},
-    "completion": {"method": "tasks/get", "state": "completed",
+    "completion": {"method": a2a_v1.GET_TASK, "state": a2a_v1.wire_state("completed"),
                    "artifact_count": 1,
                    "data": ["revision", "sha256", "author", "content",
                             "action_id", "run_id", "definition_digest"]},
@@ -69,7 +72,7 @@ def checked_command(value: object) -> dict:
     if not isinstance(value, dict) or set(value) != {
         "op", "action_id", "run_id", "definition_digest", "brief"
     } or value.get("op") != "assign":
-        raise Rejected("expected one assign DataPart with the declared fields")
+        raise Rejected("expected one assign data Part with the declared fields")
     for field in ("action_id", "run_id", "definition_digest"):
         if not isinstance(value[field], str) or not value[field]:
             raise Rejected("missing " + field)
@@ -79,12 +82,12 @@ def checked_command(value: object) -> dict:
 
 
 def command_from_params(params) -> dict:
-    if not params.configuration or params.configuration.blocking is not False:
-        raise Rejected("configuration.blocking must be false")
-    data = [part.root.data for part in params.message.parts
-            if isinstance(part.root, DataPart)]
+    if not params.HasField("configuration") or params.configuration.return_immediately is not True:
+        raise Rejected("configuration.returnImmediately must be true")
+    data = [part_data(part) for part in params.message.parts
+            if part_content(part) == "data"]
     if len(params.message.parts) != 1 or len(data) != 1:
-        raise Rejected("exactly one DataPart required")
+        raise Rejected("exactly one data Part required")
     return checked_command(data[0])
 
 
@@ -202,7 +205,7 @@ class Ledger:
                     "agent_identity": self.identity}
         if time.time() < row["complete_at"]:
             return Task(id=task_id, context_id=row["context_id"],
-                        status=TaskStatus(state=TaskState.working), metadata=metadata)
+                        status=TaskStatus(state=task_state("working")), metadata=metadata)
         content = "fixture-result:" + row["brief"]
         sha256 = hashlib.sha256(content.encode("utf-8")).hexdigest()
         artifact = {"revision": "r2", "sha256": sha256, "author": self.identity,
@@ -211,9 +214,9 @@ class Ledger:
                     else row["run_id"],
                     "definition_digest": row["definition_digest"]}
         return Task(id=task_id, context_id=row["context_id"],
-                    status=TaskStatus(state=TaskState.completed), metadata=metadata,
+                    status=TaskStatus(state=task_state("completed")), metadata=metadata,
                     artifacts=[Artifact(artifact_id=sha256,
-                                        parts=[Part(root=DataPart(data=artifact))])])
+                                        parts=[data_part(artifact)])])
 
     def effects(self) -> dict:
         with self.connect() as db:
@@ -223,7 +226,7 @@ class Ledger:
                 "total": len(actions)}
 
 
-class LedgerTaskStore(TaskStore):
+class LedgerTaskStore(ProjectionTaskStore):
     def __init__(self, ledger: Ledger):
         self.ledger = ledger
 
@@ -234,9 +237,6 @@ class LedgerTaskStore(TaskStore):
         if self.ledger.task(task.id) is None:
             raise Rejected("task has no committed action")
 
-    async def delete(self, task_id, context=None):
-        raise NotImplementedError("task deletion is outside this contract")
-
 
 class Executor(AgentExecutor):
     def __init__(self, ledger: Ledger, store: LedgerTaskStore):
@@ -244,8 +244,8 @@ class Executor(AgentExecutor):
         self.store = store
 
     async def execute(self, context, event_queue):
-        command = checked_command(next(part.root.data for part in context.message.parts
-                                       if isinstance(part.root, DataPart)))
+        command = checked_command(next(part_data(part) for part in context.message.parts
+                                       if part_content(part) == "data"))
         task_id, drop = self.ledger.accept(command, context.task_id, context.context_id)
         if drop:
             # The SQLite transaction has committed with FULL sync. The client
@@ -254,12 +254,12 @@ class Executor(AgentExecutor):
         await event_queue.enqueue_event(await self.store.get(task_id))
 
     async def cancel(self, context, event_queue):
-        raise ServerError(error=InvalidParamsError(message="action cannot be cancelled"))
+        raise InvalidParamsError(message="action cannot be cancelled")
 
 
-class Handler(DefaultRequestHandler):
-    def __init__(self, ledger: Ledger, store: LedgerTaskStore):
-        super().__init__(Executor(ledger, store), store)
+class Handler(LegacyRequestHandler):
+    def __init__(self, ledger: Ledger, store: LedgerTaskStore, card: AgentCard):
+        super().__init__(Executor(ledger, store), store, card)
         self.ledger = ledger
         self._send_lock = asyncio.Lock()
 
@@ -279,13 +279,13 @@ class Handler(DefaultRequestHandler):
                     # The mapping and effect are already committed with FULL sync.
                     os._exit(23)
                 return Task(id=task_id, context_id=context_id,
-                            status=TaskStatus(state=TaskState.working),
+                            status=TaskStatus(state=task_state("working")),
                             metadata={"action_id": command["action_id"],
                                       "run_id": command["run_id"],
                                       "definition_digest": command["definition_digest"],
                                       "agent_identity": self.ledger.identity})
         except Rejected as error:
-            raise ServerError(error=InvalidParamsError(message=str(error))) from error
+            raise InvalidParamsError(message=str(error)) from error
 
 
 def create_app(state: Path, port: int, *, delay_seconds: float = 15,
@@ -301,16 +301,15 @@ def create_app(state: Path, port: int, *, delay_seconds: float = 15,
                                        "contract_digest": CONTRACT_DIGEST})
     card = AgentCard(
         name="Delayed counter evidence", description="Independent delayed A2A fixture",
-        url=f"http://127.0.0.1:{port}/", version="1.0.0", protocol_version="0.3.0",
+        supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="1.0.0",
         default_input_modes=["application/json"], default_output_modes=["application/json"],
         capabilities=AgentCapabilities(streaming=False, extensions=[extension]),
         skills=[AgentSkill(id="counter_evidence@1", name="Counter evidence",
                            description="Deterministic counter evidence from a brief",
                            tags=["counter-evidence"])],
-        security_schemes={"fixtureBearer": {"type": "http", "scheme": "bearer"}},
-        security=[{"fixtureBearer": []}],
+        **bearer_security(),
     )
-    app = A2AFastAPIApplication(card, Handler(ledger, LedgerTaskStore(ledger))).build()
+    app = build_app(card, Handler(ledger, LedgerTaskStore(ledger), card))
 
     @app.middleware("http")
     async def fixture_auth(request: Request, call_next):
@@ -323,7 +322,7 @@ def create_app(state: Path, port: int, *, delay_seconds: float = 15,
     @app.get("/health")
     def health():
         return {"identity": ledger.identity, "incarnation": ledger.incarnation,
-                "role": "capability", "a2a_protocol": "0.3.0"}
+                "role": "capability", "a2a_protocol": a2a_v1.PROTOCOL_VERSION}
 
     @app.get("/contract")
     def contract():

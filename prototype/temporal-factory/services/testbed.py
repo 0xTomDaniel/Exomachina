@@ -93,12 +93,12 @@ def contract_records() -> dict[str, dict]:
     for name in SERVICE_NAMES:
         role = role_for(name)
         if role == "capability":
-            input_contract = {"transport": "a2a-message/send", "operation": "assign",
+            input_contract = {"transport": "a2a-SendMessage", "operation": "assign",
                               "fields": ["action_id", "run_id", "definition_digest", "brief"]}
             output_contract = {"artifact": ["revision", "sha256", "author", "content"]}
             lookup = "/fixture/actions/{id}"
         elif role == "quality":
-            input_contract = {"transport": "a2a-message/send", "operation": "review",
+            input_contract = {"transport": "a2a-SendMessage", "operation": "review",
                               "fields": ["action_id", "run_id", "definition_digest", "artifact"]}
             output_contract = {"verdict": ["accepted", "revision", "sha256", "reviewer", "reason"]}
             lookup = "/fixture/actions/{id}"
@@ -112,7 +112,7 @@ def contract_records() -> dict[str, dict]:
             lookup = "/receipts/{id}"
         contracts[name] = {
             "name": name, "role": role, "capability": CAPABILITIES[name],
-            "a2a_protocol": "0.3.0", "input": input_contract, "output": output_contract,
+            "a2a_protocol": "1.0", "input": input_contract, "output": output_contract,
             "operations": {"idempotent_action_id": True, "lookup": lookup},
             "attested": False,
         }
@@ -249,8 +249,8 @@ def up(home: Path, port_base: int, *, delayed_agent: bool = False,
         contracts["counter_beta"].update(delayed_pin)
         contracts["counter_beta"]["operations"] = {
             "idempotent_action_id": delayed_pin["reconcile"] == "a2a-idempotent-resend",
-            "task_lookup": "tasks/get"}
-        contracts["counter_beta"]["input"]["blocking"] = False
+            "task_lookup": "GetTask"}
+        contracts["counter_beta"]["input"]["returnImmediately"] = True
         contracts["counter_beta"]["attested"] = True
     write_metadata(home, bindings, pids, contracts, snapshot=profile == "report" or delayed_agent,
                    quality_policy=REPORT_QUALITY_POLICY if profile == "report" else None)

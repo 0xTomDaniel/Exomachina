@@ -15,13 +15,8 @@ from uuid import uuid4
 
 import uvicorn
 from a2a.server.agent_execution import AgentExecutor
-from a2a.server.apps import A2AFastAPIApplication
-from a2a.server.request_handlers import DefaultRequestHandler
-from a2a.server.tasks import TaskStore
 from a2a.types import (AgentCapabilities, AgentCard, AgentExtension, AgentSkill,
-                       Artifact, DataPart, InvalidParamsError, Message, Part, Task,
-                       TaskState, TaskStatus, TextPart)
-from a2a.utils.errors import ServerError
+                       Artifact, InvalidParamsError, Task, TaskStatus)
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from strands import Agent
@@ -33,6 +28,11 @@ from model_broker import (DEFAULT_MODEL_ID, ModelBroker, ModelUsageJournal, PiBr
                           DEFAULT_REASONING_EFFORT, unavailable_usage)  # noqa: E402
 from admission import AdmissionQueue  # noqa: E402
 from agent_roles import ROLES  # noqa: E402
+import a2a_v1  # noqa: E402
+from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E402
+                           agent_message, bearer_security, build_app, card_pin_projection,
+                           data_part, interfaces, part_content, part_data, task_state,
+                           text_part)
 
 
 TOKEN = "Bearer fixture-token"
@@ -53,14 +53,17 @@ def digest(value: object) -> str:
 
 def contract_for(capability: str) -> dict:
     return {
-        "name": CONTRACT_NAME, "protocol": "a2a/0.3.0", "capability": capability,
-        "request": {"method": "message/send", "blocking": False,
+        "name": CONTRACT_NAME, "protocol": a2a_v1.PROTOCOL, "capability": capability,
+        "request": {"method": a2a_v1.SEND_MESSAGE, "returnImmediately": True,
                     "data": {"op": "assign", "fields": ["action_id", "run_id",
                                                         "definition_digest", "brief"],
                              "optional_fields": ["assignment_id", "attempt_id", "factory_id"]}},
-        "response": {"kind": "task", "initial_states": ["submitted", "working"],
+        "response": {"result": "task",
+                     "initial_states": [a2a_v1.wire_state("submitted"),
+                                        a2a_v1.wire_state("working")],
                      "metadata": ["action_id", "run_id", "definition_digest", "agent_identity"]},
-        "completion": {"method": "tasks/get", "state": "completed", "artifact_count": 1,
+        "completion": {"method": a2a_v1.GET_TASK, "state": a2a_v1.wire_state("completed"),
+                       "artifact_count": 1,
                        "data": ["revision", "sha256", "author", "content", "action_id",
                                 "run_id", "definition_digest"]},
         "idempotency": {"key": "action_id", "same_payload": "original_task_id",
@@ -160,12 +163,12 @@ class ReadOnlyUsageJournal(ModelUsageJournal):
 
 
 def command_from_params(params) -> tuple[dict, dict]:
-    if not params.configuration or params.configuration.blocking is not False:
-        raise Rejected("configuration.blocking must be false")
+    if not params.HasField("configuration") or params.configuration.return_immediately is not True:
+        raise Rejected("configuration.returnImmediately must be true")
     parts = params.message.parts
-    if len(parts) != 1 or not isinstance(parts[0].root, DataPart):
-        raise Rejected("exactly one DataPart required")
-    command = parts[0].root.data
+    if len(parts) != 1 or part_content(parts[0]) != "data":
+        raise Rejected("exactly one data Part required")
+    command = part_data(parts[0])
     required = {"op", "action_id", "run_id", "definition_digest", "brief"}
     optional = {"assignment_id", "attempt_id", "factory_id"}
     if (not isinstance(command, dict) or not required.issubset(command) or
@@ -319,13 +322,13 @@ class Ledger:
         artifact = json.loads(row["artifact"]) if row["artifact"] else None
         status_message = None
         if row["state"] == "failed":
-            status_message = Message(message_id=str(uuid4()), role="agent",
-                                     parts=[Part(root=TextPart(text=FAILURE_TEXT))])
+            status_message = agent_message([text_part(FAILURE_TEXT)])
+        # The ledger keeps version-neutral state names; map them at the boundary.
         return Task(id=task_id, context_id=row["context_id"],
-                    status=TaskStatus(state=TaskState(row["state"]), message=status_message),
+                    status=TaskStatus(state=task_state(row["state"]), message=status_message),
                     metadata=metadata,
                     artifacts=[Artifact(artifact_id=artifact["sha256"],
-                                        parts=[Part(root=DataPart(data=artifact))])]
+                                        parts=[data_part(artifact)])]
                     if artifact else None)
 
     def finish(self, task_id: str, artifact: dict | None, stimulus: dict | None = None,
@@ -947,7 +950,7 @@ class ReadOnlyUsageService:
         raise Rejected("read-only usage owner cannot schedule Tasks")
 
 
-class LedgerTaskStore(TaskStore):
+class LedgerTaskStore(ProjectionTaskStore):
     def __init__(self, ledger: Ledger):
         self.ledger = ledger
 
@@ -958,27 +961,24 @@ class LedgerTaskStore(TaskStore):
         if not self.ledger.task(task.id):
             raise Rejected("task has no committed action")
 
-    async def delete(self, task_id, context=None):
-        raise NotImplementedError("task deletion is outside this contract")
-
 
 class Executor(AgentExecutor):
     async def execute(self, context, event_queue):
         raise NotImplementedError("nonblocking sends are handled by Handler")
 
     async def cancel(self, context, event_queue):
-        raise ServerError(error=InvalidParamsError(message="action cannot be cancelled"))
+        raise InvalidParamsError(message="action cannot be cancelled")
 
 
-class Handler(DefaultRequestHandler):
-    def __init__(self, service: Service | ReadOnlyUsageService):
-        super().__init__(Executor(), LedgerTaskStore(service.ledger))
+class Handler(LegacyRequestHandler):
+    def __init__(self, service: Service | ReadOnlyUsageService, card: AgentCard):
+        super().__init__(Executor(), LedgerTaskStore(service.ledger), card)
         self.service = service
         self.send_lock = asyncio.Lock()
 
     async def on_message_send(self, params, context=None):
         if getattr(self.service, "read_only_usage", False):
-            raise ServerError(error=InvalidParamsError(message="read-only usage owner"))
+            raise InvalidParamsError(message="read-only usage owner")
         try:
             command, _ = command_from_params(params)
             if (self.service.admission_queue is not None
@@ -993,11 +993,11 @@ class Handler(DefaultRequestHandler):
                     self.service.schedule(task_id)
                 return self.service.ledger.task(task_id)
         except Rejected as error:
-            raise ServerError(error=InvalidParamsError(message=str(error))) from error
+            raise InvalidParamsError(message=str(error)) from error
 
 
 class ReadOnlyUsageMiddleware:
-    """Permit safe owner reads and tasks/get while returning HTTP 503 for writes."""
+    """Permit safe owner reads and GetTask while returning HTTP 503 for writes."""
 
     PUBLIC_GET = {"/health", "/.well-known/agent-card.json"}
     PRIVATE_GET = {"/contract", "/usage/measurements"}
@@ -1042,7 +1042,7 @@ class ReadOnlyUsageMiddleware:
                 request = json.loads(body)
             except (UnicodeDecodeError, json.JSONDecodeError):
                 request = None
-            if (not isinstance(request, dict) or request.get("method") != "tasks/get"
+            if (not isinstance(request, dict) or request.get("method") != a2a_v1.GET_TASK
                     or len(body) > 1_048_576):
                 response = JSONResponse({"error": "read-only usage owner"}, status_code=503)
                 await response(scope, receive, send)
@@ -1071,20 +1071,17 @@ def agent_card(role: str, capability: str, port: int, identity: str,
                                params={"identity": identity, "contract": contract["name"],
                                        "contract_digest": digest(contract)})
     return AgentCard(name=f"{role.title()} report agent", description="Independent report agent",
-        url=f"http://127.0.0.1:{port}/", version="1.0.0", protocol_version="0.3.0",
+        supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="1.0.0",
         default_input_modes=["application/json"], default_output_modes=["application/json"],
         capabilities=AgentCapabilities(streaming=False, extensions=[extension]),
         skills=[AgentSkill(id=capability, name=capability, description=f"{role} report work",
                            tags=[role])],
-        security_schemes={"fixtureBearer": {"type": "http", "scheme": "bearer"}},
-        security=[{"fixtureBearer": []}])
+        **bearer_security())
 
 
 def agent_card_digest(card: AgentCard) -> str:
-    """Hash exactly the URL-less public AgentCard projection used by bindings."""
-    value = card.model_dump(exclude_none=True, by_alias=True)
-    value.pop("url", None)
-    return digest(value)
+    """Hash exactly the endpoint-free public AgentCard projection used by bindings."""
+    return digest(card_pin_projection(card))
 
 
 def create_app(state: Path, port: int, *, role: str, capability: str,
@@ -1127,7 +1124,7 @@ def create_app(state: Path, port: int, *, role: str, capability: str,
     card = agent_card(role, capability, port, service.ledger.identity, contract)
     if read_only_usage and agent_card_digest(card) != service.descriptor["card_sha256"]:
         raise ValueError("existing owner identity does not match the pinned AgentCard")
-    app = A2AFastAPIApplication(card, Handler(service)).build()
+    app = build_app(card, Handler(service, card))
     app.state.model_agent_service = service
 
     if not read_only_usage:
@@ -1171,7 +1168,7 @@ def create_app(state: Path, port: int, *, role: str, capability: str,
             reasoning_effort = DEFAULT_REASONING_EFFORT
         response = {"identity": service.ledger.identity, "incarnation": service.ledger.incarnation,
                     "role": "quality" if role == "quality" else "capability",
-                    "capability": capability, "a2a_protocol": "0.3.0",
+                    "capability": capability, "a2a_protocol": a2a_v1.PROTOCOL_VERSION,
                     "provider": provider, "model_id": model_id,
                     "reasoning_effort": reasoning_effort,
                     "inference_enabled": inference_enabled,

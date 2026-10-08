@@ -1,7 +1,7 @@
 """Pure bounded A2A outcome transitions plus a durable local decision journal.
 
 The caller records dispatch intent before network I/O. After an uncertain
-message/send, no transition authorizes a second submission. Participating
+SendMessage, no transition authorizes a second submission. Participating
 receivers may provide caller-action-ID lookup; opaque receivers cannot.
 """
 from __future__ import annotations
