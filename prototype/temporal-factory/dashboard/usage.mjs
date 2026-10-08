@@ -11,6 +11,9 @@ const MEASUREMENT_KEYS = new Set([
   "reasoning_effort", "unit", "measurement_source", "completeness", "evidence_status", "usage",
   "service_identity", "task_id", "message_id", "run_id", "definition_digest", "assignment_id", "attempt_id",
 ]);
+// The factory cannot see an agent's model, provider, or individual model calls;
+// those stay visible only for the factory's own Director and authoring calls.
+const AGENT_HIDDEN_KEYS = ["provider", "model_id", "model_call_id", "reasoning_effort"];
 const COVERAGE_STATUSES = new Set(["partial", "unavailable"]);
 const COVERAGE_MAIN_KEYS_LEGACY = ["status", "factory_id", "scoped_run_count", "bound_sources_status", "authoring_bound", "authoring_unbound", "pinned_services", "director", "commercial_costs"];
 const COVERAGE_MAIN_KEYS = [...COVERAGE_MAIN_KEYS_LEGACY, "director_unbound"];
@@ -56,11 +59,16 @@ function validateTime(value, path) {
 function validateMeasurement(row, index) {
   const path = `$measurements[${index}]`;
   plainRecord(row, path);
-  exactKeys(row, MEASUREMENT_KEYS, path, ["measurement_id", "model_call_id", "recorded_at", "call_scope", "provider", "model_id", "unit", "measurement_source", "completeness", "evidence_status", "usage"]);
-  for (const key of ["measurement_id", "model_call_id"]) safeId(row[key], `${path}.${key}`);
+  // An already-projected agent row (see measurementView) carries the label instead of model identity.
+  const agentView = Object.hasOwn(row, "usage_label");
+  if (agentView && (row.usage_label !== "agent-reported" || row.evidence_status !== "agent_reported")) fail("usage_label is only the agent-reported label", `${path}.usage_label`);
+  const hidden = agentView ? new Set(AGENT_HIDDEN_KEYS) : new Set();
+  const required = ["measurement_id", "model_call_id", "recorded_at", "call_scope", "provider", "model_id", "unit", "measurement_source", "completeness", "evidence_status", "usage"].filter(key => !hidden.has(key));
+  exactKeys(row, agentView ? [...[...MEASUREMENT_KEYS].filter(key => !hidden.has(key)), "usage_label"] : MEASUREMENT_KEYS, path, required);
+  for (const key of ["measurement_id", "model_call_id"].filter(key => !hidden.has(key))) safeId(row[key], `${path}.${key}`);
   validateTime(row.recorded_at, `${path}.recorded_at`);
   if (!CALL_SCOPES.has(row.call_scope)) fail("unsupported call_scope", `${path}.call_scope`);
-  for (const key of ["provider", "model_id", "unit"]) if (typeof row[key] !== "string" || !SAFE_LABEL.test(row[key])) fail("invalid safe label", `${path}.${key}`);
+  for (const key of ["provider", "model_id", "unit"].filter(key => !hidden.has(key))) if (typeof row[key] !== "string" || !SAFE_LABEL.test(row[key])) fail("invalid safe label", `${path}.${key}`);
   if (row.unit !== "tokens") fail("only token measurements are supported", `${path}.unit`);
   if (row.reasoning_effort != null && (typeof row.reasoning_effort !== "string" || !SAFE_LABEL.test(row.reasoning_effort))) fail("invalid reasoning_effort", `${path}.reasoning_effort`);
   for (const key of ["service_identity", "task_id", "message_id", "run_id", "assignment_id", "attempt_id"]) {
@@ -162,6 +170,14 @@ function validateCoverage(coverage) {
   return structuredClone(coverage);
 }
 
+/** Agent rows are labelled agent-reported and carry no model, provider, or model-call identity. */
+function measurementView(row) {
+  if (row.evidence_status !== "agent_reported") return row;
+  const view = { ...row, usage_label: "agent-reported" };
+  for (const key of AGENT_HIDDEN_KEYS) delete view[key];
+  return view;
+}
+
 /** Validate the safe MeasurementView rows returned by Runtime /usage/measurements. */
 export function validateMeasurements(rows) {
   if (!Array.isArray(rows) || rows.length > 256) fail("expected a bounded measurement array", "$measurements");
@@ -172,7 +188,7 @@ export function validateMeasurements(rows) {
     if (previous && JSON.stringify(previous) !== JSON.stringify(row)) fail("measurement_id conflicts with an earlier fact", `$measurements[${index}].measurement_id`);
     if (!previous) byId.set(row.measurement_id, row);
   });
-  return [...byId.values()];
+  return [...byId.values()].map(measurementView);
 }
 
 /** Validate Runtime's envelope and its finite nested coverage metadata. */
