@@ -3,7 +3,8 @@ const DIGEST = /^[0-9a-f]{64}$/;
 const SAFE_LABEL = /^[A-Za-z0-9][A-Za-z0-9._:/@_+-]{0,127}$/;
 const CALL_SCOPES = new Set(["authoring_overhead", "director_call", "assignment_call"]);
 const COMPLETENESS = new Set(["complete", "partial", "unknown"]);
-const EVIDENCE = new Set(["provider_reported", "unknown"]);
+// agent_reported: an A2A agent's budget-extension report, recorded by the factory.
+const EVIDENCE = new Set(["provider_reported", "agent_reported", "unknown"]);
 const CATEGORY_NAMES = ["input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "total_tokens"];
 const MEASUREMENT_KEYS = new Set([
   "measurement_id", "model_call_id", "recorded_at", "call_scope", "provider", "model_id",
@@ -14,7 +15,7 @@ const COVERAGE_STATUSES = new Set(["partial", "unavailable"]);
 const COVERAGE_MAIN_KEYS_LEGACY = ["status", "factory_id", "scoped_run_count", "bound_sources_status", "authoring_bound", "authoring_unbound", "pinned_services", "director", "commercial_costs"];
 const COVERAGE_MAIN_KEYS = [...COVERAGE_MAIN_KEYS_LEGACY, "director_unbound"];
 const AUTHORING_BOUND_KEYS = ["status", "queries_failed", "rows_rejected", "conflicts"];
-const PINNED_SERVICE_OPTIONAL_COUNTERS = ["non_usage_service_count", "owner_resolution_failures", "request_failures"];
+const PINNED_SERVICE_COUNTERS = ["pinned_owner_count", "owner_resolution_failures", "queries_failed", "non_usage_service_count", "rows_rejected", "conflicts"];
 const AUTHORING_UNBOUND_REASON = "shared_model_home_factory_exclusivity_not_proven";
 const DIRECTOR_REASON = "no_public_list_measurements_accessor";
 
@@ -66,7 +67,7 @@ function validateMeasurement(row, index) {
     if (Object.hasOwn(row, key) && row[key] !== null) safeId(row[key], `${path}.${key}`);
   }
   if (Object.hasOwn(row, "definition_digest") && row.definition_digest !== null && (typeof row.definition_digest !== "string" || !DIGEST.test(row.definition_digest))) fail("invalid definition_digest", `${path}.definition_digest`);
-  if (!new Set(["provider_reported", "unknown"]).has(row.measurement_source)) fail("invalid measurement_source", `${path}.measurement_source`);
+  if (!EVIDENCE.has(row.measurement_source)) fail("invalid measurement_source", `${path}.measurement_source`);
   if (!COMPLETENESS.has(row.completeness)) fail("invalid completeness", `${path}.completeness`);
   if (!EVIDENCE.has(row.evidence_status)) fail("invalid evidence_status", `${path}.evidence_status`);
 
@@ -85,9 +86,11 @@ function validateMeasurement(row, index) {
     } else fail("status must be reported or unavailable", `${cellPath}.status`);
   }
   const completeness = reported === CATEGORY_NAMES.length ? "complete" : reported ? "partial" : "unknown";
-  const evidence = reported ? "provider_reported" : "unknown";
   if (row.completeness !== completeness) fail("does not match reported category coverage", `${path}.completeness`);
-  if (row.evidence_status !== evidence || row.measurement_source !== evidence) fail("does not match reported category evidence", `${path}.evidence_status`);
+  // Reported rows name who reported them; nothing reported is unknown, never zero.
+  const evidenceOk = reported ? row.evidence_status !== "unknown" : row.evidence_status === "unknown";
+  if (!evidenceOk || row.measurement_source !== row.evidence_status) fail("does not match reported category evidence", `${path}.evidence_status`);
+  if (row.evidence_status === "agent_reported" && row.call_scope !== "assignment_call") fail("agent-reported usage is assignment usage only", `${path}.evidence_status`);
   return structuredClone(row);
 }
 
@@ -132,11 +135,11 @@ function validateCoverage(coverage) {
   }
 
   const pinned = plainRecord(coverage.pinned_services, `${path}.pinned_services`);
-  const pinnedRequiredCounts = ["pinned_owner_count", "owners_responded", "owner_or_request_failures", "rows_rejected", "conflicts"];
-  exactKeys(pinned, ["status", "availability", "authentication", ...pinnedRequiredCounts, ...PINNED_SERVICE_OPTIONAL_COUNTERS], `${path}.pinned_services`, ["status", "availability", "authentication", ...pinnedRequiredCounts]);
-  if (pinned.status !== "fixture_only" || !["available", "partial"].includes(pinned.availability) || pinned.authentication !== "fixture_bearer_only") fail("invalid pinned service status", `${path}.pinned_services`);
-  validateCounts(pinned, pinnedRequiredCounts, `${path}.pinned_services`);
-  for (const key of PINNED_SERVICE_OPTIONAL_COUNTERS) if (Object.hasOwn(pinned, key)) boundedCount(pinned[key], `${path}.pinned_services.${key}`);
+  // Agent services are never polled: pinned-service usage is what the factory
+  // recorded from each agent Task's budget-extension report.
+  exactKeys(pinned, ["status", "availability", "source", ...PINNED_SERVICE_COUNTERS], `${path}.pinned_services`, ["status", "availability", "source", ...PINNED_SERVICE_COUNTERS]);
+  if (pinned.status !== "agent_reported" || !["available", "partial"].includes(pinned.availability) || pinned.source !== "factory_journal") fail("invalid pinned service status", `${path}.pinned_services`);
+  validateCounts(pinned, PINNED_SERVICE_COUNTERS, `${path}.pinned_services`);
 
   if (typeof coverage.director === "string") {
     if (coverage.director !== "unavailable_no_public_list_measurements_accessor") fail("invalid director status", `${path}.director`);

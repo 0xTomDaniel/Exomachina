@@ -51,9 +51,16 @@ class TestbedTests(unittest.TestCase):
             self.assertEqual(contract["role"], binding["role"])
             self.assertEqual(contract["a2a_protocol"], "1.0")
             self.assertIs(contract["attested"], False)
-            self.assertIs(contract["operations"]["idempotent_action_id"], True)
-            self.assertEqual(contract["operations"]["lookup"],
-                             "/receipts/{id}" if name == "release" else "/fixture/actions/{id}")
+            if name == "release":
+                self.assertEqual(contract["operations"],
+                                 {"idempotent_action_id": True, "lookup": "/receipts/{id}"})
+            else:
+                # Agent services: plain Message, messageId idempotency, GetTask.
+                self.assertEqual(contract["input"], {"transport": "a2a-SendMessage",
+                                                     "message": "text-brief"})
+                self.assertEqual(contract["operations"],
+                                 {"idempotent_message_id": True, "task_lookup": "GetTask"})
+                self.assertNotIn("/fixture/", json.dumps(contract))
 
     def test_template_materializes_and_validates_with_generated_bindings(self):
         template = json.loads((ROOT / "definitions" / "report-template.json").read_text())
@@ -97,8 +104,9 @@ class TestbedTests(unittest.TestCase):
             resolved_url, observation = resolve(directory / "agent_snapshot.json",
                                                  binding["identity"], contract)
             self.assertEqual(resolved_url, binding["url"])
-            self.assertEqual(observation["contract_document"]["capability"],
-                             REPORT_CAPABILITIES[name])
+            self.assertIn(REPORT_CAPABILITIES[name], observation["skills"])
+            self.assertEqual(set(contract), {"name", "role", "capability", "card_sha256",
+                                             "identity", "reconcile"})
 
 
 if __name__ == "__main__":

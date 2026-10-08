@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
-from agent_binding import pin
+from agent_binding import UnavailableBinding, card_observation, pin
 from agent_roles import RUBRIC_DIGEST
 from model_broker import DEFAULT_MODEL_ID
 SERVICE_NAMES = (
@@ -95,16 +95,15 @@ def contract_records() -> dict[str, dict]:
     contracts = {}
     for name in SERVICE_NAMES:
         role = role_for(name)
-        if role == "capability":
-            input_contract = {"transport": "a2a-SendMessage", "operation": "assign",
-                              "fields": ["action_id", "run_id", "definition_digest", "brief"]}
-            output_contract = {"artifact": ["revision", "sha256", "author", "content"]}
-            lookup = "/fixture/actions/{id}"
-        elif role == "quality":
-            input_contract = {"transport": "a2a-SendMessage", "operation": "review",
-                              "fields": ["action_id", "run_id", "definition_digest", "artifact"]}
-            output_contract = {"verdict": ["accepted", "revision", "sha256", "reviewer", "reason"]}
-            lookup = "/fixture/actions/{id}"
+        if role in {"capability", "quality"}:
+            # Agent services: a plain A2A Message carrying a text brief. The
+            # factory correlates by its own journal, never by agent echo.
+            input_contract = {"transport": "a2a-SendMessage", "message": "text-brief"}
+            output_contract = ({"artifact": ["revision", "sha256", "author", "content"]}
+                               if role == "capability" else
+                               {"verdict": ["accepted", "revision", "sha256", "reviewer",
+                                            "reason"]})
+            operations = {"idempotent_message_id": True, "task_lookup": "GetTask"}
         else:
             input_contract = {"transport": "http-post", "path": "/release",
                               "fields": ["release_id", "run_id", "definition_digest",
@@ -112,12 +111,11 @@ def contract_records() -> dict[str, dict]:
             output_contract = {"receipt": ["release_id", "run_id", "definition_digest",
                                            "revision", "sha256", "attempts",
                                            "accepted_effect_count"]}
-            lookup = "/receipts/{id}"
+            operations = {"idempotent_action_id": True, "lookup": "/receipts/{id}"}
         contracts[name] = {
             "name": name, "role": role, "capability": CAPABILITIES[name],
             "a2a_protocol": "1.0", "input": input_contract, "output": output_contract,
-            "operations": {"idempotent_action_id": True, "lookup": lookup},
-            "attested": False,
+            "operations": operations, "attested": False,
         }
     return contracts
 
@@ -147,13 +145,27 @@ def read_pids(home: Path) -> dict[str, dict]:
     return json.loads(path.read_text()) if path.exists() else {}
 
 
-def health_at(port: int) -> dict | None:
+def health_at(port: int, name: str | None = None) -> dict | None:
+    """Identity of the service on ``port``.
+
+    A2A agent services are observed only through their public Agent Card. The
+    HTTP release receiver is not an A2A agent and keeps its own health route.
+    """
+    if name == "release":
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=1) as response:
+                value = json.load(response)
+            return value if isinstance(value, dict) and isinstance(value.get("identity"), str) else None
+        except (OSError, ValueError, urllib.error.URLError):
+            return None
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=1) as response:
-            value = json.load(response)
-        return value if isinstance(value, dict) and isinstance(value.get("identity"), str) else None
-    except (OSError, ValueError, urllib.error.URLError):
+        observed = card_observation(f"http://127.0.0.1:{port}")
+    except (OSError, ValueError, UnavailableBinding, urllib.error.URLError):
         return None
+    if not isinstance(observed.get("identity"), str) or not observed["identity"]:
+        return None
+    return {"identity": observed["identity"], "skills": observed["skills"],
+            "card_sha256": observed["card_sha256"]}
 
 
 def alive(pid: int) -> bool:
@@ -166,14 +178,15 @@ def alive(pid: int) -> bool:
 
 def command_for(name: str, state: Path, port: int, *, delayed_agent: bool = False,
                 delay_seconds: float = 15, profile: str = "legacy",
-                model_provider: str = "scripted", model: str = DEFAULT_MODEL_ID) -> list[str]:
+                model_provider: str = "scripted", model: str = DEFAULT_MODEL_ID,
+                test_controls: bool = False) -> list[str]:
     if profile == "report" and name != "release":
         role = "research" if name.startswith("research_") else "synthesis" if name == "synthesizer" else "quality"
         return [sys.executable, "-B", str(ROOT / "services" / "model_agent.py"),
                 "--role", role, "--capability", REPORT_CAPABILITIES[name],
                 "--state", str(state), "--port", str(port),
                 "--model-provider", model_provider, "--model", model,
-                *(["--test-controls"] if name == "synthesizer" else [])]
+                *(["--test-controls"] if test_controls and name == "synthesizer" else [])]
     if name == "counter_beta" and delayed_agent:
         return [sys.executable, "-B", str(ROOT / "services" / "delayed_agent.py"),
                 "--state", str(state), "--port", str(port),
@@ -192,7 +205,8 @@ def command_for(name: str, state: Path, port: int, *, delayed_agent: bool = Fals
 
 def up(home: Path, port_base: int, *, delayed_agent: bool = False,
        delay_seconds: float = 15, profile: str = "report",
-       model_provider: str = "scripted", model: str = DEFAULT_MODEL_ID) -> dict:
+       model_provider: str = "scripted", model: str = DEFAULT_MODEL_ID,
+       test_controls: bool = False) -> dict:
     if delayed_agent:
         profile = "legacy"
     if profile not in {"report", "legacy"}:
@@ -203,7 +217,7 @@ def up(home: Path, port_base: int, *, delayed_agent: bool = False,
     for index, name in enumerate(names):
         port = port_base + index
         prior = pids.get(name)
-        observed = health_at(port)
+        observed = health_at(port, name)
         if observed is not None:
             if (not prior or prior.get("port") != port or not alive(prior["pid"])
                     or prior.get("identity") != observed.get("identity")):
@@ -216,12 +230,13 @@ def up(home: Path, port_base: int, *, delayed_agent: bool = False,
             with (state / "service.log").open("a") as log:
                 process = subprocess.Popen(command_for(name, state, port,
                     delayed_agent=delayed_agent, delay_seconds=delay_seconds,
-                    profile=profile, model_provider=model_provider, model=model), stdout=log, stderr=log,
+                    profile=profile, model_provider=model_provider, model=model,
+                    test_controls=test_controls), stdout=log, stderr=log,
                                            start_new_session=True)
                 _CHILDREN[process.pid] = process
             deadline = time.monotonic() + 30
             while time.monotonic() < deadline:
-                observed = health_at(port)
+                observed = health_at(port, name)
                 if observed is not None:
                     break
                 if process.poll() is not None:
@@ -236,26 +251,28 @@ def up(home: Path, port_base: int, *, delayed_agent: bool = False,
             directory = home / "testbed"
             directory.mkdir(parents=True, exist_ok=True)
             (directory / "pids.json").write_text(json.dumps(pids, indent=2, sort_keys=True) + "\n")
-        if not (name == "counter_beta" and delayed_agent) and observed.get("role", observed.get("mode")) != (
-            "participating" if name == "release" else
-            report_role(name) if profile == "report" else role_for(name)
-        ):
+        if name == "release" and observed.get("mode") != "participating":
             raise RuntimeError(f"{name}: health role mismatch")
+        if (profile == "report" and name != "release"
+                and REPORT_CAPABILITIES[name] not in observed.get("skills", [])):
+            raise RuntimeError(f"{name}: Agent Card skill mismatch")
         health[name] = observed
     bindings = report_bindings(health, port_base) if profile == "report" else binding_records(health, port_base)
     contracts = report_contracts(bindings) if profile == "report" else contract_records()
-    if delayed_agent:
-        for value in contracts.values():
-            value["reconcile"] = "fixture-lookup"
-        delayed = bindings["counter_beta"]
-        delayed_pin = pin(delayed["url"], delayed["identity"])
-        contracts["counter_beta"].update(delayed_pin)
-        contracts["counter_beta"]["operations"] = {
-            "idempotent_action_id": delayed_pin["reconcile"] == "a2a-idempotent-resend",
-            "task_lookup": "GetTask"}
-        contracts["counter_beta"]["input"]["returnImmediately"] = True
-        contracts["counter_beta"]["attested"] = True
-    write_metadata(home, bindings, pids, contracts, snapshot=profile == "report" or delayed_agent,
+    if profile == "legacy":
+        # Every A2A agent is pinned by its Agent Card; reconciliation follows
+        # the card's declared messageId resend rule.
+        for name, value in contracts.items():
+            if value["role"] == "release":
+                continue
+            agent_pin = pin(bindings[name]["url"], bindings[name]["identity"])
+            value.update(agent_pin)
+            value["operations"]["idempotent_message_id"] = (
+                agent_pin["reconcile"] == "a2a-idempotent-resend")
+            value["attested"] = True
+        if delayed_agent:
+            contracts["counter_beta"]["input"]["returnImmediately"] = True
+    write_metadata(home, bindings, pids, contracts, snapshot=True,
                    quality_policy=REPORT_QUALITY_POLICY if profile == "report" else None)
     return {"bindings": bindings, "health": health, "pids": pids}
 
@@ -269,7 +286,7 @@ def down(home: Path) -> dict:
             result[name] = "unrecorded"
             continue
         pid = record["pid"]
-        observed = health_at(record["port"])
+        observed = health_at(record["port"], name)
         if observed is not None and observed.get("identity") != record["identity"]:
             result[name] = "identity-mismatch"
             continue
@@ -278,12 +295,12 @@ def down(home: Path) -> dict:
             continue
         os.kill(pid, signal.SIGTERM)
         deadline = time.monotonic() + 15
-        while time.monotonic() < deadline and health_at(record["port"]) is not None:
+        while time.monotonic() < deadline and health_at(record["port"], name) is not None:
             time.sleep(0.2)
         child = _CHILDREN.pop(pid, None)
         if child is not None:
             child.wait(timeout=5)
-        result[name] = "stopped" if health_at(record["port"]) is None else "timeout"
+        result[name] = "stopped" if health_at(record["port"], name) is None else "timeout"
     return result
 
 
@@ -292,7 +309,7 @@ def status(home: Path, port_base: int, *, profile: str = "report") -> dict:
     services = {}
     for index, name in enumerate(REPORT_NAMES if profile == "report" else SERVICE_NAMES):
         port = port_base + index
-        observed = health_at(port)
+        observed = health_at(port, name)
         record = pids.get(name)
         services[name] = {
             "port": port, "pid": record.get("pid") if record else None,
@@ -314,11 +331,14 @@ def main() -> None:
     parser.add_argument("--model", default=DEFAULT_MODEL_ID)
     parser.add_argument("--delayed-agent", action="store_true")
     parser.add_argument("--delay-seconds", type=float, default=15)
+    parser.add_argument("--test-controls", action="store_true",
+                        help="qualification only: declare the synthesizer's test-only stimulus extension")
     args = parser.parse_args()
     if args.command == "up":
         value = up(args.home, args.port_base, delayed_agent=args.delayed_agent,
                    delay_seconds=args.delay_seconds, profile=args.profile,
-                   model_provider=args.model_provider, model=args.model)
+                   model_provider=args.model_provider, model=args.model,
+                   test_controls=args.test_controls)
     elif args.command == "down":
         value = down(args.home)
     else:

@@ -47,6 +47,23 @@ def unavailable_usage() -> dict[str, dict[str, int | str | None]]:
     return normalize_provider_usage(None)
 
 
+# The factory's journal of agent-reported usage, beside its outcome journal.
+AGENT_USAGE_DATABASE = "agent-usage.sqlite3"
+AGENT_TOKEN_CATEGORIES = {"input": "input_tokens", "output": "output_tokens",
+                          "cache_read": "cache_read_tokens",
+                          "cache_write": "cache_write_tokens", "total": "total_tokens"}
+MEASUREMENT_SOURCES = {"provider": "provider_reported", "agent": "agent_reported"}
+
+
+def normalize_agent_tokens(tokens: object) -> dict[str, dict[str, int | str | None]]:
+    """Map an A2A budget-extension ``incurred.tokens`` report; absent stays unavailable."""
+    values = tokens if isinstance(tokens, Mapping) else {}
+    return normalize_provider_usage({source: values.get(field)
+                                     for field, category in AGENT_TOKEN_CATEGORIES.items()
+                                     for source, target in PROVIDER_CATEGORIES.items()
+                                     if target == category})
+
+
 def _canonical(value: object) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
@@ -195,8 +212,16 @@ class ModelUsageJournal:
                call_scope: str | None = None, assignment_id: str | None = None,
                attempt_id: str | None = None,
                action_id: str | None = None, message_id: str | None = None,
-               run_id: str | None = None, definition_digest: str | None = None) -> dict[str, Any]:
-        """Persist one safe measurement; recorded_at is always assigned locally."""
+               run_id: str | None = None, definition_digest: str | None = None,
+               source: str = "provider") -> dict[str, Any]:
+        """Persist one safe measurement; recorded_at is always assigned locally.
+
+        ``source="agent"`` marks a factory-recorded A2A budget-extension report
+        from an agent service (``agent_reported``) rather than a report this
+        process received from its own model provider.
+        """
+        if source not in MEASUREMENT_SOURCES:
+            raise ValueError("unsupported measurement source")
         identity = _required_text(model_call_id, "model_call_id")
         safe_action_id = _optional_text(action_id, "action_id")
         safe_message_id = _optional_text(message_id, "message_id")
@@ -228,10 +253,13 @@ class ModelUsageJournal:
             "reasoning_effort": _optional_text(reasoning_effort, "reasoning_effort"),
             "usage": self._validate_categories(usage),
         }
+        if source != "provider":
+            # Provider rows keep their original fingerprint shape.
+            fields["source"] = source
         reported = sum(item["status"] == "reported" for item in fields["usage"].values())
         completeness = "complete" if reported == len(PUBLIC_CATEGORIES) else (
             "partial" if reported else "unknown")
-        evidence_status = "provider_reported" if reported else "unknown"
+        evidence_status = MEASUREMENT_SOURCES[source] if reported else "unknown"
         measurement_source = evidence_status
         fingerprint = _digest(fields)
         measurement_id = "mu-" + _digest(identity)[:28]

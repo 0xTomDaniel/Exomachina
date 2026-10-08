@@ -12,6 +12,7 @@ from dataclasses import asdict, dataclass, replace
 from enum import StrEnum
 from pathlib import Path
 from typing import Any, Mapping
+from uuid import uuid4
 
 
 class ReceiverKind(StrEnum):
@@ -55,6 +56,10 @@ class OutcomeRecord:
     pinned_identity: str | None = None
     sequence: int = 0
     expected_phase: Phase | None = None
+    # Factory-side A2A correlation (decision 7): the agent never sees the
+    # factory's IDs; the factory maps its action to these wire identities.
+    message_id: str | None = None
+    context_id: str | None = None
 
     @property
     def may_submit(self) -> bool:
@@ -66,7 +71,8 @@ def submitted(action_id: str, run_id: str, definition_digest: str,
               receiver: ReceiverKind, *, effect_kind: EffectKind = EffectKind.A2A,
               revision: str | None = None, sha256: str | None = None,
               lookup_limit: int = 3, payload_sha256: str | None = None,
-              pinned_identity: str | None = None) -> OutcomeRecord:
+              pinned_identity: str | None = None, message_id: str | None = None,
+              context_id: str | None = None) -> OutcomeRecord:
     if not all(isinstance(x, str) and x for x in (action_id, run_id, definition_digest)):
         raise ValueError("missing A2A action binding")
     if type(lookup_limit) is not int or lookup_limit < 1:
@@ -79,7 +85,8 @@ def submitted(action_id: str, run_id: str, definition_digest: str,
     return OutcomeRecord(action_id, run_id, definition_digest, receiver,
                          effect_kind=effect_kind, revision=revision, sha256=sha256,
                          lookup_limit=lookup_limit, payload_sha256=payload_sha256,
-                         pinned_identity=pinned_identity)
+                         pinned_identity=pinned_identity, message_id=message_id,
+                         context_id=context_id)
 
 
 def task_started(record: OutcomeRecord, task_id: str) -> OutcomeRecord:
@@ -169,7 +176,21 @@ class OutcomeJournal:
         self.connection.execute("PRAGMA synchronous=FULL")
         self.connection.execute("CREATE TABLE IF NOT EXISTS outcomes "
                                 "(action_id TEXT PRIMARY KEY, value TEXT NOT NULL)")
+        self.connection.execute("CREATE TABLE IF NOT EXISTS a2a_contexts "
+                                "(run_id TEXT NOT NULL, identity TEXT NOT NULL, "
+                                "context_id TEXT NOT NULL UNIQUE, PRIMARY KEY(run_id, identity))")
         self.connection.commit()
+
+    def context_for(self, run_id: str, identity: str) -> str:
+        """One opaque A2A contextId per run and agent, journaled before first use."""
+        if not all(isinstance(x, str) and x for x in (run_id, identity)):
+            raise ValueError("context binding requires run and agent identity")
+        with self.connection:
+            self.connection.execute("INSERT OR IGNORE INTO a2a_contexts VALUES (?, ?, ?)",
+                                    (run_id, identity, str(uuid4())))
+        return self.connection.execute(
+            "SELECT context_id FROM a2a_contexts WHERE run_id=? AND identity=?",
+            (run_id, identity)).fetchone()[0]
 
     def close(self) -> None:
         self.connection.close()

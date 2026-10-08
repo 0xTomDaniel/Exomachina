@@ -215,9 +215,8 @@ class UsageAggregateRouteTests(unittest.TestCase):
                 patch.object(harness, "_director_measurements",
                              return_value=([pre_run], report)),
                 patch.object(harness, "_pinned_service_measurements", return_value=([], {
-                    "pinned_owner_count": 0, "owners_responded": 0,
-                    "owner_resolution_failures": 0, "request_failures": 0,
-                    "owner_or_request_failures": 0, "non_usage_service_count": 0,
+                    "pinned_owner_count": 0, "owner_resolution_failures": 0,
+                    "queries_failed": 0, "non_usage_service_count": 0,
                     "rows_rejected": 0, "conflicts": 0})),
             )
             with ExitStack() as stack:

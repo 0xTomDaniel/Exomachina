@@ -1,4 +1,9 @@
-"""Static identity snapshot and Agent Card pin for the async A2A contract."""
+"""Static identity snapshot and Agent Card pin for factory-side A2A clients.
+
+Agent Card discovery at the well-known path is the only read an A2A client
+makes outside JSON-RPC. The pin is the digest of the endpoint-free card plus
+the agent's self-declared identity and resend rule (``a2a_extensions.AGENT_URI``).
+"""
 from __future__ import annotations
 
 import hashlib
@@ -7,11 +12,11 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+import a2a_extensions
 import a2a_v1
 
 
-EXTENSION_URI = "urn:exomachina:a2a-action-contract:v1"
-CONTRACT = "action-idempotent-async@1"
+EXTENSION_URI = a2a_extensions.AGENT_URI
 
 
 class UnavailableBinding(Exception):
@@ -27,12 +32,12 @@ def digest(value: object) -> str:
 
 
 def read_json(url: str) -> dict:
-    request = urllib.request.Request(url, headers={"Authorization": "Bearer fixture-token"})
+    request = urllib.request.Request(url)
     try:
         with urllib.request.urlopen(request, timeout=5) as response:
             value = json.load(response)
     except urllib.error.HTTPError as error:
-        raise ValueError(f"agent metadata HTTP {error.code}") from error
+        raise ValueError(f"agent card HTTP {error.code}") from error
     except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
         raise UnavailableBinding(str(error)) from error
     if not isinstance(value, dict):
@@ -41,6 +46,7 @@ def read_json(url: str) -> dict:
 
 
 def card_observation(url: str) -> dict:
+    """Read and summarize one Agent Card; the only discovery read."""
     card = read_json(url.rstrip("/") + "/.well-known/agent-card.json")
     try:
         endpoint = a2a_v1.card_url(card)
@@ -49,40 +55,31 @@ def card_observation(url: str) -> dict:
     if endpoint.rstrip("/") != url.rstrip("/"):
         raise ValueError("Agent Card endpoint differs from snapshot")
     extensions = (card.get("capabilities") or {}).get("extensions") or []
-    if len(extensions) != 1:
-        raise ValueError("Agent Card must declare exactly one extension")
-    extension = extensions[0]
-    params = extension.get("params") or {}
-    without_url = a2a_v1.card_without_endpoint(card)
-    contract = read_json(url.rstrip("/") + "/contract")
-    return {"url": url, "card_sha256": digest(without_url),
-            "extension_uri": extension.get("uri"),
-            "extension_required": extension.get("required"),
-            "extension_identity": params.get("identity"),
-            "extension_contract": params.get("contract"),
-            "extension_contract_digest": params.get("contract_digest"),
-            "contract_sha256": digest(contract),
-            "contract_document": contract}
+    if not isinstance(extensions, list) or not all(isinstance(item, dict) for item in extensions):
+        raise ValueError("Agent Card extensions are malformed")
+    by_uri = {item.get("uri"): item for item in extensions}
+    agent = by_uri.get(EXTENSION_URI) or {}
+    params = agent.get("params") or {}
+    skills = [skill.get("id") for skill in card.get("skills") or [] if isinstance(skill, dict)]
+    return {"url": url, "card_sha256": digest(a2a_v1.card_without_endpoint(card)),
+            "identity": params.get("identity"), "resend": params.get("resend"),
+            "required_extensions": sorted(uri for uri, item in by_uri.items()
+                                          if item.get("required") is True),
+            "extensions": sorted(uri for uri in by_uri if isinstance(uri, str)),
+            "skills": skills}
 
 
-def pin(url: str, identity: str) -> dict:
+def pin(url: str, identity: str | None = None) -> dict:
+    """Pin an agent from its Agent Card alone."""
     observed = card_observation(url)
-    if (observed["extension_uri"] != EXTENSION_URI
-            or observed["extension_required"] is not True
-            or observed["extension_identity"] != identity
-            or observed["extension_contract"] != CONTRACT
-            or observed["extension_contract_digest"] != observed["contract_sha256"]):
-        raise ValueError("delayed agent contract is invalid")
-    document = observed["contract_document"]
-    idempotency = document.get("idempotency") or {}
-    resend = (document.get("name") == CONTRACT
-              and document.get("reconcile") == "a2a-idempotent-resend"
-              and idempotency.get("key") == "action_id"
-              and idempotency.get("same_payload") == "original_task_id"
-              and idempotency.get("commit_before_response") is True)
-    return {"card_sha256": observed["card_sha256"],
-            "a2a_extension": {"uri": EXTENSION_URI, "contract": CONTRACT,
-                              "contract_digest": observed["extension_contract_digest"]},
+    if not isinstance(observed["identity"], str) or not observed["identity"]:
+        raise ValueError("Agent Card declares no agent identity")
+    if identity is not None and observed["identity"] != identity:
+        raise ValueError("Agent Card identity differs from the expected identity")
+    if observed["required_extensions"]:
+        raise ValueError("Agent Card requires extensions this client does not activate")
+    resend = observed["resend"] == a2a_extensions.RESEND_RULE
+    return {"card_sha256": observed["card_sha256"], "identity": observed["identity"],
             "reconcile": "a2a-idempotent-resend" if resend else "opaque"}
 
 
@@ -97,13 +94,8 @@ def resolve(snapshot_path: Path, identity: str, pinned: dict) -> tuple[str, dict
     if not isinstance(url, str) or not url.startswith("http://127.0.0.1:"):
         raise ValueError("invalid snapshot endpoint")
     observed = card_observation(url)
-    expected = pinned.get("a2a_extension") or {}
     if (observed["card_sha256"] != pinned.get("card_sha256")
-            or observed["extension_uri"] != expected.get("uri")
-            or observed["extension_required"] is not True
-            or observed["extension_identity"] != identity
-            or observed["extension_contract"] != expected.get("contract")
-            or observed["extension_contract_digest"] != expected.get("contract_digest")
-            or observed["contract_sha256"] != expected.get("contract_digest")):
-        raise ValueError("pinned Agent Card, identity or contract mismatch")
+            or observed["identity"] != identity
+            or pinned.get("identity") not in (None, identity)):
+        raise ValueError("pinned Agent Card or identity mismatch")
     return url, observed

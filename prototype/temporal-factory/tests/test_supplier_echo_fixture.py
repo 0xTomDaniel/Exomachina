@@ -1,16 +1,16 @@
-"""End-to-end local A2A SDK proof for the explicitly pinned echo fixture."""
+"""End-to-end local A2A SDK proof for the plain-message supplier echo fixture."""
 from __future__ import annotations
 
 import json
 from pathlib import Path
 import socket
+import sqlite3
 import subprocess
 import sys
 import tempfile
 import time
 import unittest
 from urllib.error import URLError
-from urllib.request import Request, urlopen
 from uuid import UUID
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,16 +32,6 @@ def _free_port() -> int:
         return listener.getsockname()[1]
 
 
-def _request_json(url: str, path: str, value: dict | None = None) -> dict:
-    data = None if value is None else json.dumps(value).encode("utf-8")
-    request = Request(url.rstrip("/") + path, data=data,
-        method="GET" if data is None else "POST",
-        headers={"Authorization": long_client.TOKEN,
-                 "Content-Type": "application/json"})
-    with urlopen(request, timeout=3) as response:
-        return json.loads(response.read())
-
-
 class SupplierEchoFixtureA2ATests(unittest.TestCase):
     def setUp(self):
         self.directory = Path(tempfile.mkdtemp(prefix="exo-proto-supplier-echo-", dir="/tmp"))
@@ -60,10 +50,10 @@ class SupplierEchoFixtureA2ATests(unittest.TestCase):
             self.process.terminate()
             self.process.wait(timeout=5)
 
-    def start_service(self) -> dict:
+    def start_service(self, *extra: str) -> dict:
         self.process = subprocess.Popen(
             [sys.executable, str(SERVICES / "supplier_echo_fixture.py"),
-             "--state", str(self.state), "--port", str(self.port)],
+             "--state", str(self.state), "--port", str(self.port), *extra],
             cwd=ROOT, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL)
         deadline = time.monotonic() + 15
@@ -71,23 +61,24 @@ class SupplierEchoFixtureA2ATests(unittest.TestCase):
             if self.process.poll() is not None:
                 self.fail(f"supplier echo fixture exited during startup: {self.process.returncode}")
             try:
-                return _request_json(self.url, "/health")
-            except (URLError, TimeoutError, ConnectionError, OSError):
+                return agent_binding.card_observation(self.url)
+            except (URLError, TimeoutError, ConnectionError, OSError,
+                    agent_binding.UnavailableBinding):
                 time.sleep(0.05)
         self.fail("supplier echo fixture did not become ready")
 
-    def test_declared_echo_contract_fanout_and_restart_reconcile_original_task(self):
-        first_health = self.start_service()
-        identity = first_health["identity"]
+    def fixture_rows(self) -> list[tuple]:
+        with sqlite3.connect(self.state / "supplier-echo.sqlite3") as db:
+            return db.execute("SELECT * FROM messages").fetchall()
+
+    def test_plain_message_fanout_and_restart_reconcile_original_task(self):
+        first = self.start_service("--drop-first-response")
+        identity = first["identity"]
         self.snapshot.write_text(json.dumps({"snapshot_version": 1,
             "agents": {identity: {"url": self.url}}}))
         pin = agent_binding.pin(self.url, identity)
-        self.assertEqual(pin["reconcile"], "opaque")  # fixture-lookup is not generic resend
-        _resolved_url, observed = long_client.resolve_pinned(self.snapshot, identity, pin)
-        self.assertEqual(observed["contract_document"]["reconcile"], "fixture-lookup")
-        self.assertEqual(observed["contract_document"]["supplier_assignment_echo"],
-                         {"version": 1,
-                          "fields": supplier_echo_fixture.ECHO_FIELDS})
+        self.assertEqual(pin["reconcile"], "a2a-idempotent-resend")
+        long_client.resolve_pinned(self.snapshot, identity, pin)
 
         parent = ParentAssignment(
             task_id="original-parent-a2a-task-7",
@@ -98,7 +89,7 @@ class SupplierEchoFixtureA2ATests(unittest.TestCase):
         )
         child = SupplierRequest(
             identity=identity,
-            role="nested-supplier-echo-fixture",
+            role="supplier-echo-fixture",
             contract=pin,
             action_id="supplier-child-action-7",
             run_id="child-run-from-runtime",
@@ -109,9 +100,6 @@ class SupplierEchoFixtureA2ATests(unittest.TestCase):
             payload={"fixture_input": "deterministic", "sample": 7},
         )
 
-        _request_json(self.url, "/_test/faults", {
-            "drop_response_once_for": child.action_id,
-        })
         self.journal = OutcomeJournal(self.database)
         fanout = SupplierFanout(self.journal, self.snapshot, max_fanout=1)
         unknown = fanout.dispatch_child(parent, child)
@@ -120,10 +108,8 @@ class SupplierEchoFixtureA2ATests(unittest.TestCase):
         self.assertEqual(self.process.wait(timeout=10), 23)
 
         # Restart only the synthetic fixture service. It retains its normal
-        # UUID identity and the committed original Task mapping.
-        second_health = self.start_service()
-        self.assertEqual(second_health["identity"], identity)
-        self.assertGreater(second_health["incarnation"], first_health["incarnation"])
+        # UUID identity and its committed Task for the journaled messageId.
+        self.start_service()
         self.journal.close()
         self.journal = OutcomeJournal(self.database)
         restarted_fanout = SupplierFanout(self.journal, self.snapshot, max_fanout=1)
@@ -133,15 +119,24 @@ class SupplierEchoFixtureA2ATests(unittest.TestCase):
         self.assertEqual(recovered["parent_task_id"], parent.task_id)
         self.assertNotEqual(recovered["task_id"], parent.task_id)
         self.assertEqual(str(UUID(recovered["task_id"])), recovered["task_id"])
-        self.assertEqual(recovered["artifact"]["parent_task_id"], parent.task_id)
-        self.assertEqual(recovered["artifact"]["assignment_id"], child.assignment_id)
         self.assertEqual(recovered["artifact"]["author"], identity)
         self.assertEqual(recovered["artifact"]["revision"], child.expected_revision)
-        self.assertEqual(_request_json(self.url, "/_test/effects")["count"], 1)
+        receipt = self.journal.get(child.action_id).receipt
+        self.assertEqual((receipt["parent_task_id"], receipt["assignment_id"]),
+                         (parent.task_id, child.assignment_id))
+        self.assertEqual(len(self.fixture_rows()), 1)
 
         # A confirmed replay is journal-only and cannot create another effect.
         self.assertEqual(restarted_fanout.reconcile_child(parent, child), recovered)
-        self.assertEqual(_request_json(self.url, "/_test/effects")["count"], 1)
+        self.assertEqual(len(self.fixture_rows()), 1)
+
+        # The fixture never stored a factory binding.
+        with sqlite3.connect(self.state / "supplier-echo.sqlite3") as db:
+            dump = "\n".join(db.iterdump())
+        for value in ("parent-run-from-runtime", "child-run-from-runtime", "a" * 64, "b" * 64,
+                      "supplier-child-action-7", "child-assignment-from-runtime",
+                      "parent-assignment-from-runtime", parent.task_id):
+            self.assertNotIn(value, dump)
 
 
 if __name__ == "__main__":

@@ -1,28 +1,32 @@
 """Deterministic Strands+A2A fixture shared by the three runtime countertrials.
 
-This is a real Strands tool loop and A2A v1.0 server, with a fixture model and
-fixture-specific action lookup. It does not claim real model quality or general
-A2A receiver idempotency.
+This is a real Strands tool loop and A2A v1.0 server with a fixture model. Its
+agent roles are ordinary A2A agents: a plain Message with one text Part (the
+brief), messageId resend returns the original Task, and only JSON-RPC plus the
+Agent Card are served. It does not claim real model quality.
 """
 from __future__ import annotations
 
 import argparse
+import asyncio
 import hashlib
 import json
 import os
 import sqlite3
 from pathlib import Path
+from types import SimpleNamespace
 from uuid import uuid4
 
 import uvicorn
 from fastapi.responses import JSONResponse
 from a2a.server.agent_execution import AgentExecutor
-from a2a.types import AgentCard, AgentCapabilities, AgentSkill, Artifact, Task, TaskStatus
+from a2a.types import (AgentCapabilities, AgentCard, AgentExtension, AgentSkill, Artifact,
+                       InvalidParamsError, Task, TaskStatus)
 from strands import Agent, tool
 from strands.models import Model
 from strands.plugins import Plugin
 
-import a2a_v1
+import a2a_extensions
 from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore, agent_message,
                            bearer_security, build_app, data_part, interfaces, part_content,
                            part_data, task_state)
@@ -83,26 +87,51 @@ class ToolCallingModelFixture(Model):
             yield {"messageStop": {"stopReason": "end_turn"}}
 
 
+def request_from_params(params, *, received: bool = False) -> dict:
+    """Plain A2A v1 Message: one text Part (the brief), keyed by messageId.
+
+    ``received`` is the executor's view, where the SDK has already bound the
+    new Task id onto the Message.
+    """
+    message = params.message
+    if not message.message_id:
+        raise Rejected("messageId is required")
+    if message.task_id and not received:
+        raise Rejected("this agent does not continue Tasks")
+    parts = message.parts
+    if len(parts) != 1 or part_content(parts[0]) != "text" or not parts[0].text:
+        raise Rejected("exactly one text Part (the brief) is required")
+    return {"message_id": message.message_id, "brief": parts[0].text,
+            "context_id": message.context_id or ""}
+
+
 class Harness:
-    def __init__(self, state: Path, role: str):
+    """Deterministic fixture agent ledger.
+
+    It stores only its own Task identities, keyed by the caller's messageId.
+    Roles: ``capability`` returns ``fixture-result:<brief>``; ``quality``
+    reviews the artifact named by a JSON brief ``{"artifact": {...}}``.
+    """
+
+    def __init__(self, state: Path, role: str, *, drop_first_response: bool = False):
         self.state = state
         self.role = role
+        self.drop_first_response = drop_first_response
         state.mkdir(parents=True, exist_ok=True)
         self.database = state / "harness.sqlite3"
         with self.connect() as db:
+            # Schema 1 stored caller run/action/definition bindings.
+            db.execute("DROP TABLE IF EXISTS actions")
+            db.execute("DROP TABLE IF EXISTS aliases")
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS identity (
                     singleton INTEGER PRIMARY KEY CHECK(singleton=1),
                     id TEXT NOT NULL, role TEXT NOT NULL, incarnation INTEGER NOT NULL);
-                CREATE TABLE IF NOT EXISTS actions (
-                    action_id TEXT PRIMARY KEY, run_id TEXT NOT NULL,
-                    definition_digest TEXT NOT NULL, role TEXT NOT NULL,
-                    fingerprint TEXT NOT NULL, task_id TEXT NOT NULL,
-                    artifact TEXT NOT NULL, attempts INTEGER NOT NULL,
-                    accepted_count INTEGER NOT NULL);
-                CREATE TABLE IF NOT EXISTS aliases (
-                    task_id TEXT PRIMARY KEY, action_id TEXT NOT NULL,
-                    context_id TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS messages (
+                    message_id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL,
+                    task_id TEXT NOT NULL UNIQUE, context_id TEXT NOT NULL,
+                    artifact TEXT NOT NULL, attempts INTEGER NOT NULL);
+                CREATE TABLE IF NOT EXISTS dropped (singleton INTEGER PRIMARY KEY);
             """)
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT * FROM identity WHERE singleton=1").fetchone()
@@ -124,72 +153,62 @@ class Harness:
         db.execute("PRAGMA synchronous=FULL")
         return db
 
-    def action(self, action_id):
+    def existing(self, message_id: str, fingerprint: str) -> str | None:
         with self.connect() as db:
-            row = db.execute("SELECT * FROM actions WHERE action_id=?", (action_id,)).fetchone()
-        if row is None:
-            return None
-        return {
-            "action_id": row["action_id"], "run_id": row["run_id"],
-            "definition_digest": row["definition_digest"], "role": row["role"],
-            "task_id": row["task_id"], "artifact": json.loads(row["artifact"]),
-            "attempts": row["attempts"], "accepted_count": row["accepted_count"],
-        }
+            row = db.execute("SELECT fingerprint, task_id FROM messages WHERE message_id=?",
+                             (message_id,)).fetchone()
+            if row is None:
+                return None
+            if row["fingerprint"] != fingerprint:
+                raise Rejected("messageId reused with a different message")
+            db.execute("UPDATE messages SET attempts=attempts+1 WHERE message_id=?", (message_id,))
+            return row["task_id"]
 
     def task(self, task_id):
         with self.connect() as db:
-            row = db.execute("SELECT action_id, context_id FROM aliases WHERE task_id=?", (task_id,)).fetchone()
+            row = db.execute("SELECT * FROM messages WHERE task_id=?", (task_id,)).fetchone()
         if row is None:
             return None
-        return self.action(row["action_id"]), row["context_id"]
+        return json.loads(row["artifact"]), row["context_id"]
+
+    def result(self, brief: str) -> dict:
+        if self.role == "capability":
+            content = "fixture-result:" + brief
+            return {"revision": "r2", "sha256": hashlib.sha256(content.encode()).hexdigest(),
+                    "author": self.identity, "content": content}
+        try:
+            source = json.loads(brief).get("artifact")
+        except (ValueError, AttributeError):
+            source = None
+        if not isinstance(source, dict):
+            raise Rejected("quality brief must name an artifact")
+        valid = (isinstance(source.get("content"), str)
+                 and source.get("sha256") == hashlib.sha256(source["content"].encode()).hexdigest()
+                 and source.get("author") != self.identity)
+        return {"accepted": bool(valid), "revision": source.get("revision"),
+                "sha256": source.get("sha256"), "reviewer": self.identity,
+                "reason": "fixture digest and independent identity" if valid else "invalid artifact"}
 
     def perform(self, command, task_id, context_id):
-        expected_op = "assign" if self.role == "capability" else "review"
-        if command.get("op") != expected_op:
-            raise Rejected("operation not allowed for harness role")
-        for field in ("action_id", "run_id", "definition_digest"):
-            if not isinstance(command.get(field), str) or not command[field]:
-                raise Rejected("missing " + field)
-        if expected_op == "assign" and not isinstance(command.get("brief"), str):
-            raise Rejected("missing brief")
-        if expected_op == "review" and not isinstance(command.get("artifact"), dict):
-            raise Rejected("missing artifact")
-        stable_command = {key: value for key, value in command.items() if key != "drop_ack"}
-        fingerprint = hashlib.sha256(canonical(stable_command).encode()).hexdigest()
-        newly_created = False
+        """Tool body: commit the Task for ``command = {message_id, brief, fingerprint}``."""
+        artifact = self.result(command["brief"])
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            row = db.execute("SELECT * FROM actions WHERE action_id=?", (command["action_id"],)).fetchone()
-            if row:
-                if row["fingerprint"] != fingerprint:
-                    raise Rejected("action ID reused with different payload")
-                db.execute("UPDATE actions SET attempts=attempts+1 WHERE action_id=?", (command["action_id"],))
-            else:
-                newly_created = True
-                if expected_op == "assign":
-                    content = "fixture-result:" + command["brief"]
-                    artifact = {"revision": "r2", "sha256": hashlib.sha256(content.encode()).hexdigest(),
-                                "author": self.identity, "content": content}
-                else:
-                    source = command["artifact"]
-                    valid = (
-                        isinstance(source.get("content"), str)
-                        and source.get("sha256") == hashlib.sha256(source["content"].encode()).hexdigest()
-                        and source.get("author") != self.identity
-                    )
-                    artifact = {"accepted": bool(valid), "revision": source.get("revision"),
-                                "sha256": source.get("sha256"), "reviewer": self.identity,
-                                "reason": "fixture digest and independent identity" if valid else "invalid artifact"}
-                db.execute("INSERT INTO actions VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1)",
-                           (command["action_id"], command["run_id"], command["definition_digest"],
-                            self.role, fingerprint, task_id, canonical(artifact)))
-            db.execute("INSERT OR IGNORE INTO aliases VALUES (?, ?, ?)",
-                       (task_id, command["action_id"], context_id))
-        # The receiver has committed its action and task mapping. Drop the HTTP
-        # response by killing only this fixture process, before A2A can emit it.
-        if newly_created and expected_op == "assign" and command.get("drop_ack") is True:
+            row = db.execute("SELECT task_id FROM messages WHERE message_id=?",
+                             (command["message_id"],)).fetchone()
+            drop = False
+            if row is None:
+                db.execute("INSERT INTO messages VALUES (?, ?, ?, ?, ?, 1)",
+                           (command["message_id"], command["fingerprint"], task_id,
+                            context_id, canonical(artifact)))
+                if (self.drop_first_response
+                        and db.execute("SELECT 1 FROM dropped").fetchone() is None):
+                    db.execute("INSERT INTO dropped VALUES (1)")
+                    drop = True
+        if drop:
+            # Committed with FULL sync; lose only the response by exiting.
             os._exit(23)
-        return self.action(command["action_id"])
+        return artifact
 
     async def invoke(self, command, task_id, context_id):
         agent = Agent(name="Decision round " + self.role, model=ToolCallingModelFixture(),
@@ -228,23 +247,25 @@ class LedgerTaskStore(ProjectionTaskStore):
         record = self.harness.task(task_id)
         if record is None:
             return None
-        action, context_id = record
-        artifact = action["artifact"]
+        artifact, context_id = record
         return Task(id=task_id, context_id=context_id,
                     status=TaskStatus(state=task_state("completed")),
                     artifacts=[Artifact(artifact_id=artifact["sha256"],
                                         parts=[data_part(artifact)])],
-                    metadata={"action_id": action["action_id"], "run_id": action["run_id"],
-                              "definition_digest": action["definition_digest"],
-                              "harness_identity": self.harness.identity,
-                              "harness_role": self.harness.role})
+                    metadata={"agent_identity": self.harness.identity})
 
     async def save(self, task, context=None):
         if self.harness.task(task.id) is None:
-            raise Rejected("task has no committed action")
+            raise Rejected("task has no committed message")
 
 
 class HarnessExecutor(AgentExecutor):
+    """Executor shared by fixture agents and the factory Director.
+
+    Fixture agents receive a plain text brief. The Director (factory mode)
+    exposes ``inspect_bound_run`` and invokes with the caller's messageId.
+    """
+
     def __init__(self, harness, store, *, allow_structured_commands=True):
         self.harness = harness
         self.store = store
@@ -255,16 +276,26 @@ class HarnessExecutor(AgentExecutor):
             if not self.allow_structured_commands and any(
                     part_content(part) != "text" for part in context.message.parts):
                 raise Rejected("factory caller messages must contain text parts only")
-            command = next((part_data(part) for part in context.message.parts
-                            if part_content(part) == "data"), None)
-            if command is None:
-                brief = next((part.text for part in context.message.parts
-                              if part_content(part) == "text"), None)
-                if brief is None or not hasattr(self.harness, "inspect_bound_run"):
-                    raise Rejected("structured data command required")
-                result = await self.harness.invoke(brief, context.task_id, context.context_id,
-                                                   message_id=context.message.message_id)
+            if hasattr(self.harness, "inspect_bound_run"):
+                # Factory mode. A factory is not an agent service: its opted-in
+                # nested-supplier entry keeps its structured command.
+                command = next((part_data(part) for part in context.message.parts
+                                if part_content(part) == "data"), None)
+                if command is not None:
+                    result = await self.harness.invoke(command, context.task_id,
+                                                       context.context_id)
+                else:
+                    brief = next((part.text for part in context.message.parts
+                                  if part_content(part) == "text"), None)
+                    if brief is None:
+                        raise Rejected("text brief required")
+                    result = await self.harness.invoke(brief, context.task_id, context.context_id,
+                                                       message_id=context.message.message_id)
             else:
+                request = request_from_params(SimpleNamespace(message=context.message),
+                                              received=True)
+                command = {"message_id": request["message_id"], "brief": request["brief"],
+                           "fingerprint": fingerprint(request)}
                 result = await self.harness.invoke(command, context.task_id, context.context_id)
             if "error" in result:
                 await event_queue.enqueue_event(agent_message([data_part(result)]))
@@ -277,41 +308,67 @@ class HarnessExecutor(AgentExecutor):
         raise Rejected("fixture actions are immediate and cannot be cancelled")
 
 
-def create_app(state: Path, role: str, port: int):
-    harness = Harness(state, role)
-    store = LedgerTaskStore(harness)
-    card = AgentCard(
-        name="Decision round " + role, description="Deterministic Strands harness fixture",
-        supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="0.0.1",
-        default_input_modes=["application/json"], default_output_modes=["application/json"],
-        capabilities=AgentCapabilities(streaming=False),
-        skills=[AgentSkill(id=role, name=role, description="Decision-round fixture role",
-                           tags=["fixture", role])],
+def fingerprint(request: dict) -> str:
+    return hashlib.sha256(canonical({"brief": request["brief"],
+                                     "context_id": request["context_id"]}).encode()).hexdigest()
+
+
+class FixtureHandler(LegacyRequestHandler):
+    """A resent messageId returns the original Task before any new execution."""
+
+    def __init__(self, harness, store, card):
+        super().__init__(HarnessExecutor(harness, store), store, card)
+        self.harness = harness
+        self._send_lock = asyncio.Lock()
+
+    async def on_message_send(self, params, context=None):
+        try:
+            request = request_from_params(params)
+            async with self._send_lock:
+                task_id = self.harness.existing(request["message_id"], fingerprint(request))
+                if task_id is not None:
+                    return await self.task_store.get(task_id)
+                return await super().on_message_send(params, context)
+        except Rejected as error:
+            raise InvalidParamsError(message=str(error)) from error
+
+
+def fixture_card(name: str, description: str, skill: str, identity: str, port: int,
+                 tags: list[str]) -> AgentCard:
+    return AgentCard(
+        name=name, description=description,
+        supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="2.0.0",
+        default_input_modes=["text/plain"], default_output_modes=["application/json"],
+        capabilities=AgentCapabilities(streaming=False, extensions=[
+            AgentExtension(uri=a2a_extensions.AGENT_URI, required=False,
+                           params={"identity": identity,
+                                   "resend": a2a_extensions.RESEND_RULE})]),
+        skills=[AgentSkill(id=skill, name=skill, description=description, tags=tags)],
         **bearer_security(),
     )
-    app = build_app(card, LegacyRequestHandler(HarnessExecutor(harness, store), store, card))
+
+
+def fixture_app(harness, card):
+    store = LedgerTaskStore(harness)
+    app = build_app(card, FixtureHandler(harness, store, card))
+    app.state.harness = harness
 
     @app.middleware("http")
     async def fixture_auth(request, call_next):
-        if request.url.path in {"/health", "/.well-known/agent-card.json"}:
+        if request.url.path == "/.well-known/agent-card.json":
             return await call_next(request)
         if request.headers.get("authorization") != TOKEN:
             return JSONResponse({"error": "fixture authentication required"}, status_code=401)
         return await call_next(request)
 
-    @app.get("/health")
-    def health():
-        return {"identity": harness.identity, "incarnation": harness.incarnation,
-                "role": harness.role, "a2a_protocol": a2a_v1.PROTOCOL_VERSION}
-
-    @app.get("/fixture/actions/{action_id}")
-    def get_action(action_id: str):
-        record = harness.action(action_id)
-        if record is None:
-            return JSONResponse({"error": "unknown action"}, status_code=404)
-        return record
-
     return app
+
+
+def create_app(state: Path, role: str, port: int, *, drop_first_response: bool = False):
+    harness = Harness(state, role, drop_first_response=drop_first_response)
+    card = fixture_card("Decision round " + role, "Deterministic Strands harness fixture",
+                        role, harness.identity, port, ["fixture", role])
+    return fixture_app(harness, card)
 
 
 if __name__ == "__main__":
@@ -319,6 +376,9 @@ if __name__ == "__main__":
     parser.add_argument("--state", type=Path, required=True)
     parser.add_argument("--role", choices=["capability", "quality"], required=True)
     parser.add_argument("--port", type=int, required=True)
+    parser.add_argument("--drop-first-response", action="store_true",
+                        help="test fault: lose the first committed response")
     args = parser.parse_args()
-    uvicorn.run(create_app(args.state, args.role, args.port), host="127.0.0.1",
-                port=args.port, log_level="warning")
+    uvicorn.run(create_app(args.state, args.role, args.port,
+                           drop_first_response=args.drop_first_response),
+                host="127.0.0.1", port=args.port, log_level="warning")
