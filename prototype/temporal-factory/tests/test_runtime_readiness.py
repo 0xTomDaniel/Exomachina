@@ -64,25 +64,15 @@ class SubmissionReadinessTests(unittest.TestCase):
         self.director.module.publications = ActivePublications(publication)
         self.config = {"director_model": {"provider": "codex-subscription",
                                            "model": "gpt-6-luna"}}
+        # Owners as resolved from their pinned Agent Cards: the only agent
+        # evidence readiness may use (no private health routes).
         self.owners = [{"name": name, "identity": f"identity-{name}",
-                        "url": f"http://127.0.0.1:{47100 + index}"}
+                        "url": f"http://127.0.0.1:{47100 + index}",
+                        "skills": [CAPABILITIES[name]]}
                        for index, name in enumerate(CAPABILITIES)]
-        self.health = {
-            owner["identity"]: {
-                "identity": owner["identity"],
-                "role": "quality" if owner["name"] == "quality" else "capability",
-                "capability": CAPABILITIES[owner["name"]],
-                "provider": "codex-subscription", "model_id": "gpt-6-luna",
-                "reasoning_effort": "xhigh", "inference_enabled": True,
-                "read_only_usage": False,
-            }
-            for owner in self.owners
-        }
 
-    def readiness(self, *, health=None, owners=None, config=None,
-                  broker_status="available"):
+    def readiness(self, *, owners=None, config=None, broker_status="available"):
         owner_rows = self.owners if owners is None else owners
-        owner_health = self.health if health is None else health
         with patch.dict(os.environ, {}, clear=True), \
                 patch.object(harness, "_verified_active_publication_context",
                              return_value={"manifest_digest":
@@ -93,10 +83,7 @@ class SubmissionReadinessTests(unittest.TestCase):
                              return_value=(owner_rows, 0, 0)):
             return harness._submission_readiness(
                 self.director, self.config if config is None else config,
-                broker_status_reader=lambda: broker_status,
-                owner_health_reader=lambda url: next(
-                    (owner_health[owner["identity"]] for owner in owner_rows
-                     if owner["url"] == url), None))
+                broker_status_reader=lambda: broker_status)
 
     def test_ready_requires_approved_profile_broker_and_all_pinned_writable_owners(self):
         result = self.readiness()
@@ -109,10 +96,9 @@ class SubmissionReadinessTests(unittest.TestCase):
         self.assertFalse(result["live_inference_ready"])
         self.assertNotIn("account", str(result).lower())
 
-    def test_read_only_owner_blocks_preflight_without_claiming_live_inference(self):
-        health = {key: dict(value) for key, value in self.health.items()}
-        health["identity-quality"]["read_only_usage"] = True
-        health["identity-quality"]["inference_enabled"] = False
+    def test_owner_card_without_expected_skill_blocks_preflight(self):
+        owners = [dict(owner) for owner in self.owners]
+        owners[-1]["skills"] = ["some_other_skill@1"]
         callback, require = harness._submission_readiness_callbacks(self.director, self.config)
         with patch.dict(os.environ, {}, clear=True), \
                 patch.object(harness, "_verified_active_publication_context",
@@ -121,13 +107,9 @@ class SubmissionReadinessTests(unittest.TestCase):
                                                "manifest_digest"],
                                            "quality_policy_digest": "f" * 64}), \
                 patch.object(harness, "_pinned_usage_owners",
-                             return_value=(self.owners, 0, 0)), \
+                             return_value=(owners, 0, 0)), \
                 patch.object(harness, "_redacted_subscription_status",
-                             return_value="available"), \
-                patch.object(harness, "_public_owner_health",
-                             side_effect=lambda url: next(
-                                 (health[row["identity"]] for row in self.owners
-                                  if row["url"] == url), None)):
+                             return_value="available"):
             state = callback(refresh=True)
             with self.assertRaisesRegex(Rejected, "pinned_writable_model_owners_unavailable"):
                 require()
@@ -150,7 +132,7 @@ class SubmissionReadinessTests(unittest.TestCase):
                 result = harness._submission_readiness(
                     self.director, config,
                     broker_status_reader=lambda: calls.append("broker") or "available",
-                    owner_health_reader=lambda _url: self.health["identity-quality"])
+                    owner_reader=lambda *_args: (self.owners, 0, 0))
             self.assertFalse(result["submission_ready"])
             self.assertIn("director_profile_unapproved", result["submission_blockers"])
             self.assertEqual(calls, [])
@@ -164,7 +146,7 @@ class SubmissionReadinessTests(unittest.TestCase):
                 result = harness._submission_readiness(
                     self.director, self.config,
                     broker_status_reader=lambda: self.fail("must not read an overridden broker"),
-                    owner_health_reader=lambda _url: self.fail("must not resolve owners"))
+                    owner_reader=lambda *_args: (self.owners, 0, 0))
         self.assertFalse(result["submission_ready"])
         self.assertIn("default_broker_path_overridden", result["submission_blockers"])
 
@@ -189,10 +171,7 @@ class SubmissionReadinessTests(unittest.TestCase):
                              return_value=(self.owners, 0, 0)):
             result = harness._submission_readiness(
                 self.director, self.config,
-                broker_status_reader=lambda: "signed_out",
-                owner_health_reader=lambda url: next(
-                    self.health[owner["identity"]] for owner in self.owners
-                    if owner["url"] == url))
+                broker_status_reader=lambda: "signed_out")
         self.assertFalse(result["submission_ready"])
         self.assertEqual(result["broker_status"], "signed_out")
         self.assertNotIn("author_provider_configured", result)

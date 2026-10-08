@@ -12,6 +12,7 @@ import ast
 import base64
 import hashlib
 import json
+import re
 import os
 import signal
 import socket
@@ -28,6 +29,7 @@ from common import (task_state, ROOT, SRC, a2a_get, http, jsonl, run_cli, start_
 from live_authoring import (authoring_acceptance, candidate_files, positive_control,
                             scan_paths, subscription_status, synthetic_credential,
                             export_histories)
+import stimulus_client
 
 sys.path.insert(0, str(SRC))
 from model_broker import DEFAULT_HOME, DEFAULT_MODEL_ID, DEFAULT_REASONING_EFFORT, ModelBroker  # noqa: E402
@@ -201,7 +203,6 @@ def _quality_bound(e: dict, route_no: int, synthesis: dict, quality: dict,
     matches = [row for row in e.get("journal") or []
                if row.get("action_id") == quality.get("action_id") and
                row.get("run_id") == route.get("child_run_id")]
-    calls = quality.get("model_calls") or []
     return bool(
         quality.get("state") == "completed" and quality.get("task_id") and
         len(matches) == 1 and matches[0].get("phase") == "confirmed" and
@@ -209,18 +210,16 @@ def _quality_bound(e: dict, route_no: int, synthesis: dict, quality: dict,
         matches[0].get("pinned_identity") == reviewer and
         matches[0].get("definition_digest") == quality.get("definition_digest") and
         quality.get("exclusive_store") is True and quality.get("pin_verified") is True and
-        artifact.get("action_id") == quality.get("action_id") and
-        artifact.get("run_id") == route.get("child_run_id") and
-        artifact.get("definition_digest") == quality.get("definition_digest") and
+        quality.get("correlated") is True and
+        quality.get("run_id") == route.get("child_run_id") and
+        artifact.get("sha256") == quality.get("receipt_sha256") and
         artifact.get("author") == reviewer == verdict_value.get("reviewer") and
         artifact.get("revision") == candidate["revision"] and
         isinstance(content, str) and _sha(content) == artifact.get("sha256") ==
             quality.get("artifact_id") and decoded == verdict_value and
         all(candidate.values()) and verdict_value.get("candidate") == candidate and
         source.get("author") != reviewer and verdict_value.get("decided_by") == "model" and
-        bool(calls) and all(call.get("live") is live and
-            call.get("model_id") == e.get("model_id", "gpt-6-sol") and
-            call.get("task_id") == quality.get("task_id") for call in calls))
+        _model_work(quality))
 
 
 def _expected_inventory(e: dict) -> dict:
@@ -417,11 +416,13 @@ def check_evidence(e: dict) -> dict[str, dict]:
     identities = [agents.get(name, {}).get("identity") for name in SERVICES]
     ports = [agents.get(name, {}).get("port") for name in SERVICES]
     states = [agents.get(name, {}).get("state_dir") for name in SERVICES]
-    stores = [agents.get(name, {}).get("store_path") for name in AGENTS]
     release_store = agents.get("release", {}).get("store_path")
     pins = [agents.get(name, {}).get("pin_verified") for name in AGENTS]
     import_audit = e.get("import_audit") or {}
-    sqlite_copies = [agents.get(name, {}).get("sqlite") for name in AGENTS]
+    # Factory-side copies replace agent sqlite copies: the factory's journal
+    # rows and agent-usage rows for each agent, plus the pinned card digests.
+    factory_copies = [agents.get(name, {}).get("factory_records") for name in AGENTS]
+    cards = [agents.get(name, {}).get("card_sha256") for name in AGENTS]
     activity = e.get("activity_log") or []
     interactions = [x for x in activity if x.get("kind") in
                     ("agent-task-journaled", "agent-task-polled")]
@@ -436,16 +437,19 @@ def check_evidence(e: dict) -> dict[str, dict]:
         for pin in activity) for row in interactions)
     c["SF-2"] = verdict(all(identities) and len(set(identities)) == 5 and
         all(ports) and len(set(ports)) == 5 and all(states) and len(set(states)) == 5 and
-        all(stores) and len(set(stores)) == 4 and release_store and
-        release_store not in stores and all(pins) and pins_paired and all(
-            isinstance(copy, dict) and all(key in copy for key in
-                ("tasks", "model_calls", "stimulus_log")) for copy in sqlite_copies) and
+        all(cards) and len(set(cards)) == 4 and release_store and
+        not any(release_store.startswith(str(x)) for x in states[:-1]) and
+        all(pins) and pins_paired and all(
+            isinstance(copy, dict) and copy.get("journal") and
+            len(copy.get("agent_usage") or []) == len(copy["journal"])
+            for copy in factory_copies) and
         import_audit.get("product_clean") is True and
         import_audit.get("service_clean") is True and
+        import_audit.get("factory_names_clean") is True and
         (import_audit.get("launcher_exception") or {}).get("allowed") is True,
-        {"identities": identities, "ports": ports, "states": states, "stores": stores,
+        {"identities": identities, "ports": ports, "states": states, "cards": cards,
          "release_store": release_store,
-         "pins": pins, "pins_paired": pins_paired, "sqlite_copies": sqlite_copies,
+         "pins": pins, "pins_paired": pins_paired, "factory_copies": factory_copies,
          "import_audit": import_audit}, label)
     routes = e.get("routes") or {}
     workflows = [w for r in routes.values() for w in r.get("workflows", [])]
@@ -492,17 +496,16 @@ def check_evidence(e: dict) -> dict[str, dict]:
         artifact = a.get("artifact") or {}
         content = artifact.get("content")
         return (a.get("state") == "completed" and a.get("journal_task_id") == a.get("task_id") and
-            a.get("exclusive_store") is True and artifact.get("action_id") == a.get("action_id") and
-            artifact.get("run_id") == r1.get("child_run_id") and artifact.get("author") == identity and
-            artifact.get("definition_digest") == a.get("definition_digest") and
+            a.get("exclusive_store") is True and a.get("correlated") is True and
+            a.get("run_id") == r1.get("child_run_id") and artifact.get("author") == identity and
+            artifact.get("sha256") == a.get("receipt_sha256") and
             isinstance(content, str) and _sha(content) == artifact.get("sha256") == a.get("artifact_id") and
-            a.get("content_valid") is True and a.get("pin_verified") is True and
-            bool(a.get("model_calls")) and all(x.get("live") is live and
-            x.get("model_id") == e.get("model_id", "gpt-6-sol") for x in a["model_calls"]))
-    sessions = [x.get("session_id") for group in research for a in group for x in a.get("model_calls") or []]
+            a.get("content_valid") is True and a.get("pin_verified") is True and _model_work(a))
+    # Two independent executions: distinct agent Tasks and factory contexts.
+    contexts = [a.get("context_id") for group in research for a in group]
     c["R1-b"] = verdict(all(len(group) == 1 for group in research) and
         all(bound(group[0], identity) for group, identity in zip(research, ids)) and
-        all(sessions) and len(set(sessions)) == 2, {"research": research}, label,
+        all(contexts) and len(set(contexts)) == 2, {"research": research}, label,
         behavior=model_behavior)
     synth1 = _run_actions(e, 1, "synthesizer")
     quality1 = _run_actions(e, 1, "quality")
@@ -510,7 +513,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
     v1 = q1.get("verdict") or {}
     h1 = (a1.get("artifact") or {}).get("sha256")
     c["R1-c"] = verdict(len(synth1) == len(quality1) == 1 and
-        _revision(a1) == "r1" and a1.get("live") is live and
+        _revision(a1) == "r1" and _model_work(a1) and
         v1.get("accepted") is True and _quality_bound(e, 1, a1, q1, live=live),
         {"synthesis": a1, "quality": q1}, label, behavior=route1_quality_behavior)
     useful = r1.get("usefulness") or {}
@@ -591,7 +594,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
     c["R2-c"] = verdict(bool(repair2) and brief2.get("mode") == "repair" and
         (brief2.get("prior") or {}).get("sha256") == (first2.get("artifact") or {}).get("sha256") and
         brief2.get("quality_findings") == rejected2.get("findings") and
-        repair2.get("live") is live and h2 and h2 != (first2.get("artifact") or {}).get("sha256") and
+        _model_work(repair2) and h2 and h2 != (first2.get("artifact") or {}).get("sha256") and
         bool(planted2.get("planted_text")) and
         planted2["planted_text"] not in json.dumps(_report(repair2)) and
         not any(x.get("revision") == "r2" for x in stimuli2),
@@ -686,14 +689,15 @@ def check_evidence(e: dict) -> dict[str, dict]:
         all(x.get("phase") == "confirmed" for x in run_journal) and
         e.get("incidents") == [], {"inventory": inventory,
         "journal": run_journal, "incidents": e.get("incidents")}, label)
-    calls = [x for name in AGENTS for a in agents.get(name, {}).get("tasks") or []
-             for x in a.get("model_calls") or []]
-    sessions = [x.get("session_id") for x in calls]
+    # Agent model work is the factory-recorded budget-extension report; broker
+    # attribution uses the shared broker's session label <identity>:<taskId>,
+    # both factory-known. Agent stores are never read.
+    worked = [a for name in AGENTS for a in agents.get(name, {}).get("tasks") or []]
+    sessions = [_agent_session(a, agents) for a in worked]
     streams = {x.get("session") for x in stream_events}
     stream_counts = {session: sum(x.get("session") == session for x in stream_events)
                      for session in streams}
-    call_counts = {session: sum(x.get("session_id") == session for x in calls)
-                   for session in sessions}
+    call_counts = {session: stream_counts.get(session, 0) for session in sessions}
     model_inventory = [task for name in AGENTS for task in agents.get(name, {}).get("tasks") or []]
     expected_task_ids = {(j.get("receipt") or {}).get("task_id") for v in inventory.values()
         for name in AGENTS for j in v["actions"][name]}
@@ -711,20 +715,19 @@ def check_evidence(e: dict) -> dict[str, dict]:
     broker_stable = (len(broker_starts) <= 1 and bool(broker_attach) and bool(broker_pid) and
         (not broker_starts or e.get("broker_pid_before") in (None, broker_pid)) and
         all(pid == broker_pid for pid in e.get("broker_pids_during") or []))
-    # Agent sessions are absent from broker streams for the scripted agent provider.
-    stream_reconciled = (not live or all(stream_counts.get(s) == n for s, n in call_counts.items()))
+    # Live: every agent Task streamed through the broker. Scripted: no agent
+    # Task did (agent sessions are absent from broker streams).
+    stream_reconciled = (all(n >= 1 for n in call_counts.values()) if live
+                         else not (set(sessions) & streams))
     author_count = e.get("authoring_call_count")
     director_count = e.get("director_call_count")
     broker_owner_counts = e.get("broker_owner_counts") or {}
     c["G-2"] = verdict(e.get("broker_pid_before") == e.get("broker_pid_after") and
         len(set(e.get("broker_pids_during") or [])) == 1 and
         bool((e.get("broker_pids_during") or [None])[0]) and broker_stable and
-        expected_task_ids == observed_task_ids and store_binding and bool(calls) and
-        all(x.get("provider") == ("codex-subscription" if live else "scripted") and
-            x.get("model_id") == e.get("model_id", "gpt-6-sol") and x.get("live") is live for x in calls) and
-        all(sessions) and len(set(sessions)) == len({(a.get("agent"), a.get("task_id")) for name in AGENTS
-            for a in agents.get(name, {}).get("tasks") or [] if a.get("model_calls")}) and
-        (not live or set(sessions) <= streams) and stream_reconciled and
+        expected_task_ids == observed_task_ids and store_binding and bool(worked) and
+        all(_model_work(a) for a in worked) and
+        all(sessions) and len(set(sessions)) == len(worked) and stream_reconciled and
         isinstance(director_count, int) and director_count > 0 and
         isinstance(author_count, int) and author_count > 0 and
         broker_owner_counts.get("authoring") == author_count and
@@ -734,14 +737,15 @@ def check_evidence(e: dict) -> dict[str, dict]:
          "stream_sessions": sorted(str(x) for x in streams),
          "director_calls": director_count, "authoring_calls": author_count,
          "broker_owner_counts": broker_owner_counts,
-         "reconciliation_method": "authoring/Director stream windows; agent session call counts",
+         "reconciliation_method": "authoring/Director stream windows; agent Tasks by "
+             "factory-journaled identity:taskId broker sessions and agent-reported usage",
          "stream_counts": stream_counts, "call_counts": call_counts,
          "broker_starts": broker_starts, "broker_attach": broker_attach}, label)
     tasks = [a for name in AGENTS for a in agents.get(name, {}).get("tasks") or []]
     c["G-3"] = verdict(expected_task_ids == observed_task_ids and store_binding and bool(tasks) and
         all(a.get("state") in ("completed", "failed") for a in tasks) and
-        all(1 <= len(a.get("model_calls") or []) <= 3 and
-        0 <= a.get("duration_seconds", 999) <= 240 for a in tasks), {"tasks": tasks}, label)
+        all(_model_work(a) and a.get("duration_seconds") is not None and
+            0 <= a["duration_seconds"] <= 240 for a in tasks), {"tasks": tasks}, label)
     leak = e.get("leak_scan") or {}; control = e.get("positive_control") or {}
     manifest = leak.get("candidate_manifest") or []
     scan_inputs = leak.get("scan_inputs") or []
@@ -930,12 +934,51 @@ def _route(base: str, instance: Path, question: str, number: int,
             "sent_state": task_state(sent["task"])}
 
 
+FACTORY_NAMES = ("run_id", "assignment_id", "attempt_id", "action_id", "definition_digest",
+                 "factory_id", "node")
+AGENT_SERVICE_FILES = (ROOT / "services" / "model_agent.py", ROOT / "services" / "agent_roles.py",
+                       ROOT / "services" / "delayed_agent.py", ROOT / "services" / "quality_server.py",
+                       ROOT / "services" / "supplier_echo_fixture.py", SRC / "harness_server.py")
+
+
+def _factory_name_audit() -> dict:
+    """Agent services reference no factory identifier (operator rule, 8 Oct 2026).
+
+    Every identifier, attribute, argument, keyword and string constant in the
+    agent service modules is checked for the factory correlation names.
+    """
+    pattern = re.compile(r"\b(" + "|".join(FACTORY_NAMES) + r")\b")
+    violations = []
+    for path in AGENT_SERVICE_FILES:
+        tree = ast.parse(path.read_text())
+        for node in ast.walk(tree):
+            names = []
+            if isinstance(node, ast.Name):
+                names.append(node.id)
+            elif isinstance(node, ast.Attribute):
+                names.append(node.attr)
+            elif isinstance(node, ast.arg):
+                names.append(node.arg)
+            elif isinstance(node, ast.keyword) and node.arg:
+                names.append(node.arg)
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                names.append(node.name)
+            elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+                names.extend(pattern.findall(node.value))
+            for name in names:
+                if name in FACTORY_NAMES:
+                    violations.append({"path": _record_path(path),
+                                       "line": getattr(node, "lineno", None), "name": name})
+    return {"files": [_record_path(p) for p in AGENT_SERVICE_FILES],
+            "names": list(FACTORY_NAMES), "violations": violations}
+
+
 def _import_audit() -> dict:
     # The A2A v1 wire Adapters are shared protocol code, not factory state; they
     # stay shared only while they import no other factory module. The admission
     # queue is factory-only: WIP limits are factory settings and agent services
     # hold no capacity queue (operator decision, 8 Oct 2026).
-    shared = {"a2a_v1", "a2a_v1_server"}
+    shared = {"a2a_v1", "a2a_v1_server", "a2a_extensions"}
     src_names = {p.stem for p in SRC.glob("*.py")} - shared - {"model_broker"}
     def names(path: Path) -> set[str]:
         tree = ast.parse(path.read_text())
@@ -969,7 +1012,10 @@ def _import_audit() -> dict:
         not dynamic_imports and
         not any(isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and
                 node.func.id == "DEFAULT_MODEL_ID" for node in ast.walk(launcher_tree)))
+    factory_names = _factory_name_audit()
     return {"product_clean": not product, "service_clean": not service,
+            "factory_names_clean": not factory_names["violations"],
+            "factory_names": factory_names,
             "product_violations": [_record_path(p) for p in product],
             "service_violations": [_record_path(p) for p in service],
             "running_service_modules": [_record_path(p) for p in running],
@@ -982,66 +1028,122 @@ def _import_audit() -> dict:
             "legacy_not_running": ["quality_server.py", "delayed_agent.py"]}
 
 
+def _factory_agent_usage(home: Path) -> list[dict]:
+    """Agent-reported usage the factory recorded from budget-extension reports."""
+    from model_usage import AGENT_USAGE_DATABASE, ModelUsageJournal
+    path = home / "runner" / AGENT_USAGE_DATABASE
+    return ModelUsageJournal(path).list_measurements() if path.is_file() else []
+
+
+def _model_work(task: dict) -> bool:
+    """The agent reported model work for this Task; the factory recorded it.
+
+    Factory-side replacement for the retired agent ``model_calls`` table: the
+    terminal Task's budget-extension report, journaled by the factory, shows
+    output tokens. Nothing reported is ``unknown`` and never counts as work.
+    """
+    row = task.get("agent_usage") or {}
+    output = ((row.get("usage") or {}).get("output_tokens") or {})
+    return (row.get("evidence_status") == "agent_reported" and
+            row.get("measurement_source") == "agent_reported" and
+            row.get("task_id") == task.get("task_id") and
+            output.get("status") == "reported" and (output.get("value") or 0) > 0)
+
+
+def _agent_session(task: dict, agents: dict) -> str | None:
+    """Broker session label of an agent Task, from factory-known identity and taskId."""
+    identity = (agents.get(task.get("agent")) or {}).get("identity")
+    return f"{identity}:{task['task_id']}" if identity and task.get("task_id") else None
+
+
 def _collect_agents(home: Path, testbed: dict, journal: list[dict],
                     activity: list[dict]) -> dict:
+    """Per-agent evidence built only from factory-side records.
+
+    Sources: the factory outcome journal (taskId/contextId/messageId per
+    action), A2A GetTask on the journaled taskId, the factory's agent-usage
+    journal, and the factory activity log. Agent stores are never read.
+    """
+    import long_client
     result = {}
     pids = testbed.get("pids") or {}
     contracts_path = home / "testbed" / "contracts.json"
     contracts = json.loads(contracts_path.read_text()) if contracts_path.exists() else {}
+    usage_rows = _factory_agent_usage(home)
     for name in SERVICES:
         state = home / "services" / name
-        stores = list(state.glob("*.sqlite3"))
-        store = stores[0] if stores else None
-        tasks = _rows(store, "tasks") if store else []
-        calls = _rows(store, "model_calls") if store else []
-        stimulus_rows = _rows(store, "stimulus_log") if store and name in AGENTS else []
-        raw_sqlite = {"tasks": [dict(x) for x in tasks],
-                      "model_calls": [dict(x) for x in calls],
-                      "stimulus_log": stimulus_rows} if name in AGENTS else None
-        for task in tasks:
-            for field in ("brief", "artifact"):
-                task[field] = _json_field(task, field)
-            task["agent"] = name
-            task["model_calls"] = [{**x, "live": bool(x.get("live"))} for x in calls
-                                   if x.get("task_id") == task.get("task_id")]
-            task["duration_seconds"] = (task.get("updated_at") or 0) - (task.get("created_at") or 0)
-            remote = a2a_get(f"http://127.0.0.1:{pids[name]['port']}", task["task_id"])
+        identity = pids.get(name, {}).get("identity")
+        if name not in AGENTS:
+            stores = list(state.glob("*.sqlite3"))
+            result[name] = {"identity": identity, "port": pids.get(name, {}).get("port"),
+                            "state_dir": str(state),
+                            "store_path": str(stores[0]) if stores else None,
+                            "pin_verified": False, "tasks": [], "factory_records": None}
+            continue
+        url = f"http://127.0.0.1:{pids[name]['port']}"
+        pin = contracts.get(name) or {}
+        records = [x for x in journal
+                   if x.get("pinned_identity") == identity and x.get("task_id")]
+        tasks = []
+        for match in records:
+            remote = long_client.get_task(url, match["task_id"], history_length=None)
+            history = remote.get("history") or []
+            sent = history[0] if history else {}
+            sent_parts = sent.get("parts") or []
+            brief_text = sent_parts[0].get("text") if len(sent_parts) == 1 else None
             remote_artifacts = remote.get("artifacts") or []
-            task["artifact_id"] = remote_artifacts[0].get("artifactId") if len(remote_artifacts) == 1 else None
-            parts = remote_artifacts[0].get("parts") or [] if remote_artifacts else []
-            if len(parts) == 1 and _part_is(parts[0], "data"):
-                task["artifact"] = parts[0].get("data") or {}
-            artifact = task.get("artifact") or {}
-            match = next((x for x in journal if x.get("action_id") == task.get("action_id")), {})
-            task["journal_task_id"] = match.get("task_id")
-            task["definition_digest"] = match.get("definition_digest")
-            task["exclusive_store"] = True
-            pin = contracts.get(name) or {}
-            pin_logs = [x for x in activity if x.get("action_id") == task.get("action_id")
-                        and x.get("kind") == "agent-card-verified"]
-            interactions = [x for x in activity if x.get("action_id") == task.get("action_id")
-                and x.get("kind") in ("agent-task-journaled", "agent-task-polled")]
+            parts = (remote_artifacts[0].get("parts") or []) if len(remote_artifacts) == 1 else []
+            artifact = (parts[0].get("data") or {}) if len(parts) == 1 and _part_is(parts[0], "data") else {}
+            action_log = sorted((x for x in activity if x.get("action_id") == match["action_id"]),
+                                key=lambda row: row.get("wall_time", 0))
+            journaled = [x for x in action_log if x.get("kind") == "agent-task-journaled"]
+            finished = [x for x in action_log if x.get("kind") in
+                        ("agent-usage-recorded", "agent-usage-unrecorded")]
+            usage = [x for x in usage_rows if x.get("task_id") == match["task_id"]
+                     and x.get("service_identity") == identity]
+            receipt_artifact = (match.get("receipt") or {}).get("artifact") or {}
+            task = {"agent": name, "task_id": remote.get("id"),
+                    "journal_task_id": match["task_id"], "action_id": match["action_id"],
+                    "run_id": match.get("run_id"),
+                    "definition_digest": match.get("definition_digest"),
+                    "context_id": remote.get("contextId"),
+                    "journal_context_id": match.get("context_id"),
+                    "message_id": sent.get("messageId"),
+                    "journal_message_id": match.get("message_id"),
+                    "state": a2a_v1.task_state(remote),
+                    "brief": _json_field({"brief": brief_text}, "brief"),
+                    "artifact": artifact,
+                    "artifact_id": remote_artifacts[0].get("artifactId")
+                                   if len(remote_artifacts) == 1 else None,
+                    "receipt_sha256": receipt_artifact.get("sha256"),
+                    "agent_usage": usage[0] if len(usage) == 1 else None,
+                    "duration_seconds": (finished[-1]["wall_time"] - journaled[0]["wall_time"]
+                                         if journaled and finished else None),
+                    "exclusive_store": True}
+            # Correlation is the factory's: the served Task carries the journaled
+            # contextId and its history the journaled messageId.
+            task["correlated"] = (task["task_id"] == task["journal_task_id"] and
+                bool(task["context_id"]) and task["context_id"] == task["journal_context_id"] and
+                bool(task["message_id"]) and task["message_id"] == task["journal_message_id"] and
+                (remote.get("metadata") or {}).get("agent_identity") == identity)
+            pin_logs = [x for x in action_log if x.get("kind") == "agent-card-verified"]
+            interactions = [x for x in action_log
+                            if x.get("kind") in ("agent-task-journaled", "agent-task-polled")]
             last_poll_at = float("-inf")
-            ordered_pins = sorted(pin_logs, key=lambda row: row.get("wall_time", 0))
             interactions_verified = True
-            for interaction in sorted(interactions, key=lambda row: row.get("wall_time", 0)):
+            for interaction in interactions:
                 verified = any(last_poll_at < pin_log.get("wall_time", 0) <=
-                               interaction.get("wall_time", 0) for pin_log in ordered_pins)
+                               interaction.get("wall_time", 0) for pin_log in pin_logs)
                 interactions_verified = interactions_verified and verified
                 if interaction.get("kind") == "agent-task-polled":
                     last_poll_at = interaction.get("wall_time", 0)
             task["pin_verified"] = bool(pin_logs and interactions_verified and
-                match.get("pinned_identity") ==
-                pids.get(name, {}).get("identity") and all(
-                    x.get("pinned_identity") == pids.get(name, {}).get("identity") and
+                task["correlated"] and match.get("pinned_identity") == identity and all(
+                    x.get("pinned_identity") == identity and
                     x.get("pinned_card_sha256") == pin.get("card_sha256") and
-                    x.get("pinned_contract_digest") ==
-                        (pin.get("a2a_extension") or {}).get("contract_digest") and
                     x.get("observed", {}).get("card_sha256") == pin.get("card_sha256") and
-                    x.get("observed", {}).get("contract_sha256") ==
-                        (pin.get("a2a_extension") or {}).get("contract_digest")
+                    x.get("observed", {}).get("identity") == identity
                     for x in pin_logs))
-            task["live"] = any(x.get("live") is True for x in task["model_calls"])
             if name == "quality" and isinstance(artifact, dict):
                 content = artifact.get("content") or "{}"
                 try:
@@ -1049,20 +1151,22 @@ def _collect_agents(home: Path, testbed: dict, journal: list[dict],
                 except ValueError:
                     task["verdict"] = {}
             task["content_valid"] = False
-            if task.get("state") == "completed" and isinstance(artifact, dict):
+            if task["state"] == "completed" and isinstance(artifact, dict):
                 try:
                     from agent_roles import ROLES
                     role = "quality" if name == "quality" else "synthesis" if name == "synthesizer" else "research"
-                    parsed = ROLES[role].parse(artifact["content"], task["brief"],
-                                               pids[name]["identity"])
+                    parsed = ROLES[role].parse(artifact["content"], task["brief"], identity)
                     task["content_valid"] = parsed == json.loads(artifact["content"])
                 except (KeyError, ValueError, TypeError):
                     pass
-        result[name] = {"identity": pids.get(name, {}).get("identity"),
-            "port": pids.get(name, {}).get("port"), "state_dir": str(state),
-            "store_path": str(store) if store else None,
+            tasks.append(task)
+        result[name] = {"identity": identity, "port": pids.get(name, {}).get("port"),
+            "state_dir": str(state), "card_sha256": pin.get("card_sha256"),
             "pin_verified": all(x.get("pin_verified") for x in tasks) if tasks else False,
-            "tasks": tasks, "sqlite": raw_sqlite}
+            "tasks": tasks,
+            "factory_records": {"journal": records,
+                                "agent_usage": [x for x in usage_rows
+                                                if x.get("service_identity") == identity]}}
     all_ids = [t.get("task_id") for name in AGENTS for t in result[name]["tasks"]]
     for name in AGENTS:
         for task in result[name]["tasks"]:
@@ -1337,7 +1441,8 @@ def main() -> int:
         step = "testbed"
         testbed = json.loads(run_cli(str(ROOT / "services" / "testbed.py"), "up",
             "--profile", "report", "--model-provider", args.provider, "--model", args.model,
-            "--home", str(home), "--port-base", str(args.services_port_base)))
+            "--home", str(home), "--port-base", str(args.services_port_base),
+            "--test-controls"))
         evidence["testbed"] = testbed
         evidence["binding_names"] = sorted((testbed.get("bindings") or {}).keys())
         for name, member in (testbed.get("pids") or {}).items():
@@ -1420,7 +1525,8 @@ def main() -> int:
             if number in (2, 3):
                 stimuli = json.loads((ROOT / "scenarios" / "sf_stimuli.json").read_text())
                 control = stimuli[f"route{number}"]
-                http(f"http://127.0.0.1:{args.services_port_base + 2}/_test/stimulus", control)
+                # Test-only A2A extension; it binds to the next new contextId.
+                stimulus_client.arm(f"http://127.0.0.1:{args.services_port_base + 2}", control)
             route = _route(base, instance, question, number)
             evidence["broker_pids_during"].append(_pid(broker))
             runner_ready = home / "runner" / "runner-ready.json"
@@ -1506,16 +1612,20 @@ def main() -> int:
         evidence["broker_events"] = jsonl(model_home / "broker-events.jsonl")[broker_event_start:]
         evidence["director_call_count"] = sum(t.get("model_calls", 0) for r in evidence["routes"].values()
                                                for t in r.get("director_turns") or [])
-        agent_sessions = {call.get("session_id") for name in AGENTS
-            for task in evidence["agents"][name]["tasks"] for call in task.get("model_calls") or []}
+        agent_sessions = {_agent_session(task, evidence["agents"]) for name in AGENTS
+            for task in evidence["agents"][name]["tasks"]}
         evidence["broker_owner_counts"] = {
             "authoring": len(author["broker_streams"]),
             "director": sum(row.get("session") not in agent_sessions
                 for row in director_stream_windows)}
         evidence["incidents"] = _rows(instance / "director.sqlite3", "incidents")
         evidence["releases"] = _rows(home / "services" / "release" / "release.sqlite3", "releases")
-        raw_stimuli = http(f"http://127.0.0.1:{args.services_port_base + 2}/_test/stimulus-log")
-        evidence["stimulus_log"] = raw_stimuli if isinstance(raw_stimuli, list) else raw_stimuli.get("applied", [])
+        # The agent logs only its own contextIds; the factory journal says which
+        # run owns each context (factory-side binding, no agent echo of run_id).
+        evidence["stimulus_log"] = stimulus_client.bind_to_runs(
+            stimulus_client.log(f"http://127.0.0.1:{args.services_port_base + 2}"),
+            stimulus_client.factory_contexts(home / "runner" / "outcomes.sqlite3"),
+            (testbed.get("pids") or {}).get("synthesizer", {}).get("identity"))
         for number in routes:
             route = evidence["routes"][str(number)]
             route["stimulus_log"] = [x for x in evidence["stimulus_log"]

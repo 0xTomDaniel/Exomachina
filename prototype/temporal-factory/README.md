@@ -100,11 +100,12 @@ $PY -B scenarios/operator_stack.py status   # processes, ports, v1 cards, runner
 $PY -B scenarios/operator_stack.py down     # graceful stop: harness, agents, runner
 ```
 
-- **Ports.** Harness `report-factory` (`verified-research@1`) and `/floor` are on `127.0.0.1:47053`. The model agents are on 47100–47103: two research agents, the synthesizer (with `--test-controls`) and Quality, all `codex-subscription` `gpt-6-luna`. The release receiver (`--mode participating`) is on 47104. Runner port base 47020 puts the Temporal frontend on 47022; member base 32620 puts PostgreSQL on 32620.
+- **Ports.** Harness `report-factory` (`verified-research@1`) and `/floor` are on `127.0.0.1:47053`. The model agents are on 47100–47103: two research agents, the synthesizer and Quality, all `codex-subscription` `gpt-6-luna`. Production agents start without `--test-controls`; only qualification runs (`single_factory.py`, `sf_agent_probe.py`) start the synthesizer with the test-only stimulus extension. The release receiver (`--mode participating`) is on 47104. Runner port base 47020 puts the Temporal frontend on 47022; member base 32620 puts PostgreSQL on 32620.
 - **State and runtime.** Every process runs detached, and its log stays in the home: `logs/`, `services/*/service.log` and `runner/*.log`. The hand-off digest key is created as `handoff-digest.key` on first use. Temporal Server 1.32.0 and the CLI are durable copies under `~/.exomachina/temporal/1.32.0`. PostgreSQL comes from `/opt/homebrew/opt/postgresql@16/bin`.
 - **Broker.** The stack uses the operator's install-wide model broker (`~/.exomachina/model-broker`). The launcher never signs in and never prints a credential.
 - **No inference.** `up`, `status` and `down` submit no work and make no model call. Model agents start with an empty ledger, so they recover nothing.
 - **Floor.** Open `http://127.0.0.1:47053/qa/login` and start a local QA session. With no runs yet, the Observation freshness is `unknown`, and the run-history pill shows it as an error. Submission readiness still reports `ready`.
+- **Agent decoupling (8 Oct 2026).** Agents speak only A2A: a plain Message whose only content is the brief, `messageId` resend for idempotency, usage through the budget extension, and no private routes. `status` reads agents only through their Agent Cards plus process/port checks. Agent ledgers from before decoupling are migrated forward on start; re-provisioning the home is equivalent. See "Agent decoupling" in [`INTERFACES.md`](INTERFACES.md).
 - **History.** A new home starts a new factory identity with no job history. The old stack's Observation and Director databases remain in its `/private/tmp` home, but this stack does not import them.
 
 ## Qualification spikes

@@ -131,7 +131,8 @@ def build_app(card: AgentCard, request_handler, *, app=None):
     """Mount the v1 Agent Card and the strict v1 JSON-RPC endpoint at ``/``."""
     from fastapi import FastAPI
 
-    app = app or FastAPI()
+    # No generated documentation routes: an agent serves only JSON-RPC and its card.
+    app = app or FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     dispatcher = JsonRpcDispatcher(request_handler=request_handler, enable_v0_3_compat=False)
     required = set(wire.required_extensions(card_dict(card)))
 

@@ -471,7 +471,17 @@ def _card_summary(port: int) -> dict:
                                       "protocolVersion": i.get("protocolVersion")}
                                      for i in interfaces if isinstance(i, dict)],
             "skills": [skill.get("id") for skill in card.get("skills") or []
-                       if isinstance(skill, dict)]}
+                       if isinstance(skill, dict)],
+            "identity": _card_identity(card)}
+
+
+def _card_identity(card: dict) -> str | None:
+    import a2a_extensions
+    for extension in (card.get("capabilities") or {}).get("extensions") or []:
+        if isinstance(extension, dict) and extension.get("uri") == a2a_extensions.AGENT_URI:
+            identity = (extension.get("params") or {}).get("identity")
+            return identity if isinstance(identity, str) and identity else None
+    return None
 
 
 def _broker_flags() -> dict:
@@ -514,15 +524,17 @@ def status(args: argparse.Namespace) -> dict:
         port = plan[name]
         entry = {"pid": record.get("pid"), "alive": _alive(record.get("pid")), "port": port,
                  "listening": port in listening}
-        service_code, service_health = _http_json(f"http://127.0.0.1:{port}/health")
-        entry["health"] = service_code
-        if isinstance(service_health, dict):
-            entry["identity_matches"] = service_health.get("identity") == record.get("identity")
-            entry["model"] = {key: service_health.get(key) for key in
-                              ("provider", "model_id", "reasoning_effort", "inference_enabled")
-                              if key in service_health} or None
         if name in MODEL_AGENTS:
+            # A2A agents are observed only through their public Agent Card
+            # plus process/port checks; their model configuration is private.
             entry["card"] = _card_summary(port)
+            entry["identity_matches"] = (entry["card"].get("identity") is not None and
+                                         entry["card"].get("identity") == record.get("identity"))
+        else:
+            service_code, service_health = _http_json(f"http://127.0.0.1:{port}/health")
+            entry["health"] = service_code
+            if isinstance(service_health, dict):
+                entry["identity_matches"] = service_health.get("identity") == record.get("identity")
         services[name] = entry
     report["services"] = services
     report["runner"] = _runner_status(args)

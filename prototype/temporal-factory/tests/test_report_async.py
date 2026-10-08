@@ -14,6 +14,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import a2a_extensions
 import adapter
 import agent_binding
 from report_contract import canonical, digest, validate_verdict
@@ -35,8 +36,6 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path.endswith("agent-card.json"):
             self.answer(self.server.card)
-        elif self.path == "/contract":
-            self.answer(self.server.contract)
         else:
             self.send_error(404)
 
@@ -45,21 +44,23 @@ class Handler(BaseHTTPRequestHandler):
         assert self.headers.get("A2A-Version") == "1.0"
         if rpc["method"] == "SendMessage":
             assert rpc["params"]["configuration"]["returnImmediately"] is True
-            assert self.headers.get("A2A-Extensions") == agent_binding.EXTENSION_URI
-            command = rpc["params"]["message"]["parts"][0]["data"]
-            action = command["action_id"]
-            if action not in self.server.tasks:
-                self.server.tasks[action] = (command, time.monotonic())
-            elif self.server.tasks[action][0] != command:
+            assert self.headers.get("A2A-Extensions") == a2a_extensions.BUDGET_URI
+            message = rpc["params"]["message"]
+            assert [set(part) for part in message["parts"]] == [{"text", "mediaType"}]
+            text = message["parts"][0]["text"]
+            key = message["messageId"]
+            if key not in self.server.tasks:
+                self.server.tasks[key] = (text, message["contextId"], time.monotonic())
+            elif self.server.tasks[key][0] != text:
                 self.answer({"jsonrpc": "2.0", "id": rpc["id"], "error": {"code": -32000}})
                 return
-            self.server.briefs.append(json.loads(command["brief"]))
-            result = {"task": self.server.task(action)}
+            self.server.briefs.append(json.loads(text))
+            result = {"task": self.server.task(key)}
         else:
             assert rpc["method"] == "GetTask"
             task_id = rpc["params"]["id"]
-            action = next(key for key in self.server.tasks if f"{self.server.identity}:{key}" == task_id)
-            result = self.server.task(action)
+            key = next(key for key in self.server.tasks if f"{self.server.identity}:{key}" == task_id)
+            result = self.server.task(key)
         self.answer({"jsonrpc": "2.0", "id": rpc["id"], "result": result})
 
 
@@ -72,16 +73,12 @@ class Agent(ThreadingHTTPServer):
         self.tamper = None
         self.tasks = {}
         self.briefs = []
-        self.contract = {"name": agent_binding.CONTRACT, "capability": capability,
-            "reconcile": "a2a-idempotent-resend", "idempotency": {"key": "action_id",
-            "same_payload": "original_task_id", "commit_before_response": True}}
         self.card = {"name": role, "supportedInterfaces": [{
                 "url": f"http://127.0.0.1:{port}", "protocolBinding": "JSONRPC",
                 "protocolVersion": "1.0"}],
             "skills": [{"id": capability}], "capabilities": {"extensions": [{
-                "uri": agent_binding.EXTENSION_URI, "required": True, "params": {
-                    "identity": self.identity, "contract": agent_binding.CONTRACT,
-                    "contract_digest": agent_binding.digest(self.contract)}}]}}
+                "uri": agent_binding.EXTENSION_URI, "required": False, "params": {
+                    "identity": self.identity, "resend": a2a_extensions.RESEND_RULE}}]}}
 
     def result(self, brief):
         if self.role == "research":
@@ -112,20 +109,18 @@ class Agent(ThreadingHTTPServer):
             verdict["reviewer"] = candidate["author"]
         return verdict
 
-    def task(self, action):
-        command, created = self.tasks[action]
-        brief = json.loads(command["brief"])
+    def task(self, key):
+        text, context_id, created = self.tasks[key]
+        brief = json.loads(text)
         completed = time.monotonic() - created > 0.03
-        task = {"id": f"{self.identity}:{action}",
-                "metadata": {**{key: command[key] for key in
-                    ("action_id", "run_id", "definition_digest")}, "agent_identity": self.identity},
+        task = {"id": f"{self.identity}:{key}", "contextId": context_id,
+                "metadata": {"agent_identity": self.identity},
                 "status": {"state": "TASK_STATE_COMPLETED" if completed else "TASK_STATE_WORKING"}}
         if completed:
             content = canonical(self.result(brief))
             sha = hashlib.sha256(content.encode()).hexdigest()
             artifact = {"revision": brief["revision"], "sha256": sha, "author": self.identity,
-                "content": content, **{key: command[key] for key in
-                ("action_id", "run_id", "definition_digest")}}
+                "content": content}
             if self.tamper != "no_artifacts":
                 task["artifacts"] = [{"artifactId": sha, "parts": [{"data": artifact}]}]
         return task

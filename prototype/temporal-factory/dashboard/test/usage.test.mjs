@@ -40,7 +40,7 @@ function coverage(overrides = {}) {
     bound_sources_status: "available",
     authoring_bound: { status: "available", queries_failed: 0, rows_rejected: 0, conflicts: 0 },
     authoring_unbound: { status: "unavailable", reason: "shared_model_home_factory_exclusivity_not_proven" },
-    pinned_services: { status: "fixture_only", availability: "available", authentication: "fixture_bearer_only", pinned_owner_count: 1, owners_responded: 1, owner_or_request_failures: 0, rows_rejected: 0, conflicts: 0 },
+    pinned_services: { status: "agent_reported", availability: "available", source: "factory_journal", pinned_owner_count: 1, owner_resolution_failures: 0, queries_failed: 0, non_usage_service_count: 0, rows_rejected: 0, conflicts: 0 },
     director: { status: "unavailable", reason: "no_public_list_measurements_accessor" },
     director_unbound: { status: "unavailable", reason: "pre_task_or_unbound_director_rows_have_no_authoritative_factory_run" },
     commercial_costs: "not_included",
@@ -51,7 +51,7 @@ function coverage(overrides = {}) {
 test("Runtime response validator accepts the exact MeasurementView and bounded coverage shape", () => {
   const response = validateMeasurementsResponse({ measurements: [measurement()], coverage: coverage() });
   assert.equal(response.measurements.length, 1);
-  assert.equal(response.coverage.pinned_services.authentication, "fixture_bearer_only");
+  assert.equal(response.coverage.pinned_services.source, "factory_journal");
   assert.equal(response.coverage.authoring_unbound.reason, "shared_model_home_factory_exclusivity_not_proven");
   assert.equal(response.coverage.director_unbound.reason, "pre_task_or_unbound_director_rows_have_no_authoritative_factory_run");
   assert.equal(response.coverage.commercial_costs, "not_included");
@@ -61,13 +61,13 @@ test("accepts current sanitized aggregate coverage counters and rejects malforme
   const base=coverage();
   const actualShape={
     ...base,scoped_run_count:2,
-    pinned_services:{...base.pinned_services,pinned_owner_count:8,owners_responded:8,non_usage_service_count:2,owner_resolution_failures:0,request_failures:0},
+    pinned_services:{...base.pinned_services,pinned_owner_count:8,non_usage_service_count:2,owner_resolution_failures:0,queries_failed:0},
     director:{status:"available",queries_failed:0,rows_rejected:0,conflicts:0},
   };
   const response=validateMeasurementsResponse({measurements:[],coverage:actualShape});
   assert.deepEqual(response.coverage.pinned_services,actualShape.pinned_services);
 
-  for(const key of ["non_usage_service_count","owner_resolution_failures","request_failures"]){
+  for(const key of ["pinned_owner_count","non_usage_service_count","owner_resolution_failures","queries_failed","rows_rejected","conflicts"]){
     for(const value of [-1,1.5,"1",1_000_001]){
       const malformed={...actualShape,pinned_services:{...actualShape.pinned_services,[key]:value}};
       assert.throws(()=>validateMeasurementsResponse({measurements:[],coverage:malformed}),new RegExp(key));
@@ -75,6 +75,25 @@ test("accepts current sanitized aggregate coverage counters and rejects malforme
   }
   const unknown={...actualShape,pinned_services:{...actualShape.pinned_services,customer_cost:0}};
   assert.throws(()=>validateMeasurementsResponse({measurements:[],coverage:unknown}),/field is not permitted/);
+  // The retired agent-polling shape is no longer accepted.
+  const polled={...actualShape,pinned_services:{status:"fixture_only",availability:"available",authentication:"fixture_bearer_only",pinned_owner_count:1,owners_responded:1,owner_or_request_failures:0,rows_rejected:0,conflicts:0}};
+  assert.throws(()=>validateMeasurementsResponse({measurements:[],coverage:polled}));
+  const {queries_failed:_missing,...withoutCounter}=actualShape.pinned_services;
+  assert.throws(()=>validateMeasurementsResponse({measurements:[],coverage:{...actualShape,pinned_services:withoutCounter}}));
+  for(const change of [{status:"fixture_only"},{source:"agent_endpoint"},{availability:"unknown"}]){
+    assert.throws(()=>validateMeasurementsResponse({measurements:[],coverage:{...actualShape,pinned_services:{...actualShape.pinned_services,...change}}}),/invalid pinned service status/);
+  }
+});
+
+test("agent-reported usage is accepted only as reported assignment usage, never zero-filled", () => {
+  const agent = measurement({ provider: "a2a-agent", model_id: "unreported", reasoning_effort: null,
+    measurement_source: "agent_reported", evidence_status: "agent_reported", completeness: "partial",
+    usage: { ...structuredClone(unavailableUsage), input_tokens: { status: "reported", value: 7 }, output_tokens: { status: "reported", value: 5 } } });
+  assert.equal(validateMeasurements([agent])[0].evidence_status, "agent_reported");
+  assert.throws(() => validateMeasurements([{ ...agent, call_scope: "director_call" }]), /assignment usage only/);
+  assert.throws(() => validateMeasurements([{ ...agent, measurement_source: "provider_reported" }]), /reported category evidence/);
+  assert.throws(() => validateMeasurements([{ ...agent, usage: structuredClone(unavailableUsage), completeness: "unknown" }]), /reported category evidence/);
+  assert.throws(() => validateMeasurements([measurement({ evidence_status: "unknown", measurement_source: "unknown" })]), /reported category evidence/);
 });
 
 test("groups by observed service, call scope, run, assignment, and attempt", () => {

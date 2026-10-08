@@ -220,7 +220,9 @@ never reach runtime credentials, A2A, Temporal, the Commercial Module, or paymen
 
 Demo scenarios additionally carry one explicitly labelled illustrative layer through that same Seam:
 `state.demo` on the snapshot (label `Illustrative Demo fixture`; scenario clock/start/now, simulated
-budget, agent prices/capacity/shared occupancy, programs, result kind, versions, step cues) and
+budget, illustrative agent prices quoted through the A2A payment extension, factory WIP limits and
+factory queue occupancy (agents have no capacity; decision 7), programs, result kind, versions, step
+cues) and
 `com.exomachina.demo.illustration.v1` events (one allowlisted original timeline entry each: movement,
 artifacts, verdicts, releases, readouts, Director turns, alarms, recommendations, notes, holds). The
 validators accept this layer only when the caller declares source `demo`; the default, Live, and
@@ -519,7 +521,7 @@ Historical waits without these facts remain unknown. Recorded sources are read-o
 
 The lead now owns `src/factory.py`, `src/definition.py`, `dashboard/contract.mjs`, `dashboard/decision.mjs`, and the page outside explicitly allocated Dashboard sections. Runtime retains the harness, runtime source, runtime tests and the human Task projection integration. Observation's temporary Operations source constructor/producer/refresh allocation returns to Runtime after its reviewed handoff; Observation retains its new focused integration test. Dashboard owns usage validation/tests and its current Decisions wait-control section. Commerce owns additive normal model-agent scheduling, adapter factory binding, and their tests. Every allocation preserves earlier migration edits.
 
-S16 approves the additive optional A2A assign `factory_id`, supplied only by actual workflow Director authority under `exo-explicit-factory-binding-v1`. Missing identity remains unknown historically; no run/action parsing or retrofill is permitted. (A later decoupling pass is expected to remove factory identifiers from agents entirely.)
+S16 approved an additive optional A2A assign `factory_id` under `exo-explicit-factory-binding-v1`. **Superseded by agent decoupling (8 Oct 2026):** no factory identifier crosses the wire. The Temporal patch marker `exo-explicit-factory-binding-v1` stays in `src/factory.py` only for replay determinism; `factory_id` now reaches only the factory's own agent-usage journal binding, never an agent.
 
 **Agent-side capacity withdrawn (operator decision, 8 Oct 2026).** Work-in-progress limits are factory settings. Agent services have no capacity queue and are treated as infinitely scalable; an agent may someday have independent limits of its own, but that is its private business and nothing here models it. Agent-side execution capacity was removed on 8 Oct 2026 by operator decision. The model agent no longer imports `src/admission.py`, has no `--admission-db`/`--execution-capacity` options, no `GET /admission/capacity` occupancy read, no capacity-gated scheduling or Task execution claims, and no "factory_id is required" rejection; every accepted Task runs immediately. The earlier text here (one shared queue owned by the pinned service identity across all caller factories, scoped own/other occupancy reads) is superseded. `src/admission.py` and `AdmissionQueue.read_snapshot()` remain factory-only: the harness owns the factory's admission queue and WIP limit.
 
@@ -698,8 +700,9 @@ operator approval.
   role, `configuration.blocking`, or a Part with more than one content field
   answers `InvalidParams` (-32602). A send that does not list every required
   card extension in `A2A-Extensions` answers `ExtensionSupportRequiredError`
-  (-32008); the factory's required extension is
-  `urn:exomachina:a2a-action-contract:v1`. Asynchronous sends use
+  (-32008). Since agent decoupling (8 Oct 2026) no agent card requires an
+  extension; `urn:exomachina:a2a-action-contract:v1` remains only on the
+  factory's own opted-in nested-supplier entry. Asynchronous sends use
   `configuration.returnImmediately: true` and poll `GetTask`.
 - Services use the SDK `LegacyRequestHandler` (TaskStore-authoritative flow),
   because their ledger-backed stores acknowledge only Tasks the ledger already
@@ -825,3 +828,94 @@ edge kind yet.
   turns a v1 stream's `artifactUpdate … lastChunk` events into item ready
   times and `item_ready` rows, and the projection emits any `ready` rows a
   record carries; wiring a streaming dispatch is deferred.
+
+## Agent decoupling (operator rule, 8 Oct 2026)
+
+Implements decisions 7 and 8 of `docs/a2a-v1-mediation-decision-2026-10-07.md`.
+Agent services are `services/model_agent.py`, `services/quality_server.py`,
+`services/delayed_agent.py`, `services/supplier_echo_fixture.py`, the
+`src/harness_server.py` fixture roles and harness agent mode
+(`harness.py`, `mode: "agent"`). The release receiver is converted separately.
+
+**Wire contract.** The factory sends an ordinary A2A v1 `SendMessage`:
+
+```text
+message: {role: ROLE_USER, messageId, contextId,
+          parts: [{text: <brief>, mediaType: application/json}]}
+configuration: {returnImmediately: true}
+metadata (optional): {"https://github.com/0xTomDaniel/Exomachina/a2a/extensions/budget/v1":
+                      {budget: {cost: {amount, currency}?, tokens: {limit}?, deadline?}}}
+```
+
+- The brief is the only content, composed by the factory's before-dispatch
+  hook (upstream evidence included). No run, assignment, attempt, action,
+  definition digest, factory identity, node, pin or Observation identifier
+  crosses the wire or enters agent state.
+- Idempotency is A2A's own: a resent `messageId` returns the original Task; a
+  different message under a used `messageId` is `InvalidParams`. Continuation
+  uses `taskId`/`contextId`.
+- An agent rejects a clearly insufficient budget (`InvalidParams`).
+- Task metadata carries only `agent_identity`; the artifact is
+  `{revision, sha256, author, content}`; the Task history holds the original
+  Message.
+
+**Agent Card.** Agents declare, `required: false`, the generic
+`urn:exomachina:a2a-agent:v1` extension (`params: {identity, resend:
+"messageId-returns-original-task"}`) and the budget extension. The factory's
+pin is `{card_sha256 (url-less), identity, reconcile}`; `reconcile` is
+`a2a-idempotent-resend` when the card declares the resend rule, else `opaque`.
+The card at `/.well-known/agent-card.json` is the only discovery read.
+
+**Routes.** An agent serves exactly `POST /` (JSON-RPC) and its Agent Card.
+`/health`, `/contract`, `/usage/measurements`, `/fixture/actions/*`, `/_test/*`
+and FastAPI's generated docs routes are removed
+(`tests/test_agent_service_guards.py`). `operator_stack.py status` and the
+testbed observe agents only by Agent Card plus process/port checks. Submission
+readiness checks that each pinned card resolves and declares the expected
+skill; an agent's model configuration is private and no longer checked.
+
+**Factory-side correlation.** `OutcomeJournal` records per action a
+`message_id` (uuid4 at first begin; a later begin keeps the prior record) and a
+`context_id` (one per `(run_id, agent identity)`, table `a2a_contexts`), then
+the received `task_id`. A lost reply resends the journaled Message; after a
+factory restart the activity re-attaches with `GetTask` on the journaled
+`task_id`. Receipts carry the factory's action/run/definition binding plus
+`task_id`, `context_id` and `message_id`.
+
+**Usage (decision 8).** The factory activates the budget extension
+(`A2A-Extensions`). A terminal Task carries
+`metadata[<budget URI>].incurred = {cost?: {amount, currency, source},
+tokens?: {input?, output?, cache_read?, cache_write?, total?}}` with only what
+was reported: never zero-filled, `cost` omitted unless reported. The factory's
+on-complete hook (`adapter._record_agent_usage`) records it in
+`<runner>/agent-usage.sqlite3` with `evidence_status`/`measurement_source`
+`agent_reported` (`unknown` when nothing was reported or the report is
+malformed), `provider: "a2a-agent"`, `model_id: "unreported"`,
+`call_scope: "assignment_call"`. `GET /usage/measurements` reads that journal;
+agents are never polled. Coverage `pinned_services` is exactly
+`{status: "agent_reported", availability, source: "factory_journal",
+pinned_owner_count, owner_resolution_failures, queries_failed,
+non_usage_service_count, rows_rejected, conflicts}`, and `dashboard/usage.mjs`
+accepts `agent_reported` only for reported assignment usage.
+
+**Test controls.** The route-2/3 stimulus is the test-only extension
+`urn:exomachina:a2a-test-stimulus:v1`, declared only by an agent started with
+`--test-controls` (`testbed.py up --test-controls`; production
+`operator_stack.py` never passes it). A control is a `SendMessage` with one
+data Part (`{"arm": {...}}` or `{"stimulus_log": true}`) and the extension
+activated; the reply is a Message. An armed stimulus binds to the next new
+`contextId`; qualification maps logged contexts to runs through the factory's
+`a2a_contexts` (`scenarios/stimulus_client.py`). Fixture faults
+(`--drop-first-response`, `--mismatch-artifact`) are process options.
+
+**Agent storage.** Agent ledgers keep only their own Task identities keyed by
+`messageId`. Forward migrations drop schema-1 run/action/definition columns and
+the `stimulus`, `stimulus_log` and `model_usage_measurements` tables; the live
+stack may instead be re-provisioned with `operator_stack.py`.
+
+**Remaining coupling.** The quality brief still carries the factory's
+`policy_digest` as brief content. The harness nested-supplier entry is a
+factory service and keeps its structured parent/child protocol and `/contract`.
+`quality_authority.decide_quality` (synchronous, unused by the runtime) still
+describes the retired agent echo.
+

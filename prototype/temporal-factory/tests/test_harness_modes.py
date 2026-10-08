@@ -29,7 +29,8 @@ from single_factory import CHECK_IDS, FOLLOW_UP, check_evidence  # noqa: E402
 from authoring import approve, materialize  # noqa: E402
 from binding import build_id_for, source_digest  # noqa: E402
 from fixture import assignment  # noqa: E402
-from long_client import send  # noqa: E402
+import long_client  # noqa: E402
+import sqlite3  # noqa: E402
 from testbed import (REPORT_CAPABILITIES, REPORT_NAMES, REPORT_QUALITY_POLICY,  # noqa: E402
                      report_bindings, report_role)
 
@@ -594,7 +595,7 @@ class AgentModeTests(unittest.TestCase):
                 return json.load(response)
 
         def launch():
-            # A stale server left on the fixed port would answer /health for
+            # A stale server left on the fixed port would answer the card for
             # this launch and mask the incarnation under test.
             with socket.socket() as probe:
                 if probe.connect_ex(("127.0.0.1", 44875)) == 0:
@@ -613,10 +614,11 @@ class AgentModeTests(unittest.TestCase):
                     if process.poll() is not None:
                         self.fail(f"agent server exited during startup; see {state / 'agent.log'}")
                     try:
-                        return process, get_json("/health")
+                        card = get_json("/.well-known/agent-card.json")
+                        return process, card["capabilities"]["extensions"][0]["params"]
                     except (urllib.error.URLError, TimeoutError, ValueError):
                         time.sleep(0.1)
-                self.fail(f"agent server did not become healthy; see {state / 'agent.log'}")
+                self.fail(f"agent server did not serve its card; see {state / 'agent.log'}")
             except BaseException:
                 stop(process)
                 raise
@@ -636,16 +638,31 @@ class AgentModeTests(unittest.TestCase):
             card = get_json("/.well-known/agent-card.json")
             self.assertEqual([skill["id"] for skill in card["skills"]], ["capability"])
             self.assertNotIn("verified-research@1", [skill["id"] for skill in card["skills"]])
-            command = assignment("run-agent-mode", "definition-agent-mode", "source_evidence")
-            receipt = send(base, command)
-            self.assertEqual(receipt["artifact"]["content"], "fixture-result:" + command["brief"])
-            self.assertEqual(receipt["harness_identity"], first["identity"])
+            brief = assignment("run-agent-mode", "definition-agent-mode",
+                               "source_evidence")["brief"]
+            task = long_client.send_async(base, brief, message_id="agent-mode-message",
+                                          context_id="agent-mode-context")
+            data = task["artifacts"][0]["parts"][0]["data"]
+            self.assertEqual(data["content"], "fixture-result:" + brief)
+            self.assertEqual(data["author"], first["identity"])
+            self.assertEqual(task["metadata"], {"agent_identity": first["identity"]})
+            again = long_client.send_async(base, brief, message_id="agent-mode-message",
+                                           context_id="agent-mode-context")
+            self.assertEqual(again["id"], task["id"])
             self.assertFalse((home / "runner").exists())
+            database = instance / "agent-state" / "harness.sqlite3"
+
+            def incarnation():
+                with sqlite3.connect(database) as db:
+                    return db.execute("SELECT incarnation FROM identity").fetchone()[0]
+
+            before = incarnation()
             stop(process)
             process = None
             process, second = launch()
             self.assertEqual(second["identity"], first["identity"])
-            self.assertEqual(second["incarnation"], first["incarnation"] + 1)
+            self.assertEqual(incarnation(), before + 1)
+            self.assertEqual(long_client.get_task(base, task["id"])["id"], task["id"])
             self.assertFalse((home / "runner").exists())
         finally:
             if process is not None:
