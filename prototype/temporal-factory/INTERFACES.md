@@ -844,34 +844,37 @@ Agent services are `services/model_agent.py`, `services/quality_server.py`,
 (`harness.py`, `mode: "agent"`) and the release agent
 (`services/release_server.py`, next section), which is under the same guards.
 
-**Wire contract.** The factory sends an ordinary A2A v1 `SendMessage`:
+**Wire contract.** The factory sends an ordinary A2A v1 `SendMessage`
+(superseded in part by "Agent wire contract (decision 9)" below: the Message now
+also carries the consumed upstream artifact Parts, and identity is the pinned
+card):
 
 ```text
 message: {role: ROLE_USER, messageId, contextId,
-          parts: [{text: <brief>, mediaType: application/json}]}
+          parts: [{text: <brief>, mediaType: application/json}, <upstream item Parts>...]}
 configuration: {returnImmediately: true}
 metadata (optional): {"https://github.com/0xTomDaniel/Exomachina/a2a/extensions/budget/v1":
                       {budget: {cost: {amount, currency}?, tokens: {limit}?, deadline?}}}
 ```
 
-- The brief is the only content, composed by the factory's before-dispatch
-  hook (upstream evidence included). No run, assignment, attempt, action,
+- The brief is the node's own content, composed by the factory's
+  before-dispatch hook; upstream hand-offs follow it as their own Parts. No run, assignment, attempt, action,
   definition digest, factory identity, node, pin or Observation identifier
   crosses the wire or enters agent state.
 - Idempotency is A2A's own: a resent `messageId` returns the original Task; a
   different message under a used `messageId` is `InvalidParams`. Continuation
   uses `taskId`/`contextId`.
 - An agent rejects a clearly insufficient budget (`InvalidParams`).
-- Task metadata carries only `agent_identity`; the artifact is
-  `{revision, sha256, author, content}`; the Task history holds the original
-  Message.
+- Task metadata carries nothing factory-related (no `agent_identity`); the
+  result artifact is the work product itself (see decision 9 below); the Task
+  history holds the original Message.
 
-**Agent Card.** Agents declare, `required: false`, the generic
-`urn:exomachina:a2a-agent:v1` extension (`params: {identity, resend:
-"messageId-returns-original-task"}`) and the budget extension. The factory's
-pin is `{card_sha256 (url-less), identity, reconcile}`; `reconcile` is
-`a2a-idempotent-resend` when the card declares the resend rule, else `opaque`.
-The card at `/.well-known/agent-card.json` is the only discovery read.
+**Agent Card.** Agents may declare, `required: false`, only the budget
+extension (and, under `--test-controls` only, the test stimulus extension). The
+earlier `urn:exomachina:a2a-agent:v1` identity extension is removed (decision
+9). The factory's pin is `{card_sha256 (url-less), identity, reconcile}` with
+identity derived from the card; see below. The card at
+`/.well-known/agent-card.json` is the only discovery read.
 
 **Routes.** An agent serves exactly `POST /` (JSON-RPC) and its Agent Card.
 `/health`, `/contract`, `/usage/measurements`, `/fixture/actions/*`, `/_test/*`
@@ -920,11 +923,12 @@ activated; the reply is a Message. An armed stimulus binds to the next new
 the `stimulus`, `stimulus_log` and `model_usage_measurements` tables; the live
 stack may instead be re-provisioned with `operator_stack.py`.
 
-**Remaining coupling.** The quality brief still carries the factory's
-`policy_digest` as brief content. The harness nested-supplier entry is a
-factory service and keeps its structured parent/child protocol and `/contract`.
-`quality_authority.decide_quality` (synchronous, unused by the runtime) still
-describes the retired agent echo.
+**Remaining coupling.** Resolved on `feat/decouple-integration` (see
+decision 9 below): the Quality brief carries the acceptance criteria content,
+not `policy_digest`, and the unused `quality_authority.decide_quality` is
+deleted. The harness nested-supplier entry is a factory service, not an agent:
+it keeps its structured parent/child protocol, `/contract` and its required
+factory-to-factory extension carrying the Director identity.
 
 ## A2A release agent (operator rule, 8 Oct 2026)
 
@@ -940,7 +944,8 @@ Decision record: `docs/a2a-v1-mediation-decision-2026-10-07.md` (decisions 3,
   card has one `supportedInterfaces` entry (`JSONRPC`, `1.0`), skill `release@1`,
   bearer security and no extension.
 - Input: one ordinary Message with exactly one Part (`text`, `raw` or `data`)
-  carrying a `mediaType`. Nothing factory-specific: no run, assignment, attempt,
+  carrying a `mediaType`. The factory sends the accepted report artifact's own
+  Part, copied verbatim (decision 9); release has no brief Part. Nothing factory-specific: no run, assignment, attempt,
   action, definition or factory identifier.
 - Idempotency: A2A `messageId`. A repeated identical `SendMessage` returns the
   original Task and receipt; reuse of a `messageId` with different content
@@ -960,8 +965,8 @@ Decision record: `docs/a2a-v1-mediation-decision-2026-10-07.md` (decisions 3,
 **Factory side** (`src/release_delivery.py`, called by the `release` Activity):
 
 - Binding: role `release`, strict `output: "artifacts"`, pinned by Agent Card
-  digest (`agent_binding.card_pin` / `resolve_card`, re-verified before every
-  send and poll). The contract's `reconcile` is `a2a-idempotent-resend` only
+  digest like every agent (`agent_binding.pin` / `resolve`, re-verified before
+  every send and poll). The contract's `reconcile` is `a2a-idempotent-resend` only
   when the card's release skill carries the `message-id-idempotent` tag.
 - The outcome journal records the release attempt with its deterministic, opaque
   `messageId` (a UUIDv5 of the factory release id) before any I/O, then the
@@ -969,8 +974,11 @@ Decision record: `docs/a2a-v1-mediation-decision-2026-10-07.md` (decisions 3,
   card promises idempotency, otherwise `opaque-effect-unknown`; a journaled
   `taskId` is re-read only through `GetTask`.
 - On completion the strict output contract applies first (no receipt artifact:
-  `output.missing`), then the receipt must cover the exact accepted bytes
-  (`release-receipt-inconsistent` otherwise). Rejected/failed/canceled Tasks are
+  `output.missing`), then the receipt must cover the exact accepted bytes: its
+  sha256 must equal both the sha256 of the bytes derived from the delivered
+  Part and the accepted `artifact_sha256`, with matching byte length and
+  mediaType. Any mismatch fails the release node
+  (`release-receipt-inconsistent`); a recorded check alone is not enough. Rejected/failed/canceled Tasks are
   incidents `release-task-<state>` carrying the agent's status message.
 - The confirmed receipt is the node's evidence and the Workflow's
   `release_receipt`. Its content-free hand-off is produced (`handoff_id` = the
@@ -986,3 +994,85 @@ the receipt (and a parent's, which repeats its child's), emits no second fact.
 Before this fix the source emitted the receipt at both points with different
 `destination_id`/`delivered_at`, so the dashboard reducer correctly flagged the
 pair as conflicting and the floor showed "Delivery unverified".
+
+## Agent wire contract (decision 9, 8 Oct 2026)
+
+Implements decision 9 of `docs/a2a-v1-mediation-decision-2026-10-07.md` for
+every agent the factory binds, Quality and release included.
+
+**Composed inputs (before-dispatch hook).** Each `SendMessage` Message is
+`[brief Part] + [consumed upstream item Parts]`:
+
+- The brief is one `text` Part, `mediaType: application/json`, holding only the
+  node's own assignment (kind, revision, question, evidence packet, repair
+  findings, acceptance criteria). It embeds no upstream artifact content and no
+  factory reference in place of content.
+- Each consumed hand-off item follows as the producing artifact's Parts copied
+  verbatim: same part kind, the same text/data/raw bytes, `mediaType` and
+  `filename`, never re-encoded (`handoff.compose_parts`). Producing Activities
+  return `item_parts`; the Workflow passes `upstream: [{handoff_id,
+  item_parts}]` built from the same carriers as `consumes`
+  (`factory.carrier`/`upstream_inputs`/`consumed_from`).
+- Synthesis receives both research artifacts (and the rejected draft on
+  repair); Quality receives the draft; release receives the accepted draft's
+  Part alone (no brief). Agents identify inputs by their JSON content `kind`.
+- With hand-off records on, the Activity verifies that `consumes` names exactly
+  the included hand-offs, in order, with item digests equal to the keyed
+  digests of the Parts sent; otherwise the node fails with
+  `input.composition-mismatch` and nothing is sent.
+- `handoff.MAX_MESSAGE_BYTES = 4_000_000` bounds the JSON-encoded Message; an
+  input over the bound fails the node with `input.oversize`, never truncated.
+- The journaled `payload_sha256` covers the whole composed Message; a resend is
+  the identical Message under the same `messageId`/`contextId`.
+
+**Results.** An agent's result is one artifact whose single Part is the work
+product itself (`text`, `application/json`, canonical JSON). The factory
+computes `sha256` over the text bytes and records `revision` (the one it
+assigned) and `author` (the pinned binding) from its own journal; agents echo
+neither. The report's plain sha256 is therefore the sha256 of the exact bytes
+release delivers, so `artifact.revised` → `quality.verdict` →
+`delivery.receipt` share one digest.
+
+**Quality.** The brief carries the factory's `acceptance_criteria` content
+(`report_contract.REPORT_ACCEPTANCE_CRITERIA`); the pinned quality policy keeps
+`rubric_digest` and the factory's Activity input keeps `policy_digest` as
+evidence. The verdict is `{kind, candidate: {revision, sha256}, accepted,
+decided_by, findings, rubric, rubric_digest}`: the candidate's revision is the
+draft content's own and its sha256 the agent's digest of the received Part;
+`rubric_digest` is the digest of the criteria it received. No `reviewer` or
+author field: the factory enforces author ≠ reviewer from its bindings.
+
+**Identity and reconcile.** Every agent is pinned by its Agent Card alone
+(`agent_binding.pin`): `card_sha256` is the digest of the endpoint-free card,
+identity is `a2a-card-<card_sha256[:24]>`, a card marking any extension
+`required: true` is refused, and `reconcile` is `a2a-idempotent-resend` only
+when a skill carries the tag `message-id-idempotent`, else `opaque` (no resend
+after an uncertain send: `opaque-effect-unknown`). The factory requires no
+Exomachina extension, Task metadata or artifact field to dispatch, accept, pin
+or correlate. The `urn:exomachina:a2a-agent:v1` extension and Task metadata
+`agent_identity` are removed rather than kept optional: identity is already in
+the standard card and resend deduplication is A2A `messageId`, so the
+extension only restated standard behaviour. The testbed refuses two services
+whose cards would derive the same identity. Model agents label broker sessions
+`<card sha256>:<taskId>`.
+
+**Conformance proof.** `tests/test_third_party_agent.py`
+(`test_plain_a2a_sdk_agent_runs_an_assignment_end_to_end`) binds an agent built
+only on `a2a-sdk`, with no extensions, no Task metadata and opaque reconcile,
+and runs `adapter.assign` to validated content with journal correlation and a
+keyed hand-off record; no factory identifier reaches the agent. A guard in
+`tests/test_agent_service_guards.py` allows repo agent cards only the budget
+extension (plus the stimulus extension under test controls). Any change that
+breaks these tests violates decision 7.
+
+**Evidence.** `single_factory.py` G-8 requires, per delivered route, exactly
+one `delivery.receipt` fact and one confirmed release record whose sha256
+equals the accepted report's plain sha256 (none on route 3). The dashboard
+shows delivery as verified only on that equality and a mismatch or a second
+receipt as a delivery fault; agent usage is labelled agent-reported without an
+agent model or provider.
+
+**Historical scenarios.** `scenarios/integrated.py`, `spike_a_delayed.py`,
+`spike_b_two_instances.py`, `spike_c_director.py` and `sf_agent_probe.py` read
+the retired HTTP release receiver or the old agent envelope. They are kept as
+non-runnable records of their cited results; no gate imports them.
