@@ -152,9 +152,16 @@ Definition edges declare a kind: `material` (the default) or `control`.
 - Route nodes' transitions to repair, Director waits, release, and terminal
   states are declared as control edges, replacing today's "undeclared" hop
   labels.
-- A gate node such as Quality consumes a carrier and returns a verdict. The
-  factory forwards the same hand-off downstream with the verdict attached as a
-  seal; the gate does not mint a new work product.
+- A gate node such as Quality consumes a carrier and returns its verdict and
+  findings as an artifact, like any other agent (strict `artifacts` mode).
+  - The factory records that artifact as the gate's own hand-off.
+  - On the floor, the verdict is drawn as a seal on the carrier the gate
+    judged. That carrier keeps its identity and continues downstream on its
+    material edge.
+  - When the verdict routes to repair, the repair node consumes both the
+    judged work product and the gate's findings hand-off, each over a declared
+    material edge. Findings are never pasted into the repair brief (amended
+    8 October 2026).
 
 ### 6. Floor presentation: carriers and gems
 
