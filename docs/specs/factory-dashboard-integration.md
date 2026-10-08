@@ -1062,3 +1062,41 @@ is authoritative; this section states its dashboard consequences.
   is requalified when they land. Live-submission B-rows are requalified on A2A
   v1. Demo keeps its illustrative movement and gains illustrative gems labelled
   as such.
+
+Implementation notes (dashboard presentation, 7 Oct 2026). Built and proved
+over synthetic, test-only hand-off streams; runtime emission is a later phase.
+These settle details the decision left open:
+
+- **Where edge kinds arrive.** The pinned public graph (`graph.edges[].kind`,
+  `graph.nodes[].output`) carries both. The event-stream `graph_nodes` form
+  (`publication.activated`, `run.created`) gains `output` only; its `next`
+  lists cannot express an edge kind, so those edges default to material until
+  the runtime phase decides how control edges are announced there.
+- **Carriers ride material edges only.** A consumer reached from the carrier's
+  position by material edges receives it there. Otherwise the carrier is
+  retired where it waits at that consumption (for example, a rejected R1 at
+  Quality when the repaired draft consumes it); it does not travel the repair
+  route over control edges. A later consumer that is reachable from the
+  producer by a material bypass gets its own carrier on that belt, starting at
+  production. Inferred items in runs without records still follow route cases;
+  a hop over a declared control edge is labelled control, not undeclared.
+- **Release.** A carrier consumed by a side-effect release node exits there on
+  a verified receipt for its report item; it never travels the release node's
+  control edge to the terminal.
+- **Live filling.** Before production the total item count is unknown, so a
+  filling carrier shows its ready items plus one empty socket.
+- **Quality states.** Besides flawless (recorded, digests match) and cloudy
+  (inferred: one rough-cut "contents not recorded" socket), a consumer naming
+  digests that match no produced revision chips the gems ("digest mismatch").
+- **Shape and merge.** In Live, carrier shape follows the producing node's
+  pinned kind (synthesize square, parallel or branch pod capsule, join
+  hexagon, nested factory pentagon, otherwise capsule). A merged carrier
+  starts at the join, labelled J, holding every input item.
+- **Field details.** `media_type` may be null (A2A `mediaType` is optional);
+  `byte_length` may be null only when the part kinds include `url`;
+  `handoff_revision` is a positive integer; digests are 64 lowercase hex; a
+  `message` hand-off holds exactly one item; consumed inputs name each
+  hand-off once.
+- **Snapshots.** Snapshot run rows do not yet carry hand-off records, so a
+  refreshed or retained run shows inferred carriers until the runtime phase
+  adds them to the snapshot contract.

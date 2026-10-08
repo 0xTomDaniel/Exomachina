@@ -1,4 +1,4 @@
-import { DEMO_ILLUSTRATION_EVENT_TYPE, DashboardContractError, validateServerMessage, validateSnapshot } from "./contract.mjs";
+import { DEMO_ILLUSTRATION_EVENT_TYPE, DashboardContractError, HANDOFF_EVENT_TYPES, validateServerMessage, validateSnapshot } from "./contract.mjs";
 
 const clone = value => structuredClone(value);
 const values = value => value && typeof value === "object" ? Object.values(value) : [];
@@ -8,6 +8,20 @@ const MAX_ILLUSTRATIONS = 8192;
 
 function newRun(runId) {
   return { run_id:runId, started_at:null, pinned:{}, state:null, assignments:{}, artifacts:[], quality:[], decisions:[], commands:[], delivery:[], incidents:[], admissions:[], illustrations:[] };
+}
+// Content-free hand-off facts are kept per run, keyed by their identities so
+// at-least-once replays and duplicate emissions do not double a carrier.
+const HANDOFF_KEYS = {
+  "com.exomachina.handoff.produced.v1": ["produced", d => `${d.handoff_id}\u0000${d.handoff_revision}`],
+  "com.exomachina.handoff.consumed.v1": ["consumed", d => `${d.assignment_id}\u0000${d.attempt_id}\u0000${d.node}\u0000${d.consumed_at}`],
+  "com.exomachina.handoff.item_ready.v1": ["ready", d => `${d.assignment_id}\u0000${d.attempt_id}\u0000${d.handoff_id}\u0000${d.item_index}`],
+};
+function addHandoff(run, type, data) {
+  const [list, key] = HANDOFF_KEYS[type];
+  const rows = (run.handoffs ??= { produced:[], consumed:[], ready:[] })[list];
+  const id = key(data), index = rows.findIndex(row => key(row) === id);
+  if (index >= 0) rows[index] = clone(data); else rows.push(clone(data));
+  if (rows.length > 256) rows.splice(0, rows.length - 256);
 }
 function addBounded(rows, data, key) {
   const id = key ? data[key] : null;
@@ -85,7 +99,7 @@ function mergeCloudEvent(state, event) {
   else if (event.type === eventType("publication.activated")) {
     state.publication = clone(d);
     if(Array.isArray(d.graph_nodes)){
-      const nodes=d.graph_nodes.map(n=>({id:n.id,name:n.name??n.id,type:n.type,kind:n.type,...(n.capability?{capability:n.capability,agent:n.capability}:{})}));
+      const nodes=d.graph_nodes.map(n=>({id:n.id,name:n.name??n.id,type:n.type,kind:n.type,...(n.capability?{capability:n.capability,agent:n.capability}:{}),...(n.output?{output:n.output}:{})}));
       const edges=d.graph_nodes.flatMap(n=>(n.next??[]).map(to=>({from:n.id,to})));
       state.factory={...(state.factory??{}),id:state.factoryId,name:state.factory?.name??state.factoryId,graph:{nodes,edges},agent_bindings:clone(d.service_bindings??[])};
     }
@@ -107,7 +121,7 @@ function mergeCloudEvent(state, event) {
     run.pinned[k] = d[k];
   }
   if(event.type === eventType("run.created") && Array.isArray(d.graph_nodes)){
-    const graph={nodes:d.graph_nodes.map(n=>({id:n.id,kind:n.type,...(n.capability?{capability:n.capability}: {})})),edges:d.graph_nodes.flatMap(n=>(n.next??[]).map(to=>({from:n.id,to})))};
+    const graph={nodes:d.graph_nodes.map(n=>({id:n.id,kind:n.type,...(n.capability?{capability:n.capability}: {}),...(n.output?{output:n.output}:{})})),edges:d.graph_nodes.flatMap(n=>(n.next??[]).map(to=>({from:n.id,to})))};
     if(run.graph && JSON.stringify(run.graph)!==JSON.stringify(graph))throw new DashboardContractError("pinned run graph changed","$event.data.graph_nodes");
     run.graph=graph;
   }
@@ -133,7 +147,7 @@ function mergeCloudEvent(state, event) {
     case eventType("commercial.usage"): replaceByKey(run.commercial_usage ??= [], d, ["usage_id"]); break;
     case eventType("commercial.obligation"): replaceObligation(run.commercial_obligations ??= [], d); break;
     case eventType("commercial.payment"): replaceByKey(run.commercial_payments ??= [], d, ["payment_id"]); break;
-    default: break;
+    default: if (HANDOFF_EVENT_TYPES.includes(event.type)) addHandoff(run, event.type, d); break;
   }
 }
 
@@ -379,14 +393,28 @@ function branchPods(state, runs, nodes, edges) {
   for (const pod of pods.values()) perNode.set(pod.node, (perNode.get(pod.node) ?? 0) + 1);
   return [...pods.values()].filter(pod => perNode.get(pod.node) > 1).sort((a, b) => a.id.localeCompare(b.id));
 }
+// Presentation projection of one hand-off item. Only these allowlisted, content-free
+// fields ever reach the floor: source, part kinds, media type, size, short keyed
+// digest, ready time, gem, and evidence level.
+export const CARRIER_ITEM_FIELDS = Object.freeze(["index", "source", "part_kinds", "media_type", "byte_length", "digest", "ready_at", "ready_t", "gem", "evidence"]);
+const GEMS = { text:"sapphire", data:"emerald", raw:"amethyst", url:"topaz" };
+export const gemFor = item => item.source === "message" ? "diamond" : GEMS[item.part_kinds?.[0]] ?? "unknown";
+// Runs without hand-off records: one chipped, cloudy "contents not recorded" socket.
+const INFERRED_CARRIER = () => ({ evidence:"inferred", sockets:1, items:[], consumers:[], note:"contents not recorded; hand-off inferred from pinned graph order" });
 function liveFlow(state, run, nodes, edges, pods) {
   const runStart = run.started_at ?? run.state?.started_at;
   if (!runStart || !nodes.length) return [];
   const T = iso => secondsBetween(iso, runStart);
+  const carrierItem = (i, readyAt, evidence) => ({ index:i.item_index, source:i.source, part_kinds:[...i.part_kinds], media_type:i.media_type ?? null,
+    byte_length:i.byte_length ?? null, digest:typeof i.digest === "string" ? i.digest.slice(0, 12) : null, ready_at:readyAt, ready_t:Math.max(0, T(readyAt) ?? 0), gem:gemFor(i), evidence });
   const ids = new Set(nodes.map(n => n.id)), type = new Map(nodes.map(n => [n.id, n.type ?? n.kind])), kind = new Map(nodes.map(n => [n.id, graphKind(n.kind ?? n.type)]));
   const byCapability = new Map(nodes.filter(n => n.capability).map(n => [n.capability, n.id]));
   const podFor = new Map(pods.map(p => [`${p.node}\u0000${p.capability}`, p])), podById = new Map(pods.map(p => [p.id, p]));
-  const succ = id => podById.has(id) ? [podById.get(id).join] : [...new Set(edges.filter(e => e.from === id).map(e => e.to))];
+  // Only material edges carry items; control edges sequence work (decision 5).
+  const material = e => (e.kind ?? "material") === "material";
+  const succ = id => podById.has(id) ? [podById.get(id).join] : [...new Set(edges.filter(e => e.from === id && material(e)).map(e => e.to))];
+  const controlSucc = id => podById.has(id) ? [] : [...new Set(edges.filter(e => e.from === id && e.kind === "control").map(e => e.to))];
+  const output = new Map(nodes.map(n => [n.id, n.output ?? "artifacts"]));
   const ended = terminal.has(run.state?.state), endT = ended && run.state?.ended_at ? T(run.state.ended_at) : null;
   const job = run.run_id, out = [], at = t => Math.max(0, t);
   // A2A Tasks observed as assignment attempts.
@@ -435,32 +463,36 @@ function liveFlow(state, run, nodes, edges, pods) {
     const id = uniqueType(wanted);
     return id ? { node:id, basis:`only ${wanted} node in the pinned graph` } : null;
   };
-  // Pinned-graph path. A route node's cases are not declared as edges, so one hop
-  // from a route to a declared control target is allowed and labelled undeclared.
-  const pathTo = (from, to) => {
-    if (from === to) return [];
-    for (const allow of [false, true]) {
-      const seen = new Map([[from, null]]), queue = [from];
-      while (queue.length) {
-        const id = queue.shift();
-        const hops = succ(id).map(n => [n, false]);
-        if (allow && type.get(id) === "route") for (const n of nodes) if (ROUTE_TARGET_TYPES.has(n.type ?? n.kind) && n.id !== id) hops.push([n.id, true]);
-        for (const [n, undeclared] of hops) {
-          if (seen.has(n)) continue;
-          seen.set(n, { prev:id, undeclared });
-          if (n === to) { const path = []; let c = to; while (c !== from) { const s = seen.get(c); path.unshift({ from:s.prev, to:c, undeclared:s.undeclared }); c = s.prev; } return path; }
-          queue.push(n);
-        }
+  // Pinned-graph path over material edges first. Inferred items may then follow
+  // declared control edges (labelled control) and, from a route node, one hop to a
+  // route target that is not declared at all (labelled undeclared).
+  const search = (from, to, allow) => {
+    const seen = new Map([[from, null]]), queue = [from];
+    while (queue.length) {
+      const id = queue.shift();
+      const hops = succ(id).map(n => [n, null]);
+      if (allow) {
+        for (const n of controlSucc(id)) hops.push([n, "control"]);
+        if (type.get(id) === "route") for (const n of nodes) if (ROUTE_TARGET_TYPES.has(n.type ?? n.kind) && n.id !== id) hops.push([n.id, "undeclared"]);
+      }
+      for (const [n, how] of hops) {
+        if (seen.has(n)) continue;
+        seen.set(n, { prev:id, how });
+        if (n === to) { const path = []; let c = to; while (c !== from) { const s = seen.get(c); path.unshift({ from:s.prev, to:c, ...(s.how ? { [s.how]:true } : {}) }); c = s.prev; } return path; }
+        queue.push(n);
       }
     }
-    return [{ from, to, undeclared:true }];
+    return null;
   };
+  const pathTo = (from, to) => from === to ? [] : search(from, to, false) ?? search(from, to, true) ?? [{ from, to, undeclared:true }];
+  // Carriers (recorded hand-offs) ride material edges only.
+  const materialPath = (from, to) => from === to ? [] : search(from, to, false);
   // Emit belt hops from `start`; dwell on the belt is the observed gap up to `arrive`.
   const travel = (item, path, start, arrive) => {
     if (!path.length) return start;
     const gap = arrive == null ? Infinity : arrive - start;
     const dur = Math.max(MIN_HOP, Math.min(BELT_HOP, gap / path.length));
-    path.forEach((hop, k) => out.push({ t:at(start + k * dur), type:"move", item, from:hop.from, to:hop.to, dur, job, ...(hop.undeclared ? { undeclared:true } : {}) }));
+    path.forEach((hop, k) => out.push({ t:at(start + k * dur), type:"move", item, from:hop.from, to:hop.to, dur, job, ...(hop.undeclared ? { undeclared:true } : {}), ...(hop.control ? { control:true } : {}) }));
     return start + path.length * dur;
   };
   const stationStarts = [...tasks.map(x => ({ node:x.node, station:x.station, t0:x.t0 })), ...visits.map(v => ({ node:v.node, station:v.node, t0:v.t0 }))].sort((a, b) => a.t0 - b.t0);
@@ -481,16 +513,156 @@ function liveFlow(state, run, nodes, edges, pods) {
     out.push({ t:0, type:"spawn", item, art:"brief", at:first.node, label:"T", job, evidence:"Submitted Task; run start observed", observed:`run started ${runStart}` });
     out.push({ t:at(Math.max(first.t0, 0.9)), type:"consume", item, at:first.node, job });
   }
-  // Assignment outputs: not recorded as artifacts; hand-off follows pinned graph order.
+  // Recorded hand-offs: the belt item is the factory's carrier (decisions 4-6). A
+  // carrier fills in its producing station as items become ready, leaves when the
+  // hand-off is produced, rides material belts until each observed consumption, is
+  // sealed (not replaced) by a gate verdict, and merges with its siblings at a join.
+  // Carriers replace the inferred Task output and report items they cover.
+  const handoffs = run.handoffs ?? {};
+  const producedRows = (handoffs.produced ?? []).filter(p => ids.has(p.node) && output.get(p.node) !== "none" && T(p.produced_at) != null)
+    .sort((a, b) => Date.parse(a.produced_at) - Date.parse(b.produced_at) || a.handoff_id.localeCompare(b.handoff_id));
+  const readyRows = (handoffs.ready ?? []).filter(r => ids.has(r.node) && output.get(r.node) !== "none" && T(r.ready_at) != null);
+  const consumedRows = (handoffs.consumed ?? []).filter(c => ids.has(c.node) && T(c.consumed_at) != null)
+    .sort((a, b) => Date.parse(a.consumed_at) - Date.parse(b.consumed_at));
+  const attemptOf = d => `${d.assignment_id}:${d.attempt_id}`;
+  const taskByKey = new Map(tasks.map(x => [x.key, x]));
+  const recordedAttempts = new Set([...producedRows, ...readyRows].map(attemptOf));
+  const recordedShas = new Set(producedRows.flatMap(p => p.items.map(i => i.artifact_sha256).filter(Boolean)));
+  const carriers = [];
+  for (const p of producedRows) {
+    const items = [...p.items].sort((a, b) => a.item_index - b.item_index).map(i => {
+      const streamed = readyRows.find(r => r.handoff_id === p.handoff_id && attemptOf(r) === attemptOf(p) && r.item_index === i.item_index);
+      return carrierItem(i, streamed && Date.parse(streamed.ready_at) < Date.parse(i.ready_at) ? streamed.ready_at : i.ready_at, "recorded");
+    });
+    const task = taskByKey.get(attemptOf(p)), station = task?.station ?? p.node, producedT = T(p.produced_at);
+    const report = p.items.find(i => i.artifact_sha256);
+    carriers.push({ id:`carrier:${p.handoff_id}:${p.handoff_revision}`, row:p, node:p.node, station, task, producedT, items,
+      digests:new Set(p.items.map(i => i.digest)), shas:new Set(p.items.map(i => i.artifact_sha256).filter(Boolean)),
+      label:report ? String(report.artifact_revision).toUpperCase() : `R${p.handoff_revision}`, consumers:[] });
+  }
+  // Consumers match by handoff_id and item digests; an input naming a hand-off whose
+  // digests match no revision is attached to the latest revision then produced and
+  // shown as a digest mismatch.
+  const mergeRows = new Map();
+  for (const c of consumedRows) {
+    const t = T(c.consumed_at), matched = [];
+    for (const input of c.inputs) {
+      const same = carriers.filter(x => x.row.handoff_id === input.handoff_id && x.producedT <= t + EPS);
+      const hit = same.filter(x => input.item_digests.some(d => x.digests.has(d))).at(-1);
+      const carrier = hit ?? same.at(-1);
+      if (!carrier) continue;
+      const match = !!hit && input.item_digests.every(d => carrier.digests.has(d));
+      carrier.consumers.push({ row:c, t, node:c.node, match });
+      matched.push(carrier);
+    }
+    if (matched.length > 1) mergeRows.set(c, { row:c, t, inputs:matched, arrivals:[] });
+  }
+  const isGate = id => type.get(id) === "quality" || (kind.get(id) === "gate" && !["route", "repair"].includes(type.get(id)));
+  const spawnCarrier = (c, id, t, station, items, extra = {}) => out.push({ t:at(t), type:"spawn", item:id, art:`carrier:${c.node}`, at:station, label:c.label, job,
+    evidence:`Recorded hand-off ${c.row?.handoff_id ?? "merge"} · revision ${c.row?.handoff_revision ?? 1} from ${c.node} · ${items.length} item${items.length === 1 ? "" : "s"} · contents not shown`,
+    observed:c.row ? `hand-off produced ${c.row.produced_at}` : extra.observed ?? "",
+    carrier:{ evidence:"recorded", handoff_id:c.row?.handoff_id ?? null, revision:c.row?.handoff_revision ?? null, node:c.node, output:output.get(c.node),
+      produced_at:c.row?.produced_at ?? null, produced_t:c.producedT ?? t, sockets:items.length, items:clone(items),
+      consumers:c.consumers.map(k => ({ node:k.node, consumed_at:k.row.consumed_at, digest_match:k.match })),
+      digest_match:c.consumers.every(k => k.match), ...extra.carrier } });
+  const retireAtEnd = (id, here, ready) => {
+    if (!ended || endT == null) return;
+    const outcome = run.state?.state;
+    out.push({ t:at(Math.max(endT, ready + MIN_HOP)), type:outcome === "aborted" || outcome === "failed" ? "scrap" : "consume", item:id, at:here, job });
+  };
+  const visitAt = (node, t) => visits.find(v => v.node === node && v.t0 <= t + EPS && (v.t1 == null || t <= v.t1 + EPS));
+  for (const c of carriers) {
+    const fillT = Math.min(c.producedT, ...c.items.map(i => i.ready_t));
+    spawnCarrier(c, c.id, c.task ? Math.max(c.task.t0, fillT) : fillT, c.station, c.items);
+    let here = c.station, ready = c.producedT, alive = true, branches = 0;
+    for (const k of [...c.consumers].sort((a, b) => a.t - b.t)) {
+      const merge = mergeRows.get(k.row);
+      let item = c.id, from = here, start = ready, path = alive ? materialPath(here, k.node) : null;
+      // A retired carrier reaches a later consumer only on its own belt from the producer (a material bypass).
+      if (!path) {
+        const bypass = materialPath(c.station, k.node);
+        if (alive) { out.push({ t:at(Math.max(k.t, ready)), type:"consume", item, at:here, job }); alive = false; }
+        if (!bypass || !bypass.length) continue;
+        item = `${c.id}~${++branches}`; from = c.station; start = c.producedT; path = bypass;
+        spawnCarrier(c, item, c.producedT, c.station, c.items, { carrier:{ leg:k.node } });
+      }
+      if (merge) {
+        const j = path.map(h => h.to).findLastIndex(n => n !== k.node && kind.get(n) === "join");
+        // The leg to the join takes its share of the observed gap; the merged carrier rides the rest.
+        if (j >= 0) { merge.arrivals.push({ item, carrier:c, join:path[j].to, t:travel(item, path.slice(0, j + 1), start, start + (k.t - start) * (j + 1) / path.length) }); if (item === c.id) alive = false; continue; }
+      }
+      const arrived = travel(item, path, start, k.t);
+      if (isGate(k.node) && item === c.id) {
+        here = k.node; ready = Math.max(k.t, arrived);
+        const visit = visitAt(k.node, k.t); if (visit && !visit.item) visit.item = item;
+        const vv = verdicts.find(v => c.shas.has(v.artifact_sha256) && v.t >= k.t - EPS);
+        if (vv) {
+          out.push({ t:at(Math.max(vv.t, arrived)), type:"verdict", step:k.node, item, verdict:vv.accepted === true ? "accepted" : "rejected", rev:vv.artifact_revision, sha:vv.artifact_sha256.slice(0, 12), finding:`${vv.finding_count ?? 0} finding${vv.finding_count === 1 ? "" : "s"}`, job, seal:true });
+          if (vv.accepted === false) out.push({ t:at(Math.max(vv.t, arrived)), type:"flag", item, flag:"rejected", job });
+          ready = Math.max(ready, vv.t);
+        }
+        continue;
+      }
+      // A side-effect release with a verified receipt for this carrier's report exits the factory there.
+      const receipt = receipts.find(r => c.shas.has(r.artifact_sha256) && !r.receipt_conflict && r.t >= k.t - EPS);
+      if (receipt && (output.get(k.node) === "none" || type.get(k.node) === "release")) out.push({ t:at(Math.max(receipt.t, k.t, arrived)), type:"release", item, at:k.node, job });
+      else out.push({ t:at(Math.max(k.t, arrived)), type:"consume", item, at:k.node, job });
+      if (item === c.id) { alive = false; here = k.node; }
+    }
+    if (!alive) continue;
+    if (c.consumers.length) { retireAtEnd(c.id, here, ready); continue; }
+    // Not consumed yet: ride the material belt to the next station and wait there.
+    const nexts = succ(c.station);
+    let dest = nexts.length === 1 ? nexts[0] : null;
+    const path = dest ? [{ from:c.station, to:dest }] : [];
+    while (dest && kind.get(dest) === "join" && !stationStarts.some(s => s.node === dest)) { const next = succ(dest); if (next.length !== 1) break; path.push({ from:dest, to:next[0] }); dest = next[0]; }
+    const arrived = travel(c.id, path, c.producedT, endT);
+    retireAtEnd(c.id, dest ?? c.station, arrived);
+  }
+  // Fan-in: input carriers meet at the join and leave it as one carrier holding every item.
+  for (const merge of mergeRows.values()) {
+    const byJoin = new Map();
+    for (const a of merge.arrivals) (byJoin.get(a.join) ?? byJoin.set(a.join, []).get(a.join)).push(a);
+    for (const [joinId, rows] of byJoin) {
+      const mergeT = Math.max(...rows.map(a => a.t));
+      const id = `merge:${attemptOf(merge.row)}:${merge.row.node}:${joinId}`;
+      if (rows.length > 1) for (const a of rows) out.push({ t:at(mergeT), type:"consume", item:a.item, at:joinId, job });
+      const carrier = rows.length > 1 ? { node:joinId, row:null, producedT:mergeT, label:"J", consumers:[{ row:merge.row, t:merge.t, node:merge.row.node, match:rows.every(a => a.carrier.consumers.find(k => k.row === merge.row)?.match) }] } : null;
+      if (carrier) spawnCarrier(carrier, id, mergeT, joinId, rows.flatMap(a => a.carrier.items), { observed:`merged at ${joinId}`, carrier:{ merged_from:rows.map(a => a.carrier.row.handoff_id) } });
+      const item = carrier ? id : rows[0].item, path = materialPath(joinId, merge.row.node) ?? [];
+      const arrived = travel(item, path, mergeT, merge.t);
+      out.push({ t:at(Math.max(merge.t, arrived)), type:"consume", item, at:merge.row.node, job });
+    }
+  }
+  // A live carrier still filling: empty sockets wait for the items still streaming.
+  const filling = new Map();
+  for (const r of readyRows) {
+    if (producedRows.some(p => p.handoff_id === r.handoff_id && attemptOf(p) === attemptOf(r) && Date.parse(p.produced_at) >= Date.parse(r.ready_at) - 1)) continue;
+    const key = `${attemptOf(r)}\u0000${r.handoff_id}`;
+    (filling.get(key) ?? filling.set(key, []).get(key)).push(r);
+  }
+  for (const rows of filling.values()) {
+    const r0 = rows[0], task = taskByKey.get(attemptOf(r0)), station = task?.station ?? r0.node;
+    const items = rows.sort((a, b) => a.item_index - b.item_index).map(r => carrierItem({ ...r, source:"artifact", byte_length:null, digest:null }, r.ready_at, "recorded"));
+    const revision = Math.max(0, ...producedRows.filter(p => p.handoff_id === r0.handoff_id).map(p => p.handoff_revision)) + 1;
+    const id = `carrier:${r0.handoff_id}:${revision}:filling`;
+    const fillT = Math.min(...items.map(i => i.ready_t));
+    out.push({ t:at(task ? Math.max(task.t0, fillT) : fillT), type:"spawn", item:id, art:`carrier:${r0.node}`, at:station, label:`R${revision}`, job,
+      evidence:`Hand-off ${r0.handoff_id} filling at ${r0.node}: ${items.length} item${items.length === 1 ? "" : "s"} ready, not yet produced · contents not shown`, observed:`first item ready ${items[0].ready_at}`,
+      carrier:{ evidence:"recorded", handoff_id:r0.handoff_id, revision, node:r0.node, output:output.get(r0.node), produced_at:null, produced_t:null, filling:true, sockets:items.length + 1, items, consumers:[], digest_match:true } });
+    if (ended && endT != null) out.push({ t:at(Math.max(endT, fillT)), type:"consume", item:id, at:station, job });
+  }
+  // Assignment outputs without hand-off records: inferred carriers whose contents are
+  // not recorded; their hand-off follows pinned graph order. Side-effect nodes produce none.
   for (const x of tasks) {
-    if (x.t1 == null) continue;
+    if (x.t1 == null || recordedAttempts.has(x.key) || output.get(x.node) === "none") continue;
     const item = `out:${x.key}`;
     const nexts = succ(x.station);
     let dest = nexts.length === 1 ? nexts[0] : null;
     const path = [];
     if (dest) path.push({ from:x.station, to:dest, undeclared:false });
     while (dest && kind.get(dest) === "join" && !stationStarts.some(s => s.node === dest)) { const next = succ(dest); if (next.length !== 1) break; path.push({ from:dest, to:next[0], undeclared:false }); dest = next[0]; }
-    out.push({ t:at(x.t1), type:"spawn", item, art:"task-output", at:x.station, label:"TO", job, evidence:`Task output · artifact not recorded. Observation records the ${x.capability || "assignment"} Task (ended ${x.ended_at}) but not its output; hand-off to ${dest ?? "the next station"} is inferred from pinned graph order.`, observed:`assignment ended ${x.ended_at}` });
+    out.push({ t:at(x.t1), type:"spawn", item, art:"task-output", at:x.station, label:"TO", job, evidence:`Task output · artifact not recorded. Observation records the ${x.capability || "assignment"} Task (ended ${x.ended_at}) but not its output; hand-off to ${dest ?? "the next station"} is inferred from pinned graph order.`, observed:`assignment ended ${x.ended_at}`, carrier:INFERRED_CARRIER() });
     if (!dest) { if (endT != null) out.push({ t:at(Math.max(endT, x.t1)), type:"consume", item, at:x.station, job }); continue; }
     const next = stationStarts.find(s => s.node === dest && s.t0 >= x.t1 - EPS);
     const consumeAt = next?.t0 ?? endT;
@@ -503,6 +675,7 @@ function liveFlow(state, run, nodes, edges, pods) {
   for (const r of receipts) if (!revs.has(r.artifact_sha256)) revs.set(r.artifact_sha256, { rev:r.artifact_revision, sha:r.artifact_sha256, t:r.t, iso:r.iso, timed:"receipt" });
   const ordered = [...revs.values()].sort((a, b) => a.t - b.t);
   ordered.forEach((a, index) => {
+    if (recordedShas.has(a.sha)) return; // carried by a recorded hand-off
     const next = ordered[index + 1];
     const verdict = verdicts.find(v => v.artifact_sha256 === a.sha) ?? (run.quality ?? []).find(v => v.artifact_sha256 === a.sha);
     const myReceipts = receipts.filter(r => r.artifact_sha256 === a.sha), verified = myReceipts.some(r => !r.receipt_conflict);
@@ -513,7 +686,7 @@ function liveFlow(state, run, nodes, edges, pods) {
       verdict ? `Quality ${verdict.accepted === true ? "accepted" : verdict.accepted === false ? "rejected" : "verdict"} (same sha256${verdict.t == null ? "; verdict time not recorded" : ""})` : "No quality verdict observed",
       myReceipts.length ? (verified ? "delivery receipt (same sha256)" : "delivery unverified (conflicting receipts)") : "No delivery receipt observed",
       `located at ${start.node} by ${start.basis}`].join(" · ");
-    out.push({ t:at(a.t), type:"spawn", item, art:"report", at:start.node, label, rev:a.rev, sha:a.sha, job, evidence, observed:`${a.timed === "revised" ? "artifact revised" : "first delivered"} ${a.iso}` });
+    out.push({ t:at(a.t), type:"spawn", item, art:"report", at:start.node, label, rev:a.rev, sha:a.sha, job, evidence, observed:`${a.timed === "revised" ? "artifact revised" : "first delivered"} ${a.iso}`, carrier:INFERRED_CARRIER() });
     let here = start.node, ready = a.t;
     const stopUntil = next ? next.t : Infinity;
     const stops = visits.filter(v => v.t0 >= a.t - EPS && v.t0 < stopUntil + EPS && !(v.node === start.node && v.t0 <= a.t + EPS));
@@ -572,6 +745,8 @@ function checkGraphPins(state) {
     }
   }
 }
+// The all-jobs floor runs on one clock; carrier item times move with their job.
+const shiftCarrier = (carrier, offset) => ({ ...carrier, ...(carrier.produced_t != null ? { produced_t:carrier.produced_t + offset } : {}), items:(carrier.items ?? []).map(item => ({ ...item, ready_t:item.ready_t + offset })) });
 function aggregateFloorRuns(state, runs) {
   if (runs.length < 2) return runs;
   const known = runs.filter(run => run.startKnown);
@@ -594,7 +769,7 @@ function aggregateFloorRuns(state, runs) {
     }
     const admissions = starts.filter(Number.isFinite);
     if (admissions.length) events.push({type:"admit",t:Math.max(offset,(Math.min(...admissions)-baseMs)/1000),job:run.id});
-    for (const event of run.timeline) events.push({...event,t:event.t+offset,type:event.type === "end" ? "jobend" : event.type,job:run.id,...(event.item?{item:`${run.id}:${event.item}`}:{})});
+    for (const event of run.timeline) events.push({...event,t:event.t+offset,type:event.type === "end" ? "jobend" : event.type,job:run.id,...(event.item?{item:`${run.id}:${event.item}`}:{}),...(event.carrier?{carrier:shiftCarrier(event.carrier,offset)}:{})});
   }
   events.sort((a,b)=>a.t-b.t);
   const now=Math.max(0,(Date.parse(state.captured_at)-baseMs)/1000);
@@ -688,7 +863,11 @@ function demoFactory(model, demo) {
 }
 
 const LIVE_ARTIFACTS = {brief:{name:"Task",shape:"circle"},"task-output":{name:"Task output · artifact not recorded",shape:"capsule"},report:{name:"Report artifact",shape:"square"}};
-const FLOW_BASIS = "A2A flow: Tasks occupy stations from observed start to end; artifacts ride belts from the producing station's completion until the next station's observed start (dwell is the observed gap; hops shorter than 0.8 s are shown at 0.8 s). Report artifacts are evidenced by revision and sha256; Task outputs are not recorded as artifacts, so their hand-off is inferred from pinned graph order. Branch agent pods are presentation derived from observed assignments.";
+// A carrier's shape is its producing node's declared kind on the pinned graph, so it
+// is constant across jobs (and matches the inferred item shape for the same node kind).
+const CARRIER_SHAPES = {synthesize:"square",parallel:"capsule",fanout:"capsule",join:"hexagon",nested_factory:"pentagon",nested:"pentagon"};
+const carrierArtifacts = nodes => Object.fromEntries(nodes.map(n => [`carrier:${n.id}`, {name:`Hand-off from ${n.name ?? n.id}`, shape:CARRIER_SHAPES[n.type ?? n.kind] ?? "capsule", carrier:true}]));
+const FLOW_BASIS = "A2A flow: Tasks occupy stations from observed start to end; artifacts ride belts as carriers on material edges from the producing station's completion until the next station's observed start (dwell is the observed gap; hops shorter than 0.8 s are shown at 0.8 s). Recorded hand-offs show their items as gems (part kind, media type, size, short keyed digest, ready time; never content), and a gate verdict seals the same carrier. Runs without hand-off records keep inferred carriers: report artifacts are evidenced by revision and sha256, Task outputs are not recorded as artifacts, so their contents are not recorded and their hand-off is inferred from pinned graph order. Control edges carry no items. Branch pods are presentation derived from observed assignments.";
 export function toFloorModel(state, {runId=null, graphOf=null} = {}) {
   if (!state) throw new DashboardContractError("dashboard state is unavailable", "$state");
   let hasPinnedGraph=false;
@@ -718,7 +897,7 @@ export function toFloorModel(state, {runId=null, graphOf=null} = {}) {
   const presentation = floorPresentation(wireNodes, edges);
   const demoSource = state.source === "demo";
   const pods = demoSource ? [] : branchPods(state, [...state.runs.values()], wireNodes, edges);
-  const steps = wireNodes.map(n=>({id:n.id,name:n.name ?? n.id,kind:graphKind(n.kind ?? n.type),type:n.type ?? n.kind,agent:n.agent ?? n.capability,capability:n.capability ?? n.agent,sub:n.sub ?? n.capability ?? n.agent ?? n.type ?? n.kind,dept:presentation.byNode.get(n.id)}));
+  const steps = wireNodes.map(n=>({id:n.id,name:n.name ?? n.id,kind:graphKind(n.kind ?? n.type),type:n.type ?? n.kind,agent:n.agent ?? n.capability,capability:n.capability ?? n.agent,sub:n.sub ?? n.capability ?? n.agent ?? n.type ?? n.kind,dept:presentation.byNode.get(n.id),...(n.output?{output:n.output}:{})}));
   const nowMs=Date.parse(state.captured_at);
   const demo=demoLayer(state);
   const baseRun=run=>{
@@ -736,7 +915,7 @@ export function toFloorModel(state, {runId=null, graphOf=null} = {}) {
   const factory=state.factory ?? {};
   const publication=state.publication ?? {};
   const capacity=state.capacity;
-  const model={id:state.factoryId,name:factory.name ?? state.factoryId,capability:factory.capability ?? "",version:publication.publication_version ?? publication.version ?? publication.label ?? "Unknown",digest:publication.manifest_digest ?? publication.digest ?? "Unknown",versions:{},provenance:factory.fixture_label?`Demo fixture · ${factory.fixture_label}`:state.source==="demo"?"Isolated deterministic demo":"Runtime observation",departments:presentation.departments,boundaries:presentation.boundaries,programs:[],mainArt:"report",admission:capacity?{limit:capacity.capacity_limit ?? capacity.limit,when:"observed"}:undefined,budget:null,agents,artifacts:demoSource?{}:clone(LIVE_ARTIFACTS),steps,edges,signals:[],runs:floorRuns,defaultRun:floorRuns[0]?.id,actual:true,branchPods:pods,flowBasis:demoSource?null:FLOW_BASIS};
+  const model={id:state.factoryId,name:factory.name ?? state.factoryId,capability:factory.capability ?? "",version:publication.publication_version ?? publication.version ?? publication.label ?? "Unknown",digest:publication.manifest_digest ?? publication.digest ?? "Unknown",versions:{},provenance:factory.fixture_label?`Demo fixture · ${factory.fixture_label}`:state.source==="demo"?"Isolated deterministic demo":"Runtime observation",departments:presentation.departments,boundaries:presentation.boundaries,programs:[],mainArt:"report",admission:capacity?{limit:capacity.capacity_limit ?? capacity.limit,when:"observed"}:undefined,budget:null,agents,artifacts:demoSource?{}:{...clone(LIVE_ARTIFACTS),...carrierArtifacts(wireNodes)},steps,edges,signals:[],runs:floorRuns,defaultRun:floorRuns[0]?.id,actual:true,branchPods:pods,flowBasis:demoSource?null:FLOW_BASIS};
   return demo?demoFactory(model,demo):model;
 }
 
