@@ -985,6 +985,10 @@ class RuntimeObservationSource:
                         and isinstance(result.get("message_id"), str)):
                     # A2A release receipt: the node's evidence, from the
                     # receiver's own receipt over the exact delivered bytes.
+                    # One delivery yields exactly one receipt fact: it is
+                    # emitted only here, keyed by the receiver's receipt id,
+                    # and every field (time included) comes from the durable
+                    # receipt, so any re-projection is an identical no-op.
                     command = data.get("command") or {}
                     fields = {"receipt_id": result.get("receipt_id"),
                               "artifact_revision": result.get("revision"),
@@ -996,7 +1000,8 @@ class RuntimeObservationSource:
                             isinstance(value, str) and value for value in fields.values())
                             and fields["artifact_sha256"] == command.get("sha256")
                             and fields["artifact_revision"] == command.get("revision")):
-                        records.append(self._record("outcome", f"{workflow_id}:{event_id}:delivery",
+                        records.append(self._record(
+                            "outcome", "delivery-receipt:" + fields["receipt_id"],
                             "com.exomachina.delivery.receipt.v1", fields["delivered_at"],
                             run_id=workflow_id, fields=fields, task_id=task_id))
                 elif name == "release" and isinstance(result, Mapping) and "unresolved" not in result:
@@ -1036,18 +1041,10 @@ class RuntimeObservationSource:
                     if isinstance(artifact, Mapping):
                         self._record_accepted_artifact(workflow_id, event_id, at, artifact,
                                                         task_id, context_id, pins, records)
-                    receipt = result.get("receipt")
-                    if isinstance(receipt, Mapping):
-                        artifact = artifact or {}
-                        receipt_id = receipt.get("receipt_id") or receipt.get("release_id")
-                        if isinstance(receipt_id, str):
-                            records.append(self._record("outcome", f"{workflow_id}:{event_id}:delivery-final",
-                                "com.exomachina.delivery.receipt.v1", at, run_id=workflow_id,
-                                fields={"receipt_id": receipt_id,
-                                    "artifact_revision": artifact.get("revision") or receipt.get("revision"),
-                                    "artifact_sha256": artifact.get("sha256") or receipt.get("sha256"),
-                                    "destination_id": "fixture-receiver", "delivered_at": at,
-                                    "outcome": "fixture-received"}, task_id=task_id))
+                    # The completed run's result repeats the release receipt
+                    # (and a parent repeats its child's). It is not a second
+                    # delivery: the receipt fact comes only from the release
+                    # node's own completion, so none is emitted here.
                 continue
             if event_type in {"WORKFLOW_EXECUTION_FAILED", "WORKFLOW_EXECUTION_TIMED_OUT",
                               "WORKFLOW_EXECUTION_CANCELED", "WORKFLOW_EXECUTION_TERMINATED"}:

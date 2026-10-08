@@ -870,7 +870,9 @@ class RuntimeObservationTests(unittest.TestCase):
         self.assertEqual(run["quality"][0]["reviewer_identity"], "quality-reviewer")
         self.assertEqual(run["quality"][0]["artifact_revision"], "r1")
         self.assertEqual(run["quality"][0]["artifact_sha256"], accepted["sha256"])
-        self.assertTrue(any(event["outcome"] == "fixture-received" for event in run["delivery"]))
+        # The completed run's result repeats a receipt, but a receipt fact comes
+        # only from a release node's own completion (one fact per delivery).
+        self.assertEqual(run["delivery"], [])
         self.assertEqual(run["task"], {"id": "task-1", "context_id": "context-1"})
         self.assertEqual(child_run["task"], {"id": "task-1", "context_id": "context-1"})
         self.assertEqual(child_run["pinned"]["definition_digest"], "f" * 64)
