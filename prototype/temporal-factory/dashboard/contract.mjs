@@ -323,6 +323,18 @@ function validateHandoffData(data, eventType, p) {
   return data;
 }
 
+// Retained runs carry their timed hand-off facts (runtime phase, 7 Oct 2026):
+// exactly the three lists, each row the exact event data of its type.
+const SNAPSHOT_HANDOFF_LISTS = { produced:"com.exomachina.handoff.produced.v1", consumed:"com.exomachina.handoff.consumed.v1", ready:"com.exomachina.handoff.item_ready.v1" };
+function validateSnapshotHandoffs(value, runId, factoryId, p) {
+  record(value, p); exactKeys(value, new Set(Object.keys(SNAPSHOT_HANDOFF_LISTS)), p);
+  for (const [name, type] of Object.entries(SNAPSHOT_HANDOFF_LISTS)) {
+    const rows = value[name];
+    if (!Array.isArray(rows) || rows.length > 256) throw new DashboardContractError("expected bounded hand-off list", `${p}.${name}`);
+    rows.forEach((row, i) => { validateHandoffData(row, type, `${p}.${name}[${i}]`); if (row.run_id !== runId || row.factory_id !== factoryId) throw new DashboardContractError("hand-off row does not belong to this run", `${p}.${name}[${i}]`); });
+  }
+}
+
 export function validateCloudEvent(event, options = {}) {
   record(event, "$event");
   const required = ["specversion", "id", "source", "type", "time", "subject", "datacontenttype", "dataschema", "data"];
@@ -446,7 +458,7 @@ export function validateSnapshot(snapshot, options = {}) {
   if(state.factory.agents!=null){if(!Array.isArray(state.factory.agents))throw new DashboardContractError("agents must be an array","$snapshot.state.factory.agents");state.factory.agents.forEach((x,i)=>validatePublicRecord(x,`$snapshot.state.factory.agents[${i}]`));}
   validatePublicRecord(state.active_publication,"$snapshot.state.active_publication");validatePublicRecord(state.capacity,"$snapshot.state.capacity");
   if(!Array.isArray(state.runs)||state.runs.length>256)throw new DashboardContractError("runs must be an array","$snapshot.state.runs");
-  const runIds=new Set();state.runs.forEach((run,i)=>{const p=`$snapshot.state.runs[${i}]`;record(run,p);exactKeys(run,new Set(["id","task","status","started_at","graph","pinned","assignments","artifacts","quality","decisions","commands","delivery","incidents","admissions","model_label","fixture_label"]),p);if(!ID.test(run.id??""))throw new DashboardContractError("invalid run id",`${p}.id`);if(runIds.has(run.id))throw new DashboardContractError("duplicate run id",`${p}.id`);runIds.add(run.id);for(const k of ["task","status","pinned","assignments","artifacts","quality","decisions","commands","delivery","incidents","admissions"])if(!(k in run))throw new DashboardContractError("required run field missing",`${p}.${k}`);if(!run.task||!ID.test(run.task.id??"")||!ID.test(run.task.context_id??""))throw new DashboardContractError("task identity and context are required",`${p}.task`);if(run.status==null)throw new DashboardContractError("status is required",`${p}.status`);if(run.started_at!=null)time(run.started_at,`${p}.started_at`);if(run.graph!=null)validatePublicGraph(run.graph,`${p}.graph`);for(const k of ["task","status","pinned"])validatePublicRecord({[k]:run[k]},p);for(const k of ["assignments","artifacts","quality","decisions","commands","delivery","incidents","admissions"]){if(!Array.isArray(run[k])||run[k].length>256)throw new DashboardContractError("expected bounded run collection",`${p}.${k}`);run[k].forEach((row,j)=>validatePublicRecord(row,`${p}.${k}[${j}]`));}});
+  const runIds=new Set();state.runs.forEach((run,i)=>{const p=`$snapshot.state.runs[${i}]`;record(run,p);exactKeys(run,new Set(["id","task","status","started_at","graph","pinned","assignments","artifacts","quality","decisions","commands","delivery","incidents","admissions","model_label","fixture_label","handoffs"]),p);if(run.handoffs!==undefined)validateSnapshotHandoffs(run.handoffs,run.id,state.factory.id,`${p}.handoffs`);if(!ID.test(run.id??""))throw new DashboardContractError("invalid run id",`${p}.id`);if(runIds.has(run.id))throw new DashboardContractError("duplicate run id",`${p}.id`);runIds.add(run.id);for(const k of ["task","status","pinned","assignments","artifacts","quality","decisions","commands","delivery","incidents","admissions"])if(!(k in run))throw new DashboardContractError("required run field missing",`${p}.${k}`);if(!run.task||!ID.test(run.task.id??"")||!ID.test(run.task.context_id??""))throw new DashboardContractError("task identity and context are required",`${p}.task`);if(run.status==null)throw new DashboardContractError("status is required",`${p}.status`);if(run.started_at!=null)time(run.started_at,`${p}.started_at`);if(run.graph!=null)validatePublicGraph(run.graph,`${p}.graph`);for(const k of ["task","status","pinned"])validatePublicRecord({[k]:run[k]},p);for(const k of ["assignments","artifacts","quality","decisions","commands","delivery","incidents","admissions"]){if(!Array.isArray(run[k])||run[k].length>256)throw new DashboardContractError("expected bounded run collection",`${p}.${k}`);run[k].forEach((row,j)=>validatePublicRecord(row,`${p}.${k}[${j}]`));}});
   if(freshness.scope==="run"&&(!runIds.has(freshness.run_id)||[...runIds].some(id=>!freshness.included_run_ids.includes(id))))throw new DashboardContractError("run freshness does not bind snapshot rows","$snapshot.freshness");
   record(state.commercial, "$snapshot.state.commercial");exactKeys(state.commercial,new Set(["usage","obligations","payments"]),"$snapshot.state.commercial");
   const obligationIds=new Set();

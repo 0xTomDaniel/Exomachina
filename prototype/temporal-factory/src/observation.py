@@ -82,6 +82,14 @@ EVENT_FIELDS: dict[str, frozenset[str]] = {
     "com.exomachina.commercial.payment.v1": frozenset({
         "payment_id", "network", "asset", "amount_atoms", "currency", "atomic_scale",
         "state", "receipt_id", "evidence_status", "evidence_refs"}),
+    # Content-free hand-off facts (A2A v1 mediation decision 4). They never
+    # carry text, data, bytes, artifact names, descriptions, artifactIds,
+    # filenames, URLs or metadata; nested items and inputs are exact records.
+    "com.exomachina.handoff.produced.v1": frozenset({
+        "node", "handoff_id", "handoff_revision", "produced_at", "items"}),
+    "com.exomachina.handoff.consumed.v1": frozenset({"node", "consumed_at", "inputs"}),
+    "com.exomachina.handoff.item_ready.v1": frozenset({
+        "node", "handoff_id", "item_index", "part_kinds", "media_type", "ready_at"}),
 }
 EVENT_REQUIRED: dict[str, frozenset[str]] = {
     "com.exomachina.factory.discovered.v1": frozenset({"identity", "capability", "name"}),
@@ -117,7 +125,27 @@ EVENT_REQUIRED: dict[str, frozenset[str]] = {
     "com.exomachina.commercial.payment.v1": frozenset({
         "run_id", "payment_id", "amount_atoms", "currency", "atomic_scale", "state",
         "evidence_status"}),
+    "com.exomachina.handoff.produced.v1": frozenset({
+        "run_id", "assignment_id", "attempt_id", "node", "handoff_id", "handoff_revision",
+        "produced_at", "items"}),
+    "com.exomachina.handoff.consumed.v1": frozenset({
+        "run_id", "assignment_id", "attempt_id", "node", "consumed_at", "inputs"}),
+    "com.exomachina.handoff.item_ready.v1": frozenset({
+        "run_id", "assignment_id", "attempt_id", "node", "handoff_id", "item_index",
+        "part_kinds", "media_type", "ready_at"}),
 }
+HANDOFF_EVENT_TYPES = frozenset({
+    "com.exomachina.handoff.produced.v1", "com.exomachina.handoff.consumed.v1",
+    "com.exomachina.handoff.item_ready.v1",
+})
+# Hand-off facts carry exactly these common fields: no Task, context or pins.
+HANDOFF_COMMON_FIELDS = frozenset({"factory_id", "run_id", "assignment_id", "attempt_id"})
+HANDOFF_PART_KINDS = ("text", "data", "raw", "url")
+_HANDOFF_ITEM_FIELDS = frozenset({
+    "item_index", "source", "part_kinds", "media_type", "byte_length", "ready_at", "digest",
+    "artifact_revision", "artifact_sha256",
+})
+_HANDOFF_ITEM_REQUIRED = _HANDOFF_ITEM_FIELDS - {"artifact_revision", "artifact_sha256"}
 
 _ID_FIELDS = frozenset({
     "factory_id", "run_id", "task_id", "context_id", "assignment_id", "attempt_id", "node",
@@ -352,6 +380,101 @@ def _safe_string_list(field: str, value: Any, *, digest_only: bool = False) -> l
     return result
 
 
+def _handoff_index(field: str, value: Any) -> int:
+    if type(value) is not int or not 0 <= value <= 255:
+        raise SourceContractError(f"invalid hand-off field: {field}")
+    return value
+
+
+def _handoff_part_kinds(value: Any) -> list[str]:
+    if (not isinstance(value, list) or not value or len(value) > 64
+            or any(kind not in HANDOFF_PART_KINDS for kind in value)):
+        raise SourceContractError("invalid hand-off part kinds")
+    return list(value)
+
+
+def _handoff_media_type(value: Any) -> str | None:
+    # A2A v1 mediaType is optional on a Part; null records "not declared".
+    if value is None:
+        return None
+    if not isinstance(value, str) or len(value) > 127 or not _SAFE_MEDIA.fullmatch(value):
+        raise SourceContractError("invalid hand-off media type")
+    return value
+
+
+def _handoff_item(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping) or set(value) - _HANDOFF_ITEM_FIELDS:
+        raise SourceContractError("hand-off item has unallowlisted fields")
+    if _HANDOFF_ITEM_REQUIRED - set(value):
+        raise SourceContractError("hand-off item is missing required facts")
+    if value["source"] not in {"artifact", "message"}:
+        raise SourceContractError("invalid hand-off item source")
+    kinds = _handoff_part_kinds(value["part_kinds"])
+    length = value["byte_length"]
+    if length is None:
+        if "url" not in kinds:
+            raise SourceContractError("byte_length may be null only for url parts")
+    elif type(length) is not int or length < 0:
+        raise SourceContractError("invalid hand-off byte length")
+    item = {"item_index": _handoff_index("item_index", value["item_index"]),
+            "source": value["source"], "part_kinds": kinds,
+            "media_type": _handoff_media_type(value["media_type"]), "byte_length": length,
+            "ready_at": _utc_time(value["ready_at"]),
+            "digest": _string("artifact_sha256", value["digest"])}
+    report = {"artifact_revision", "artifact_sha256"} & set(value)
+    if report:
+        if len(report) != 2 or value["source"] != "artifact":
+            raise SourceContractError("report reference requires an artifact item with revision and sha256")
+        item["artifact_revision"] = _string("artifact_revision", value["artifact_revision"])
+        item["artifact_sha256"] = _string("artifact_sha256", value["artifact_sha256"])
+    return item
+
+
+def _project_handoff(event_type: str, fields: Mapping[str, Any]) -> dict[str, Any]:
+    """Exact content-free hand-off facts, mirroring dashboard/contract.mjs."""
+    if set(fields) - EVENT_FIELDS[event_type]:
+        raise SourceContractError("hand-off fact has unallowlisted fields")
+    result: dict[str, Any] = {"node": _string("node", fields.get("node"))}
+    if event_type == "com.exomachina.handoff.produced.v1":
+        revision = fields.get("handoff_revision")
+        if type(revision) is not int or revision < 1:
+            raise SourceContractError("handoff_revision must be a positive integer")
+        items = fields.get("items")
+        if not isinstance(items, list) or not 1 <= len(items) <= 256:
+            raise SourceContractError("hand-off requires a bounded non-empty item array")
+        projected = [_handoff_item(item) for item in items]
+        if len({item["item_index"] for item in projected}) != len(projected):
+            raise SourceContractError("duplicate hand-off item index")
+        if any(item["source"] == "message" for item in projected) and len(projected) != 1:
+            raise SourceContractError("a message hand-off holds exactly one item")
+        result.update(handoff_id=_string("handoff_id", fields.get("handoff_id")),
+                      handoff_revision=revision,
+                      produced_at=_utc_time(fields.get("produced_at")), items=projected)
+    elif event_type == "com.exomachina.handoff.consumed.v1":
+        inputs = fields.get("inputs")
+        if not isinstance(inputs, list) or not 1 <= len(inputs) <= 64:
+            raise SourceContractError("consumption requires a bounded non-empty input array")
+        projected = []
+        for value in inputs:
+            if not isinstance(value, Mapping) or set(value) != {"handoff_id", "item_digests"}:
+                raise SourceContractError("consumed input has unallowlisted fields")
+            digests = value["item_digests"]
+            if not isinstance(digests, list) or not 1 <= len(digests) <= 256:
+                raise SourceContractError("consumed input requires a bounded digest array")
+            projected.append({"handoff_id": _string("handoff_id", value["handoff_id"]),
+                              "item_digests": [_string("artifact_sha256", d) for d in digests]})
+        if len({value["handoff_id"] for value in projected}) != len(projected):
+            raise SourceContractError("duplicate consumed hand-off")
+        result.update(consumed_at=_utc_time(fields.get("consumed_at")), inputs=projected)
+    else:
+        result.update(handoff_id=_string("handoff_id", fields.get("handoff_id")),
+                      item_index=_handoff_index("item_index", fields.get("item_index")),
+                      part_kinds=_handoff_part_kinds(fields.get("part_kinds")),
+                      media_type=_handoff_media_type(fields.get("media_type")),
+                      ready_at=_utc_time(fields.get("ready_at")))
+    return result
+
+
 def _project_fields(event_type: str, record: Mapping[str, Any]) -> dict[str, Any]:
     if event_type not in EVENT_FIELDS:
         raise SourceContractError("unsupported observation event type")
@@ -359,6 +482,11 @@ def _project_fields(event_type: str, record: Mapping[str, Any]) -> dict[str, Any
     if not isinstance(fields, Mapping):
         raise SourceContractError("source event fields must be an object")
     result: dict[str, Any] = {"schema_version": SCHEMA_VERSION}
+    if event_type in HANDOFF_EVENT_TYPES:
+        for field in HANDOFF_COMMON_FIELDS:
+            result[field] = _string(field, record.get(field))
+        result.update(_project_handoff(event_type, fields))
+        return result
     for field in COMMON_FIELDS:
         value = record.get(field)
         if value is not None:
@@ -538,6 +666,29 @@ def _snapshot_graph(graph_nodes: list[Mapping[str, Any]]) -> dict[str, list[dict
     return {"nodes": nodes, "edges": edges}
 
 
+# Snapshot hand-off rows keep each fact once per identity, the same keys the
+# dashboard reducer uses, so at-least-once replays never double a carrier.
+_HANDOFF_ROWS = {
+    "com.exomachina.handoff.produced.v1": (
+        "produced", lambda d: (d["handoff_id"], d["handoff_revision"])),
+    "com.exomachina.handoff.consumed.v1": (
+        "consumed", lambda d: (d["assignment_id"], d["attempt_id"], d["node"], d["consumed_at"])),
+    "com.exomachina.handoff.item_ready.v1": (
+        "ready", lambda d: (d["assignment_id"], d["attempt_id"], d["handoff_id"], d["item_index"])),
+}
+
+
+def _add_handoff(run: dict[str, Any], event_type: str, data: Mapping[str, Any]) -> None:
+    name, key = _HANDOFF_ROWS[event_type]
+    rows = run.setdefault("handoffs", {"produced": [], "consumed": [], "ready": []})[name]
+    identity = key(data)
+    for index, row in enumerate(rows):
+        if key(row) == identity:
+            rows[index] = dict(data)
+            return
+    _append_bounded(rows, dict(data))
+
+
 def _merge_run_state(previous: Mapping[str, Any], update: Mapping[str, Any]) -> dict[str, Any]:
     """Retain lifecycle facts across refreshes and keep the earliest start time."""
     merged = dict(previous)
@@ -659,6 +810,8 @@ def _reduce(state: dict[str, Any], event_type: str, event: Mapping[str, Any]) ->
             _append_bounded(run["incidents"], data)
     elif event_type == "com.exomachina.admission.state_changed.v1":
         _append_bounded(run["admissions"], data)
+    elif event_type in HANDOFF_EVENT_TYPES:
+        _add_handoff(run, event_type, data)
 
 
 def _snapshot_state(state: Mapping[str, Any], *, selected_run_id: str | None = None) -> dict[str, Any]:
@@ -730,6 +883,12 @@ def _snapshot_state(state: Mapping[str, Any], *, selected_run_id: str | None = N
             run["started_at"] = current["started_at"]
         if record.get("graph") is not None:
             run["graph"] = record["graph"]
+        handoffs = record.get("handoffs")
+        if isinstance(handoffs, Mapping) and any(handoffs.values()):
+            # Retained runs keep their timed hand-off records so a refreshed
+            # or retained run replays its full carrier path.
+            run["handoffs"] = {name: list(handoffs.get(name, []))
+                               for name in ("produced", "consumed", "ready")}
         runs.append(run)
     return {"factory": factory, "runs": runs,
             "active_publication": state.get("active_publication"),

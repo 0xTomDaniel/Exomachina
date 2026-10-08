@@ -221,3 +221,27 @@ test("inferred items hop a declared control route without the undeclared label",
   const old = timeline(build(legacy, undeclared)).filter(e => e.type === "move" && e.from === "route_verdict");
   assert.ok(old.length && old.every(e => e.undeclared === true && !e.control), "a route case with no declared edge stays undeclared");
 });
+
+test("retained snapshots carry timed hand-off rows, so a refreshed run replays the same recorded carriers", () => {
+  const streamed = build(reportRun());
+  const run = streamed.runs.get("run-c");
+  const snap = snapshot();
+  const row = snap.state.runs[0];
+  row.handoffs = { produced:run.handoffs.produced, consumed:run.handoffs.consumed, ready:run.handoffs.ready };
+  row.artifacts = run.artifacts; row.quality = run.quality; row.delivery = run.delivery;
+  row.assignments = Object.entries(run.assignments).map(([id, attempts]) => ({ id, attempts:Object.values(attempts) }));
+  row.status = { state:"completed", phase:"accepted", started_at:T(0), ended_at:T(35) };
+  const retained = createDashboardState(snap, { source:"recorded" });
+  assert.deepEqual(retained.runs.get("run-c").handoffs, run.handoffs);
+  const spawned = state => timeline(state).filter(e => e.type === "spawn" && e.item.startsWith("carrier:")).map(e => `${e.item}@${e.at}`).sort();
+  assert.deepEqual(spawned(retained), spawned(streamed));
+  const r2 = of(timeline(retained), "carrier:h-draft:2");
+  assert.equal(r2.find(e => e.type === "release").at, "publish", "the retained run replays release at the side-effect node");
+  // Rows are the exact event data and must belong to this run.
+  const bad = structuredClone(snap); bad.state.runs[0].handoffs.produced[0].run_id = "run-other";
+  assert.throws(() => createDashboardState(bad, { source:"recorded" }), /does not belong/);
+  const leak = structuredClone(snap); leak.state.runs[0].handoffs.produced[0].items[0].name = "secret";
+  assert.throws(() => createDashboardState(leak, { source:"recorded" }), /not allowlisted/);
+  const extra = structuredClone(snap); extra.state.runs[0].handoffs.items = [];
+  assert.throws(() => createDashboardState(extra, { source:"recorded" }), /not allowlisted/);
+});

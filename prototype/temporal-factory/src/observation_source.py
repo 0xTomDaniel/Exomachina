@@ -721,6 +721,73 @@ class RuntimeObservationSource:
                 run_id=workflow_id,
                 fields={**original_fields, "node": node}, task_id=task_id))
 
+        def handoff_node(activity_input: Mapping[str, Any]) -> str | None:
+            node = activity_input.get("node")
+            if (isinstance(node, str) and
+                    re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,255}", node) and
+                    node in {item["id"] for item in _graph_nodes(definition)}):
+                return node
+            return None
+
+        def handoff_assignment(activity_input: Mapping[str, Any], item: Mapping[str, Any],
+                               scheduled_id: Any) -> str:
+            # Research assignments keep the identity their assignment facts use.
+            return str(activity_input.get("instance") or activity_input.get("assignment_id")
+                       or item.get("activity_id") or scheduled_id)
+
+        def append_handoff_consumed(event_id: Any, time_value: Any,
+                                    activity_input: Mapping[str, Any], item: Mapping[str, Any],
+                                    scheduled_id: Any, attempt_id: str | None) -> None:
+            """Before dispatch: the hand-offs this Task was composed from."""
+            consumes = activity_input.get("consumes")
+            node = handoff_node(activity_input)
+            if not consumes or not isinstance(consumes, list) or node is None or attempt_id is None:
+                return
+            records.append(self._record(
+                "temporal", f"{workflow_id}:{event_id}:handoff-consumed",
+                "com.exomachina.handoff.consumed.v1", time_value, run_id=workflow_id,
+                fields={"node": node, "consumed_at": _event_time(time_value), "inputs": consumes},
+                assignment_id=handoff_assignment(activity_input, item, scheduled_id),
+                attempt_id=attempt_id))
+
+        def append_handoff_produced(event_id: Any, activity_input: Mapping[str, Any],
+                                    item: Mapping[str, Any], scheduled_id: Any,
+                                    attempt_id: str | None, result: Any) -> None:
+            """On complete: the content-free record the Activity hook returned."""
+            produced = result.get("handoff") if isinstance(result, Mapping) else None
+            node = handoff_node(activity_input)
+            if (not isinstance(produced, Mapping) or node is None or attempt_id is None
+                    or not isinstance(produced.get("handoff_id"), str)):
+                return
+            assignment_id = handoff_assignment(activity_input, item, scheduled_id)
+            for ready in produced.get("ready") or []:
+                if isinstance(ready, Mapping):
+                    records.append(self._record(
+                        "temporal",
+                        f"{workflow_id}:{event_id}:handoff-ready:{ready.get('item_index')}",
+                        "com.exomachina.handoff.item_ready.v1", ready.get("ready_at"),
+                        run_id=workflow_id,
+                        fields={"node": node, "handoff_id": produced["handoff_id"],
+                                **{key: ready.get(key) for key in
+                                   ("item_index", "part_kinds", "media_type", "ready_at")}},
+                        assignment_id=assignment_id, attempt_id=attempt_id))
+            records.append(self._record(
+                "temporal", f"{workflow_id}:{event_id}:handoff-produced",
+                "com.exomachina.handoff.produced.v1", produced.get("produced_at"),
+                run_id=workflow_id,
+                fields={"node": node, **{key: produced.get(key) for key in
+                        ("handoff_id", "handoff_revision", "produced_at", "items")}},
+                assignment_id=assignment_id, attempt_id=attempt_id))
+
+        def completed_attempt(attributes: Mapping[str, Any], scheduled_id: Any) -> str | None:
+            started_event_id = attributes.get("started_event_id")
+            linked = (started_by_event_id.get(started_event_id, [])
+                      if type(started_event_id) is int else [])
+            if (len(linked) == 1 and linked[0].get("scheduled_event_id") == scheduled_id and
+                    isinstance(linked[0].get("attempt_id"), str)):
+                return linked[0]["attempt_id"]
+            return None
+
         for event in events:
             event_id = event.get("event_id")
             event_type = event.get("event_type")
@@ -772,6 +839,9 @@ class RuntimeObservationSource:
                                        "phase": self._phase_for_activity(item["name"])}
                     append_run_node_link(event_id, at, item["input"], activity_fields)
                 attempt_id = _temporal_attempt(attributes.get("attempt"))
+                if item:
+                    append_handoff_consumed(event_id, at, item["input"], item,
+                                            scheduled_id, attempt_id)
                 if item and item["name"] == "assign" and attempt_id is not None:
                     data = item["input"]
                     binding = data.get("binding") or {}
@@ -795,6 +865,9 @@ class RuntimeObservationSource:
                     continue
                 data, result = item["input"], attributes.get("result") or {}
                 name = item["name"]
+                if name in {"assign", "synthesize"}:
+                    append_handoff_produced(event_id, data, item, scheduled_id,
+                                            completed_attempt(attributes, scheduled_id), result)
                 if name == "assign":
                     assignment_id = str(data.get("instance") or item["activity_id"] or scheduled_id)
                     legacy_source_id = f"{workflow_id}:{event_id}:assignment"

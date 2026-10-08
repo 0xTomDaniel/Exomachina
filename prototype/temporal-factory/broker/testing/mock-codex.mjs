@@ -119,7 +119,10 @@ function turn(res, model, session, reasoningId, calls, text) {
 	}
 	if (!res.headersSent) res.writeHead(200, { "content-type": "text/event-stream" });
 	for (const e of ev) res.write(`event: ${e.type}\ndata: ${JSON.stringify(e)}\n\n`);
-	res.end();
+	// Callers record this turn synchronously after it returns (`log({ reply: turn(...) })`).
+	// End the response on the next tick so the record is durable before a client
+	// that has read the completed stream can inspect it.
+	setImmediate(() => res.end());
 	return { rid, calls: calls.map((c) => c.call_id), reasoning: reasoningId, text,
 		fragments: ev.filter((e) => e.type === "response.function_call_arguments.delta").map((e) => e.item_id) };
 }

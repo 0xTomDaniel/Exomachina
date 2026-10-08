@@ -75,7 +75,9 @@ function arraysFromSnapshot(snapshot) {
     for(const artifact of row.artifacts??[])addArtifact(artifacts,artifact);
     for(const receipt of row.delivery??[])addDelivery(delivery,receipt);
     const status=typeof row.status==="string"?{state:row.status}:clone(row.status);
-    const internal={run_id:row.id,graph:clone(row.graph??null),task:clone(row.task),state:{...status,...(row.started_at?{started_at:row.started_at}:{})},started_at:row.started_at??status.started_at??null,pinned:clone(row.pinned),assignments,artifacts,quality:clone(row.quality),decisions:clone(row.decisions),commands:clone(row.commands),delivery,incidents:currentIncidents(row.incidents),admissions:clone(row.admissions),illustrations:[],model_label:row.model_label,fixture_label:row.fixture_label};
+    const handoffRun={};
+    for(const [list,type] of [["produced","com.exomachina.handoff.produced.v1"],["consumed","com.exomachina.handoff.consumed.v1"],["ready","com.exomachina.handoff.item_ready.v1"]])for(const data of row.handoffs?.[list]??[])addHandoff(handoffRun,type,data);
+    const internal={run_id:row.id,...(handoffRun.handoffs?{handoffs:handoffRun.handoffs}:{}),graph:clone(row.graph??null),task:clone(row.task),state:{...status,...(row.started_at?{started_at:row.started_at}:{})},started_at:row.started_at??status.started_at??null,pinned:clone(row.pinned),assignments,artifacts,quality:clone(row.quality),decisions:clone(row.decisions),commands:clone(row.commands),delivery,incidents:currentIncidents(row.incidents),admissions:clone(row.admissions),illustrations:[],model_label:row.model_label,fixture_label:row.fixture_label};
     return [row.id,internal];
   }));
   return { factoryId:wire.factory.id, factory:clone(wire.factory), publication:clone(wire.active_publication), capacity:clone(wire.capacity), commercial:clone(wire.commercial), runs, demo:clone(wire.demo ?? null), illustrations:[] };

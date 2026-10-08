@@ -793,3 +793,36 @@ edge kind yet.
   in `next`, adds `control` (the control subset of `next`) and the node's
   `output`; the snapshot graph carries `edges[].kind` and `nodes[].output`.
   The dashboard accepts `graph_nodes[].control` (a distinct subset of `next`).
+
+**Runtime phase: emission, Observation and snapshots (7 Oct 2026).**
+
+- Activities (`src/adapter.py`, `src/handoff.py`) run the on-complete hook:
+  enforce the binding's output contract (`output.missing` is an ordinary
+  outcome-journal incident, so it takes the existing unresolved/incident path)
+  and, when `EXO_HANDOFF_KEY_FILE` is configured (the runner sets
+  `<home>/handoff-digest.key`, created 0600 on first use), return the
+  content-free item records in the journaled receipt. A `data` Part's byte
+  length is its canonical JSON encoding; a `raw` Part's is its decoded bytes.
+  The item digest is HMAC-SHA256 over the canonical JSON `[[kind, value], …]`
+  of its Parts. Quality (a gate) and release (`output: none`) produce none.
+- The Workflow (patch `exo-handoff-records-v1`) names hand-offs
+  (`<parallel node>.<branch>`, revision 1; `<synthesize node>`, revision
+  `repair_count + 1`) and passes `consumes` (upstream ids and item digests) to
+  synthesis (research hand-offs, plus the rejected draft on repair), Quality
+  and release. It never sees the key.
+- `RuntimeObservationSource` projects `consumed` at the Activity's
+  `ACTIVITY_TASK_STARTED` (before dispatch) and `produced` (plus any streamed
+  `ready` rows) at completion. Assignment identity follows the assignment facts
+  (`instance` for research, else the Workflow `assignment_id`), with the
+  Temporal attempt. Hand-off event data carries exactly the INTERFACES fields:
+  no Task, context or pin fields.
+- `src/observation.py` allowlists the three types with exact nested
+  validation and reduces them into `runs[].handoffs = {produced, consumed,
+  ready}` (deduplicated by the reducer's identities, each list bounded at 256).
+  Snapshot run rows carry `handoffs` when a run has any, and the dashboard
+  accepts it (each row the exact event data of its type, bound to its run).
+- Streaming: no current dispatch path consumes `SendStreamingMessage` (the
+  durable path is `returnImmediately` plus `GetTask`). `handoff.stream_ready_items`
+  turns a v1 stream's `artifactUpdate … lastChunk` events into item ready
+  times and `item_ready` rows, and the projection emits any `ready` rows a
+  record carries; wiring a streaming dispatch is deferred.

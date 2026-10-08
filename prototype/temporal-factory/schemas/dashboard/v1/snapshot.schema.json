@@ -154,6 +154,15 @@
         "delivery": {"$ref": "#/$defs/publicRecordList"},
         "incidents": {"$ref": "#/$defs/publicRecordList"},
         "admissions": {"$ref": "#/$defs/publicRecordList"},
+        "handoffs": {
+          "type": "object", "additionalProperties": false,
+          "required": ["produced", "consumed", "ready"],
+          "properties": {
+            "produced": {"type": "array", "maxItems": 256, "items": {"$ref": "urn:exomachina:dashboard:event:v1"}},
+            "consumed": {"type": "array", "maxItems": 256, "items": {"$ref": "urn:exomachina:dashboard:event:v1"}},
+            "ready": {"type": "array", "maxItems": 256, "items": {"$ref": "urn:exomachina:dashboard:event:v1"}}
+          }
+        },
         "model_label": {"$ref": "#/$defs/safeText"},
         "fixture_label": {"$ref": "#/$defs/safeText"}
       }
