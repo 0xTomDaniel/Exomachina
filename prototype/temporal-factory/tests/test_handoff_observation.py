@@ -193,6 +193,62 @@ class HandoffHistoryProjectionTests(unittest.TestCase):
         self.assertEqual(events[0]["time"], T0)
         self.assertTrue(all("task_id" not in event["data"] for event in events))
 
+    def test_quality_verdict_artifact_projects_as_its_own_produced_handoff(self):
+        """Decision 5 as amended 8 Oct 2026: Quality consumes the draft and
+        produces its verdict (with findings) as a hand-off; the verdict fact
+        still seals the judged draft by its sha256."""
+        temp = Path(tempfile.mkdtemp(prefix="exo-handoff-quality-", dir="/tmp"))
+        source = RuntimeObservationSource(FakeDirector(temp / "instance"),
+            {"name": "factory-test", "capability": {"id": "verified-research@1"}},
+            temp / "source.sqlite3", history_reader=lambda: [], refresh_interval_seconds=0)
+        document = {"start": "independent_quality", "nodes": {
+            "independent_quality": {"type": "quality", "next": "done"},
+            "done": {"type": "complete"}}}
+        closure = {"manifest_digest": "a" * 64, "manifest": {"root_digest": "c" * 64,
+                   "package_digest": "b" * 64, "interpreter": {"build_id": "b-123456789abc"},
+                   "services": {}}}
+        record_q = {"handoff_id": "independent_quality", "handoff_revision": 1, "produced_at": T1,
+                    "items": [item(0, D3)]}
+        verdict = {"kind": "quality_verdict@1", "candidate": {"revision": "r1", "sha256": SHA},
+                   "accepted": False, "decided_by": "model", "rubric": "report-quality@1",
+                   "rubric_digest": "9" * 64,
+                   "findings": [{"claim_id": "C1", "severity": "blocking",
+                                 "problem": "SECRET-FINDING-TEXT", "evidence": ["E1"]}]}
+        history = [
+            {"event_id": 1, "event_type": "WORKFLOW_EXECUTION_STARTED", "time": "2026-10-07T12:00:00.000Z",
+             "attributes": {"input": {"run": "run-1", "definition_digest": "c" * 64,
+                 "package_digest": "b" * 64, "closure": closure, "document": document}}},
+            {"event_id": 2, "event_type": "ACTIVITY_TASK_SCHEDULED", "time": "2026-10-07T12:00:00.100Z",
+             "attributes": {"activity_id": "1", "activity_type": "review", "input": {
+                 "node": "independent_quality", "assignment_id": "q-uuid", "attempt_id": "q-attempt",
+                 "binding": {"identity": "quality-safe"},
+                 "candidate": {"revision": "r1", "sha256": SHA},
+                 "handoff_id": "independent_quality", "handoff_revision": 1,
+                 "consumes": [{"handoff_id": "draft", "item_digests": [D2]}]}}},
+            {"event_id": 3, "event_type": "ACTIVITY_TASK_STARTED", "time": "2026-10-07T12:00:00.200Z",
+             "attributes": {"scheduled_event_id": 2, "attempt": 1}},
+            {"event_id": 4, "event_type": "ACTIVITY_TASK_COMPLETED", "time": "2026-10-07T12:00:02.100Z",
+             "attributes": {"scheduled_event_id": 2, "started_event_id": 3,
+                            "result": {"task_id": "quality-task", "artifact": verdict,
+                                       "item_parts": [[{"text": "{}", "mediaType": "application/json"}]],
+                                       "handoff": record_q}}},
+        ]
+        records = source._history_records("run-1", history, "task-1", "context-1")
+        kinds = [r["event_type"] for r in records if ".handoff." in r["event_type"]
+                 or r["event_type"].endswith("quality.verdict.v1")]
+        self.assertEqual([kind.split(".")[2] + "." + kind.split(".")[3] for kind in kinds],
+                         ["handoff.consumed", "handoff.produced", "quality.verdict"])
+        events = {r["event_type"]: project_source_record(r, source.factory_id)[3]["data"]
+                  for r in records if r["event_type"] in kinds}
+        produced = events["com.exomachina.handoff.produced.v1"]
+        self.assertEqual((produced["node"], produced["handoff_id"], produced["assignment_id"]),
+                         ("independent_quality", "independent_quality", "q-uuid"))
+        self.assertNotIn("artifact_sha256", produced["items"][0])
+        sealed = events["com.exomachina.quality.verdict.v1"]
+        self.assertEqual((sealed["artifact_sha256"], sealed["accepted"], sealed["finding_count"]),
+                         (SHA, False, 1), "the seal stays on the judged draft")
+        self.assertNotIn("SECRET-FINDING-TEXT", json.dumps(list(events.values())))
+
 
 if __name__ == "__main__":
     unittest.main()

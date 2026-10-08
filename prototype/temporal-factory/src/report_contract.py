@@ -112,24 +112,18 @@ def packet_evidence_join(results: dict[str, dict], packet: dict) -> dict:
             "branch_artifact_sha256": {name: results[name]["sha256"] for name in sorted(results)}}
 
 
-def synthesis_assignment(revision: str, question: str, packet: dict,
-                         *, quality_findings: list | None = None) -> dict:
+def synthesis_assignment(revision: str, question: str, packet: dict) -> dict:
     """The synthesis brief: factory-own fields only.
 
-    Research results and, on repair, the rejected draft are consumed hand-off
-    items that travel as their own Parts after the brief (decision 9); the
-    brief never embeds them.
+    Research results and, on repair, the rejected draft and Quality's verdict
+    (its findings) are consumed hand-off items that travel as their own Parts
+    after the brief (decisions 5 and 9); the brief never embeds them.
     """
     if revision not in {"r1", "r2", "r3"} or not _nonempty(question):
         raise ValueError("invalid synthesis revision or question")
     mode = "draft" if revision == "r1" else "repair"
-    if mode == "draft" and quality_findings is not None:
-        raise ValueError("draft cannot carry prior verdict")
-    if mode == "repair" and not isinstance(quality_findings, list):
-        raise ValueError("repair needs Quality findings")
     return {"kind": "synthesis_assignment@1", "mode": mode, "revision": revision,
-            "question": question, "packet": validate_packet(packet), "packet_digest": packet_digest(packet),
-            "quality_findings": quality_findings}
+            "question": question, "packet": validate_packet(packet), "packet_digest": packet_digest(packet)}
 
 
 def validate_report(value: object, revision: str, question: str, packet: dict) -> dict:

@@ -144,6 +144,8 @@ class FactoryRun:
         self._draft_handoff: dict | None = None
         self._research_carriers: list[dict] = []
         self._draft_carrier: dict | None = None
+        self._quality_handoff = False
+        self._verdict_carrier: dict | None = None
 
     @workflow.query
     def status(self) -> dict:
@@ -297,13 +299,21 @@ class FactoryRun:
                 self.completed.append(at)
                 at = node["next"]
             elif kind == "synthesize":
-                findings = self.verdict["findings"] if self.repair_count else None
                 service = bindings[node["service"]]
                 # Before dispatch: the Task is composed from the research
-                # hand-offs and, on repair, the rejected draft. ``joined`` is
-                # the factory's own validation and is not sent.
-                sources = [*self._research_carriers,
-                           *([self._draft_carrier] if self.repair_count else [])]
+                # hand-offs and, on repair, the judged (rejected) draft and
+                # Quality's verdict hand-off carrying its findings, each over
+                # a declared material edge (decision 5, amended 8 Oct 2026).
+                # ``joined`` is the factory's own validation and is not sent.
+                # Findings are never pasted into the brief.
+                repair_sources = []
+                if self.repair_count:
+                    repair_sources.append(self._draft_carrier)
+                    if self._quality_handoff:
+                        if self._verdict_carrier is None:
+                            raise ValueError("repair without Quality's findings hand-off")
+                        repair_sources.append(self._verdict_carrier)
+                sources = [*self._research_carriers, *repair_sources]
                 handoff_fields = {}
                 if self._handoff_records:
                     handoff_fields = {"handoff_id": at, "handoff_revision": self.repair_count + 1,
@@ -311,7 +321,7 @@ class FactoryRun:
                 self.current = await _activity(synthesize, self._assignment_input(at, {
                     "run": self.run_id, "digest": self.definition_digest,
                     "revision": f"r{self.repair_count + 1}", "question": self.run_inputs["question"],
-                    "packet": package["evidence_packet"], "quality_findings": findings,
+                    "packet": package["evidence_packet"],
                     "upstream": upstream_inputs(*sources),
                     "binding": service, "contract": input["closure"]["contracts"][node["service"]],
                     **handoff_fields,
@@ -326,6 +336,7 @@ class FactoryRun:
                 if "unresolved" in self.current:
                     return await self._hold_unresolved("synthesis-incident", self.current)
                 self.verdict = None
+                self._verdict_carrier = None
                 self.acceptance = None
                 self.completed.append(at + ":" + self.current["revision"])
                 at = node["next"]
@@ -334,6 +345,10 @@ class FactoryRun:
                 quality_name = next(name for name, value in bindings.items() if value["role"] == "quality")
                 assignment_id = self.run_id + ":quality"
                 attempt = self.repair_count + 1
+                # Quality's verdict artifact is its own hand-off, one revision
+                # per judged draft revision.
+                verdict_identity = ({"handoff_id": at, "handoff_revision": attempt}
+                                    if self._quality_handoff else {})
                 outcome = await _activity(review, self._assignment_input(at, {
                     "run": self.run_id, "digest": self.definition_digest,
                     "binding": quality, "contract": input["closure"]["contracts"][quality_name],
@@ -347,10 +362,19 @@ class FactoryRun:
                     "upstream": upstream_inputs(self._draft_carrier),
                     **({"consumes": consumed_from(self._draft_carrier)}
                        if self._handoff_records else {}),
+                    **verdict_identity,
                 }))
                 if "inconsistent" in outcome:
                     return await self._hold_unresolved("quality-incident", outcome)
+                produced = outcome.pop("handoff", None)
+                parts = outcome.pop("item_parts", None)
                 artifact = outcome["artifact"]
+                if self._quality_handoff:
+                    if not isinstance(parts, list) or not parts:
+                        raise ValueError("Quality returned no verdict artifact Parts")
+                    self._verdict_carrier = carrier(
+                        {"handoff": produced if self._handoff_records else None,
+                         "item_parts": parts}, "")
                 self.verdict = artifact
                 self.last_verdict = artifact
                 if artifact["accepted"] is True:
@@ -565,4 +589,7 @@ class FactoryRun:
         self._explicit_assignment_bindings = workflow.patched("exo-explicit-assignment-bindings-v1")
         self._explicit_factory_binding = workflow.patched("exo-explicit-factory-binding-v1")
         self._handoff_records = workflow.patched("exo-handoff-records-v1")
+        # Decision 5 as amended 8 Oct 2026: Quality's verdict and findings are
+        # its own hand-off; repair consumes it with the judged draft.
+        self._quality_handoff = workflow.patched("exo-quality-findings-handoff-v1")
         return await self.run_node(document, input["package"], input)

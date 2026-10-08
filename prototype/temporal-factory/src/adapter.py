@@ -377,9 +377,11 @@ async def typed_join(input: dict) -> dict:
 
 @activity.defn
 async def synthesize(input: dict) -> dict:
-    # Research results and the rejected draft travel as consumed item Parts.
-    brief = synthesis_assignment(input["revision"], input["question"], input["packet"],
-                                 quality_findings=input.get("quality_findings"))
+    # Research results and, on repair, the rejected draft and Quality's verdict
+    # (its findings) travel as consumed item Parts; the brief embeds none of
+    # them. A ``quality_findings`` field in a pre-patch Workflow history's
+    # input is ignored: findings are never pasted into a brief.
+    brief = synthesis_assignment(input["revision"], input["question"], input["packet"])
     action_id = f"{input['run']}:synthesize:{input['revision']}"
     try:
         action = _action(action_id, input, brief, _compose(input, brief))
@@ -442,9 +444,20 @@ async def review(input: dict) -> dict:
             expected_task_id=result["task_id"])
         if decision.kind == QualityKind.INCONSISTENT:
             return {"inconsistent": decision.incident, "reasons": list(decision.reasons)}
-        # A gate seals the carrier it consumed; it never mints a new hand-off.
-        return {key: value for key, value in result.items()
-                if key not in {"handoff", "item_parts"}} | {"artifact": content}
+        # The verdict and findings are Quality's own result artifact (strict
+        # ``artifacts``). On the floor the verdict seals the judged carrier;
+        # the artifact itself is Quality's produced hand-off (decision 5, as
+        # amended 8 Oct 2026), which repair consumes over a material edge.
+        # Workflows that predate that amendment pass no ``handoff_id`` and see
+        # neither the record nor the Parts.
+        reviewed = {key: value for key, value in result.items()
+                    if key not in {"handoff", "item_parts"}} | {"artifact": content}
+        if not isinstance(input.get("handoff_id"), str):
+            return reviewed
+        reviewed["item_parts"] = result["item_parts"]
+        if "handoff" in result:
+            reviewed["handoff"] = result["handoff"]
+        return _with_handoff(reviewed, input)
     except PendingTask:
         raise
     except Exception as error:

@@ -231,18 +231,27 @@ class ReportAsyncTests(unittest.TestCase):
         self.assertEqual(sent[1:], candidate["item_parts"][0])
         self.assertNotIn("candidate", self.agents["quality"].briefs[-1])
         self.assertNotIn(candidate["content"], sent[0]["text"])
-        findings = [{"claim_id": "C1", "severity": "blocking", "problem": "Unsupported",
-                     "evidence": ["E1"]}]
+        # Quality's verdict (with its findings) is its own result artifact; a
+        # Workflow that names its hand-off receives the verdict's Parts.
+        self.assertNotIn("item_parts", verdict, "pre-amendment Workflows see no verdict Parts")
+        verdict_parts = [[{"text": canonical(verdict["artifact"]), "mediaType": "application/json"}]]
+        # A legacy ``quality_findings`` input (pre-patch history) is ignored:
+        # findings never enter a brief; they arrive as the verdict's own Part.
         repaired = self.call(adapter.synthesize, {**self.args("synthesizer"), "revision": "r2",
-            "question": self.question, "packet": self.packet, "quality_findings": findings,
-            "upstream": self.upstream(**results, draft=candidate)})
+            "question": self.question, "packet": self.packet,
+            "quality_findings": [{"claim_id": "C1", "severity": "blocking", "problem": "Legacy",
+                                  "evidence": ["E1"]}],
+            "upstream": [*self.upstream(**results, draft=candidate),
+                         {"handoff_id": "independent_quality", "item_parts": verdict_parts}]})
         self.assertEqual(repaired["revision"], "r2")
         brief = self.agents["synthesizer"].briefs[-1]
         self.assertEqual(brief["mode"], "repair")
         self.assertNotIn("prior", brief)
-        self.assertEqual(self.agents["synthesizer"].messages[-1][-1],
-                         candidate["item_parts"][0][0])
-        self.assertEqual(brief["quality_findings"], findings)
+        self.assertNotIn("quality_findings", brief)
+        self.assertNotIn("Legacy", self.agents["synthesizer"].messages[-1][0]["text"])
+        self.assertEqual(self.agents["synthesizer"].messages[-1][-2:],
+                         [candidate["item_parts"][0][0], verdict_parts[0][0]],
+                         "the judged draft, then Quality's verdict, verbatim")
 
     def test_verdict_wrong_revision_sha_reviewer_or_self_review_is_incident(self):
         for mutation in ("revision", "sha", "reviewer", "author_review"):
@@ -271,7 +280,7 @@ class ReportAsyncTests(unittest.TestCase):
     def test_oversize_input_fails_loudly_and_is_never_sent(self):
         results, _, _ = self.candidate()
         self.agents["synthesizer"].messages = []
-        with patch.object(handoff, "MAX_MESSAGE_BYTES", 2000):
+        with patch.object(handoff, "MAX_MESSAGE_BYTES", 1000):
             result = self.call(adapter.synthesize, {**self.args("synthesizer"), "revision": "r1",
                 "question": self.question, "packet": self.packet, "run": "run-oversize",
                 "upstream": self.upstream(**results)})
@@ -338,7 +347,34 @@ class ReportAsyncTests(unittest.TestCase):
             "upstream": [{"handoff_id": "draft", "item_parts": candidate["item_parts"]}],
             "consumes": handoff.consumed_inputs([candidate["handoff"]])}, key_file)
         self.assertNotIn("inconsistent", verdict)
-        self.assertNotIn("handoff", verdict, "a gate seals the carrier; it mints no hand-off")
+        self.assertNotIn("handoff", verdict, "a Workflow that names no verdict hand-off sees none")
+        # Decision 5 as amended 8 Oct 2026: with a named hand-off identity the
+        # verdict artifact is Quality's produced hand-off, content-free and keyed.
+        for agent in self.agents.values():
+            agent.tasks = {}
+        judged = self.call_keyed(adapter.review, {**self.args("quality"), "run": "run-verdict",
+            "candidate": {k: v for k, v in candidate.items() if k != "handoff"},
+            "question": self.question, "packet": self.packet, "policy_digest": "p" * 64,
+            "acceptance_criteria": REPORT_ACCEPTANCE_CRITERIA,
+            "assignment_id": "run-verdict:quality", "attempt": 1,
+            "rubric_digest": digest(REPORT_ACCEPTANCE_CRITERIA),
+            "upstream": [{"handoff_id": "draft", "item_parts": candidate["item_parts"]}],
+            "consumes": handoff.consumed_inputs([candidate["handoff"]]),
+            "handoff_id": "independent_quality", "handoff_revision": 1}, key_file)
+        self.assertNotIn("inconsistent", judged)
+        produced = judged["handoff"]
+        self.assertEqual((produced["handoff_id"], produced["handoff_revision"]), ("independent_quality", 1))
+        [item] = produced["items"]
+        verdict_text = canonical(judged["artifact"])
+        self.assertEqual(judged["item_parts"], [[{"text": verdict_text, "mediaType": "application/json"}]])
+        self.assertEqual((item["source"], item["part_kinds"], item["media_type"]),
+                         ("artifact", ["text"], "application/json"))
+        self.assertNotIn("artifact_sha256", item, "a verdict is not the report artifact")
+        payload = json.dumps([["text", verdict_text]], sort_keys=True,
+                             separators=(",", ":"), ensure_ascii=False).encode()
+        self.assertEqual(item["digest"], hmac.new(key, payload, hashlib.sha256).hexdigest())
+        self.assertNotIn("findings", json.dumps(produced))
+        self.assertNotIn(key.hex(), json.dumps(produced))
         # The journal replays the same record on an Activity retry.
         again = self.call_keyed(adapter.assign, {**self.args("research_findings"), "instance": "research_findings",
             "capability": "packet_findings@1", "question": self.question, "packet": self.packet,

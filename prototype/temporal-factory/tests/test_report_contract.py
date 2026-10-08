@@ -94,12 +94,15 @@ class ReportContractTests(unittest.TestCase):
         candidate = {"revision": "r1", "sha256": digest(report), "author": "synthesizer",
                      "content": canonical(report)}
         draft = synthesis_assignment("r1", "Question?", self.packet)
-        repair = synthesis_assignment("r2", "Question?", self.packet, quality_findings=[])
+        repair = synthesis_assignment("r2", "Question?", self.packet)
         review = quality_review_request(candidate, "Question?", self.packet,
                                         REPORT_ACCEPTANCE_CRITERIA,
                                         rubric_digest=digest(REPORT_ACCEPTANCE_CRITERIA))
         for brief in (draft, repair, review):
-            self.assertFalse({"evidence", "prior", "candidate"} & set(brief), brief)
+            # Quality's findings are a hand-off of their own (decision 5 as
+            # amended 8 Oct 2026), never pasted into the repair brief.
+            self.assertFalse({"evidence", "prior", "candidate", "quality_findings", "findings"}
+                             & set(brief), brief)
             self.assertNotIn(candidate["content"], canonical(brief))
         # Acceptance criteria travel as content, never as a factory digest.
         self.assertEqual(review["acceptance_criteria"], REPORT_ACCEPTANCE_CRITERIA)
@@ -112,8 +115,8 @@ class ReportContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             quality_review_request(candidate, "Question?", self.packet, None)
         self.assertEqual(repair["mode"], "repair")
-        with self.assertRaises(ValueError):
-            synthesis_assignment("r2", "Question?", self.packet)
+        with self.assertRaises(TypeError):
+            synthesis_assignment("r2", "Question?", self.packet, quality_findings=[])
 
 if __name__ == "__main__":
     unittest.main()

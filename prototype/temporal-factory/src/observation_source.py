@@ -865,7 +865,9 @@ class RuntimeObservationSource:
                     continue
                 data, result = item["input"], attributes.get("result") or {}
                 name = item["name"]
-                if name in {"assign", "synthesize", "release"}:
+                # Quality's verdict artifact is its own hand-off (decision 5,
+                # amended 8 Oct 2026); older review results carry none.
+                if name in {"assign", "synthesize", "review", "release"}:
                     append_handoff_produced(event_id, data, item, scheduled_id,
                                             completed_attempt(attributes, scheduled_id), result)
                 if name == "assign":

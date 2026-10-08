@@ -264,6 +264,105 @@ class WorkflowHandoffCompositionTests(unittest.IsolatedAsyncioTestCase):
         for name in ("instance_key", "KEY_ENV", "EXO_HANDOFF_KEY_FILE", "hmac"):
             self.assertNotIn(name, source)
 
+    async def test_repair_consumes_the_judged_draft_and_qualitys_findings_handoff(self):
+        """Decision 5 as amended 8 Oct 2026: Quality's verdict artifact is its
+        own hand-off; repair receives it and the judged draft as verbatim Parts
+        and lists both as consumed. The brief carries no findings."""
+        run = factory.FactoryRun(); run.run_id = "run"; run.definition_digest = "definition"
+        run.run_inputs = {"question": "synthetic only"}
+        run._explicit_assignment_bindings = True; run._handoff_records = True
+        run._quality_handoff = True
+        bindings = {"research": {"role": "capability", "url": "http://127.0.0.1:1", "identity": "research"},
+                    "synthesis": {"role": "capability", "identity": "synthesis"},
+                    "quality": {"role": "quality", "identity": "quality"},
+                    "release": {"role": "release", "url": "http://127.0.0.1:1", "identity": "release",
+                                "output": "artifacts"}}
+        branch = lambda name: dict(service="research", result_type=name, capability=name)
+        document = {"start": "gather", "nodes": {
+            "gather": dict(type="parallel", branches={"findings": branch("findings")}, next="join"),
+            "join": dict(type="join", branches=["findings"], next="draft"),
+            "draft": dict(type="synthesize", service="synthesis", next="review",
+                          edges={"review": "material", "repair": "material"}),
+            "review": dict(type="quality", next="route",
+                           edges={"route": "control", "publish": "material", "repair": "material"}),
+            "route": dict(type="route", field="verdict.accepted", cases={"true": "publish", "false": "repair"},
+                          edges={"publish": "control", "repair": "control"}),
+            "repair": dict(type="repair", max_repairs=1, next="draft", exhausted="abort",
+                           edges={"draft": "material", "abort": "control"}),
+            "abort": dict(type="abort"),
+            "publish": dict(type="release", service="release", next="done", edges={"done": "control"}),
+            "done": dict(type="complete")}}
+        closure = {"contracts": {name: {} for name in bindings}, "manifest": {"quality_policy_digest": "p"},
+                   "quality_policy": {}}
+        record = lambda handoff_id, revision, digest: {"handoff_id": handoff_id, "handoff_revision": revision,
+            "produced_at": "2026-10-07T12:00:00.000Z", "items": [{"item_index": 0, "digest": digest}]}
+        findings = [{"claim_id": "C4", "severity": "blocking", "problem": "contradicts E7", "evidence": ["E7"]}]
+        verdict_parts = lambda accepted: [[{"text": json.dumps({"kind": "quality_verdict@1", "accepted": accepted,
+                                                                "findings": [] if accepted else findings}),
+                                            "mediaType": "application/json"}]]
+        calls = []
+        drafts = iter(["d", "e"]); verdicts = iter([False, True])
+
+        async def execute(fn, value):
+            calls.append((fn, value))
+            if fn is factory.assign:
+                return {"handoff": record(value["handoff_id"], 1, "f" * 64), "item_parts": [FINDINGS_PARTS]}
+            if fn is factory.typed_join:
+                return {}
+            if fn is factory.synthesize:
+                mark = next(drafts)
+                return dict(revision=value["revision"], sha256=mark * 64, content="{}",
+                            handoff=record("draft", value["handoff_revision"], mark * 64),
+                            item_parts=[[{"text": "{\"r\":\"" + mark + "\"}", "mediaType": "application/json"}]])
+            if fn is factory.review:
+                accepted = next(verdicts)
+                return dict(task_id="quality-task", artifact=dict(accepted=accepted,
+                                                                  findings=[] if accepted else findings),
+                            handoff=record(value["handoff_id"], value["handoff_revision"],
+                                           ("1" if not accepted else "2") * 64),
+                            item_parts=verdict_parts(accepted))
+            if fn is factory.release:
+                return dict(receipt_id="synthetic", handoff=record("publish", 1, "9" * 64))
+            raise AssertionError("unexpected activity")
+        with patch.object(factory, "verify_closure"), patch.object(factory, "_activity", side_effect=execute), \
+                patch.object(factory.workflow, "uuid4", side_effect=[uuid4() for _ in range(20)]):
+            result = await run.run_node(document, {"bindings": bindings, "evidence_packet": {}}, {"closure": closure})
+        self.assertEqual(result["status"], "accepted")
+        by_fn = {}
+        for fn, value in calls:
+            by_fn.setdefault(fn, []).append(value)
+        reviews, synths = by_fn[factory.review], by_fn[factory.synthesize]
+        self.assertEqual([(v["handoff_id"], v["handoff_revision"]) for v in reviews], [("review", 1), ("review", 2)])
+        self.assertEqual(len(synths), 2)
+        repair = synths[1]
+        self.assertEqual(repair["revision"], "r2")
+        # Both repair inputs are consumed over material edges, as recorded hand-offs.
+        self.assertEqual(repair["consumes"], [
+            {"handoff_id": "gather.findings", "item_digests": ["f" * 64]},
+            {"handoff_id": "draft", "item_digests": ["d" * 64]},
+            {"handoff_id": "review", "item_digests": ["1" * 64]}])
+        self.assertEqual([entry["handoff_id"] for entry in repair["upstream"]],
+                         ["gather.findings", "draft", "review"])
+        self.assertEqual(repair["upstream"][-1]["item_parts"], verdict_parts(False),
+                         "the verdict artifact's own Parts, verbatim")
+        for value in synths:
+            self.assertNotIn("quality_findings", value)
+            self.assertNotIn("contradicts E7", json.dumps({k: v for k, v in value.items() if k != "upstream"}))
+        # The first draft carries no verdict; release consumes the accepted draft only.
+        self.assertEqual([entry["handoff_id"] for entry in synths[0]["upstream"]], ["gather.findings"])
+        self.assertEqual(by_fn[factory.release][0]["consumes"],
+                         [{"handoff_id": "draft", "item_digests": ["e" * 64]}])
+        self.assertNotIn("handoff", result["acceptance"])
+
+    async def test_histories_before_the_findings_handoff_patch_keep_their_inputs(self):
+        """A pre-amendment run passes no verdict hand-off identity to Quality and
+        its repair consumes the judged draft only (still without findings in the brief)."""
+        run = factory.FactoryRun()
+        self.assertFalse(run._quality_handoff)
+        source = (ROOT / "src" / "factory.py").read_text()
+        self.assertIn('workflow.patched("exo-quality-findings-handoff-v1")', source)
+        self.assertNotIn('"quality_findings"', source)
+
 
 if __name__ == "__main__":
     unittest.main()

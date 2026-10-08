@@ -121,12 +121,6 @@ def as_composed_inputs(e: dict) -> dict:
         for task in (agents.get(name) or {}).get("tasks") or []:
             research.setdefault(task.get("run_id"), []).append(
                 (task.get("artifact") or {}).get("sha256"))
-    for task in (agents.get("synthesizer") or {}).get("tasks") or []:
-        brief = task.get("brief") if isinstance(task.get("brief"), dict) else {}
-        prior = brief.pop("prior", None)
-        brief.pop("evidence", None)
-        task["inputs"] = [item(digest) for digest in research.get(task.get("run_id"), [])] + (
-            [item(prior["sha256"])] if isinstance(prior, dict) else [])
     for task in (agents.get("quality") or {}).get("tasks") or []:
         brief = task.get("brief") if isinstance(task.get("brief"), dict) else {}
         candidate = brief.pop("candidate", None) or {}
@@ -141,6 +135,20 @@ def as_composed_inputs(e: dict) -> dict:
         task["artifact"] = {**(task.get("artifact") or {}), "content": content,
                             "sha256": sha(content)}
         task["artifact_id"] = task["receipt_sha256"] = sha(content)
+    # Decision 5 (amended 8 Oct 2026): a repair receives the judged draft and
+    # then Quality's verdict artifact (its findings) as its own Parts; the
+    # preserved briefs' embedded ``quality_findings`` is removed.
+    verdicts = {((t.get("verdict") or {}).get("candidate") or {}).get("sha256"):
+                (t.get("artifact") or {}).get("sha256")
+                for t in (agents.get("quality") or {}).get("tasks") or []}
+    for task in (agents.get("synthesizer") or {}).get("tasks") or []:
+        brief = task.get("brief") if isinstance(task.get("brief"), dict) else {}
+        prior = brief.pop("prior", None)
+        brief.pop("evidence", None)
+        brief.pop("quality_findings", None)
+        task["inputs"] = [item(digest) for digest in research.get(task.get("run_id"), [])] + (
+            [item(prior["sha256"]), item(verdicts.get(prior["sha256"]))]
+            if isinstance(prior, dict) else [])
     return e
 
 
@@ -196,20 +204,24 @@ def as_a2a_release(e: dict) -> dict:
     return e
 
 
-def handoff_audit() -> dict:
+REPAIRS = {"1": 0, "2": 1, "3": 2}
+
+
+def handoff_audit(repairs: int = 0) -> dict:
     """In-memory G-8 hand-off evidence for preserved observations.
 
     The preserved scripted-7 run predates hand-off records (7 Oct 2026), so its
     false-pass probes carry a minimal recorded chain: two research hand-offs
-    consumed by synthesis, the report draft consumed by Quality and release.
+    consumed by synthesis, the report draft consumed by Quality and release,
+    and per repair Quality's verdict hand-off consumed with the judged draft.
     """
     base = {"schema_version": 1, "factory_id": "report-factory", "run_id": "run",
             "assignment_id": "a", "attempt_id": "1"}
     item = lambda digest, **extra: {"item_index": 0, "source": "artifact", "part_kinds": ["data"],
         "media_type": None, "byte_length": 9, "ready_at": "2026-10-07T12:00:01.000Z",
         "digest": digest, **extra}
-    produced = lambda node, hid, digest, at, **extra: {"type": "com.exomachina.handoff.produced.v1",
-        "time": at, "data": {**base, "node": node, "handoff_id": hid, "handoff_revision": 1,
+    produced = lambda node, hid, digest, at, revision=1, **extra: {"type": "com.exomachina.handoff.produced.v1",
+        "time": at, "data": {**base, "node": node, "handoff_id": hid, "handoff_revision": revision,
                              "produced_at": at, "items": [item(digest, **extra)]}}
     consumed = lambda node, at, inputs: {"type": "com.exomachina.handoff.consumed.v1", "time": at,
         "data": {**base, "node": node, "consumed_at": at,
@@ -220,6 +232,13 @@ def handoff_audit() -> dict:
               produced("draft", "draft", "3" * 64, "2026-10-07T12:00:03.000Z",
                        artifact_revision="r1", artifact_sha256="4" * 64),
               consumed("independent_quality", "2026-10-07T12:00:04.000Z", [("draft", "3" * 64)])]
+    for number in range(1, repairs + 1):
+        verdict = str(5 + number) * 64
+        events += [produced("independent_quality", "independent_quality", verdict,
+                            f"2026-10-07T12:00:0{4 + number}.000Z", revision=number),
+                   consumed("draft", f"2026-10-07T12:00:0{4 + number}.500Z",
+                            [("gather.f", "1" * 64), ("gather.r", "2" * 64), ("draft", "3" * 64),
+                             ("independent_quality", verdict)])]
     return {"events": events, "key_configured": True, "key_absent_history": True,
             "key_absent_events": True, "dashboard_contract_valid": True, "histories_checked": 2}
 
@@ -242,8 +261,8 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.e["leak_scan"]["sensitive_fields_redacted"] = {"pass": True, "files_checked": 9,
             "decoded_payloads_checked": 0, "redaction_objects_checked": 1}
         self.e["leak_scan"]["exported_file_count"] = 9
-        for route in self.e["routes"].values():
-            route["handoff_audit"] = handoff_audit()
+        for number, route in self.e["routes"].items():
+            route["handoff_audit"] = handoff_audit(REPAIRS[number])
         self.temp = tempfile.TemporaryDirectory(prefix="exo-sf-check-", dir="/tmp")
         self.addCleanup(self.temp.cleanup)
         self.assertTrue(all(v["pass"] for v in check_evidence(self.e).values()))
@@ -265,16 +284,48 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.fails("G-8"); self.fails("G-7")
         for key in ("key_absent_history", "key_absent_events", "dashboard_contract_valid",
                     "key_configured"):
-            self.e["routes"]["2"]["handoff_audit"] = {**handoff_audit(), key: False}
+            self.e["routes"]["2"]["handoff_audit"] = {**handoff_audit(1), key: False}
             self.fails("G-8")
-        leaked = handoff_audit()
+        leaked = handoff_audit(1)
         leaked["events"][0]["data"]["items"][0]["name"] = "secret"
         self.e["routes"]["2"]["handoff_audit"] = leaked
         self.fails("G-8")
-        self.e["routes"]["2"]["handoff_audit"] = {**handoff_audit(), "events": handoff_audit()["events"][:2]}
+        self.e["routes"]["2"]["handoff_audit"] = {**handoff_audit(1), "events": handoff_audit(1)["events"][:2]}
         self.fails("G-8")
         del self.e["routes"]["3"]["handoff_audit"]
         self.fails("G-8")
+
+    def test_repair_consumes_the_judged_draft_and_the_findings_handoff(self):
+        """Decision 5 (amended 8 Oct 2026): every repair lists both the judged
+        draft and Quality's findings hand-off, and its brief carries no findings."""
+        checks = check_evidence(self.e)
+        self.assertTrue(checks["G-8"]["pass"])
+        self.assertEqual(checks["G-8"]["decisive_evidence"]["2"]["repair_inputs"],
+                         [["gather.f", "gather.r", "draft", "independent_quality"]])
+        self.assertEqual(checks["G-8"]["decisive_evidence"]["3"]["repairs_with_findings"], 2)
+        # A repair that consumed the draft alone (findings pasted elsewhere) fails.
+        audit = self.e["routes"]["2"]["handoff_audit"]
+        audit["events"][-1]["data"]["inputs"].pop()
+        self.fails("G-8")
+        self.e = copy.deepcopy(self.snapshot)
+        for number, route in self.e["routes"].items():
+            route["handoff_audit"] = handoff_audit(REPAIRS[number])
+        self.assertTrue(check_evidence(self.e)["G-8"]["pass"])
+        self.e["routes"]["3"]["handoff_audit"] = handoff_audit(1)
+        self.fails("G-8")
+        # R2-c: the verdict Part follows the judged draft; the brief has no findings.
+        def repair():
+            return next(t for t in self._tasks(2, "synthesizer") if t["artifact"]["revision"] == "r2")
+        self.e = copy.deepcopy(self.snapshot)
+        self.assertTrue(check_evidence(self.e)["R2-c"]["pass"])
+        repair()["inputs"].pop()
+        self.fails("R2-c")
+        self.e = copy.deepcopy(self.snapshot)
+        repair()["inputs"][-1]["sha256"] = "0" * 64
+        self.fails("R2-c")
+        self.e = copy.deepcopy(self.snapshot)
+        repair()["brief"]["quality_findings"] = []
+        self.fails("R2-c")
 
     def test_model_selection_must_match_authoring_observation(self):
         self.e["model_id"] = "gpt-6-luna"
@@ -340,8 +391,8 @@ class ReviewTwoCheckerTests(unittest.TestCase):
     def test_release_is_one_a2a_delivery_with_exactly_one_receipt_fact(self):
         def mutate(change):
             self.e = copy.deepcopy(self.snapshot)
-            for route in self.e["routes"].values():
-                route["handoff_audit"] = handoff_audit()
+            for number, route in self.e["routes"].items():
+                route["handoff_audit"] = handoff_audit(REPAIRS[number])
             change()
         facts = lambda n: self.e["routes"][n]["receipt_audit"]["events"]
         # A duplicate receipt fact for the same delivery (the 8 Oct floor bug).
@@ -371,8 +422,8 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         sha256 is the accepted report's plain sha256."""
         def mutate(change):
             self.e = copy.deepcopy(self.snapshot)
-            for route in self.e["routes"].values():
-                route["handoff_audit"] = handoff_audit()
+            for number, route in self.e["routes"].items():
+                route["handoff_audit"] = handoff_audit(REPAIRS[number])
             change()
         self.assertTrue(check_evidence(self.e)["G-8"]["pass"])
         delivery = check_evidence(self.e)["G-8"]["decisive_evidence"]["1"]["delivery"]

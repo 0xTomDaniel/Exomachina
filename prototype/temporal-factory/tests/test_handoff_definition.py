@@ -50,13 +50,20 @@ class DefinitionOutputAndEdgeKindTests(unittest.TestCase):
         self.assertIsNone(node_output(nodes["route_verdict"], package["bindings"]))
         self.assertEqual(declared_edges(nodes["route_verdict"]),
                          [("publish", "control"), ("repair", "control")])
+        # Repair consumes the judged draft and Quality's findings hand-off over
+        # declared material edges (decision 5, amended 8 Oct 2026): from the
+        # draft's producer and from Quality into repair, then on to the
+        # repair synthesis at the draft station.
         self.assertEqual(declared_edges(nodes["repair"]),
-                         [("draft", "control"), ("director", "control")])
+                         [("draft", "material"), ("director", "control")])
+        self.assertEqual(declared_edges(nodes["draft"]),
+                         [("independent_quality", "material"), ("repair", "material")])
         self.assertEqual(declared_edges(nodes["director"]), [("abort", "control")])
         self.assertEqual(declared_edges(nodes["publish"]), [("done", "control")])
         # Quality forwards the draft carrier to release on a material bypass belt.
         self.assertEqual(declared_edges(nodes["independent_quality"]),
-                         [("route_verdict", "control"), ("publish", "material")])
+                         [("route_verdict", "control"), ("publish", "material"),
+                          ("repair", "material")])
         self.assertEqual(declared_edges(nodes["join_evidence"]), [("draft", "material")])
 
     def test_side_effect_node_with_outgoing_material_edge_is_rejected_at_publication(self):
@@ -134,6 +141,9 @@ class DefinitionOutputAndEdgeKindTests(unittest.TestCase):
         self.assertEqual(kinds[("independent_quality", "publish")], "material")
         self.assertEqual(kinds[("draft", "independent_quality")], "material")
         self.assertEqual(kinds[("route_verdict", "repair")], "control")
+        for edge in (("draft", "repair"), ("independent_quality", "repair"), ("repair", "draft")):
+            self.assertEqual(kinds[edge], "material", edge)
+        self.assertEqual(kinds[("repair", "director")], "control")
         self.assertEqual(kinds[("publish", "done")], "control")
         self.assertEqual({n["id"]: n.get("output") for n in graph["nodes"]}["publish"], "artifacts")
         broken = [dict(node) for node in projected]

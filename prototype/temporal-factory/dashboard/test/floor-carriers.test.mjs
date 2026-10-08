@@ -287,3 +287,51 @@ test("a retained run keeps its gate seals: snapshot verdict rows seal the carrie
   assert.ok(timeline(retained).filter(e => e.type === "verdict").every(e => e.observed === "verdict time not recorded"));
   assert.ok(timeline(streamed).filter(e => e.type === "verdict").every(e => e.observed === undefined), "streamed verdicts keep their observed time");
 });
+
+// Decision 5 as amended 8 Oct 2026: Quality returns its verdict and findings as an
+// artifact, recorded as its own hand-off; repair consumes the judged draft and the
+// findings over declared material edges (draft→repair, quality→repair, repair→draft).
+const repairGraph = { nodes:graph.nodes, edges:[...graph.edges.filter(e => !(e.from === "repair" && e.to === "draft")),
+  {from:"draft",to:"repair",kind:"material"},{from:"quality",to:"repair",kind:"material"},{from:"repair",to:"draft",kind:"material"}] };
+const DQ1 = hex("4"), DQ2 = hex("5");
+function findingsRun() {
+  const quality = (revision, at, digest) => produced("quality", "quality", "h-quality", revision, at, [item(0, ["text"], digest, at, { media_type:"application/json" })]);
+  return reportRun().flatMap(f => {
+    const d = f.event.data;
+    if (f.event.type.endsWith("quality.verdict.v1")) return [quality(d.artifact_revision === "r1" ? 1 : 2, Date.parse(f.event.time) / 1000 - Date.parse(T(0)) / 1000, d.artifact_revision === "r1" ? DQ1 : DQ2), f];
+    // The repair consumes the judged draft and Quality's findings hand-off.
+    if (f.event.type.endsWith("handoff.consumed.v1") && d.node === "draft" && d.inputs[0].handoff_id === "h-draft")
+      return [consumed("synth", "draft", 25.2, [["h-draft", DD1], ["h-quality", DQ1]])];
+    return [f];
+  });
+}
+
+test("findings hand-off: Quality's verdict artifact is its own carrier on the quality→repair belt; the seal stays on the judged draft", () => {
+  const tl = timeline(build(findingsRun(), repairGraph));
+  const findings = of(tl, "carrier:h-quality:1");
+  assert.equal(findings[0].type, "spawn"); assert.equal(findings[0].at, "quality"); assert.equal(findings[0].art, "carrier:quality");
+  assert.deepEqual(findings[0].carrier.items.map(i => i.gem), ["sapphire"]);
+  assert.deepEqual(findings.filter(e => e.type === "move").map(e => `${e.from}>${e.to}`), ["quality>repair", "repair>draft"], "rides the material belt into repair");
+  const used = findings.find(e => e.type === "consume");
+  assert.equal(used.at, "draft");
+  assert.ok(used.t >= 25.2 && used.t <= 25 + 2 * 0.8 + 0.01, "consumed by the repair synthesis, adjusted only by the minimum visible hops");
+  assert.deepEqual(findings[0].carrier.consumers.map(c => [c.node, c.digest_match]), [["draft", true]]);
+  // The judged draft keeps its identity and seal and travels the same belt into repair.
+  const r1 = of(tl, "carrier:h-draft:1");
+  assert.ok(r1.some(e => e.type === "verdict" && e.verdict === "rejected" && e.seal));
+  assert.deepEqual(r1.filter(e => e.type === "move").map(e => `${e.from}>${e.to}`), ["draft>quality", "quality>repair", "repair>draft"]);
+  assert.equal(r1.find(e => e.type === "consume").at, "draft");
+  // Seals are drawn only on the judged carriers, never on a findings carrier.
+  assert.deepEqual(tl.filter(e => e.type === "verdict").map(e => e.item), ["carrier:h-draft:1", "carrier:h-draft:2"]);
+  // An accepted verdict's hand-off has no consumer: it retires at the gate.
+  const accepted = of(tl, "carrier:h-quality:2");
+  assert.equal(accepted[0].at, "quality");
+  assert.equal(accepted.some(e => e.type === "move"), false);
+  assert.equal(accepted.at(-1).at, "quality");
+  // The accepted draft still exits at release, and nothing rides the control route.
+  assert.equal(of(tl, "carrier:h-draft:2").find(e => e.type === "release").at, "publish");
+  assert.equal(tl.some(e => e.type === "move" && ["route_verdict", "done"].includes(e.to) && e.item?.startsWith("carrier:")), false);
+  const model = toFloorModel(build(findingsRun(), repairGraph), { runId:"run-c" });
+  assert.equal(model.edges.find(e => e.from === "quality" && e.to === "repair").kind, "material");
+  assert.ok(model.artifacts["carrier:quality"], "the findings carrier has a shape from the pinned graph");
+});

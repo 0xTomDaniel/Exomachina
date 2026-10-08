@@ -674,13 +674,16 @@ def check_evidence(e: dict) -> dict[str, dict]:
     repair2 = next((x for x in s2 if _revision(x) == "r2"), {})
     brief2 = repair2.get("brief") or {}
     h2 = (repair2.get("artifact") or {}).get("sha256")
-    # The repair Message carried the rejected draft as its own Part after the
-    # research items; the brief embeds none of it.
+    # The repair Message carried the rejected draft and then Quality's verdict
+    # artifact (its findings) as their own Parts after the research items
+    # (decision 5, amended 8 Oct 2026); the brief embeds none of them.
     repair_inputs = [row.get("sha256") for row in repair2.get("inputs") or [] if isinstance(row, dict)]
     c["R2-c"] = verdict(bool(repair2) and brief2.get("mode") == "repair" and
-        "prior" not in brief2 and "evidence" not in brief2 and len(repair_inputs) == 3 and
-        repair_inputs[-1] == (first2.get("artifact") or {}).get("sha256") and
-        brief2.get("quality_findings") == rejected2.get("findings") and
+        "prior" not in brief2 and "evidence" not in brief2 and len(repair_inputs) == 4 and
+        repair_inputs[-2] == (first2.get("artifact") or {}).get("sha256") and
+        bool((review2.get("artifact") or {}).get("sha256")) and
+        repair_inputs[-1] == (review2.get("artifact") or {}).get("sha256") and
+        "quality_findings" not in brief2 and "findings" not in brief2 and
         _model_work(repair2) and h2 and h2 != (first2.get("artifact") or {}).get("sha256") and
         bool(planted2.get("planted_text")) and
         planted2["planted_text"] not in json.dumps(_report(repair2)) and
@@ -894,13 +897,17 @@ def check_evidence(e: dict) -> dict[str, dict]:
             "key_configured", "key_absent_history", "key_absent_events",
             "dashboard_contract_valid", "histories_checked")},
             "delivery": _delivery_of_accepted(e, int(number), delivered=number != "3")}
+    # Route 1 has no repair; route 2 one (R1 rejected); route 3 two (exhausted).
+    expected_repairs = {"1": 0, "2": 1, "3": 2}
     c["G-8"] = verdict(all(
         row["delivery"]["ok"] and
+        row["repairs"] == expected_repairs[number] and
+        row["repairs_with_findings"] == expected_repairs[number] and
         row["produced"] >= 3 and row["consumed"] >= 2 and row["chain_ok"] and
         row["report_items"] >= 1 and row["content_free"] and
         row["key_configured"] is True and row["key_absent_history"] is True and
         row["key_absent_events"] is True and row["dashboard_contract_valid"] is True
-        for row in handoff_routes.values()), handoff_routes, label)
+        for number, row in handoff_routes.items()), handoff_routes, label)
     synthetic = e.get("synthetic_scenario") or {}
     synthetic_attestation = synthetic.get("attestation") or {}
     synthetic_record = synthetic.get("record") or {}
@@ -1437,7 +1444,19 @@ def _handoff_chain(audit: dict) -> dict:
                           "revision": source.get("handoff_revision") if source else None,
                           "match": source is not None})
     reports = [i for p in produced for i in p.get("items") or [] if "artifact_sha256" in i]
+    # Repair consumption (decision 5, amended 8 Oct 2026): each repair lists
+    # both the judged draft hand-off and Quality's findings hand-off.
+    quality_ids = {p.get("handoff_id") for p in produced if p.get("node") == "independent_quality"}
+    draft_ids = {p.get("handoff_id") for p in produced if p.get("node") == "draft"}
+    repairs = [row for row in consumed if row.get("node") == "draft" and
+               any(entry.get("handoff_id") in draft_ids for entry in row.get("inputs") or [])]
+    repair_with_findings = [row for row in repairs if
+        {entry.get("handoff_id") for entry in row.get("inputs") or []} >= (draft_ids | quality_ids)
+        and quality_ids and draft_ids]
     return {"produced": len(produced), "consumed": len(consumed), "links": links,
+            "repairs": len(repairs), "repairs_with_findings": len(repair_with_findings),
+            "repair_inputs": [[entry.get("handoff_id") for entry in row.get("inputs") or []]
+                              for row in repairs],
             "chain_ok": bool(links) and all(link["match"] for link in links),
             "report_items": len(reports),
             "content_free": all(set(e) == {"type", "time", "data"} for e in rows) and

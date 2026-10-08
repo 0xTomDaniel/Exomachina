@@ -158,13 +158,13 @@ def working_view(brief: dict, inputs: list) -> dict:
 
     Inputs are the Parts after the brief, identified by their JSON ``kind``.
     Synthesis builds its evidence from the research results and, on repair,
-    reads the prior draft; Quality reviews the draft, naming it by its own
+    reads the prior draft and the reviewer's verdict (its findings); Quality reviews the draft, naming it by its own
     ``revision`` and the sha256 this agent computes over the received text.
     """
     _require(isinstance(brief, dict), "brief: object required")
     _require(isinstance(inputs, list), "inputs: list required")
     view = dict(brief)
-    findings, risks, reports = [], [], []
+    findings, risks, reports, verdicts = [], [], [], []
     for part in inputs:
         value = _part_value(part)
         kind = value.get("kind") if isinstance(value, dict) else None
@@ -172,6 +172,8 @@ def working_view(brief: dict, inputs: list) -> dict:
             findings.extend(value.get("items") or [])
         elif kind == "packet_risks@1":
             risks.extend(value.get("items") or [])
+        elif kind == "quality_verdict@1":
+            verdicts.append(value)
         elif kind == "verified_report@1" and isinstance(part.get("text"), str):
             reports.append({"revision": value.get("revision"),
                             "sha256": hashlib.sha256(part["text"].encode("utf-8")).hexdigest(),
@@ -180,6 +182,10 @@ def working_view(brief: dict, inputs: list) -> dict:
         view["evidence"] = {"findings": findings, "risks": risks}
         if brief.get("mode") == "repair" and len(reports) == 1:
             view["prior"] = reports[0]
+        # On repair the reviewer's verdict arrives as its own input Part; its
+        # findings join the agent's working view, never the client's brief.
+        if brief.get("mode") == "repair" and len(verdicts) == 1:
+            view["quality_findings"] = verdicts[0].get("findings") or []
     elif brief.get("kind") == "quality_review_request@1" and len(reports) == 1:
         view["candidate"] = reports[0]
     return view

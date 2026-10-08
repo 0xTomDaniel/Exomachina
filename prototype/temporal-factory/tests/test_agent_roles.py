@@ -49,13 +49,23 @@ class AgentRoleTests(unittest.TestCase):
         return parts
 
     def synthesis_brief(self, revision="r1", mode="draft", prior=None, findings=None):
-        """The agent's working view of a brief plus its received input Parts."""
+        """The agent's working view of a brief plus its received input Parts.
+
+        On repair the reviewer's verdict (its findings) follows the prior draft
+        as its own Part, exactly as the factory composes it; the brief carries
+        no findings.
+        """
         brief = {"kind": "synthesis_assignment@1", "mode": mode, "revision": revision,
-                 "question": self.question, "packet": self.packet, "packet_digest": self.packet_digest,
-                 "quality_findings": findings}
+                 "question": self.question, "packet": self.packet, "packet_digest": self.packet_digest}
         inputs = self.research_parts()
         if prior is not None:
             inputs.append({"text": prior["content"], "mediaType": "application/json"})
+        if findings is not None:
+            verdict = {"kind": "quality_verdict@1", "candidate": {"revision": "r1", "sha256": "0" * 64},
+                       "accepted": not any(f["severity"] == "blocking" for f in findings),
+                       "decided_by": "model", "findings": findings, "rubric": "report-quality@1",
+                       "rubric_digest": "0" * 64}
+            inputs.append({"text": canonical(verdict), "mediaType": "application/json"})
         return working_view(brief, inputs)
 
     def report(self, brief=None):
@@ -85,6 +95,8 @@ class AgentRoleTests(unittest.TestCase):
         self.assertNotIn("prior", synthesis)
         repair = self.synthesis_brief("r2", "repair", prior=view["candidate"], findings=[])
         self.assertEqual(repair["prior"], view["candidate"])
+        self.assertEqual(repair["quality_findings"], [], "findings come from the verdict Part")
+        self.assertNotIn("quality_findings", synthesis)
         self.assertNotIn("candidate", working_view(self.quality_request(report), []))
 
     def test_prompts_are_role_specific_and_canonical(self):
