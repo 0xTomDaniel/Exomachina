@@ -23,7 +23,7 @@ A publicly described kind of work that an agent service can undertake for a call
 _Avoid_: Model, harness
 
 **Agent service**:
-An independently callable participant that accepts assignments and is accountable for its advertised capability contract. Its internal workers and methods are private to it.
+An independently callable participant that accepts assignments and is accountable for its advertised capability contract. Its internal workers and methods are private to it. It is reached only through A2A and cannot tell whether its caller is a factory.
 _Avoid_: Factory step, conversation
 
 **Capability contract**:

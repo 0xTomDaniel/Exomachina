@@ -55,6 +55,26 @@ contract change and any resulting consumer changes.
   resources, evidence and completion criteria explicit. A change to the enclosing
   process uses the factory's publication and authority rules.
 
+### Agent services speak only A2A and cannot tell they serve a factory
+
+Adopted 8 October 2026; details are in
+[decision 7 of the A2A v1 decision](a2a-v1-mediation-decision-2026-10-07.md#7-a2a-only-agent-services-are-factory-unaware).
+
+- **A2A only.** A2A v1 is the only channel between a factory and an agent
+  service. There are no side channels: no private endpoints, shared storage,
+  shared queues, or out-of-band polling. Agent Card discovery is part of A2A.
+- **Factory-unaware.** An agent service receives ordinary A2A Messages and
+  cannot distinguish a factory from any other client. Factory concepts (run,
+  assignment, attempt, definition, factory identity, node) never reach it, and
+  correlation stays inside the factory.
+- **No factory policy in agents.** Work-in-progress limits, admission, budgets,
+  routing, and acceptance belong to the factory. The factory treats agent
+  services as infinitely scalable.
+- **Generic extensions.** Usage, cost, budget, price, and payment travel only
+  through A2A extensions that an agent offers to any client.
+- **Coupling is a defect.** Any existing coupling is a defect, and new coupling
+  fails review.
+
 ### Preserve version binding and active work
 
 Independent replaceability does not authorize silent changes to active runs.
@@ -84,5 +104,7 @@ establish automatic in-flight substitution.
    provider to redeploy?
 4. Are the limits to each replacement explicit, with evidence and an authorized
    path for active work?
+5. Could any v1-compliant agent service, unaware of factories, fill this
+   binding using A2A alone, with no side channel or factory identifier?
 
 These are architecture review criteria, not claims of completed qualification.

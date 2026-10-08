@@ -189,6 +189,89 @@ Belt dwell remains the observed gap between a hand-off being produced and its
 consumption; the 0.8 s minimum visible hop remains the only presentation
 adjustment.
 
+### 7. A2A only; agent services are factory-unaware
+
+Amended by the operator on 8 October 2026. This is a hard rule, not a preference.
+
+- **A2A is the only channel between the factory and an agent service.**
+  - No side channels: no private HTTP endpoints, shared files or databases,
+    shared queues, environment variables, or out-of-band polling.
+  - The only exception is standard A2A discovery: fetching the Agent Card at
+    its well-known path.
+  - An agent's own private dependencies, such as its model provider or model
+    broker, are its implementation. They are not a factory channel.
+- **An agent service cannot tell that its caller is a factory.**
+  - The factory is an ordinary A2A client, and agents receive ordinary A2A
+    Messages.
+  - Factory concepts never cross the wire or appear in agent state: run,
+    assignment, attempt, action, definition digest, factory identity, node,
+    pins, or Observation identifiers.
+  - Correlation stays on the factory side. The factory maps its assignment
+    and attempt to the A2A `taskId` and `contextId` it receives.
+  - Retry deduplication uses A2A's own `messageId`.
+- **Agent services own no factory policy.** Work-in-progress limits,
+  admission, budgets, routing, and acceptance are factory settings. The factory
+  treats agent services as infinitely scalable. An agent may enforce private
+  limits of its own, and the factory sees them only as ordinary A2A outcomes
+  (for example a rejected or failed Task).
+- **Side-effect services are A2A agents too.** A release or delivery receiver is
+  an agent service with `output: none`. Its receipt is returned through A2A, not
+  by a plain HTTP call.
+- **Test controls stay out of production agents.** Fault injection and similar
+  controls belong in test fixtures or a test-only A2A extension that production
+  agent cards do not declare.
+
+Any coupling found in existing code is a defect to remove, not a precedent.
+
+### 8. Usage, cost, budget, and price travel through A2A extensions
+
+Checked on 8 October 2026:
+
+- Core A2A v1 has no usage or cost fields; the maintainers direct this to
+  opt-in extensions.
+- No usage or cost extension is ratified. The closest is
+  [proposal #2121](https://github.com/a2aproject/A2A/issues/2121) (budget/v1,
+  opened August 2026). It has no maintainer response, and its URI is not
+  reserved.
+- Payment extensions exist:
+  - **x402 A2A extension v0.1:** price as `PaymentRequirements`, settlement and
+    receipts in `x402.payment.*` metadata. It specifies only the `exact` scheme
+    and is written in 0.3 wire shapes.
+  - **AP2 A2A extension:** merchant and shopper roles, and Intent, Cart, and
+    Payment mandates.
+- MPP defines HTTP and MCP bindings, with metered sessions, but no A2A binding.
+
+Decisions:
+
+- **Usage and cost reports, and budgets: #2121's field shape under an
+  Exomachina-owned URI**, provisionally
+  `https://github.com/0xTomDaniel/Exomachina/a2a/extensions/budget/v1`.
+  - **Budget (optional):** the client puts `budget.cost.amount`/`currency`,
+    `budget.tokens.limit`, and `budget.deadline` in the `SendMessage` metadata.
+    An agent may reject a Task whose budget is clearly insufficient.
+  - **Usage report:** the agent reports `incurred.cost.amount`/`currency`/
+    `source`, `incurred.tokens.input`/`output`, and optional
+    `incurred.tokens.cache_read`/`cache_write`/`total`. It puts them in the
+    terminal Task's metadata, keyed by the URI, for any client that activated
+    the extension.
+  - **No defaults:** a field the agent did not report stays unreported, and
+    absence never means zero.
+  - **Factory side:** its on-complete hook records the report as
+    *agent-reported* usage evidence.
+  - **Migration:** when #2121 or a successor is ratified, we move to its URI.
+    We do not claim the `a2a-protocol.org` namespace before then.
+- **Price and payment: existing extensions, no Exomachina pricing extension.**
+  - Price is quoted and settled through the x402 A2A extension. A metered
+    quote is a ceiling (`maxAmountRequired`), settled at the reported incurred
+    cost.
+  - AP2 mandates carry purchase authority.
+  - Both are adopted when payment becomes real, and must be qualified on v1
+    wire shapes first.
+  - The amount the factory actually paid is the spend of record. An agent's
+    self-reported cost is a claim.
+- These extensions are generic: an agent offers them to any A2A client. Nothing
+  in them identifies a factory, run, or assignment.
+
 ## Delivery sequence
 
 1. **A2A v1 migration:** servers, clients, model agents, Quality, fixtures, and
@@ -205,6 +288,12 @@ adjustment.
    - gate seals;
    - removal of the inferred "Task output · artifact not recorded" items for
      runs that have records.
+4. **Agent decoupling (decisions 7 and 8):**
+   - remove agent-side capacity;
+   - remove factory identifiers and private endpoints from agents;
+   - make release delivery an A2A agent;
+   - move test controls into fixtures;
+   - report usage through the budget extension.
 
 ## Not decided here
 
