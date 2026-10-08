@@ -91,12 +91,11 @@ class DelayedAgentTests(unittest.TestCase):
             done = client.post("/", json=get_body(task_id), headers=AUTH).json()["result"]
             self.assertEqual(done["status"]["state"], "TASK_STATE_COMPLETED")
             artifact = done["artifacts"][0]
-            data = artifact["parts"][0]["data"]
-            self.assertEqual(data, {
-                "revision": "r2", "sha256": hashlib.sha256(
-                    b"fixture-result:counter brief").hexdigest(),
-                "author": params["identity"], "content": "fixture-result:counter brief"})
-            self.assertEqual(artifact["artifactId"], data["sha256"])
+            # The work product itself: one text Part, no envelope or author echo.
+            self.assertEqual(artifact["parts"], [{"text": "fixture-result:counter brief",
+                                                  "mediaType": "text/plain"}])
+            self.assertEqual(artifact["artifactId"],
+                             hashlib.sha256(b"fixture-result:counter brief").hexdigest())
 
     def test_restart_port_change_keeps_identity_task_and_elapsed_delay(self):
         script = str(ROOT / "services" / "delayed_agent.py")
@@ -136,9 +135,10 @@ class DelayedAgentTests(unittest.TestCase):
             card = client.get("/.well-known/agent-card.json").json()
             identity = card["capabilities"]["extensions"][0]["params"]["identity"]
             result = client.post("/", json=send_body(), headers=AUTH).json()["result"]["task"]
-            data = result["artifacts"][0]["parts"][0]["data"]
-            self.assertEqual(data["revision"], "r2-mismatch")
-            self.assertEqual(data["author"], identity)
+            # The fault serves a data Part where a consumer expects text.
+            part = result["artifacts"][0]["parts"][0]
+            self.assertEqual(part["data"], {"content": "fixture-result:counter brief"})
+            self.assertNotIn("text", part)
         with TestClient(create_app(self.state, 46214, delay_seconds=0,
                                    identity_file=impostor_file)) as client:
             again = client.get("/.well-known/agent-card.json").json()

@@ -96,6 +96,54 @@ def as_factory_side(e):
     return e
 
 
+def _canonical(value) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def as_composed_inputs(e: dict) -> dict:
+    """Re-express preserved agent evidence in the composed-input wire contract.
+
+    Preserved observations predate decision 9 (8 Oct 2026): their briefs
+    embedded the research join, the prior draft and the Quality candidate,
+    and Quality verdicts echoed a ``reviewer`` and the candidate ``author``.
+    Now each consumed item travels as its own Part after the brief (evidence
+    keeps only the items' digests), and a verdict names its candidate by
+    ``{revision, sha256}``. The same observation is projected onto that shape
+    in memory; the evidence files stay byte-identical.
+    """
+    agents = e.get("agents") or {}
+    def sha(text):
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()
+    def item(digest):
+        return {"part_kinds": ["text"], "media_type": "application/json", "sha256": digest}
+    research = {}
+    for name in ("research_findings", "research_risks"):
+        for task in (agents.get(name) or {}).get("tasks") or []:
+            research.setdefault(task.get("run_id"), []).append(
+                (task.get("artifact") or {}).get("sha256"))
+    for task in (agents.get("synthesizer") or {}).get("tasks") or []:
+        brief = task.get("brief") if isinstance(task.get("brief"), dict) else {}
+        prior = brief.pop("prior", None)
+        brief.pop("evidence", None)
+        task["inputs"] = [item(digest) for digest in research.get(task.get("run_id"), [])] + (
+            [item(prior["sha256"])] if isinstance(prior, dict) else [])
+    for task in (agents.get("quality") or {}).get("tasks") or []:
+        brief = task.get("brief") if isinstance(task.get("brief"), dict) else {}
+        candidate = brief.pop("candidate", None) or {}
+        task["inputs"] = [item(candidate.get("sha256"))]
+        verdict = task.get("verdict")
+        if not isinstance(verdict, dict) or not verdict:
+            continue
+        verdict.pop("reviewer", None)
+        verdict["candidate"] = {key: (verdict.get("candidate") or {}).get(key)
+                                for key in ("revision", "sha256")}
+        content = _canonical(verdict)
+        task["artifact"] = {**(task.get("artifact") or {}), "content": content,
+                            "sha256": sha(content)}
+        task["artifact_id"] = task["receipt_sha256"] = sha(content)
+    return e
+
+
 def as_a2a_release(e: dict) -> dict:
     """Re-express the preserved observation's release evidence as A2A release evidence.
 
@@ -179,8 +227,8 @@ def handoff_audit() -> dict:
 class ReviewTwoCheckerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.snapshot = as_factory_side(as_a2a_release(as_a2a_v1(json.loads(
-            (ROOT / "evidence" / "single-factory" / "scripted-7.json").read_text()))))
+        cls.snapshot = as_composed_inputs(as_factory_side(as_a2a_release(as_a2a_v1(json.loads(
+            (ROOT / "evidence" / "single-factory" / "scripted-7.json").read_text())))))
 
     def setUp(self):
         self.e = copy.deepcopy(self.snapshot)
@@ -318,6 +366,51 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         mutate(lambda: facts("3").append(copy.deepcopy(facts("1")[0])))
         self.fails("R3-d")
 
+    def test_g8_delivered_receipt_must_equal_the_accepted_report_sha256(self):
+        """False-pass probe: exactly one receipt per delivered route, and its
+        sha256 is the accepted report's plain sha256."""
+        def mutate(change):
+            self.e = copy.deepcopy(self.snapshot)
+            for route in self.e["routes"].values():
+                route["handoff_audit"] = handoff_audit()
+            change()
+        self.assertTrue(check_evidence(self.e)["G-8"]["pass"])
+        delivery = check_evidence(self.e)["G-8"]["decisive_evidence"]["1"]["delivery"]
+        self.assertTrue(delivery["ok"] and delivery["accepted_sha256"])
+        facts = lambda n: self.e["routes"][n]["receipt_audit"]["events"]
+        journal = lambda n: next(j for j in self.e["journal"] if j.get("effect_kind") == "release"
+                                 and j["run_id"] == self.e["routes"][n]["child_run_id"])
+        for number in ("1", "2"):
+            mutate(lambda: facts(number)[0]["data"].update(artifact_sha256="0" * 64))
+            self.fails("G-8")
+            mutate(lambda: journal(number)["receipt"].update(sha256="0" * 64))
+            self.fails("G-8")
+            mutate(lambda: facts(number).append(copy.deepcopy(facts(number)[0])))
+            self.fails("G-8")
+            mutate(lambda: facts(number).clear())
+            self.fails("G-8")
+        mutate(lambda: facts("3").append(copy.deepcopy(facts("1")[0])))
+        self.fails("G-8")
+
+    def test_quality_must_receive_the_candidate_part_and_echo_no_identity(self):
+        quality = lambda: self._tasks(1, "quality")[0]
+        quality()["inputs"][0]["sha256"] = "0" * 64
+        self.fails("R1-c")
+        self.e = copy.deepcopy(self.snapshot)
+        quality()["inputs"].append(dict(quality()["inputs"][0]))
+        self.fails("R1-c")
+        self.e = copy.deepcopy(self.snapshot)
+        quality()["verdict"]["reviewer"] = quality()["artifact"]["author"]
+        self.fails("R1-c")
+        self.e = copy.deepcopy(self.snapshot)
+        repair = next(t for t in self._tasks(2, "synthesizer") if t["artifact"]["revision"] == "r2")
+        repair["inputs"][-1]["sha256"] = "0" * 64
+        self.fails("R2-c")
+        self.e = copy.deepcopy(self.snapshot)
+        repair = next(t for t in self._tasks(2, "synthesizer") if t["artifact"]["revision"] == "r2")
+        repair["brief"]["prior"] = {"sha256": repair["inputs"][-1]["sha256"]}
+        self.fails("R2-c")
+
     def test_f6_structured_controls_and_whole_stimulus_log(self):
         self.e["routes"]["2"]["caller_messages"][0]["append_claim"] = {"text": "hidden"}
         self.fails("R2-a")
@@ -360,8 +453,8 @@ class ReviewTwoCheckerTests(unittest.TestCase):
 
     def test_live_attempt_1_corrected_predicates(self):
         """Replay preserved live observations without changing the evidence file."""
-        live = as_factory_side(as_a2a_v1(json.loads((ROOT / "evidence" / "single-factory" /
-                                     "codex-subscription-1.json").read_text())))
+        live = as_composed_inputs(as_factory_side(as_a2a_v1(json.loads(
+            (ROOT / "evidence" / "single-factory" / "codex-subscription-1.json").read_text()))))
         checks = check_evidence(live)
         for key in ("R2-b", "R3-b", "R3-d", "G-5"):
             self.assertTrue(checks[key]["pass"], key)

@@ -118,14 +118,12 @@ class SupplierServer(ThreadingHTTPServer):
         content = _canonical({"result": "synthetic-public-artifact",
                               "supplier": self.identity,
                               "input": message["parts"][0]["text"]})
-        artifact = {"author": self.identity, "revision": "supplier-revision-test-only",
-                    "content": content,
-                    "sha256": hashlib.sha256(content.encode()).hexdigest()}
+        # The work product itself; the factory normalizes revision and author.
         return {"id": f"remote-task-{self.effects}", "contextId": message["contextId"],
                 "metadata": {"agent_identity": self.identity},
                 "status": {"state": "TASK_STATE_COMPLETED"},
-                "artifacts": [{"artifactId": artifact["sha256"],
-                               "parts": [{"data": artifact}]}]}
+                "artifacts": [{"artifactId": hashlib.sha256(content.encode()).hexdigest(),
+                               "parts": [{"text": content, "mediaType": "application/json"}]}]}
 
 
 class SupplierFanoutTests(unittest.TestCase):

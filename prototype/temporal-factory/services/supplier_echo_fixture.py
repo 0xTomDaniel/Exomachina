@@ -1,7 +1,9 @@
 """Loopback-only A2A supplier fixture for fan-out recovery tests.
 
 This service is a deterministic protocol fixture. It is an ordinary A2A agent:
-it accepts a plain Message with one text Part, returns the original Task when
+it accepts a plain Message with one text Part (it consumes no upstream
+items), returns its result as one artifact whose single text Part is the work
+product, returns the original Task when
 a ``messageId`` is resent, and serves only JSON-RPC and its Agent Card. It
 never sees a caller's run, assignment, attempt or parent bindings. It does not
 invoke a model or represent a qualified production supplier.
@@ -36,6 +38,7 @@ sys.path.insert(0, str(ROOT / "src"))
 import a2a_extensions as ext  # noqa: E402
 from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E402
                            bearer_security, build_app, data_part, interfaces, part_content,
+                           text_part,
                            task_state)
 
 
@@ -144,12 +147,11 @@ class Ledger:
                              "supplier_identity": self.identity,
                              "input_sha256": row["input_sha256"]})
         sha256 = hashlib.sha256(content.encode("utf-8")).hexdigest()
-        artifact = {"revision": REVISION, "sha256": sha256, "author": self.identity,
-                    "content": content}
         return Task(id=row["task_id"], context_id=row["context_id"],
                     status=TaskStatus(state=task_state("completed")),
                     metadata={"agent_identity": self.identity},
-                    artifacts=[Artifact(artifact_id=sha256, parts=[data_part(artifact)])])
+                    artifacts=[Artifact(artifact_id=sha256,
+                                        parts=[text_part(content, "application/json")])])
 
 
 class LedgerTaskStore(ProjectionTaskStore):

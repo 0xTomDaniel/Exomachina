@@ -642,9 +642,9 @@ class AgentModeTests(unittest.TestCase):
                                "source_evidence")["brief"]
             task = long_client.send_async(base, brief, message_id="agent-mode-message",
                                           context_id="agent-mode-context")
-            data = task["artifacts"][0]["parts"][0]["data"]
-            self.assertEqual(data["content"], "fixture-result:" + brief)
-            self.assertEqual(data["author"], first["identity"])
+            # The work product itself: one text Part, no envelope or author echo.
+            self.assertEqual(task["artifacts"][0]["parts"],
+                             [{"text": "fixture-result:" + brief, "mediaType": "text/plain"}])
             self.assertEqual(task["metadata"], {"agent_identity": first["identity"]})
             again = long_client.send_async(base, brief, message_id="agent-mode-message",
                                            context_id="agent-mode-context")

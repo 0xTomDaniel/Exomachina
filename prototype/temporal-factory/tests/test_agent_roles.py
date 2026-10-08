@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "services"))
 
 from agent_roles import (REPORT_SECTIONS, ROLES, RUBRIC, RUBRIC_DIGEST,  # noqa: E402
-                         RoleOutputError, usefulness_check)
+                         RoleOutputError, usefulness_check, working_view)
 
 
 def canonical(value):
@@ -36,25 +36,54 @@ class AgentRoleTests(unittest.TestCase):
         return {"kind": "research_assignment@1", "capability": capability, "revision": "r1",
                 "question": self.question, "packet": self.packet, "packet_digest": self.packet_digest}
 
+    def research_parts(self):
+        """The research results as the synthesis agent receives them: text Parts."""
+        parts = []
+        for capability in ("packet_findings@1", "packet_risks@1"):
+            brief = self.research_brief(capability)
+            text = canonical(ROLES["research"].parse(
+                ROLES["research"].scripted_reply(brief, "research-id"), brief, "research-id"))
+            parts.append({"text": text, "mediaType": "application/json"})
+        return parts
+
     def synthesis_brief(self, revision="r1", mode="draft", prior=None, findings=None):
-        return {"kind": "synthesis_assignment@1", "mode": mode, "revision": revision,
-                "question": self.question, "packet": self.packet, "packet_digest": self.packet_digest,
-                "evidence": {"kind": "packet_evidence_join@1", "packet_digest": self.packet_digest,
-                             "findings": [], "risks": [], "branch_artifact_sha256": {}},
-                "prior": prior, "quality_findings": findings}
+        """The agent's working view of a brief plus its received input Parts."""
+        brief = {"kind": "synthesis_assignment@1", "mode": mode, "revision": revision,
+                 "question": self.question, "packet": self.packet, "packet_digest": self.packet_digest,
+                 "quality_findings": findings}
+        inputs = self.research_parts()
+        if prior is not None:
+            inputs.append({"text": prior["content"], "mediaType": "application/json"})
+        return working_view(brief, inputs)
 
     def report(self, brief=None):
         brief = brief or self.synthesis_brief()
         role = ROLES["synthesis"]
         return role.parse(role.scripted_reply(brief, "synth-id"), brief, "synth-id")
 
-    def quality_brief(self, report, author="synth-id"):
-        content = canonical(report)
+    def quality_request(self, report):
         return {"kind": "quality_review_request@1", "revision": report["revision"],
                 "question": self.question, "packet": self.packet, "packet_digest": self.packet_digest,
-                "candidate": {"revision": report["revision"], "sha256": hashlib.sha256(content.encode()).hexdigest(),
-                              "author": author, "content": content},
                 "policy_digest": "a" * 64}
+
+    def quality_brief(self, report):
+        """Quality's working view: the brief plus the draft received as a Part."""
+        return working_view(self.quality_request(report),
+                            [{"text": canonical(report), "mediaType": "application/json"}])
+
+    def test_working_view_reads_inputs_from_parts(self):
+        report = self.report()
+        text = canonical(report)
+        view = self.quality_brief(report)
+        self.assertEqual(view["candidate"], {"revision": report["revision"],
+            "sha256": hashlib.sha256(text.encode()).hexdigest(), "content": text})
+        synthesis = self.synthesis_brief()
+        self.assertEqual([item["id"][0] for item in synthesis["evidence"]["findings"]], ["F"] * 3)
+        self.assertEqual([item["id"][0] for item in synthesis["evidence"]["risks"]], ["R"] * 3)
+        self.assertNotIn("prior", synthesis)
+        repair = self.synthesis_brief("r2", "repair", prior=view["candidate"], findings=[])
+        self.assertEqual(repair["prior"], view["candidate"])
+        self.assertNotIn("candidate", working_view(self.quality_request(report), []))
 
     def test_prompts_are_role_specific_and_canonical(self):
         for capability in ("packet_findings@1", "packet_risks@1"):
@@ -151,9 +180,8 @@ class AgentRoleTests(unittest.TestCase):
         bad = copy.deepcopy(original)
         bad["candidate"]["sha256"] = "0" * 64
         variants.append(bad)
-        bad = copy.deepcopy(original)
-        bad["candidate"]["author"] = "quality-id"
-        variants.append(bad)
+        # No draft Part received: nothing to review.
+        variants.append(working_view(self.quality_request(self.report()), []))
         for change in (lambda r: r.pop("title"),
                        lambda r: r["claims"][0].update(evidence=["E999"])):
             bad = copy.deepcopy(original)
@@ -167,17 +195,18 @@ class AgentRoleTests(unittest.TestCase):
                 verdict = ROLES["quality"].precheck(brief, "quality-id")
                 self.assertFalse(verdict["accepted"])
                 self.assertEqual(verdict["decided_by"], "deterministic-precheck")
-                self.assertEqual(verdict["reviewer"], "quality-id")
-                self.assertEqual(verdict["candidate"]["sha256"], brief["candidate"]["sha256"])
+                self.assertNotIn("reviewer", verdict)
+                self.assertEqual(verdict["candidate"]["sha256"],
+                                 (brief.get("candidate") or {}).get("sha256", ""))
                 self.assertEqual(verdict["findings"][0]["severity"], "blocking")
 
-    def test_quality_parse_binds_candidate_reviewer_and_rubric(self):
+    def test_quality_parse_binds_candidate_and_rubric(self):
         brief = self.quality_brief(self.report())
         quality = ROLES["quality"]
         result = quality.parse('{"accepted":true,"findings":[]}', brief, "quality-id")
         self.assertEqual(result, {"kind": "quality_verdict@1",
-                                  "candidate": {key: brief["candidate"][key] for key in ("revision", "sha256", "author")},
-                                  "reviewer": "quality-id", "accepted": True,
+                                  "candidate": {key: brief["candidate"][key] for key in ("revision", "sha256")},
+                                  "accepted": True,
                                   "decided_by": "model", "findings": [],
                                   "rubric": RUBRIC["kind"], "rubric_digest": RUBRIC_DIGEST})
         self.assertEqual(quality.parse(canonical(result), brief, "quality-id"), result)
@@ -197,7 +226,7 @@ class AgentRoleTests(unittest.TestCase):
                     {"accepted": True, "findings": [{**minor, "evidence": ["E404"]}]},
                     {"accepted": True, "findings": [{**minor, "claim_id": "C99"}]}]
         full = quality.parse('{"accepted":true,"findings":[]}', brief, "quality-id")
-        for field, value in (("reviewer", "wrong"), ("decided_by", "deterministic-precheck"),
+        for field, value in (("reviewer", "quality-id"), ("decided_by", "deterministic-precheck"),
                              ("candidate", {**full["candidate"], "sha256": "0" * 64}),
                              ("rubric_digest", "0" * 64)):
             bad = copy.deepcopy(full)

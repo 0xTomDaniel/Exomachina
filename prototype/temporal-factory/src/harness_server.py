@@ -1,9 +1,11 @@
 """Deterministic Strands+A2A fixture shared by the three runtime countertrials.
 
 This is a real Strands tool loop and A2A v1.0 server with a fixture model. Its
-agent roles are ordinary A2A agents: a plain Message with one text Part (the
-brief), messageId resend returns the original Task, and only JSON-RPC plus the
-Agent Card are served. It does not claim real model quality.
+agent roles are ordinary A2A agents: a plain Message whose first text Part is
+the brief, optionally followed by input Parts; messageId resend returns the
+original Task, and only JSON-RPC plus the Agent Card are served. A result is
+one artifact whose single text Part is the work product itself. It does not
+claim real model quality.
 """
 from __future__ import annotations
 
@@ -27,9 +29,11 @@ from strands.models import Model
 from strands.plugins import Plugin
 
 import a2a_extensions
+from google.protobuf.json_format import MessageToDict
+import a2a_v1
 from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore, agent_message,
                            bearer_security, build_app, data_part, interfaces, part_content,
-                           part_data, task_state)
+                           part_data, task_state, text_part)
 
 
 TOKEN = "Bearer fixture-token"
@@ -88,7 +92,7 @@ class ToolCallingModelFixture(Model):
 
 
 def request_from_params(params, *, received: bool = False) -> dict:
-    """Plain A2A v1 Message: one text Part (the brief), keyed by messageId.
+    """Plain A2A v1 Message: the text brief Part, then input Parts, keyed by messageId.
 
     ``received`` is the executor's view, where the SDK has already bound the
     new Task id onto the Message.
@@ -99,10 +103,25 @@ def request_from_params(params, *, received: bool = False) -> dict:
     if message.task_id and not received:
         raise Rejected("this agent does not continue Tasks")
     parts = message.parts
-    if len(parts) != 1 or part_content(parts[0]) != "text" or not parts[0].text:
-        raise Rejected("exactly one text Part (the brief) is required")
+    if not parts or part_content(parts[0]) != "text" or not parts[0].text:
+        raise Rejected("the first Part must be the text brief")
     return {"message_id": message.message_id, "brief": parts[0].text,
+            "inputs": [a2a_v1.normalize_numbers(MessageToDict(part)) for part in parts[1:]],
             "context_id": message.context_id or ""}
+
+
+def input_candidate(inputs: list) -> dict | None:
+    """The draft received as the first input text Part, named by its own digest."""
+    text = next((part.get("text") for part in inputs or []
+                 if isinstance(part, dict) and isinstance(part.get("text"), str)), None)
+    if text is None:
+        return None
+    try:
+        revision = json.loads(text).get("revision")
+    except (ValueError, AttributeError):
+        revision = None
+    return {"revision": revision, "sha256": hashlib.sha256(text.encode()).hexdigest(),
+            "content": text}
 
 
 class Harness:
@@ -110,7 +129,8 @@ class Harness:
 
     It stores only its own Task identities, keyed by the caller's messageId.
     Roles: ``capability`` returns ``fixture-result:<brief>``; ``quality``
-    reviews the artifact named by a JSON brief ``{"artifact": {...}}``.
+    reviews the draft received as an input Part (or, for older fixture
+    callers, named by a JSON brief ``{"artifact": {...}}``).
     """
 
     def __init__(self, state: Path, role: str, *, drop_first_response: bool = False):
@@ -171,27 +191,33 @@ class Harness:
             return None
         return json.loads(row["artifact"]), row["context_id"]
 
-    def result(self, brief: str) -> dict:
-        if self.role == "capability":
-            content = "fixture-result:" + brief
-            return {"revision": "r2", "sha256": hashlib.sha256(content.encode()).hexdigest(),
-                    "author": self.identity, "content": content}
-        try:
-            source = json.loads(brief).get("artifact")
-        except (ValueError, AttributeError):
-            source = None
+    def verdict(self, brief: str, inputs: list) -> dict:
+        source = input_candidate(inputs)
+        if source is None:
+            try:
+                source = json.loads(brief).get("artifact")
+            except (ValueError, AttributeError):
+                source = None
         if not isinstance(source, dict):
-            raise Rejected("quality brief must name an artifact")
+            raise Rejected("quality needs a draft input Part")
         valid = (isinstance(source.get("content"), str)
-                 and source.get("sha256") == hashlib.sha256(source["content"].encode()).hexdigest()
-                 and source.get("author") != self.identity)
+                 and source.get("sha256") == hashlib.sha256(source["content"].encode()).hexdigest())
         return {"accepted": bool(valid), "revision": source.get("revision"),
-                "sha256": source.get("sha256"), "reviewer": self.identity,
-                "reason": "fixture digest and independent identity" if valid else "invalid artifact"}
+                "sha256": source.get("sha256"),
+                "reason": "fixture digest" if valid else "invalid artifact"}
+
+    def result(self, brief: str, inputs: list | None = None) -> dict:
+        """The work product itself, as the text of one artifact Part."""
+        if self.role == "capability":
+            content, media_type = "fixture-result:" + brief, "text/plain"
+        else:
+            content, media_type = canonical(self.verdict(brief, inputs or [])), "application/json"
+        return {"sha256": hashlib.sha256(content.encode()).hexdigest(), "content": content,
+                "media_type": media_type}
 
     def perform(self, command, task_id, context_id):
-        """Tool body: commit the Task for ``command = {message_id, brief, fingerprint}``."""
-        artifact = self.result(command["brief"])
+        """Tool body: commit the Task for ``command = {message_id, brief, inputs, fingerprint}``."""
+        artifact = self.result(command["brief"], command.get("inputs"))
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT task_id FROM messages WHERE message_id=?",
@@ -251,7 +277,8 @@ class LedgerTaskStore(ProjectionTaskStore):
         return Task(id=task_id, context_id=context_id,
                     status=TaskStatus(state=task_state("completed")),
                     artifacts=[Artifact(artifact_id=artifact["sha256"],
-                                        parts=[data_part(artifact)])],
+                                        parts=[text_part(artifact["content"], artifact.get(
+                                            "media_type", "application/json"))])],
                     metadata={"agent_identity": self.harness.identity})
 
     async def save(self, task, context=None):
@@ -295,7 +322,7 @@ class HarnessExecutor(AgentExecutor):
                 request = request_from_params(SimpleNamespace(message=context.message),
                                               received=True)
                 command = {"message_id": request["message_id"], "brief": request["brief"],
-                           "fingerprint": fingerprint(request)}
+                           "inputs": request["inputs"], "fingerprint": fingerprint(request)}
                 result = await self.harness.invoke(command, context.task_id, context.context_id)
             if "error" in result:
                 await event_queue.enqueue_event(agent_message([data_part(result)]))
@@ -309,8 +336,10 @@ class HarnessExecutor(AgentExecutor):
 
 
 def fingerprint(request: dict) -> str:
+    inputs = request.get("inputs")
     return hashlib.sha256(canonical({"brief": request["brief"],
-                                     "context_id": request["context_id"]}).encode()).hexdigest()
+                                     "context_id": request["context_id"],
+                                     **({"inputs": inputs} if inputs else {})}).encode()).hexdigest()
 
 
 class FixtureHandler(LegacyRequestHandler):

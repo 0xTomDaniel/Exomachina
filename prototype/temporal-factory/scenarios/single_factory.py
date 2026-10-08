@@ -226,6 +226,38 @@ def _exact_release(route: dict, releases: list[dict], revision: str, sha: str) -
             (route.get("receipt_audit") or {}).get("dashboard_contract_valid") is True)
 
 
+def _delivery_of_accepted(e: dict, route_no: int, *, delivered: bool) -> dict:
+    """Decision 9: delivery is provably the accepted revision.
+
+    A delivered route has exactly one delivery.receipt fact and one confirmed
+    factory release record, and both receipt digests equal the accepted
+    report's plain sha256: the one accepted Quality verdict's candidate digest
+    (the artifact.revised / quality.verdict ``artifact_sha256``), which is also
+    the Workflow's authoritative acceptance. A route that does not deliver has
+    no receipt at all.
+    """
+    route = (e.get("routes") or {}).get(str(route_no)) or {}
+    facts = _receipt_facts(route)
+    releases = [j for j in e.get("journal") or [] if j.get("effect_kind") == "release"
+                and j.get("run_id") == route.get("child_run_id")]
+    accepted = [q for q in _run_actions(e, route_no, "quality")
+                if (q.get("verdict") or {}).get("accepted") is True]
+    accepted_sha = ((accepted[0].get("verdict") or {}).get("candidate") or {}).get("sha256") \
+        if len(accepted) == 1 else None
+    acceptance = _data(route.get("task") or {}).get("acceptance") or {}
+    receipts = [{"fact_sha256": fact.get("artifact_sha256")} for fact in facts]
+    if not delivered:
+        ok = not facts and not releases
+    else:
+        ok = (bool(accepted_sha) and acceptance.get("sha256") == accepted_sha and
+              len(facts) == 1 and facts[0].get("artifact_sha256") == accepted_sha and
+              len(releases) == 1 and releases[0].get("phase") == "confirmed" and
+              (releases[0].get("receipt") or {}).get("sha256") == accepted_sha)
+    return {"ok": ok, "delivered": delivered, "accepted_sha256": accepted_sha,
+            "receipts": receipts,
+            "journal_sha256": [(j.get("receipt") or {}).get("sha256") for j in releases]}
+
+
 def _quality_bound(e: dict, route_no: int, synthesis: dict, quality: dict,
                    *, live: bool) -> bool:
     """Bind one verdict to its synthesis, remote Task, pin and confirmed outcome."""
@@ -239,8 +271,10 @@ def _quality_bound(e: dict, route_no: int, synthesis: dict, quality: dict,
         decoded = json.loads(content) if isinstance(content, str) else None
     except ValueError:
         decoded = None
-    candidate = {"revision": source.get("revision"), "sha256": source.get("sha256"),
-                 "author": source.get("author")}
+    # The verdict names its candidate by revision and digest only; authorship
+    # and the reviewer are the factory's pinned bindings, never agent echoes.
+    candidate = {"revision": source.get("revision"), "sha256": source.get("sha256")}
+    received = [row.get("sha256") for row in quality.get("inputs") or [] if isinstance(row, dict)]
     matches = [row for row in e.get("journal") or []
                if row.get("action_id") == quality.get("action_id") and
                row.get("run_id") == route.get("child_run_id")]
@@ -254,12 +288,15 @@ def _quality_bound(e: dict, route_no: int, synthesis: dict, quality: dict,
         quality.get("correlated") is True and
         quality.get("run_id") == route.get("child_run_id") and
         artifact.get("sha256") == quality.get("receipt_sha256") and
-        artifact.get("author") == reviewer == verdict_value.get("reviewer") and
+        artifact.get("author") == reviewer and "reviewer" not in verdict_value and
         artifact.get("revision") == candidate["revision"] and
+        # Quality received exactly the candidate draft as its consumed Part.
+        received == [candidate["sha256"]] and
         isinstance(content, str) and _sha(content) == artifact.get("sha256") ==
             quality.get("artifact_id") and decoded == verdict_value and
         all(candidate.values()) and verdict_value.get("candidate") == candidate and
-        source.get("author") != reviewer and verdict_value.get("decided_by") == "model" and
+        bool(source.get("author")) and source.get("author") != reviewer and
+        verdict_value.get("decided_by") == "model" and
         _model_work(quality))
 
 
@@ -637,8 +674,12 @@ def check_evidence(e: dict) -> dict[str, dict]:
     repair2 = next((x for x in s2 if _revision(x) == "r2"), {})
     brief2 = repair2.get("brief") or {}
     h2 = (repair2.get("artifact") or {}).get("sha256")
+    # The repair Message carried the rejected draft as its own Part after the
+    # research items; the brief embeds none of it.
+    repair_inputs = [row.get("sha256") for row in repair2.get("inputs") or [] if isinstance(row, dict)]
     c["R2-c"] = verdict(bool(repair2) and brief2.get("mode") == "repair" and
-        (brief2.get("prior") or {}).get("sha256") == (first2.get("artifact") or {}).get("sha256") and
+        "prior" not in brief2 and "evidence" not in brief2 and len(repair_inputs) == 3 and
+        repair_inputs[-1] == (first2.get("artifact") or {}).get("sha256") and
         brief2.get("quality_findings") == rejected2.get("findings") and
         _model_work(repair2) and h2 and h2 != (first2.get("artifact") or {}).get("sha256") and
         bool(planted2.get("planted_text")) and
@@ -851,8 +892,10 @@ def check_evidence(e: dict) -> dict[str, dict]:
         chain = _handoff_chain(audit)
         handoff_routes[number] = {**chain, **{key: audit.get(key) for key in (
             "key_configured", "key_absent_history", "key_absent_events",
-            "dashboard_contract_valid", "histories_checked")}}
+            "dashboard_contract_valid", "histories_checked")},
+            "delivery": _delivery_of_accepted(e, int(number), delivered=number != "3")}
     c["G-8"] = verdict(all(
+        row["delivery"]["ok"] and
         row["produced"] >= 3 and row["consumed"] >= 2 and row["chain_ok"] and
         row["report_items"] >= 1 and row["content_free"] and
         row["key_configured"] is True and row["key_absent_history"] is True and
@@ -1138,11 +1181,22 @@ def _collect_agents(home: Path, testbed: dict, journal: list[dict],
             remote = long_client.get_task(url, match["task_id"], history_length=None)
             history = remote.get("history") or []
             sent = history[0] if history else {}
+            # The Message the factory composed: its brief Part, then the
+            # consumed items' Parts. Only the items' digests are kept.
             sent_parts = sent.get("parts") or []
-            brief_text = sent_parts[0].get("text") if len(sent_parts) == 1 else None
+            brief_text = (sent_parts[0].get("text") if sent_parts and _part_is(sent_parts[0], "text")
+                          else None)
+            input_parts = sent_parts[1:]
             remote_artifacts = remote.get("artifacts") or []
             parts = (remote_artifacts[0].get("parts") or []) if len(remote_artifacts) == 1 else []
-            artifact = (parts[0].get("data") or {}) if len(parts) == 1 and _part_is(parts[0], "data") else {}
+            # The agent returns its work product itself (one text Part); the
+            # revision and author are the factory's own normalized record.
+            wire_text = (parts[0].get("text") if len(parts) == 1 and _part_is(parts[0], "text")
+                         else None)
+            normalized = (match.get("receipt") or {}).get("artifact") or {}
+            artifact = ({"revision": normalized.get("revision"), "sha256": _sha(wire_text),
+                         "author": normalized.get("author"), "content": wire_text}
+                        if isinstance(wire_text, str) else {})
             action_log = sorted((x for x in activity if x.get("action_id") == match["action_id"]),
                                 key=lambda row: row.get("wall_time", 0))
             journaled = [x for x in action_log if x.get("kind") == "agent-task-journaled"]
@@ -1161,6 +1215,12 @@ def _collect_agents(home: Path, testbed: dict, journal: list[dict],
                     "journal_message_id": match.get("message_id"),
                     "state": a2a_v1.task_state(remote),
                     "brief": _json_field({"brief": brief_text}, "brief"),
+                    "inputs": [{"part_kinds": [kind for kind in ("text", "data", "raw", "url")
+                                               if kind in part],
+                                "media_type": part.get("mediaType"),
+                                "sha256": _sha(part["text"]) if isinstance(part.get("text"), str)
+                                          else None}
+                               for part in input_parts if isinstance(part, dict)],
                     "artifact": artifact,
                     "artifact_id": remote_artifacts[0].get("artifactId")
                                    if len(remote_artifacts) == 1 else None,
@@ -1202,9 +1262,10 @@ def _collect_agents(home: Path, testbed: dict, journal: list[dict],
             task["content_valid"] = False
             if task["state"] == "completed" and isinstance(artifact, dict):
                 try:
-                    from agent_roles import ROLES
+                    from agent_roles import ROLES, working_view
                     role = "quality" if name == "quality" else "synthesis" if name == "synthesizer" else "research"
-                    parsed = ROLES[role].parse(artifact["content"], task["brief"], identity)
+                    view = working_view(task["brief"], input_parts)
+                    parsed = ROLES[role].parse(artifact["content"], view, identity)
                     task["content_valid"] = parsed == json.loads(artifact["content"])
                 except (KeyError, ValueError, TypeError):
                     pass

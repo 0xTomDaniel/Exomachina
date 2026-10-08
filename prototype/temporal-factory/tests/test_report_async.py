@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import a2a_extensions
 import adapter
 import agent_binding
+import handoff
 from report_contract import canonical, digest, validate_verdict
 from report_fixture import packet
 
@@ -46,15 +47,17 @@ class Handler(BaseHTTPRequestHandler):
             assert rpc["params"]["configuration"]["returnImmediately"] is True
             assert self.headers.get("A2A-Extensions") == a2a_extensions.BUDGET_URI
             message = rpc["params"]["message"]
-            assert [set(part) for part in message["parts"]] == [{"text", "mediaType"}]
-            text = message["parts"][0]["text"]
+            # The brief is the first text Part; consumed items follow verbatim.
+            assert set(message["parts"][0]) == {"text", "mediaType"}
+            parts = message["parts"]
             key = message["messageId"]
             if key not in self.server.tasks:
-                self.server.tasks[key] = (text, message["contextId"], time.monotonic())
-            elif self.server.tasks[key][0] != text:
+                self.server.tasks[key] = (parts, message["contextId"], time.monotonic())
+            elif self.server.tasks[key][0] != parts:
                 self.answer({"jsonrpc": "2.0", "id": rpc["id"], "error": {"code": -32000}})
                 return
-            self.server.briefs.append(json.loads(text))
+            self.server.briefs.append(json.loads(parts[0]["text"]))
+            self.server.messages.append(parts)
             result = {"task": self.server.task(key)}
         else:
             assert rpc["method"] == "GetTask"
@@ -73,6 +76,7 @@ class Agent(ThreadingHTTPServer):
         self.tamper = None
         self.tasks = {}
         self.briefs = []
+        self.messages = []
         self.card = {"name": role, "supportedInterfaces": [{
                 "url": f"http://127.0.0.1:{port}", "protocolBinding": "JSONRPC",
                 "protocolVersion": "1.0"}],
@@ -80,7 +84,7 @@ class Agent(ThreadingHTTPServer):
                 "uri": agent_binding.EXTENSION_URI, "required": False, "params": {
                     "identity": self.identity, "resend": a2a_extensions.RESEND_RULE}}]}}
 
-    def result(self, brief):
+    def result(self, brief, inputs):
         if self.role == "research":
             risk = self.capability == "packet_risks@1"
             prefix = "R" if risk else "F"
@@ -94,9 +98,12 @@ class Agent(ThreadingHTTPServer):
                     "title": "Qualification report", "markdown": "# Qualification report\nThree claims.",
                     "claims": [{"id": f"C{n}", "text": f"Claim {n}", "evidence": [f"E{n}"]}
                                for n in (1, 2, 3)]}
-        candidate = brief["candidate"]
-        verdict = {"kind": "quality_verdict@1", "candidate": {key: candidate[key]
-                   for key in ("revision", "sha256", "author")}, "reviewer": self.identity,
+        # Quality reviews the draft it received as a Part, naming it by the
+        # draft's own revision and the digest it computes over the text.
+        draft = inputs[0]["text"]
+        verdict = {"kind": "quality_verdict@1", "candidate": {
+                       "revision": json.loads(draft)["revision"],
+                       "sha256": hashlib.sha256(draft.encode()).hexdigest()},
                    "accepted": True, "decided_by": "model", "findings": [],
                    "rubric": "report-quality@1", "rubric_digest": "rubric-digest"}
         if self.tamper == "revision":
@@ -105,24 +112,22 @@ class Agent(ThreadingHTTPServer):
             verdict["candidate"]["sha256"] = "0" * 64
         elif self.tamper == "reviewer":
             verdict["reviewer"] = "impostor"
-        elif self.tamper == "author_review":
-            verdict["reviewer"] = candidate["author"]
         return verdict
 
     def task(self, key):
-        text, context_id, created = self.tasks[key]
-        brief = json.loads(text)
+        parts, context_id, created = self.tasks[key]
+        brief = json.loads(parts[0]["text"])
         completed = time.monotonic() - created > 0.03
         task = {"id": f"{self.identity}:{key}", "contextId": context_id,
                 "metadata": {"agent_identity": self.identity},
                 "status": {"state": "TASK_STATE_COMPLETED" if completed else "TASK_STATE_WORKING"}}
         if completed:
-            content = canonical(self.result(brief))
+            content = canonical(self.result(brief, parts[1:]))
             sha = hashlib.sha256(content.encode()).hexdigest()
-            artifact = {"revision": brief["revision"], "sha256": sha, "author": self.identity,
-                "content": content}
             if self.tamper != "no_artifacts":
-                task["artifacts"] = [{"artifactId": sha, "parts": [{"data": artifact}]}]
+                # The work product itself: one JSON text Part, no envelope.
+                task["artifacts"] = [{"artifactId": sha, "parts": [
+                    {"text": content, "mediaType": "application/json"}]}]
         return task
 
 
@@ -161,6 +166,7 @@ class ReportAsyncTests(unittest.TestCase):
         for agent in self.agents.values():
             agent.tasks = {}
             agent.briefs = []
+            agent.messages = []
             agent.tamper = None
 
     def call(self, fn, value):
@@ -173,6 +179,11 @@ class ReportAsyncTests(unittest.TestCase):
                 agent.role == "quality" else "capability", "url": agent.card["supportedInterfaces"][0]["url"],
                 "identity": agent.identity, "approved": True}, "contract": self.pins[name]}
 
+    @staticmethod
+    def upstream(**receipts):
+        return [{"handoff_id": name, "item_parts": receipt["item_parts"]}
+                for name, receipt in receipts.items()]
+
     def candidate(self):
         results = {}
         for name, capability in (("research_findings", "packet_findings@1"),
@@ -182,7 +193,8 @@ class ReportAsyncTests(unittest.TestCase):
             self.assertNotIn("unresolved", results[name])
         evidence = self.call(adapter.typed_join, {"receipts": results, "packet": self.packet})
         candidate = self.call(adapter.synthesize, {**self.args("synthesizer"), "revision": "r1",
-            "question": self.question, "packet": self.packet, "evidence": evidence})
+            "question": self.question, "packet": self.packet,
+            "upstream": self.upstream(**results)})
         self.assertNotIn("unresolved", candidate)
         return results, evidence, candidate
 
@@ -190,36 +202,60 @@ class ReportAsyncTests(unittest.TestCase):
         return self.call(adapter.review, {**self.args("quality"), "candidate": candidate,
             "question": self.question, "packet": self.packet, "policy_digest": "p" * 64,
             "assignment_id": "run-1:quality", "attempt": 1,
-            "rubric_digest": "rubric-digest"})
+            "rubric_digest": "rubric-digest", "upstream": self.upstream(draft=candidate)})
 
     def test_all_roles_async_and_repair_brief(self):
         results, evidence, candidate = self.candidate()
         self.assertEqual(evidence["kind"], "packet_evidence_join@1")
         self.assertEqual(set(evidence["branch_artifact_sha256"]), set(results))
         self.assertEqual(candidate["author"], self.agents["synthesizer"].identity)
+        # Synthesis receives the research artifacts' own Parts after its brief,
+        # and the brief embeds none of their content.
+        sent = self.agents["synthesizer"].messages[-1]
+        self.assertEqual(sent[1:], [part for name in results
+                                    for part in results[name]["item_parts"][0]])
+        brief = self.agents["synthesizer"].briefs[-1]
+        self.assertFalse({"evidence", "prior", "candidate"} & set(brief))
+        for receipt in results.values():
+            self.assertNotIn(receipt["artifact"]["content"], sent[0]["text"])
+        self.assertEqual(candidate["item_parts"], [[{"text": candidate["content"],
+                                                     "mediaType": "application/json"}]])
         verdict = self.review(candidate)
         self.assertNotIn("inconsistent", verdict)
         self.assertTrue(verdict["artifact"]["accepted"])
+        self.assertEqual(verdict["artifact"]["candidate"],
+                         {"revision": "r1", "sha256": candidate["sha256"]})
+        sent = self.agents["quality"].messages[-1]
+        self.assertEqual(sent[1:], candidate["item_parts"][0])
+        self.assertNotIn("candidate", self.agents["quality"].briefs[-1])
+        self.assertNotIn(candidate["content"], sent[0]["text"])
         findings = [{"claim_id": "C1", "severity": "blocking", "problem": "Unsupported",
                      "evidence": ["E1"]}]
         repaired = self.call(adapter.synthesize, {**self.args("synthesizer"), "revision": "r2",
-            "question": self.question, "packet": self.packet, "evidence": evidence,
-            "prior": {key: candidate[key] for key in ("revision", "sha256", "content")},
-            "quality_findings": findings})
+            "question": self.question, "packet": self.packet, "quality_findings": findings,
+            "upstream": self.upstream(**results, draft=candidate)})
         self.assertEqual(repaired["revision"], "r2")
         brief = self.agents["synthesizer"].briefs[-1]
         self.assertEqual(brief["mode"], "repair")
-        self.assertEqual(brief["prior"]["sha256"], candidate["sha256"])
+        self.assertNotIn("prior", brief)
+        self.assertEqual(self.agents["synthesizer"].messages[-1][-1],
+                         candidate["item_parts"][0][0])
         self.assertEqual(brief["quality_findings"], findings)
 
-    def test_verdict_wrong_revision_sha_or_reviewer_is_incident(self):
+    def test_verdict_wrong_revision_sha_reviewer_or_self_review_is_incident(self):
         for mutation in ("revision", "sha", "reviewer", "author_review"):
             with self.subTest(mutation=mutation):
                 _, _, candidate = self.candidate()
-                self.agents["quality"].tamper = mutation
+                if mutation == "author_review":
+                    # Factory-side independence: the pinned Quality identity
+                    # may never be the candidate's pinned author.
+                    candidate = {**candidate, "author": self.agents["quality"].identity}
+                else:
+                    self.agents["quality"].tamper = mutation
                 verdict = self.review(candidate)
                 self.assertEqual(verdict["inconsistent"], "quality-evidence-inconsistent")
                 self.agents["quality"].tasks = {}
+                self.agents["quality"].tamper = None
                 # Each subcase needs a fresh journal action identity.
                 self.home = Path(tempfile.mkdtemp(prefix="exo-sf-interp-unit-", dir="/tmp"))
                 (self.home / "testbed").mkdir()
@@ -229,6 +265,16 @@ class ReportAsyncTests(unittest.TestCase):
                     for agent in self.agents.values()}}))
                 for agent in self.agents.values():
                     agent.tasks = {}
+
+    def test_oversize_input_fails_loudly_and_is_never_sent(self):
+        results, _, _ = self.candidate()
+        self.agents["synthesizer"].messages = []
+        with patch.object(handoff, "MAX_MESSAGE_BYTES", 2000):
+            result = self.call(adapter.synthesize, {**self.args("synthesizer"), "revision": "r1",
+                "question": self.question, "packet": self.packet, "run": "run-oversize",
+                "upstream": self.upstream(**results)})
+        self.assertEqual(result["unresolved"], "input.oversize")
+        self.assertEqual(self.agents["synthesizer"].messages, [])
 
     # A2A v1 mediation decisions 3 and 4: the on-complete hook enforces the
     # node's output contract and records content-free produced hand-offs.
@@ -250,9 +296,12 @@ class ReportAsyncTests(unittest.TestCase):
         key = key_file.read_bytes()
         self.assertEqual(len(key), 32)
         evidence = self.call_keyed(adapter.typed_join, {"receipts": results, "packet": self.packet}, key_file)
+        consumes = handoff.consumed_inputs([results[name]["handoff"] for name in results])
         candidate = self.call_keyed(adapter.synthesize, {**self.args("synthesizer"), "revision": "r1",
-            "question": self.question, "packet": self.packet, "evidence": evidence,
-            "handoff_id": "draft", "handoff_revision": 1}, key_file)
+            "question": self.question, "packet": self.packet,
+            "upstream": [{"handoff_id": results[name]["handoff"]["handoff_id"],
+                          "item_parts": results[name]["item_parts"]} for name in results],
+            "consumes": consumes, "handoff_id": "draft", "handoff_revision": 1}, key_file)
         records = [results["research_findings"]["handoff"], results["research_risks"]["handoff"],
                    candidate["handoff"]]
         for record, (handoff_id, receipt) in zip(records, (
@@ -262,32 +311,74 @@ class ReportAsyncTests(unittest.TestCase):
             self.assertEqual(record["handoff_revision"], 1)
             self.assertEqual(len(record["items"]), 1)
             item = record["items"][0]
-            artifact = receipt["artifact"] if "artifact" in receipt else {
-                k: v for k, v in receipt.items() if k != "handoff"}
-            data = json.dumps(artifact, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+            artifact = receipt["artifact"] if "artifact" in receipt else receipt
             self.assertEqual((item["source"], item["part_kinds"], item["media_type"]),
-                             ("artifact", ["data"], None))  # this agent declares no mediaType
-            self.assertEqual(item["byte_length"], len(data.encode()))
-            payload = json.dumps([["data", artifact]], sort_keys=True, separators=(",", ":"),
-                                 ensure_ascii=False).encode()
+                             ("artifact", ["text"], "application/json"))
+            self.assertEqual(item["byte_length"], len(artifact["content"].encode()))
+            payload = json.dumps([["text", artifact["content"]]], sort_keys=True,
+                                 separators=(",", ":"), ensure_ascii=False).encode()
             self.assertEqual(item["digest"], hmac.new(key, payload, hashlib.sha256).hexdigest())
             self.assertNotEqual(item["digest"], hashlib.sha256(payload).hexdigest())
             self.assertEqual(item["ready_at"], record["produced_at"])
             encoded = json.dumps(record)
             self.assertNotIn(key.hex(), encoded)
             for secret in (artifact["content"], artifact["sha256"] if handoff_id != "draft" else "~",
-                           "artifactId", "content", "metadata", "name", "filename", "url\"", "text\""):
+                           "artifactId", "content", "metadata", "name", "filename", "url\"", "\"text\":"):
                 self.assertNotIn(secret, encoded)
         report = candidate["handoff"]["items"][0]
         self.assertEqual((report["artifact_revision"], report["artifact_sha256"]),
                          (candidate["revision"], candidate["sha256"]))
-        verdict = self.review({k: v for k, v in candidate.items() if k != "handoff"})
+        verdict = self.call_keyed(adapter.review, {**self.args("quality"),
+            "candidate": {k: v for k, v in candidate.items() if k != "handoff"},
+            "question": self.question, "packet": self.packet, "policy_digest": "p" * 64,
+            "assignment_id": "run-1:quality", "attempt": 1, "rubric_digest": "rubric-digest",
+            "upstream": [{"handoff_id": "draft", "item_parts": candidate["item_parts"]}],
+            "consumes": handoff.consumed_inputs([candidate["handoff"]])}, key_file)
+        self.assertNotIn("inconsistent", verdict)
         self.assertNotIn("handoff", verdict, "a gate seals the carrier; it mints no hand-off")
         # The journal replays the same record on an Activity retry.
         again = self.call_keyed(adapter.assign, {**self.args("research_findings"), "instance": "research_findings",
             "capability": "packet_findings@1", "question": self.question, "packet": self.packet,
             "handoff_id": "gather.research_findings", "handoff_revision": 1}, key_file)
         self.assertEqual(again["handoff"], results["research_findings"]["handoff"])
+
+    def test_consumed_record_must_name_exactly_the_composed_items(self):
+        key_file = self.home / "handoff-digest.key"
+        results = {}
+        for name, capability in (("research_findings", "packet_findings@1"),
+                                 ("research_risks", "packet_risks@1")):
+            results[name] = self.call_keyed(adapter.assign, {**self.args(name), "instance": name,
+                "capability": capability, "question": self.question, "packet": self.packet,
+                "handoff_id": f"gather.{name}", "handoff_revision": 1}, key_file)
+        upstream = [{"handoff_id": f"gather.{name}", "item_parts": results[name]["item_parts"]}
+                    for name in results]
+        consumes = handoff.consumed_inputs([results[name]["handoff"] for name in results])
+        tampered = json.loads(json.dumps(upstream))
+        tampered[1]["item_parts"][0][0]["text"] += " "
+        cases = {"missing": upstream[:1], "reordered": upstream[::-1], "altered": tampered,
+                 "extra": upstream + upstream[:1]}
+        self.agents["synthesizer"].messages = []
+        for label, value in cases.items():
+            with self.subTest(case=label):
+                result = self.call_keyed(adapter.synthesize, {**self.args("synthesizer"),
+                    "run": f"run-{label}", "revision": "r1", "question": self.question,
+                    "packet": self.packet, "upstream": value, "consumes": consumes,
+                    "handoff_id": "draft", "handoff_revision": 1}, key_file)
+                self.assertEqual(result["unresolved"], "input.composition-mismatch")
+        self.assertEqual(self.agents["synthesizer"].messages, [], "a mismatch never sends")
+        # Quality and release fail the same way when their consumed draft differs.
+        draft = self.call_keyed(adapter.synthesize, {**self.args("synthesizer"), "revision": "r1",
+            "question": self.question, "packet": self.packet, "upstream": upstream,
+            "consumes": consumes, "handoff_id": "draft", "handoff_revision": 1}, key_file)
+        self.assertNotIn("unresolved", draft)
+        verdict = self.call_keyed(adapter.review, {**self.args("quality"),
+            "candidate": {k: v for k, v in draft.items() if k != "handoff"},
+            "question": self.question, "packet": self.packet, "policy_digest": "p" * 64,
+            "assignment_id": "run-1:quality", "attempt": 1, "rubric_digest": "rubric-digest",
+            "upstream": upstream[:1], "consumes": handoff.consumed_inputs([draft["handoff"]])},
+            key_file)
+        self.assertEqual(verdict["inconsistent"], "input.composition-mismatch")
+        self.assertEqual(self.agents["quality"].messages, [])
 
     def test_without_workflow_identity_or_key_no_record_is_returned(self):
         plain = self.call(adapter.assign, {**self.args("research_findings"), "instance": "research_findings",

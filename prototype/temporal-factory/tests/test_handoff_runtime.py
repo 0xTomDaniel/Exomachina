@@ -115,6 +115,66 @@ class HandoffModuleTests(unittest.TestCase):
         self.assertEqual([i["ready_at"] for i in items], ["2026-10-07T12:00:02.000Z", "2026-10-07T12:00:01.000Z"])
 
 
+class ComposePartsTests(unittest.TestCase):
+    """Before-dispatch composition (decision 9): brief, then items verbatim."""
+
+    def setUp(self):
+        self.key = b"k" * 32
+        self.brief = {"text": '{"kind":"brief"}', "mediaType": "application/json"}
+        self.first = [[{"text": "a", "mediaType": "text/markdown", "filename": "a.md"}],
+                      [{"raw": "aGk=", "mediaType": "application/octet-stream"},
+                       {"data": {"n": 1, "x": [True, None]}}]]
+        self.second = [[{"url": "https://example.invalid/r", "mediaType": "text/plain"}]]
+        self.upstream = [{"handoff_id": "gather.a", "item_parts": self.first},
+                         {"handoff_id": "gather.b", "item_parts": self.second}]
+
+    def consumes(self, upstream):
+        return [{"handoff_id": entry["handoff_id"], "item_digests": [
+            handoff.describe_item(item, index=i, source="artifact", ready_at="",
+                                  key=self.key)["digest"]
+            for i, item in enumerate(entry["item_parts"])]} for entry in upstream]
+
+    def test_parts_are_copied_verbatim_in_handoff_then_item_order(self):
+        parts = handoff.compose_parts([self.brief], self.upstream,
+                                      consumes=self.consumes(self.upstream), key=self.key)
+        self.assertEqual(parts, [self.brief, *self.first[0], *self.first[1], *self.second[0]])
+        parts[1]["text"] = "changed"
+        self.assertEqual(self.first[0][0]["text"], "a", "composition copies; it never aliases")
+        self.assertEqual(handoff.compose_parts([], self.upstream[1:]), self.second[0])
+
+    def test_consumes_must_name_exactly_the_included_items(self):
+        consumes = self.consumes(self.upstream)
+        altered = json.loads(json.dumps(self.upstream))
+        altered[0]["item_parts"][0][0]["text"] = "b"
+        for label, upstream in (("missing", self.upstream[:1]), ("reordered", self.upstream[::-1]),
+                                ("altered", altered), ("extra", self.upstream + self.upstream[:1])):
+            with self.subTest(case=label), self.assertRaises(handoff.CompositionError) as caught:
+                handoff.compose_parts([self.brief], upstream, consumes=consumes, key=self.key)
+            self.assertEqual(caught.exception.reason, "input.composition-mismatch")
+        # Without a configured key the factory records no digests to compare.
+        self.assertEqual(len(handoff.compose_parts([self.brief], self.upstream[:1],
+                                                   consumes=consumes, key=None)), 4)
+        with self.assertRaises(handoff.CompositionError):
+            handoff.compose_parts([], [{"handoff_id": "x", "item_parts": [[{"kind": "text"}]]}])
+
+    def test_oversize_message_fails_loudly_and_is_never_truncated(self):
+        big = [{"handoff_id": "draft", "item_parts": [[{"text": "x" * handoff.MAX_MESSAGE_BYTES,
+                                                         "mediaType": "text/plain"}]]}]
+        message = {"role": "ROLE_USER", "messageId": "m",
+                   "parts": handoff.compose_parts([self.brief], big)}
+        self.assertEqual(len(message["parts"][1]["text"]), handoff.MAX_MESSAGE_BYTES)
+        with self.assertRaises(handoff.CompositionError) as caught:
+            handoff.require_within_bound(message)
+        self.assertEqual(caught.exception.reason, "input.oversize")
+        small = {"role": "ROLE_USER", "messageId": "m", "parts": [self.brief]}
+        self.assertIs(handoff.require_within_bound(small), small)
+
+
+FINDINGS_PARTS = [{"text": '{"kind":"findings"}', "mediaType": "application/json",
+                   "filename": "findings.json"}]
+DRAFT_PARTS = [{"text": "{}", "mediaType": "application/json"}]
+
+
 class WorkflowHandoffCompositionTests(unittest.IsolatedAsyncioTestCase):
     """Workflow code composes consumption from content-free records only."""
 
@@ -125,7 +185,8 @@ class WorkflowHandoffCompositionTests(unittest.IsolatedAsyncioTestCase):
         run.run_inputs = {"question": "synthetic only"}
         run._explicit_assignment_bindings = True; run._handoff_records = True
         bindings = {"research": {"role": "capability", "url": "http://127.0.0.1:1", "identity": "research"},
-                    "synthesis": {"role": "capability"}, "quality": {"role": "quality"},
+                    "synthesis": {"role": "capability", "identity": "synthesis"},
+                    "quality": {"role": "quality", "identity": "quality"},
                     "release": {"role": "release", "url": "http://127.0.0.1:1", "identity": "release",
                                 "output": "artifacts"}}
         branch = lambda name: dict(service="research", result_type=name, capability=name)
@@ -144,13 +205,18 @@ class WorkflowHandoffCompositionTests(unittest.IsolatedAsyncioTestCase):
         async def execute(fn, value):
             calls.append((fn, value))
             if fn is factory.assign:
-                return {"handoff": record(value["handoff_id"], value["instance"][0] * 64)}
+                produced = {"handoff": record(value["handoff_id"], value["instance"][0] * 64)}
+                if value["instance"] == "findings":
+                    return {**produced, "item_parts": [FINDINGS_PARTS]}
+                # A receipt recorded before ``item_parts``: the content falls back.
+                return {**produced, "artifact": {"content": '{"kind":"risks"}'}}
             if fn is factory.typed_join:
                 return {}
             if fn is factory.synthesize:
-                return dict(revision="r1", sha256="c" * 64, content="{}", handoff=record("draft", "d" * 64))
+                return dict(revision="r1", sha256="c" * 64, content="{}", handoff=record("draft", "d" * 64),
+                            item_parts=[DRAFT_PARTS])
             if fn is factory.review:
-                return dict(task_id="quality-task", artifact=dict(accepted=True, reviewer="quality"))
+                return dict(task_id="quality-task", artifact=dict(accepted=True))
             if fn is factory.release:
                 return dict(receipt_id="synthetic", handoff=record("publish", "e" * 64))
             raise AssertionError("unexpected activity")
@@ -159,6 +225,8 @@ class WorkflowHandoffCompositionTests(unittest.IsolatedAsyncioTestCase):
             result = await run.run_node(document, {"bindings": bindings, "evidence_packet": {}}, {"closure": closure})
         self.assertEqual(result["status"], "accepted")
         self.assertNotIn("handoff", result["artifact"], "the draft record never rides in the Workflow artifact")
+        self.assertNotIn("item_parts", result["artifact"])
+        self.assertEqual(result["acceptance"]["reviewer"], "quality", "the pinned binding, not an echo")
         by_fn = {}
         for fn, value in calls:
             by_fn.setdefault(fn, []).append(value)
@@ -171,6 +239,16 @@ class WorkflowHandoffCompositionTests(unittest.IsolatedAsyncioTestCase):
         draft = [{"handoff_id": "draft", "item_digests": ["d" * 64]}]
         self.assertEqual(by_fn[factory.review][0]["consumes"], draft)
         self.assertEqual(by_fn[factory.release][0]["consumes"], draft)
+        # The upstream items travel with the same hand-off ids, in the same order.
+        self.assertEqual(by_fn[factory.synthesize][0]["upstream"], [
+            {"handoff_id": "gather.findings", "item_parts": [FINDINGS_PARTS]},
+            {"handoff_id": "gather.risks",
+             "item_parts": [[{"text": '{"kind":"risks"}', "mediaType": "application/json"}]]}])
+        self.assertNotIn("evidence", by_fn[factory.synthesize][0])
+        self.assertNotIn("prior", by_fn[factory.synthesize][0])
+        for fn in (factory.review, factory.release):
+            self.assertEqual(by_fn[fn][0]["upstream"],
+                             [{"handoff_id": "draft", "item_parts": [DRAFT_PARTS]}])
         self.assertEqual(by_fn[factory.release][0]["node"], "publish")
         # The receipt hand-off has no consumer: it never rides in the Workflow result.
         self.assertEqual((by_fn[factory.release][0]["handoff_id"],

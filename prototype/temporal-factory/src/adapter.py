@@ -1,7 +1,8 @@
 """A2A and release Activities. Remote receipts never become product acceptance here.
 
-Agent services receive ordinary A2A Messages (decision 7). The factory composes
-the brief, journals its own action, run, assignment and attempt against the
+Agent services receive ordinary A2A Messages (decision 7). Before dispatch the
+factory composes each Message from the node's brief and the consumed hand-off
+items' Parts copied verbatim (decision 9), journals its own action, run, assignment and attempt against the
 A2A ``messageId``/``contextId``/``taskId`` in the outcome journal, re-attaches
 with ``GetTask`` after a restart, and records agent-reported usage from the
 budget extension (decision 8) in its own usage journal.
@@ -9,7 +10,6 @@ budget extension (decision 8) in its own usage journal.
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import json
 import os
 import re
@@ -29,6 +29,7 @@ from report_contract import (canonical, packet_evidence_join, research_assignmen
     synthesis_assignment, quality_review_request, validate_research_result,
     validate_report, validate_verdict)
 import a2a_extensions
+import a2a_v1
 import long_client as a2a
 import fixture
 import handoff
@@ -117,8 +118,10 @@ def _invoke_async(binding: dict, contract: dict, action: dict,
         raise ValueError("async receiver reconciliation mode is undeclared")
     path = Path(journal_path)
     snapshot = path.parent.parent / "testbed" / "agent_snapshot.json"
-    brief = action["brief"]
-    payload_sha256 = hashlib.sha256(brief.encode()).hexdigest()
+    parts = action["parts"]
+    # The journal binds the whole composed Message content (brief and every
+    # consumed item Part); its ids are the journal's own.
+    payload_sha256 = a2a.payload_sha256(a2a_v1.user_message(parts))
     journal = OutcomeJournal(path)
     try:
         context_id = journal.context_for(action["run_id"], binding["identity"])
@@ -163,10 +166,10 @@ def _invoke_async(binding: dict, contract: dict, action: dict,
                  observed=observed)
             if record.task_id is None:
                 # First dispatch and replay send the same journal-bound Message:
-                # same messageId, contextId and brief.
+                # same messageId, contextId and composed Parts.
                 try:
-                    task = a2a.send_async(url, brief, message_id=record.message_id,
-                                          context_id=record.context_id)
+                    task = a2a.send_message_async(url, a2a_v1.user_message(
+                        parts, message_id=record.message_id, context_id=record.context_id))
                     state = a2a.validate_async_task(task, context_id=record.context_id,
                                                     identity=binding["identity"])
                     record = task_started(record, task["id"])
@@ -312,18 +315,43 @@ def _log(kind: str, **fields) -> None:
                                     sort_keys=True) + "\n")
 
 
-def _action(action_id: str, input: dict, brief: dict) -> dict:
-    """The factory's own record of one agent action; only ``brief`` is sent."""
+def _compose(input: dict, brief: dict) -> list[dict]:
+    """Before dispatch: the brief Part, then the consumed items' Parts verbatim.
+
+    With an instance digest key configured and a recorded ``consumes``, the
+    included items must be exactly the consumed hand-offs (ids, order, keyed
+    item digests). An input over the declared bound fails; it is never cut.
+    """
+    consumes = input.get("consumes")
+    key = handoff.instance_key() if consumes is not None else None
+    parts = handoff.compose_parts(
+        [a2a_v1.text_part(canonical(brief), a2a_v1.JSON_MEDIA_TYPE)],
+        input.get("upstream") or [], consumes=consumes, key=key)
+    handoff.require_within_bound(a2a_v1.user_message(parts))
+    return parts
+
+
+def _action(action_id: str, input: dict, brief: dict, parts: list[dict]) -> dict:
+    """The factory's own record of one agent action; only ``parts`` are sent."""
     return {"action_id": action_id, "run_id": input["run"],
             "definition_digest": input["digest"], "brief": canonical(brief),
-            **_assignment_usage_bindings(input)}
+            "parts": parts, **_assignment_usage_bindings(input)}
+
+
+def _composition_failure(action_id: str, error: handoff.CompositionError) -> dict:
+    _log("agent-input-incident", action_id=action_id, reason=error.reason)
+    return {"unresolved": error.reason, "action_id": action_id}
 
 
 @activity.defn
 async def assign(input: dict) -> dict:
     capability = input["capability"]
     brief = research_assignment(capability, input["question"], input["packet"])
-    action = _action(f"{input['run']}:{input['instance']}", input, brief)
+    action_id = f"{input['run']}:{input['instance']}"
+    try:
+        action = _action(action_id, input, brief, _compose(input, brief))
+    except handoff.CompositionError as error:
+        return _composition_failure(action_id, error)
     try:
         result = await _thread_with_heartbeat(_invoke_async, input["binding"],
             input["contract"], action, "r1", "research", capability)
@@ -351,9 +379,14 @@ async def typed_join(input: dict) -> dict:
 
 @activity.defn
 async def synthesize(input: dict) -> dict:
+    # Research results and the rejected draft travel as consumed item Parts.
     brief = synthesis_assignment(input["revision"], input["question"], input["packet"],
-        input["evidence"], prior=input.get("prior"), quality_findings=input.get("quality_findings"))
-    action = _action(f"{input['run']}:synthesize:{input['revision']}", input, brief)
+                                 quality_findings=input.get("quality_findings"))
+    action_id = f"{input['run']}:synthesize:{input['revision']}"
+    try:
+        action = _action(action_id, input, brief, _compose(input, brief))
+    except handoff.CompositionError as error:
+        return _composition_failure(action_id, error)
     try:
         result = await _thread_with_heartbeat(_invoke_async, input["binding"],
             input["contract"], action, input["revision"], "synthesis", "report_synthesis@1")
@@ -364,9 +397,10 @@ async def synthesize(input: dict) -> dict:
         if canonical(content) != artifact["content"]:
             raise ValueError("noncanonical report content")
         validate_report(content, input["revision"], input["question"], input["packet"])
+        produced = {**artifact, "item_parts": result["item_parts"]}
         if "handoff" not in result:
-            return artifact
-        return _with_handoff({**artifact, "handoff": result["handoff"]}, input, report=artifact)
+            return produced
+        return _with_handoff({**produced, "handoff": result["handoff"]}, input, report=artifact)
     except PendingTask:
         raise
     except Exception as error:
@@ -378,10 +412,15 @@ async def synthesize(input: dict) -> dict:
 async def review(input: dict) -> dict:
     from quality_authority import decide_quality_async
     candidate = input["candidate"]
+    # The draft under review travels as its consumed item Parts.
     brief = quality_review_request(candidate, input["question"], input["packet"],
                                    input["policy_digest"])
-    action = _action(quality_action_id(input["run"], input["assignment_id"], input["attempt"],
-                                       candidate["revision"], candidate["sha256"]), input, brief)
+    action_id = quality_action_id(input["run"], input["assignment_id"], input["attempt"],
+                                  candidate["revision"], candidate["sha256"])
+    try:
+        action = _action(action_id, input, brief, _compose(input, brief))
+    except handoff.CompositionError as error:
+        return {"inconsistent": error.reason, "detail": _composition_failure(action_id, error)}
     try:
         result = await _thread_with_heartbeat(_invoke_async, input["binding"],
             input["contract"], action, candidate["revision"], "quality", "report_quality_review@1")
@@ -399,8 +438,8 @@ async def review(input: dict) -> dict:
         if decision.kind == QualityKind.INCONSISTENT:
             return {"inconsistent": decision.incident, "reasons": list(decision.reasons)}
         # A gate seals the carrier it consumed; it never mints a new hand-off.
-        return {key: value for key, value in result.items() if key != "handoff"} | {
-            "artifact": content}
+        return {key: value for key, value in result.items()
+                if key not in {"handoff", "item_parts"}} | {"artifact": content}
     except PendingTask:
         raise
     except Exception as error:
@@ -426,6 +465,9 @@ async def release(input: dict) -> dict:
         result = await _thread_with_heartbeat(_release, input)
     except release_delivery.PendingRelease:
         raise
+    except handoff.CompositionError as error:
+        # The accepted draft's Parts cannot be composed as consumed: never send.
+        result = {"unresolved": error.reason, "release_id": input["command"]["release_id"]}
     except Exception as error:
         result = {"unresolved": "release-adapter-incident",
                   "release_id": input["command"]["release_id"],

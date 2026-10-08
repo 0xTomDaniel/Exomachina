@@ -85,6 +85,15 @@ def get(task_id):
             "params": {"id": task_id}}
 
 
+def wire(artifact):
+    """The work product an artifact carries: its single JSON text Part."""
+    parts = artifact["parts"]
+    assert len(parts) == 1 and set(parts[0]) == {"text", "mediaType"}, parts
+    assert parts[0]["mediaType"] == "application/json", parts
+    text = parts[0]["text"]
+    return {"content": text, "sha256": hashlib.sha256(text.encode()).hexdigest()}
+
+
 def control(value):
     return send(parts=[{"data": value, "mediaType": "application/json"}])
 
@@ -140,12 +149,11 @@ class ModelAgentTests(unittest.TestCase):
             self.assertEqual(done["history"][0]["messageId"], message_id)
             self.assertEqual(done["history"][0]["parts"][0]["text"], brief())
             artifact = done["artifacts"][0]
-            data = artifact["parts"][0]["data"]
-            self.assertEqual(set(data), {"revision", "sha256", "author", "content"})
+            # The work product itself, with no envelope and no author echo.
+            data = wire(artifact)
             self.assertEqual(artifact["artifactId"], data["sha256"])
-            self.assertEqual(data["sha256"], hashlib.sha256(data["content"].encode()).hexdigest())
-            self.assertEqual(data["author"], identity)
             self.assertEqual(json.loads(data["content"])["revision"], "r1")
+            self.assertNotIn(identity, json.dumps(done["artifacts"]))
 
     def test_rejects_non_message_shapes(self):
         with TestClient(self.app()) as client:
@@ -153,9 +161,25 @@ class ModelAgentTests(unittest.TestCase):
                     send(parts=[{"data": {"op": "assign", "brief": brief()}}]),
                     send("not json"),
                     send(canonical({"no": "revision"})),
-                    send(parts=[{"text": brief()}, {"text": brief()}])):
+                    send(parts=[{"data": {"x": 1}}, {"text": brief()}]),
+                    send(parts=[{"text": "  "}, {"text": brief()}])):
                 self.assertEqual(client.post("/", json=request, headers=AUTH).json()["error"]["code"],
                                  -32602)
+
+    def test_input_parts_are_received_verbatim_and_bound_to_the_message(self):
+        upstream = {"text": canonical({"kind": "packet_findings@1", "items": []}),
+                    "mediaType": "application/json", "filename": "findings.json"}
+        with TestClient(self.app()) as client:
+            message_id = str(uuid4())
+            body = send(parts=[{"text": brief(), "mediaType": "application/json"}, upstream],
+                        message_id=message_id)
+            task = client.post("/", json=body, headers=AUTH).json()["result"]["task"]
+            done = completed(client, task["id"])
+            self.assertEqual(done["history"][0]["parts"][1], upstream)
+            changed = send(parts=[{"text": brief(), "mediaType": "application/json"},
+                                  {**upstream, "filename": "other.json"}], message_id=message_id)
+            self.assertEqual(client.post("/", json=changed, headers=AUTH).json()["error"]["code"],
+                             -32602)
 
     def test_factory_identifiers_are_ignored_and_never_echoed(self):
         leaked = {name: f"leak-{name}" for name in FACTORY_NAMES}
@@ -364,14 +388,14 @@ class TestStimulusExtensionTests(unittest.TestCase):
             self.assertTrue(self.arm(client, body)["armed"])
             first = client.post("/", json=send(context_id="ctx-1"), headers=AUTH).json()["result"]["task"]
             done = completed(client, first["id"])
-            artifact = done["artifacts"][0]["parts"][0]["data"]
+            artifact = wire(done["artifacts"][0])
             content = json.loads(artifact["content"])
             self.assertEqual(content["claims"][-1]["id"], "C2")
             self.assertIn("Planted defect.", content["markdown"])
             self.assertEqual(artifact["sha256"], hashlib.sha256(artifact["content"].encode()).hexdigest())
             repair = client.post("/", json=send(brief("r2"), context_id="ctx-1"), headers=AUTH).json()["result"]["task"]
             repaired = completed(client, repair["id"])
-            self.assertNotIn("Planted defect.", repaired["artifacts"][0]["parts"][0]["data"]["content"])
+            self.assertNotIn("Planted defect.", wire(repaired["artifacts"][0])["content"])
             other = client.post("/", json=send(context_id="ctx-2"), headers=AUTH).json()["result"]["task"]
             completed(client, other["id"])
             self.assertEqual(self.log(client), [{
@@ -386,10 +410,10 @@ class TestStimulusExtensionTests(unittest.TestCase):
                               "revisions": "all"})
             same = client.post("/", json=send(brief("r2"), context_id="old"), headers=AUTH).json()["result"]["task"]
             old = completed(client, same["id"])
-            self.assertNotIn("Next context only.", old["artifacts"][0]["parts"][0]["data"]["content"])
+            self.assertNotIn("Next context only.", wire(old["artifacts"][0])["content"])
             new = client.post("/", json=send(context_id="new"), headers=AUTH).json()["result"]["task"]
             done = completed(client, new["id"])
-            self.assertIn("Next context only.", done["artifacts"][0]["parts"][0]["data"]["content"])
+            self.assertIn("Next context only.", wire(done["artifacts"][0])["content"])
             self.assertEqual([row["context_id"] for row in self.log(client)], ["new"])
 
     def test_stimulus_log_committed_before_finish_recovers_one_identical_artifact(self):
@@ -425,7 +449,7 @@ class TestStimulusExtensionTests(unittest.TestCase):
         self.roles["synthesis"] = FakeRole(claim_text="Different recovered model output")
         with TestClient(self.app(port=45749)) as client:
             done = completed(client, task["id"])
-            artifact = done["artifacts"][0]["parts"][0]["data"]
+            artifact = wire(done["artifacts"][0])
             content = json.loads(artifact["content"])
             self.assertEqual(content["claims"][0]["text"], "Normal claim")
             self.assertEqual(content["claims"][1], {"id": "C2", "text": "Planted defect.", "evidence": ["E1"]})

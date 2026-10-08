@@ -4,14 +4,20 @@ This is the client side of the A2A Adapter boundary: requests carry the
 ``A2A-Version: 1.0`` header, Tasks arrive wrapped as ``{"task": ...}``, and
 ``TASK_STATE_*`` values are mapped to version-neutral state names here.
 
-An agent receives an ordinary Message: one text Part with the brief, the
-factory-journaled ``messageId`` and ``contextId``, and optionally a budget in
-the budget extension's request metadata. No factory identifier crosses the
-wire; the factory's own journal maps its assignment to the A2A identities.
+An agent receives an ordinary Message: the node's brief as a text Part,
+followed by the consumed hand-off items' Parts copied verbatim from their
+producing artifacts (``handoff.compose_parts``), the factory-journaled
+``messageId`` and ``contextId``, and optionally a budget in the budget
+extension's request metadata. No factory identifier crosses the wire; the
+factory's own journal maps its assignment to the A2A identities.
+
+An agent returns its work product itself: one artifact whose single text Part
+is the content. The factory normalizes it on complete (``async_receipt``).
 """
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import sys
@@ -20,6 +26,7 @@ import urllib.request
 
 import a2a_extensions
 import a2a_v1
+import handoff
 from agent_binding import UnavailableBinding, resolve as resolve_pinned  # noqa: F401
 
 
@@ -46,17 +53,32 @@ def _request(url, method, data=None, extensions=()):
         raise UncertainSubmission(str(error)) from error
 
 
-def message(brief_text: str, *, message_id: str, context_id: str) -> dict:
-    """The plain A2A Message the factory composes for one assignment attempt."""
-    return a2a_v1.user_message([a2a_v1.text_part(brief_text, a2a_v1.JSON_MEDIA_TYPE)],
-                               context_id=context_id, message_id=message_id)
+def message(brief_text: str, *, message_id: str, context_id: str,
+            upstream: list | None = None, consumes: list | None = None,
+            key: bytes | None = None) -> dict:
+    """The plain A2A Message the factory composes for one assignment attempt.
+
+    The brief Part comes first, then each consumed hand-off item's Parts
+    verbatim. Raises ``handoff.CompositionError`` on a mismatch with
+    ``consumes`` or when the Message exceeds ``handoff.MAX_MESSAGE_BYTES``.
+    """
+    parts = handoff.compose_parts([a2a_v1.text_part(brief_text, a2a_v1.JSON_MEDIA_TYPE)],
+                                  upstream or [], consumes=consumes, key=key)
+    return handoff.require_within_bound(
+        a2a_v1.user_message(parts, context_id=context_id, message_id=message_id))
 
 
-def send_async(url: str, brief_text: str, *, message_id: str, context_id: str,
-               budget: dict | None = None) -> dict:
-    """SendMessage with returnImmediately; a resend reuses the journaled messageId."""
-    params = a2a_v1.send_params(message(brief_text, message_id=message_id,
-                                        context_id=context_id), return_immediately=True)
+def payload_sha256(message: dict) -> str:
+    """Digest of the whole composed Message content; its ids are journal-bound."""
+    content = {key: value for key, value in message.items()
+               if key not in {"messageId", "contextId", "taskId"}}
+    return hashlib.sha256(json.dumps(content, sort_keys=True, separators=(",", ":"),
+                                     ensure_ascii=False).encode()).hexdigest()
+
+
+def send_message_async(url: str, message: dict, *, budget: dict | None = None) -> dict:
+    """SendMessage with returnImmediately; a resend reuses the journaled Message."""
+    params = a2a_v1.send_params(message, return_immediately=True)
     if budget is not None:
         params["metadata"] = {a2a_extensions.BUDGET_URI: {"budget": budget}}
     rpc = a2a_v1.rpc(a2a_v1.SEND_MESSAGE, params)
@@ -67,6 +89,14 @@ def send_async(url: str, brief_text: str, *, message_id: str, context_id: str,
         return a2a_v1.require_task(response["result"])
     except a2a_v1.ProtocolError as error:
         raise ValueError("A2A v1 response invalid: " + str(error)) from error
+
+
+def send_async(url: str, brief_text: str, *, message_id: str, context_id: str,
+               budget: dict | None = None, upstream: list | None = None) -> dict:
+    """SendMessage with returnImmediately; a resend reuses the journaled messageId."""
+    return send_message_async(url, message(brief_text, message_id=message_id,
+                                           context_id=context_id, upstream=upstream),
+                              budget=budget)
 
 
 def validate_async_task(task: dict, *, context_id: str, identity: str,
@@ -93,30 +123,32 @@ def validate_async_task(task: dict, *, context_id: str, identity: str,
 
 def async_receipt(task: dict, binding: dict, *, identity: str,
                   expected_revision: str, role: str) -> dict:
-    """On-complete normalization. ``binding`` is the factory's own journal binding."""
+    """On-complete normalization. ``binding`` is the factory's own journal binding.
+
+    The agent returns its work product as one artifact with one text Part. The
+    factory computes the content digest and builds its own normalized record:
+    the revision it assigned and the author from its own pin, never an agent
+    echo. ``item_parts`` keeps the artifact's Parts verbatim for consumers.
+    """
     if validate_async_task(task, context_id=binding["context_id"], identity=identity,
                            task_id=binding.get("task_id")) != "completed":
         raise ValueError("A2A Task is not complete")
     artifacts = task.get("artifacts") or []
-    if len(artifacts) != 1 or len(artifacts[0].get("parts") or []) != 1:
-        raise ValueError("expected one structured artifact")
+    parts = artifacts[0].get("parts") if len(artifacts) == 1 and isinstance(artifacts[0], dict) else None
+    if not isinstance(parts, list) or len(parts) != 1:
+        raise ValueError("expected one artifact with one Part")
     try:
-        artifact = a2a_v1.part_data(artifacts[0]["parts"][0])
+        content = a2a_v1.part_text(parts[0])
     except a2a_v1.ProtocolError as error:
-        raise ValueError("expected artifact data Part") from error
-    if not isinstance(artifact, dict):
-        raise ValueError("expected artifact data Part")
-    if artifact.get("author") != identity or artifact.get("revision") != expected_revision:
-        raise ValueError("artifact author or revision mismatch")
-    content = artifact.get("content")
-    if not isinstance(content, str) or artifact.get("sha256") != hashlib.sha256(content.encode()).hexdigest():
-        raise ValueError("artifact content digest mismatch")
-    if artifacts[0].get("artifactId") != artifact["sha256"]:
-        raise ValueError("A2A Artifact id differs from content digest")
+        raise ValueError("expected an artifact text Part") from error
+    artifact = {"revision": expected_revision,
+                "sha256": hashlib.sha256(content.encode("utf-8")).hexdigest(),
+                "author": identity, "content": content}
     return {"action_id": binding["action_id"], "run_id": binding["run_id"],
                "definition_digest": binding["definition_digest"], "task_id": task["id"],
                "context_id": binding["context_id"], "message_id": binding["message_id"],
-               "artifact": artifact, "harness_identity": identity,
+               "artifact": artifact, "item_parts": [copy.deepcopy(parts)],
+               "harness_identity": identity,
                "harness_role": role, "a2a_protocol": a2a_v1.PROTOCOL_VERSION}
 
 

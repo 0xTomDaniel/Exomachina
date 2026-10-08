@@ -27,6 +27,7 @@ sys.path.insert(0, str(ROOT / "services"))
 
 import a2a_v1  # noqa: E402
 import adapter  # noqa: E402
+import handoff  # noqa: E402
 import release_delivery  # noqa: E402
 from a2a_outcome import OutcomeJournal, Phase, task_started  # noqa: E402
 from agent_binding import UnavailableBinding, card_pin  # noqa: E402
@@ -50,6 +51,20 @@ def command(revision="r1", content=CONTENT):
     return {"release_id": f"run-release-test:release:{revision}", "run_id": "run-release-test",
             "definition_digest": "definition-digest", "revision": revision,
             "sha256": hashlib.sha256(content.encode("utf-8")).hexdigest(), "content": content}
+
+
+def accepted_part(value, **extra):
+    """The accepted report artifact's own Part, as the producing agent returned it."""
+    return {"text": value["content"], "mediaType": "application/json", **extra}
+
+
+def message(value, **extra):
+    return release_delivery.release_message(value, [accepted_part(value, **extra)])
+
+
+def payload(value) -> str:
+    return hashlib.sha256(json.dumps(message(value), sort_keys=True, separators=(",", ":"),
+                                     ensure_ascii=False).encode()).hexdigest()
 
 
 class ReleaseDeliveryTests(unittest.TestCase):
@@ -96,12 +111,15 @@ class ReleaseDeliveryTests(unittest.TestCase):
                         "approved": True, "output": "artifacts"}
         self.logs = []
 
-    def input(self, value=None):
+    def input(self, value=None, part=None):
+        value = value or command()
         return {"identity": self.identity, "binding": self.binding,
-                "contract": self.contract, "command": value or command()}
+                "contract": self.contract, "command": value,
+                "upstream": [{"handoff_id": "draft",
+                              "item_parts": [[part or accepted_part(value)]]}]}
 
-    def deliver(self, value=None, **options):
-        return release_delivery.deliver(self.input(value), journal_path=self.journal_path,
+    def deliver(self, value=None, part=None, **options):
+        return release_delivery.deliver(self.input(value, part), journal_path=self.journal_path,
             snapshot=self.snapshot, log=lambda kind, **fields: self.logs.append((kind, fields)),
             deadline_seconds=options.pop("deadline_seconds", 10), poll_seconds=0.05, **options)
 
@@ -142,7 +160,7 @@ class ParticipatingReleaseTests(ReleaseDeliveryTests):
         self.assertEqual(self.deliveries()[receipt["task_id"]]["sends"], 1)
 
     def test_the_wire_message_is_ordinary_and_factory_free(self):
-        message = release_delivery.release_message(command())
+        message = release_delivery.release_message(command(), [accepted_part(command())])
         self.assertEqual(set(message), {"role", "messageId", "parts"})
         self.assertEqual(message["parts"], [{"text": CONTENT, "mediaType": "application/json"}])
         self.assertIsNone(a2a_v1.request_violation(a2a_v1.rpc(
@@ -157,15 +175,14 @@ class ParticipatingReleaseTests(ReleaseDeliveryTests):
     def test_uncertain_send_resends_the_identical_message_and_gets_the_original_task(self):
         value = command("r-resend")
         # The receiver committed, but the reply was lost before the taskId was journaled.
-        original = release_delivery.send_message(self.url, release_delivery.release_message(value))
+        original = release_delivery.send_message(self.url, message(value))
         journal = OutcomeJournal(self.journal_path)
         journal.begin(release_delivery.submitted(value["release_id"], value["run_id"],
             value["definition_digest"], release_delivery.ReceiverKind.PARTICIPATING,
             effect_kind=release_delivery.EffectKind.RELEASE, revision=value["revision"],
             sha256=value["sha256"], pinned_identity=self.identity,
             message_id=release_delivery.message_id_for(value["release_id"]),
-            payload_sha256=hashlib.sha256(json.dumps(release_delivery.release_message(value),
-                sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()))
+            payload_sha256=payload(value)))
         journal.close()
         receipt = self.deliver(value)
         self.assertEqual(receipt["task_id"], original["id"])
@@ -176,15 +193,14 @@ class ParticipatingReleaseTests(ReleaseDeliveryTests):
 
     def test_journaled_task_is_recovered_through_get_task_without_a_new_send(self):
         value = command("r-get")
-        original = release_delivery.send_message(self.url, release_delivery.release_message(value))
+        original = release_delivery.send_message(self.url, message(value))
         journal = OutcomeJournal(self.journal_path)
         expected = release_delivery.submitted(value["release_id"], value["run_id"],
             value["definition_digest"], release_delivery.ReceiverKind.PARTICIPATING,
             effect_kind=release_delivery.EffectKind.RELEASE, revision=value["revision"],
             sha256=value["sha256"], pinned_identity=self.identity,
             message_id=release_delivery.message_id_for(value["release_id"]),
-            payload_sha256=hashlib.sha256(json.dumps(release_delivery.release_message(value),
-                sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest())
+            payload_sha256=payload(value))
         record, _ = journal.begin(expected)
         journal.put(task_started(record, original["id"]))
         journal.close()
@@ -196,7 +212,7 @@ class ParticipatingReleaseTests(ReleaseDeliveryTests):
 
     def test_conflicting_message_id_reuse_is_refused_and_unresolved(self):
         value = command("r-conflict")
-        other = {**release_delivery.release_message(value),
+        other = {**message(value),
                  "parts": [a2a_v1.text_part(CONTENT + " ", "application/json")]}
         release_delivery.send_message(self.url, other)
         result = self.deliver(value)
@@ -219,9 +235,12 @@ class ParticipatingReleaseTests(ReleaseDeliveryTests):
         os.environ["EXO_HANDOFF_KEY_FILE"] = str(self.case / "handoff-digest.key")
         self.addCleanup(os.environ.pop, "EXO_OUTCOME_DB", None)
         self.addCleanup(os.environ.pop, "EXO_HANDOFF_KEY_FILE", None)
-        value = {**self.input(command("r-activity")), "node": "publish",
-                 "handoff_id": "publish", "handoff_revision": 1,
-                 "consumes": [{"handoff_id": "draft", "item_digests": ["d" * 64]}]}
+        key = handoff.instance_key()
+        base = self.input(command("r-activity"))
+        digest = handoff.describe_item(base["upstream"][0]["item_parts"][0], index=0,
+                                       source="artifact", ready_at="", key=key)["digest"]
+        value = {**base, "node": "publish", "handoff_id": "publish", "handoff_revision": 1,
+                 "consumes": [{"handoff_id": "draft", "item_digests": [digest]}]}
         result = asyncio.run(adapter.release(value))
         self.assertNotIn("unresolved", result, result)
         record = result["handoff"]
@@ -230,6 +249,54 @@ class ParticipatingReleaseTests(ReleaseDeliveryTests):
         self.assertEqual((item["source"], item["part_kinds"], item["media_type"]),
                          ("artifact", ["data"], "application/json"))
         self.assertEqual(result["sha256"], value["command"]["sha256"])
+
+    def test_consumed_record_must_match_the_delivered_parts(self):
+        os.environ["EXO_OUTCOME_DB"] = str(self.journal_path)
+        os.environ["EXO_HANDOFF_KEY_FILE"] = str(self.case / "handoff-digest.key")
+        self.addCleanup(os.environ.pop, "EXO_OUTCOME_DB", None)
+        self.addCleanup(os.environ.pop, "EXO_HANDOFF_KEY_FILE", None)
+        before = len(self.deliveries())
+        value = {**self.input(command("r-mismatch")), "node": "publish",
+                 "handoff_id": "publish", "handoff_revision": 1,
+                 "consumes": [{"handoff_id": "draft", "item_digests": ["d" * 64]}]}
+        result = asyncio.run(adapter.release(value))
+        self.assertEqual(result["unresolved"], "input.composition-mismatch")
+        self.assertEqual(len(self.deliveries()), before, "a mismatch never sends")
+
+    def test_delivered_part_is_the_accepted_artifact_part_verbatim(self):
+        for media_type, filename in (("application/json", "report.json"),
+                                     ("text/markdown", None)):
+            with self.subTest(media_type=media_type):
+                value = command("r-verbatim-" + media_type.split("/")[1])
+                part = {"text": value["content"], "mediaType": media_type,
+                        **({"filename": filename} if filename else {})}
+                sent = []
+                original = release_delivery.send_message
+
+                def spy(url, message):
+                    sent.append(message)
+                    return original(url, message)
+
+                with patch.object(release_delivery, "send_message", side_effect=spy):
+                    receipt = self.deliver(value, part=part)
+                self.assertNotIn("unresolved", receipt, receipt)
+                self.assertEqual([message["parts"] for message in sent], [[part]])
+                self.assertEqual((receipt["sha256"], receipt["media_type"]),
+                                 (value["sha256"], media_type))
+
+    def test_release_without_upstream_sends_the_recorded_content_part(self):
+        value = command("r-legacy")
+        legacy = {key: item for key, item in self.input(value).items() if key != "upstream"}
+        self.assertEqual(release_delivery.release_parts(legacy),
+                         [{"text": value["content"], "mediaType": "application/json"}])
+
+    def test_a_part_other_than_the_accepted_bytes_is_never_sent(self):
+        value = command("r-other-part")
+        before = len(self.deliveries())
+        with self.assertRaisesRegex(ValueError, "accepted artifact digest"):
+            self.deliver(value, part={"text": value["content"] + " ",
+                                      "mediaType": "application/json"})
+        self.assertEqual(len(self.deliveries()), before)
 
 
 class FakeTaskReleaseTests(ReleaseDeliveryTests):
@@ -254,6 +321,39 @@ class FakeTaskReleaseTests(ReleaseDeliveryTests):
         task = {"id": "wrong-bytes", "contextId": "c", "status": {"state": "TASK_STATE_COMPLETED"},
                 "artifacts": [{"artifactId": "rcpt", "parts": [a2a_v1.data_part(receipt)]}]}
         self.assertEqual(self.deliver_with(task)["unresolved"], "release-receipt-inconsistent")
+
+    def test_receipt_must_equal_the_accepted_artifact_sha256(self):
+        """Delivery is provably the accepted revision: any receipt that does
+        not report the accepted artifact_sha256 over the delivered bytes fails
+        the release node at runtime."""
+        value = command("r-fake-accepted")
+        good = {"receipt_id": "rcpt", "sha256": value["sha256"],
+                "byte_length": len(CONTENT.encode("utf-8")),
+                "media_type": "application/json", "accepted_at": "2026-10-08T00:00:00Z",
+                "outcome": "delivered"}
+        other = hashlib.sha256((CONTENT + " ").encode("utf-8")).hexdigest()
+        for label, change in (("other-sha", {"sha256": other}),
+                              ("byte-length", {"byte_length": 1}),
+                              ("media-type", {"media_type": "text/plain"})):
+            with self.subTest(case=label):
+                task = {"id": "receipt-" + label, "contextId": "c",
+                        "status": {"state": "TASK_STATE_COMPLETED"},
+                        "artifacts": [{"artifactId": "rcpt",
+                                       "parts": [a2a_v1.data_part({**good, **change})]}]}
+                with patch.object(release_delivery, "send_message", return_value=task):
+                    result = self.deliver({**value, "release_id": value["release_id"] + label})
+                self.assertEqual(result["unresolved"], "release-receipt-inconsistent")
+                self.assertEqual(self.journal(result["release_id"]).phase, Phase.INCIDENT)
+        task = {"id": "receipt-good", "contextId": "c", "status": {"state": "TASK_STATE_COMPLETED"},
+                "artifacts": [{"artifactId": "rcpt", "parts": [a2a_v1.data_part(good)]}]}
+        # The receipt covers the delivered bytes but not the accepted digest.
+        with self.assertRaisesRegex(ValueError, "exact accepted bytes"):
+            release_delivery.receipt_from_task(task, {**value, "sha256": other},
+                delivered=accepted_part(value), identity=self.identity, task_id="t",
+                message_id="m")
+        self.assertEqual(release_delivery.receipt_from_task(task, value,
+            delivered=accepted_part(value), identity=self.identity, task_id="t",
+            message_id="m")["sha256"], value["sha256"])
 
     def test_rejected_and_failed_tasks_carry_their_status_message(self):
         for state in ("rejected", "failed"):
@@ -283,8 +383,7 @@ class OpaqueReleaseTests(ReleaseDeliveryTests):
             effect_kind=release_delivery.EffectKind.RELEASE, revision=value["revision"],
             sha256=value["sha256"], pinned_identity=self.identity,
             message_id=release_delivery.message_id_for(value["release_id"]),
-            payload_sha256=hashlib.sha256(json.dumps(release_delivery.release_message(value),
-                sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()))
+            payload_sha256=payload(value)))
         journal.close()
         self.assertEqual(self.deliver(value)["unresolved"], "opaque-effect-unknown")
         self.assertEqual(sum(row["effect_count"] for row in self.deliveries().values()), before)

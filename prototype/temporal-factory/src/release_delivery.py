@@ -5,8 +5,9 @@ factory is its ordinary A2A client:
 
 - the node records dispatch intent (release attempt -> ``messageId``) in the
   durable outcome journal before any network I/O;
-- it sends one ``SendMessage`` whose single Part carries the accepted bytes and
-  their ``mediaType`` and nothing factory-specific;
+- it sends one ``SendMessage`` carrying exactly the accepted report artifact's
+  own Parts, copied verbatim from the producing artifact (``handoff.compose_parts``,
+  decision 9): no brief and nothing factory-specific;
 - it journals the returned ``taskId`` and re-reads only through ``GetTask``;
 - after an uncertain send it re-sends the identical Message (same
   ``messageId``) only when the pinned Agent Card promises ``messageId``
@@ -14,7 +15,9 @@ factory is its ordinary A2A client:
 - the node is bound with strict ``artifacts`` output: a completed Task with
   no receipt artifact fails the output contract (``output.missing``), so an
   unverified delivery can never look complete;
-- the receipt artifact must cover the exact accepted bytes.
+- the receipt artifact must cover the exact delivered bytes, and those must
+  be the bytes Quality accepted (``artifact_sha256``); any mismatch fails the
+  node (``release-receipt-inconsistent``).
 
 The confirmed receipt is the node's evidence. Its content-free hand-off record
 has no consumer (release has control edges only) and retires at the station.
@@ -22,6 +25,7 @@ Correlation (run, revision, release id) stays on the factory side.
 """
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import time
@@ -63,10 +67,39 @@ def message_id_for(release_id: str) -> str:
     return str(uuid.uuid5(_MESSAGE_NAMESPACE, release_id))
 
 
-def release_message(command: dict) -> dict:
-    """The ordinary A2A Message the receiver gets: one Part, no factory facts."""
-    return a2a_v1.user_message([a2a_v1.text_part(command["content"], MEDIA_TYPE)],
-                               message_id=message_id_for(command["release_id"]))
+def release_parts(input: dict) -> list[dict]:
+    """The accepted draft's item Parts, verbatim, verified against ``consumes``.
+
+    Release has no brief. A release scheduled by an older Workflow carries no
+    ``upstream``; its accepted content is then the recorded text Part.
+    """
+    command = input["command"]
+    upstream = input.get("upstream")
+    if upstream is None:
+        upstream = [{"handoff_id": None,
+                     "item_parts": handoff.fallback_item_parts(command["content"])}]
+    consumes = input.get("consumes")
+    key = handoff.instance_key() if consumes is not None else None
+    return handoff.compose_parts([], upstream, consumes=consumes, key=key)
+
+
+def release_message(command: dict, parts: list[dict]) -> dict:
+    """The ordinary A2A Message the receiver gets: the accepted artifact's Parts."""
+    return handoff.require_within_bound(
+        a2a_v1.user_message(parts, message_id=message_id_for(command["release_id"])))
+
+
+def delivered_bytes(part: dict) -> bytes:
+    """The exact bytes a receiver derives from one delivered Part."""
+    kind = a2a_v1.part_content(part)
+    if kind == "text":
+        return a2a_v1.part_text(part).encode("utf-8")
+    if kind == "raw":
+        return base64.b64decode(part["raw"], validate=True)
+    if kind == "data":
+        return json.dumps(a2a_v1.part_data(part), sort_keys=True, separators=(",", ":"),
+                          ensure_ascii=False).encode("utf-8")
+    raise ValueError("a URL Part delivers no bytes")
 
 
 def _rpc(url: str, method: str, params: dict) -> dict:
@@ -107,20 +140,26 @@ def status_text(task: dict) -> str | None:
     return " ".join(texts) or None
 
 
-def receipt_from_task(task: dict, command: dict, *, identity: str, task_id: str,
-                      message_id: str) -> dict:
-    """Validate the completed Task's receipt artifact against the exact delivered bytes."""
+def receipt_from_task(task: dict, command: dict, *, delivered: dict, identity: str,
+                      task_id: str, message_id: str) -> dict:
+    """Validate the receipt against the delivered Part and the accepted digest.
+
+    The receipt's sha256 must equal both the digest of the bytes the receiver
+    derives from ``delivered`` (the one Part sent) and the accepted
+    ``artifact_sha256`` (``command["sha256"]``); its byte length and media
+    type must be those of the delivered Part.
+    """
     artifacts = task.get("artifacts") or []
     if len(artifacts) != 1 or len(artifacts[0].get("parts") or []) != 1:
         raise ValueError("release Task must carry exactly one receipt artifact")
     receipt = a2a_v1.part_data(artifacts[0]["parts"][0])
     if not isinstance(receipt, dict) or set(receipt) != RECEIPT_FIELDS:
         raise ValueError("release receipt fields differ from the pinned contract")
-    delivered = command["content"].encode("utf-8")
-    if (receipt["sha256"] != hashlib.sha256(delivered).hexdigest()
+    content = delivered_bytes(delivered)
+    if (receipt["sha256"] != hashlib.sha256(content).hexdigest()
             or receipt["sha256"] != command["sha256"]
-            or receipt["byte_length"] != len(delivered)
-            or receipt["media_type"] != MEDIA_TYPE
+            or receipt["byte_length"] != len(content)
+            or receipt["media_type"] != delivered.get("mediaType")
             or receipt["outcome"] != "delivered"):
         raise ValueError("release receipt does not cover the exact accepted bytes")
     if (not isinstance(receipt["receipt_id"], str) or not receipt["receipt_id"]
@@ -158,7 +197,12 @@ def deliver(input: dict, *, journal_path: Path, snapshot: Path, log=lambda *a, *
         raise ValueError("release node requires a card-pinned strict-artifacts A2A agent")
     if hashlib.sha256(command["content"].encode("utf-8")).hexdigest() != command["sha256"]:
         raise ValueError("release content differs from its accepted digest")
-    message = release_message(command)
+    parts = release_parts(input)
+    if len(parts) != 1:
+        raise ValueError("release delivers the accepted artifact as exactly one Part")
+    if hashlib.sha256(delivered_bytes(parts[0])).hexdigest() != command["sha256"]:
+        raise ValueError("release Part differs from the accepted artifact digest")
+    message = release_message(command, parts)
     receiver = _RECEIVER[contract["reconcile"]]
     expected = submitted(command["release_id"], command["run_id"], command["definition_digest"],
         receiver, effect_kind=EffectKind.RELEASE, revision=command["revision"],
@@ -253,7 +297,8 @@ def _drive(journal, record, created, message, command, contract, binding, snapsh
             try:
                 items = handoff.produced_items(task, binding_output(binding),
                                                key=handoff.instance_key(), ready_at=produced_at)
-                receipt = receipt_from_task(task, command, identity=identity,
+                receipt = receipt_from_task(task, command, delivered=message["parts"][0],
+                                            identity=identity,
                                             task_id=record.task_id,
                                             message_id=record.message_id)
             except handoff.OutputMissing:

@@ -91,23 +91,24 @@ def packet_evidence_join(results: dict[str, dict], packet: dict) -> dict:
             "branch_artifact_sha256": {name: results[name]["sha256"] for name in sorted(results)}}
 
 
-def synthesis_assignment(revision: str, question: str, packet: dict, evidence: dict,
-                         *, prior: dict | None = None, quality_findings: list | None = None) -> dict:
+def synthesis_assignment(revision: str, question: str, packet: dict,
+                         *, quality_findings: list | None = None) -> dict:
+    """The synthesis brief: factory-own fields only.
+
+    Research results and, on repair, the rejected draft are consumed hand-off
+    items that travel as their own Parts after the brief (decision 9); the
+    brief never embeds them.
+    """
     if revision not in {"r1", "r2", "r3"} or not _nonempty(question):
         raise ValueError("invalid synthesis revision or question")
-    _keys(evidence, {"kind", "packet_digest", "findings", "risks", "branch_artifact_sha256"})
-    if evidence["kind"] != "packet_evidence_join@1" or evidence["packet_digest"] != packet_digest(packet):
-        raise ValueError("synthesis evidence mismatch")
     mode = "draft" if revision == "r1" else "repair"
-    if mode == "draft" and (prior is not None or quality_findings is not None):
+    if mode == "draft" and quality_findings is not None:
         raise ValueError("draft cannot carry prior verdict")
-    if mode == "repair":
-        _keys(prior, {"revision", "sha256", "content"})
-        if prior["revision"] != f"r{int(revision[1]) - 1}" or not isinstance(quality_findings, list):
-            raise ValueError("repair needs rejected prior and findings")
+    if mode == "repair" and not isinstance(quality_findings, list):
+        raise ValueError("repair needs Quality findings")
     return {"kind": "synthesis_assignment@1", "mode": mode, "revision": revision,
             "question": question, "packet": validate_packet(packet), "packet_digest": packet_digest(packet),
-            "evidence": evidence, "prior": prior, "quality_findings": quality_findings}
+            "quality_findings": quality_findings}
 
 
 def validate_report(value: object, revision: str, question: str, packet: dict) -> dict:
@@ -130,23 +131,31 @@ def validate_report(value: object, revision: str, question: str, packet: dict) -
 
 
 def quality_review_request(candidate: dict, question: str, packet: dict, policy_digest: str) -> dict:
+    """The Quality brief. The candidate draft travels as its own Part; the
+    factory validates it here but never embeds it in the brief."""
     if not isinstance(candidate, dict) or not {"revision", "sha256", "author", "content"} <= set(candidate):
         raise ValueError("invalid candidate")
-    candidate = {key: candidate[key] for key in ("revision", "sha256", "author", "content")}
     if not _nonempty(policy_digest) or candidate["sha256"] != hashlib.sha256(candidate["content"].encode()).hexdigest():
         raise ValueError("invalid candidate or policy digest")
     validate_report(json.loads(candidate["content"]), candidate["revision"], question, packet)
     return {"kind": "quality_review_request@1", "revision": candidate["revision"],
             "question": question, "packet": validate_packet(packet), "packet_digest": packet_digest(packet),
-            "candidate": candidate, "policy_digest": policy_digest}
+            "policy_digest": policy_digest}
 
 
 def validate_verdict(value: object, candidate: dict, reviewer: str, *,
                      packet: dict | None = None, rubric_digest: str | None = None) -> dict:
-    value = _keys(value, {"kind", "candidate", "reviewer", "accepted", "decided_by", "findings", "rubric", "rubric_digest"})
-    _keys(value["candidate"], {"revision", "sha256", "author"})
-    if (value["kind"] != "quality_verdict@1" or value["candidate"] != {k: candidate[k] for k in ("revision", "sha256", "author")}
-            or value["reviewer"] != reviewer or reviewer == candidate["author"]
+    """Validate a verdict against the factory's accepted candidate.
+
+    The verdict names its candidate by ``{revision, sha256}`` as the agent
+    computed them over the Part it received. Author/reviewer independence is
+    the factory's policy over its own bindings (``reviewer`` is the pinned
+    Quality identity, ``candidate["author"]`` the pinned synthesis identity).
+    """
+    value = _keys(value, {"kind", "candidate", "accepted", "decided_by", "findings", "rubric", "rubric_digest"})
+    _keys(value["candidate"], {"revision", "sha256"})
+    if (value["kind"] != "quality_verdict@1" or value["candidate"] != {k: candidate[k] for k in ("revision", "sha256")}
+            or not _nonempty(reviewer) or reviewer == candidate.get("author")
             or type(value["accepted"]) is not bool or value["decided_by"] not in {"model", "deterministic-precheck"}
             or value["rubric"] != "report-quality@1" or not _nonempty(value["rubric_digest"])
             or (rubric_digest is not None and value["rubric_digest"] != rubric_digest)

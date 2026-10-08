@@ -43,7 +43,11 @@ def quality_action_id(run_id: str, assignment_id: str, attempt: int,
 def decide_quality_async(*, binding: Mapping[str, Any], command: Mapping[str, Any],
                          candidate: Mapping[str, Any], receipt: Mapping[str, Any],
                          verdict: Mapping[str, Any], expected_task_id: str) -> QualityDecision:
-    """Bind the async Task journal receipt and decoded verdict to one candidate."""
+    """Bind the async Task journal receipt and decoded verdict to one candidate.
+
+    Author/reviewer independence is decided from the factory's own bindings:
+    the pinned Quality identity against the candidate's pinned author.
+    """
     problems = []
     if binding.get("role") != "quality" or binding.get("approved") is not True:
         problems.append("pinned-quality-binding")
@@ -57,11 +61,14 @@ def decide_quality_async(*, binding: Mapping[str, Any], command: Mapping[str, An
             or receipt.get("harness_identity") != identity
             or receipt.get("harness_role") != "quality"):
         problems.append("task-journal-binding")
+    # The normalized record is the factory's own: its author is the pinned
+    # Quality identity and its revision the one the factory assigned. The
+    # verdict names the candidate by the revision and sha256 the agent read
+    # from the Part it received; they must be the accepted candidate's.
     wire = receipt.get("artifact") or {}
     if (wire.get("author") != identity or wire.get("revision") != candidate.get("revision")
-            or verdict.get("reviewer") != identity
             or verdict.get("candidate") != {key: candidate.get(key) for key in
-                                              ("revision", "sha256", "author")}):
+                                              ("revision", "sha256")}):
         problems.append("verdict-candidate-binding")
     if problems:
         return QualityDecision(QualityKind.INCONSISTENT, tuple(problems),

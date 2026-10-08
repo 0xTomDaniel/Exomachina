@@ -3,9 +3,13 @@
 The agent speaks A2A v1 only and cannot tell what kind of client calls it. It
 exposes exactly the JSON-RPC endpoint and the well-known Agent Card:
 
-- A request is an ordinary Message whose single text Part is the brief (a JSON
-  object with a ``revision``). Request metadata other than the optional budget
-  extension entry is ignored and never stored or echoed.
+- A request is an ordinary Message whose first text Part is the brief (a JSON
+  object with a ``revision``); any further Parts are the inputs this agent
+  works from (research results, a draft), each identified by its JSON
+  ``kind``. Request metadata other than the optional budget extension entry is
+  ignored and never stored or echoed.
+- The result is one artifact whose single text Part is the work product
+  itself (canonical JSON); there is no envelope.
 - A resend of the same ``messageId`` returns the original Task; a reused
   ``messageId`` with a different payload is rejected.
 - With the budget extension activated, the terminal Task reports ``incurred``
@@ -30,16 +34,16 @@ from uuid import uuid4
 import uvicorn
 from a2a.server.agent_execution import AgentExecutor
 from a2a.types import (AgentCapabilities, AgentCard, AgentExtension, AgentSkill,
-                       Artifact, InvalidParamsError, Message, Role, Task, TaskStatus)
+                       Artifact, InvalidParamsError, Message, Part, Role, Task, TaskStatus)
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from google.protobuf.json_format import MessageToDict
+from google.protobuf.json_format import MessageToDict, ParseDict
 from strands import Agent
 from strands.models import Model
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from model_broker import DEFAULT_MODEL_ID, ModelBroker, PiBrokerModel  # noqa: E402
-from agent_roles import ROLES  # noqa: E402
+from agent_roles import ROLES, working_view  # noqa: E402
 import a2a_extensions as ext  # noqa: E402
 import a2a_v1  # noqa: E402
 from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E402
@@ -82,15 +86,16 @@ class Rejected(ValueError):
 
 
 def request_from_params(params) -> dict:
-    """An ordinary A2A v1 Message: one text Part holding the JSON brief."""
+    """An ordinary A2A v1 Message: the JSON brief Part, then input Parts."""
     message = params.message
     if not message.message_id:
         raise Rejected("messageId is required")
     if message.task_id:
         raise Rejected("this agent does not continue an existing Task")
     parts = message.parts
-    if len(parts) != 1 or part_content(parts[0]) != "text" or not parts[0].text.strip():
-        raise Rejected("exactly one non-empty text Part (the brief) is required")
+    if not parts or part_content(parts[0]) != "text" or not parts[0].text.strip():
+        raise Rejected("the first Part must be the non-empty text brief")
+    inputs = [a2a_v1.normalize_numbers(MessageToDict(part)) for part in parts[1:]]
     text = parts[0].text
     try:
         brief = json.loads(text)
@@ -109,7 +114,7 @@ def request_from_params(params) -> dict:
     except ext.BudgetError as error:
         raise Rejected(str(error)) from error
     return {"message_id": message.message_id, "context_id": message.context_id or None,
-            "brief_text": text, "brief": brief, "budget": budget,
+            "brief_text": text, "brief": brief, "inputs": inputs, "budget": budget,
             "blocking": not (params.HasField("configuration")
                              and params.configuration.return_immediately is True)}
 
@@ -155,7 +160,8 @@ class Ledger:
         db.execute(f"""CREATE TABLE IF NOT EXISTS {name} (task_id TEXT PRIMARY KEY,
             context_id TEXT NOT NULL, message_id TEXT NOT NULL UNIQUE,
             fingerprint TEXT NOT NULL, state TEXT NOT NULL, brief TEXT NOT NULL,
-            budget TEXT, artifact TEXT, created_at REAL NOT NULL, updated_at REAL NOT NULL)""")
+            budget TEXT, artifact TEXT, created_at REAL NOT NULL, updated_at REAL NOT NULL,
+            inputs TEXT)""")
 
     def _migrate(self, db) -> None:
         """Forward migration to schema 2: only the agent's own Task identities.
@@ -188,6 +194,8 @@ class Ledger:
             for table in ("stimulus", "stimulus_log", "model_usage_measurements"):
                 db.execute(f"DROP TABLE IF EXISTS {table}")
             db.execute("COMMIT")
+        if "inputs" not in {row["name"] for row in db.execute("PRAGMA table_info(tasks)")}:
+            db.execute("ALTER TABLE tasks ADD COLUMN inputs TEXT")
         call_columns = {row["name"] for row in db.execute("PRAGMA table_info(model_calls)")}
         for field in ext.TOKEN_FIELDS:
             if f"{field}_tokens" not in call_columns:
@@ -206,7 +214,8 @@ class Ledger:
 
     def accept(self, request: dict, task_id: str) -> tuple[str, bool]:
         fingerprint = digest({"brief": request["brief_text"], "budget": request["budget"],
-                              "context_id": request["context_id"]})
+                              "context_id": request["context_id"],
+                              **({"inputs": request["inputs"]} if request["inputs"] else {})})
         with self._transaction() as db:
             row = db.execute("SELECT task_id, fingerprint FROM tasks WHERE message_id=?",
                              (request["message_id"],)).fetchone()
@@ -217,11 +226,12 @@ class Ledger:
             context_id = request["context_id"] or str(uuid4())
             now = time.time()
             db.execute("""INSERT INTO tasks (task_id,context_id,message_id,fingerprint,state,
-                brief,budget,artifact,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                brief,budget,artifact,created_at,updated_at,inputs)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                        (task_id, context_id, request["message_id"], fingerprint, "working",
                         request["brief_text"],
                         canonical(request["budget"]) if request["budget"] is not None else None,
-                        None, now, now))
+                        None, now, now, canonical(request["inputs"])))
             if self.test_controls:
                 # An armed test stimulus binds to the next context this agent
                 # has never seen. Replays never reach this branch.
@@ -263,15 +273,18 @@ class Ledger:
         status_message = None
         if row["state"] == "failed":
             status_message = agent_message([text_part(FAILURE_TEXT)])
+        inputs = json.loads(row["inputs"]) if row["inputs"] else []
         request = Message(message_id=row["message_id"], role=Role.ROLE_USER,
                           task_id=task_id, context_id=row["context_id"],
-                          parts=[text_part(row["brief"], a2a_v1.JSON_MEDIA_TYPE)])
+                          parts=[text_part(row["brief"], a2a_v1.JSON_MEDIA_TYPE),
+                                 *(ParseDict(part, Part()) for part in inputs)])
         # The ledger keeps version-neutral state names; map them at the boundary.
         return Task(id=task_id, context_id=row["context_id"],
                     status=TaskStatus(state=task_state(row["state"]), message=status_message),
                     metadata=metadata, history=[request],
                     artifacts=[Artifact(artifact_id=artifact["sha256"],
-                                        parts=[data_part(artifact)])]
+                                        parts=[text_part(artifact["content"],
+                                                         a2a_v1.JSON_MEDIA_TYPE)])]
                     if artifact else None)
 
     def finish(self, task_id: str, artifact: dict | None, stimulus: dict | None = None):
@@ -573,7 +586,9 @@ class Service:
         if row is None or row["state"] != "working":
             return
         try:
-            brief = json.loads(row["brief"])
+            # The working view joins the brief with the input Parts received.
+            brief = working_view(json.loads(row["brief"]),
+                                 json.loads(row["inputs"]) if row["inputs"] else [])
             budget = json.loads(row["budget"]) if row["budget"] else None
             recovered = (self.ledger.logged_stimulus(task_id, brief["revision"])
                          if self.test_controls else None)
@@ -621,8 +636,7 @@ class Service:
                                                                    brief["revision"], content)
             rendered = canonical(content)
             sha256 = hashlib.sha256(rendered.encode()).hexdigest()
-            artifact = {"revision": brief["revision"], "sha256": sha256,
-                        "author": self.ledger.identity, "content": rendered}
+            artifact = {"revision": brief["revision"], "sha256": sha256, "content": rendered}
             self.ledger.finish(task_id, artifact, stimulus)
         except asyncio.CancelledError:
             # A stopped process leaves the committed Task working for recovery.

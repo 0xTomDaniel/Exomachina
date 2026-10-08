@@ -55,14 +55,15 @@ class StubHandler(BaseHTTPRequestHandler):
             message = rpc["params"]["message"]
             part = message["parts"][0]
             assert "kind" not in part and message["role"] == "ROLE_USER"
-            assert len(message["parts"]) == 1 and isinstance(part["text"], str)
+            assert isinstance(part["text"], str)
             message_id = message["messageId"]
             if message_id not in self.server.tasks:
                 self.server.tasks[message_id] = {"id": "remote-task-1", "brief": part["text"],
+                                                 "parts": message["parts"],
                                                  "context_id": message["contextId"],
                                                  "accepted": time.monotonic()}
                 self.server.effects += 1
-            elif part["text"] != self.server.tasks[message_id]["brief"]:
+            elif message["parts"] != self.server.tasks[message_id]["parts"]:
                 self.reply({"jsonrpc": "2.0", "id": rpc["id"], "error": {"code": -32000}})
                 return
             if self.server.drop_once:
@@ -114,11 +115,11 @@ class StubServer(ThreadingHTTPServer):
                            else "TASK_STATE_WORKING"}}
         if completed:
             content = "fixture-result:" + value["brief"]
-            artifact = {"revision": "r3" if self.mismatch else "r2",
-                        "sha256": hashlib.sha256(content.encode()).hexdigest(),
-                        "author": self.identity, "content": content}
-            task["artifacts"] = [{"artifactId": artifact["sha256"],
-                                  "parts": [{"data": artifact}]}]
+            # The work product itself; a mismatch serves it as a data Part.
+            part = ({"data": {"content": content}} if self.mismatch
+                    else {"text": content, "mediaType": "text/plain"})
+            task["artifacts"] = [{"artifactId": hashlib.sha256(content.encode()).hexdigest(),
+                                  "parts": [part]}]
         return task
 
 
@@ -158,6 +159,8 @@ class AsyncClientTests(unittest.TestCase):
                         "definition_digest": "d" * 64, "assignment_id": "assignment-1",
                         "attempt_id": "attempt-1", "factory_id": "factory-1",
                         "brief": json.dumps({"kind": "fixture", "revision": "r2"})}
+        self.command["parts"] = [{"text": self.command["brief"],
+                                  "mediaType": "application/json"}]
 
     def invoke(self):
         with patch.dict("os.environ", {"EXO_OUTCOME_DB": str(self.home / "runner" / "outcomes.sqlite3")}):
@@ -177,7 +180,13 @@ class AsyncClientTests(unittest.TestCase):
         message_id = next(iter(self.server.tasks))
         self.assertEqual(record["message_id"], message_id)
         self.assertEqual(record["context_id"], self.server.tasks[message_id]["context_id"])
-        self.assertEqual(result["artifact"]["revision"], "r2")
+        # The factory's normalized record: its revision, its pinned author and
+        # the digest it computed over the received text Part.
+        content = "fixture-result:" + self.command["brief"]
+        self.assertEqual(result["artifact"], {
+            "revision": "r2", "author": self.server.identity, "content": content,
+            "sha256": __import__("hashlib").sha256(content.encode()).hexdigest()})
+        self.assertEqual(result["item_parts"], [[{"text": content, "mediaType": "text/plain"}]])
         self.assertEqual((result["action_id"], result["run_id"], result["context_id"]),
                          ("run-1:counter_beta", "run-1", record["context_id"]))
         # Every v1 request carries the version header and activates only the
@@ -226,6 +235,17 @@ class AsyncClientTests(unittest.TestCase):
         sends = [json.loads(body)["params"]["message"] for body in self.server.bodies
                  if json.loads(body)["method"] == "SendMessage"]
         self.assertEqual(sends[0], sends[1])
+
+    def test_composed_upstream_parts_travel_verbatim_after_the_brief(self):
+        upstream = [{"raw": "aGVsbG8=", "mediaType": "application/octet-stream",
+                     "filename": "a.bin"}, {"data": {"kind": "x", "n": 1}}]
+        self.command["parts"] = self.command["parts"] + upstream
+        self.invoke()
+        sends = [json.loads(body)["params"]["message"] for body in self.server.bodies
+                 if json.loads(body)["method"] == "SendMessage"]
+        self.assertEqual(sends[0]["parts"][1:], upstream)
+        self.assertEqual(self.journal()["payload_sha256"], adapter.a2a.payload_sha256(
+            {"role": "ROLE_USER", "parts": self.command["parts"]}))
 
     def test_mismatched_artifact_is_incident(self):
         self.server.mismatch = True

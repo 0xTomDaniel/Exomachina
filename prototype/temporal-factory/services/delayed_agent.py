@@ -1,13 +1,16 @@
 """Independent, durable A2A counter-evidence fixture with delayed completion.
 
-It is an ordinary A2A agent: it accepts a plain Message with one text Part (the
-brief), returns the original Task when a ``messageId`` is resent, and serves
+It is an ordinary A2A agent: it accepts a plain Message whose first text Part
+is the brief (any further input Parts are bound into the message fingerprint),
+returns its result as one artifact whose single text Part is the work product,
+returns the original Task when a ``messageId`` is resent, and serves
 only JSON-RPC and its Agent Card. It never sees a caller's run, action or
 definition identifiers.
 
 Test faults are process options of this fixture, never wire controls:
 ``--drop-first-response`` loses the first committed response by exiting, and
-``--mismatch-artifact`` serves artifacts whose revision differs from the brief.
+``--mismatch-artifact`` serves its result as a data Part instead of the text
+Part a consumer expects.
 """
 from __future__ import annotations
 
@@ -31,9 +34,11 @@ from fastapi.responses import JSONResponse
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import a2a_extensions as ext  # noqa: E402
+import a2a_v1  # noqa: E402
+from google.protobuf.json_format import MessageToDict  # noqa: E402
 from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E402
                            bearer_security, build_app, data_part, interfaces, part_content,
-                           task_state)
+                           task_state, text_part)
 
 
 TOKEN = "Bearer fixture-token"
@@ -57,9 +62,10 @@ def request_from_params(params) -> dict:
     if not message.message_id:
         raise Rejected("messageId is required")
     parts = message.parts
-    if len(parts) != 1 or part_content(parts[0]) != "text" or not parts[0].text:
-        raise Rejected("exactly one text Part (the brief) is required")
+    if not parts or part_content(parts[0]) != "text" or not parts[0].text:
+        raise Rejected("the first Part must be the text brief")
     return {"message_id": message.message_id, "brief": parts[0].text,
+            "inputs": [a2a_v1.normalize_numbers(MessageToDict(part)) for part in parts[1:]],
             "context_id": message.context_id or ""}
 
 
@@ -125,7 +131,8 @@ class Ledger:
 
     def accept(self, request: dict) -> tuple[str, bool, bool]:
         """Return (task_id, created, drop_response)."""
-        fingerprint = digest({"brief": request["brief"], "context_id": request["context_id"]})
+        fingerprint = digest({"brief": request["brief"], "context_id": request["context_id"],
+                              **({"inputs": request["inputs"]} if request.get("inputs") else {})})
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT * FROM messages WHERE message_id=?",
@@ -157,12 +164,11 @@ class Ledger:
                         status=TaskStatus(state=task_state("working")), metadata=metadata)
         content = "fixture-result:" + row["brief"]
         sha256 = hashlib.sha256(content.encode("utf-8")).hexdigest()
-        artifact = {"revision": "r2-mismatch" if self.mismatch_artifact else "r2",
-                    "sha256": sha256, "author": self.identity, "content": content}
+        part = (data_part({"content": content}) if self.mismatch_artifact
+                else text_part(content, "text/plain"))
         return Task(id=task_id, context_id=row["context_id"],
                     status=TaskStatus(state=task_state("completed")), metadata=metadata,
-                    artifacts=[Artifact(artifact_id=sha256,
-                                        parts=[data_part(artifact)])])
+                    artifacts=[Artifact(artifact_id=sha256, parts=[part])])
 
 
 class LedgerTaskStore(ProjectionTaskStore):
