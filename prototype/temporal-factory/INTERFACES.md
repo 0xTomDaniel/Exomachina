@@ -683,7 +683,10 @@ operator approval.
   built from the committed `tools/spikes/2026-10-07/a2a-v1/pyproject.toml` and
   `uv.lock` (`UV_PROJECT_ENVIRONMENT=<venv> uv sync --frozen --python 3.12.9`).
   Pins: Python 3.12.9, `a2a-sdk[fastapi]` 1.2.2, temporalio 1.33.0,
-  strands-agents 1.57.0, fastapi 0.141.1, uvicorn 0.53.0, httpx 0.28.1.
+  strands-agents 1.57.0, fastapi 0.141.1, uvicorn 0.53.0, httpx 0.28.1,
+  and (8 Oct 2026) websockets 17.1, wsproto 1.2.0, h11 0.16.0 for the
+  harness `/observations` WebSocket, replacing a former `/tmp` `PYTHONPATH`
+  overlay.
 - strands-agents: every release through 1.58.1 pins `a2a-sdk<0.4.0` in its
   `a2a` extra. The prototype never uses Strands' A2A layer, so strands-agents
   1.57.0 is installed without that extra.
