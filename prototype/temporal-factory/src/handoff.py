@@ -1,0 +1,217 @@
+"""Content-free hand-off records at the factory's own A2A boundary.
+
+A2A v1 mediation decision 4 (`docs/a2a-v1-mediation-decision-2026-10-07.md`).
+The factory, never an agent, describes what travelled between stations: one
+item per completed-Task artifact (or one `message` item), each with its part
+kinds, media type, byte length, ready time and a keyed digest. Item digests are
+HMAC-SHA256 under a per-factory-instance key kept in the instance home (mode
+0600). Only Activity code calls this module: the key never enters Workflow
+inputs or history, logs, Observation, evidence or git. Records hold no text,
+data, bytes, artifact names, descriptions, artifactIds, filenames, URLs or
+metadata.
+"""
+from __future__ import annotations
+
+import base64
+import binascii
+import hashlib
+import hmac
+import json
+import os
+import re
+import secrets
+from datetime import datetime, timezone
+from pathlib import Path
+
+import a2a_v1
+
+KEY_ENV = "EXO_HANDOFF_KEY_FILE"
+KEY_FILE_NAME = "handoff-digest.key"
+KEY_BYTES = 32
+OUTPUT_MODES = ("artifacts", "message", "none")
+MAX_ITEMS = 256
+_MEDIA = re.compile(r"^[a-z0-9.+-]+/[a-z0-9.+-]+$")
+
+
+class OutputMissing(ValueError):
+    """A completed Task did not satisfy its node's output contract."""
+
+    reason = "output.missing"
+
+
+def now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def key_path() -> Path | None:
+    """The configured instance key path, or None when records are disabled."""
+    value = os.environ.get(KEY_ENV)
+    return Path(value) if value else None
+
+
+def instance_key(path: Path | None = None) -> bytes | None:
+    """Load the instance digest key, creating it (0600) on first use."""
+    path = path if path is not None else key_path()
+    if path is None:
+        return None
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError:
+        pass
+    else:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(secrets.token_bytes(KEY_BYTES))
+            stream.flush()
+            os.fsync(stream.fileno())
+    if path.stat().st_mode & 0o077:
+        raise PermissionError("hand-off digest key must be private to its owner")
+    key = path.read_bytes()
+    if len(key) != KEY_BYTES:
+        raise ValueError("hand-off digest key is malformed")
+    return key
+
+
+def _part_value(part: dict) -> tuple[str, object, int | None]:
+    """(kind, canonical value, byte length) of one v1 Part; content stays local."""
+    kind = a2a_v1.part_content(part)
+    value = part[kind]
+    if kind == "text":
+        if not isinstance(value, str):
+            raise ValueError("text Part must be a string")
+        return kind, value, len(value.encode("utf-8"))
+    if kind == "raw":
+        if not isinstance(value, str):
+            raise ValueError("raw Part must be base64 text")
+        try:
+            size = len(base64.b64decode(value, validate=True))
+        except (binascii.Error, ValueError) as error:
+            raise ValueError("raw Part is not base64") from error
+        return kind, value, size
+    if kind == "url":
+        if not isinstance(value, str):
+            raise ValueError("url Part must be a string")
+        return kind, value, None
+    data = a2a_v1.normalize_numbers(value)
+    encoded = json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return kind, data, len(encoded.encode("utf-8"))
+
+
+def _media_type(parts: list[dict]) -> str | None:
+    """A2A `mediaType` is optional; a missing or non-simple type records null."""
+    declared = parts[0].get("mediaType") if parts else None
+    if not isinstance(declared, str):
+        return None
+    simple = declared.split(";", 1)[0].strip().lower()
+    return simple if len(simple) <= 127 and _MEDIA.fullmatch(simple) else None
+
+
+def describe_item(parts: list, *, index: int, source: str, ready_at: str,
+                  key: bytes) -> dict:
+    """One content-free hand-off item for an artifact's (or message's) parts."""
+    if not isinstance(parts, list) or not parts or len(parts) > 64:
+        raise ValueError("hand-off item requires 1..64 Parts")
+    values = [_part_value(part) for part in parts]
+    kinds = list(dict.fromkeys(kind for kind, _, _ in values))
+    sizes = [size for _, _, size in values]
+    payload = json.dumps([[kind, value] for kind, value, _ in values], sort_keys=True,
+                         separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return {"item_index": index, "source": source, "part_kinds": kinds,
+            "media_type": _media_type(parts),
+            "byte_length": None if None in sizes else sum(sizes),
+            "ready_at": ready_at,
+            "digest": hmac.new(key, payload, hashlib.sha256).hexdigest()}
+
+
+def enforce_output(task: dict, mode: str) -> list[tuple[str, list]]:
+    """Apply a node's output contract to a completed v1 Task.
+
+    Returns the (source, parts) of each item. `artifacts` requires at least one
+    artifact and never yields an empty hand-off; `message` yields one item from
+    the Task's status message; `none` yields nothing.
+    """
+    if mode not in OUTPUT_MODES:
+        raise ValueError("unknown node output mode")
+    if mode == "none":
+        return []
+    if mode == "message":
+        message = (task.get("status") or {}).get("message") if isinstance(task, dict) else None
+        parts = a2a_v1.message_parts(message) if isinstance(message, dict) else []
+        if not parts:
+            raise OutputMissing("message output node completed without a message")
+        return [("message", parts)]
+    artifacts = task.get("artifacts") if isinstance(task, dict) else None
+    if not isinstance(artifacts, list) or not artifacts:
+        raise OutputMissing("artifacts output node completed without an artifact")
+    if len(artifacts) > MAX_ITEMS:
+        raise ValueError("too many artifacts for one hand-off")
+    result = []
+    for artifact in artifacts:
+        parts = artifact.get("parts") if isinstance(artifact, dict) else None
+        if not isinstance(parts, list) or not parts:
+            raise OutputMissing("artifact completed without a Part")
+        result.append(("artifact", parts))
+    return result
+
+
+def produced_items(task: dict, mode: str, *, key: bytes | None,
+                   ready_at: str | None = None,
+                   streamed: dict[int, str] | None = None) -> list[dict] | None:
+    """Enforce the output contract, then describe its items (None without a key)."""
+    sources = enforce_output(task, mode)
+    if key is None or not sources:
+        return None
+    ready_at = ready_at or now_iso()
+    streamed = streamed or {}
+    return [describe_item(parts, index=index, source=source,
+                          ready_at=streamed.get(index, ready_at), key=key)
+            for index, (source, parts) in enumerate(sources)]
+
+
+def consumed_inputs(upstream: list) -> list[dict]:
+    """Name each upstream produced hand-off once with all of its item digests."""
+    inputs: dict[str, list[str]] = {}
+    for record in upstream:
+        if not isinstance(record, dict) or not isinstance(record.get("handoff_id"), str):
+            continue
+        digests = [item["digest"] for item in record.get("items") or []
+                   if isinstance(item, dict) and isinstance(item.get("digest"), str)]
+        if digests:
+            inputs[record["handoff_id"]] = digests
+    return [{"handoff_id": handoff_id, "item_digests": digests}
+            for handoff_id, digests in inputs.items()]
+
+
+def stream_ready_items(events, *, clock=now_iso) -> tuple[dict[int, str], list[dict]]:
+    """Track artifact chunks in a v1 `SendStreamingMessage` response stream.
+
+    Each `artifactUpdate` with `lastChunk: true` marks that artifact ready at
+    the time the factory received it. Returns (item_index -> ready_at, ready
+    records in completion order); item indexes follow first appearance, the
+    order the completed Task lists its artifacts.
+    """
+    order: dict[str, int] = {}
+    kinds_seen: dict[int, list[str]] = {}
+    media: dict[int, str | None] = {}
+    ready: dict[int, str] = {}
+    records: list[dict] = []
+    for event in events:
+        update = event.get("artifactUpdate") if isinstance(event, dict) else None
+        if not isinstance(update, dict) or not isinstance(update.get("artifact"), dict):
+            continue
+        artifact = update["artifact"]
+        identity = artifact.get("artifactId")
+        if not isinstance(identity, str):
+            continue
+        index = order.setdefault(identity, len(order))
+        parts = artifact.get("parts") or []
+        kinds = kinds_seen.setdefault(index, [])
+        kinds.extend(kind for kind in (a2a_v1.part_content(part) for part in parts)
+                     if kind not in kinds)
+        if index not in media and parts:
+            media[index] = _media_type(parts)
+        if update.get("lastChunk") is True and index not in ready and kinds:
+            ready[index] = clock()
+            records.append({"item_index": index, "part_kinds": list(kinds),
+                            "media_type": media.get(index), "ready_at": ready[index]})
+    return ready, records

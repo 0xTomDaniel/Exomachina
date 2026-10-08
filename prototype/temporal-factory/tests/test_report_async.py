@@ -126,7 +126,8 @@ class Agent(ThreadingHTTPServer):
             artifact = {"revision": brief["revision"], "sha256": sha, "author": self.identity,
                 "content": content, **{key: command[key] for key in
                 ("action_id", "run_id", "definition_digest")}}
-            task["artifacts"] = [{"artifactId": sha, "parts": [{"data": artifact}]}]
+            if self.tamper != "no_artifacts":
+                task["artifacts"] = [{"artifactId": sha, "parts": [{"data": artifact}]}]
         return task
 
 
@@ -233,6 +234,93 @@ class ReportAsyncTests(unittest.TestCase):
                     for agent in self.agents.values()}}))
                 for agent in self.agents.values():
                     agent.tasks = {}
+
+    # A2A v1 mediation decisions 3 and 4: the on-complete hook enforces the
+    # node's output contract and records content-free produced hand-offs.
+    def call_keyed(self, fn, value, key_file):
+        with patch.dict("os.environ", {"EXO_OUTCOME_DB": str(self.home / "runner" / "outcomes.sqlite3"),
+                                       "EXO_HANDOFF_KEY_FILE": str(key_file)}):
+            return asyncio.run(fn(value))
+
+    def test_produced_handoffs_are_keyed_content_free_and_chain_to_the_report(self):
+        import hmac
+        key_file = self.home / "handoff-digest.key"
+        results = {}
+        for name, capability in (("research_findings", "packet_findings@1"),
+                                 ("research_risks", "packet_risks@1")):
+            results[name] = self.call_keyed(adapter.assign, {**self.args(name), "instance": name,
+                "capability": capability, "question": self.question, "packet": self.packet,
+                "handoff_id": f"gather.{name}", "handoff_revision": 1}, key_file)
+        self.assertEqual(key_file.stat().st_mode & 0o777, 0o600)
+        key = key_file.read_bytes()
+        self.assertEqual(len(key), 32)
+        evidence = self.call_keyed(adapter.typed_join, {"receipts": results, "packet": self.packet}, key_file)
+        candidate = self.call_keyed(adapter.synthesize, {**self.args("synthesizer"), "revision": "r1",
+            "question": self.question, "packet": self.packet, "evidence": evidence,
+            "handoff_id": "draft", "handoff_revision": 1}, key_file)
+        records = [results["research_findings"]["handoff"], results["research_risks"]["handoff"],
+                   candidate["handoff"]]
+        for record, (handoff_id, receipt) in zip(records, (
+                ("gather.research_findings", results["research_findings"]),
+                ("gather.research_risks", results["research_risks"]), ("draft", candidate))):
+            self.assertEqual(record["handoff_id"], handoff_id)
+            self.assertEqual(record["handoff_revision"], 1)
+            self.assertEqual(len(record["items"]), 1)
+            item = record["items"][0]
+            artifact = receipt["artifact"] if "artifact" in receipt else {
+                k: v for k, v in receipt.items() if k != "handoff"}
+            data = json.dumps(artifact, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+            self.assertEqual((item["source"], item["part_kinds"], item["media_type"]),
+                             ("artifact", ["data"], None))  # this agent declares no mediaType
+            self.assertEqual(item["byte_length"], len(data.encode()))
+            payload = json.dumps([["data", artifact]], sort_keys=True, separators=(",", ":"),
+                                 ensure_ascii=False).encode()
+            self.assertEqual(item["digest"], hmac.new(key, payload, hashlib.sha256).hexdigest())
+            self.assertNotEqual(item["digest"], hashlib.sha256(payload).hexdigest())
+            self.assertEqual(item["ready_at"], record["produced_at"])
+            encoded = json.dumps(record)
+            self.assertNotIn(key.hex(), encoded)
+            for secret in (artifact["content"], artifact["sha256"] if handoff_id != "draft" else "~",
+                           "artifactId", "content", "metadata", "name", "filename", "url\"", "text\""):
+                self.assertNotIn(secret, encoded)
+        report = candidate["handoff"]["items"][0]
+        self.assertEqual((report["artifact_revision"], report["artifact_sha256"]),
+                         (candidate["revision"], candidate["sha256"]))
+        verdict = self.review({k: v for k, v in candidate.items() if k != "handoff"})
+        self.assertNotIn("handoff", verdict, "a gate seals the carrier; it mints no hand-off")
+        # The journal replays the same record on an Activity retry.
+        again = self.call_keyed(adapter.assign, {**self.args("research_findings"), "instance": "research_findings",
+            "capability": "packet_findings@1", "question": self.question, "packet": self.packet,
+            "handoff_id": "gather.research_findings", "handoff_revision": 1}, key_file)
+        self.assertEqual(again["handoff"], results["research_findings"]["handoff"])
+
+    def test_without_workflow_identity_or_key_no_record_is_returned(self):
+        plain = self.call(adapter.assign, {**self.args("research_findings"), "instance": "research_findings",
+            "capability": "packet_findings@1", "question": self.question, "packet": self.packet,
+            "handoff_id": "gather.research_findings", "handoff_revision": 1})
+        self.assertNotIn("handoff", plain)
+        for agent in self.agents.values():
+            agent.tasks = {}
+        self.home = Path(tempfile.mkdtemp(prefix="exo-sf-interp-unit-", dir="/tmp"))
+        self.setUp()
+        legacy = self.call_keyed(adapter.assign, {**self.args("research_risks"), "instance": "research_risks",
+            "capability": "packet_risks@1", "question": self.question, "packet": self.packet},
+            self.home / "handoff-digest.key")
+        self.assertNotIn("unresolved", legacy)
+        self.assertNotIn("handoff", legacy)
+
+    def test_artifacts_node_without_an_artifact_fails_output_missing(self):
+        self.agents["research_findings"].tamper = "no_artifacts"
+        try:
+            result = self.call_keyed(adapter.assign, {**self.args("research_findings"),
+                "instance": "research_findings", "capability": "packet_findings@1",
+                "question": self.question, "packet": self.packet,
+                "handoff_id": "gather.research_findings", "handoff_revision": 1},
+                self.home / "handoff-digest.key")
+        finally:
+            self.agents["research_findings"].tamper = None
+        self.assertEqual(result["unresolved"], "output.missing")
+        self.assertNotIn("handoff", result)
 
 
 if __name__ == "__main__":

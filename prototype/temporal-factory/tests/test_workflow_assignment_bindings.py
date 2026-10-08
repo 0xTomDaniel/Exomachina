@@ -53,7 +53,8 @@ class WorkflowAssignmentBindingsTest(unittest.IsolatedAsyncioTestCase):
                  patch.object(factory.workflow, 'patched', return_value=enabled) as guard, \
                  patch.object(run, 'run_node', new=AsyncMock(return_value={} )):
                 await run.run(value)
-            self.assertEqual(guard.call_args_list,[call('exo-explicit-assignment-bindings-v1'),call('exo-explicit-factory-binding-v1')])
+            self.assertEqual(guard.call_args_list,[call('exo-explicit-assignment-bindings-v1'),call('exo-explicit-factory-binding-v1'),call('exo-handoff-records-v1')])
+            self.assertEqual(run._handoff_records,enabled)
             self.assertEqual(run._explicit_factory_binding,enabled)
             self.assertEqual(run._explicit_assignment_bindings, enabled)
 

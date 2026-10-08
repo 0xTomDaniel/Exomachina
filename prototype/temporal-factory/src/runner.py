@@ -368,7 +368,10 @@ class Runner:
                    EXO_WORKER_BUILD_ID=build_id,
                    EXO_WORKER_SOURCE_DIGEST=manifest["source_digest"],
                    EXO_OUTCOME_DB=str(self.state / "outcomes.sqlite3"),
-                   EXO_ACTIVITY_LOG=str(self.state / "activities.jsonl"))
+                   EXO_ACTIVITY_LOG=str(self.state / "activities.jsonl"),
+                   # Per-instance hand-off digest key (0600, created on first
+                   # use by Activities); only its path crosses this boundary.
+                   EXO_HANDOFF_KEY_FILE=str(self.home / "handoff-digest.key"))
         with (self.state / f"worker-{build_id}.log").open("a") as log:
             return subprocess.Popen([sys.executable, "worker.py"], cwd=path, env=env,
                                     stdout=log, stderr=log)

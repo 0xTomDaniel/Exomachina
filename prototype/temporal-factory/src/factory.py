@@ -28,6 +28,21 @@ def _activity(fn, input: dict):
     return workflow.execute_activity(fn, input, **options)
 
 
+def consumed_inputs(*records) -> list[dict]:
+    """Name upstream produced hand-offs (ids and item digests only) once each.
+
+    Pure Workflow-side composition over content-free records returned by
+    Activities; digests are computed in Activities, never here.
+    """
+    inputs: dict[str, list[str]] = {}
+    for record in records:
+        if isinstance(record, dict) and isinstance(record.get("handoff_id"), str):
+            digests = [item["digest"] for item in record.get("items") or []]
+            if digests:
+                inputs[record["handoff_id"]] = digests
+    return [{"handoff_id": key, "item_digests": value} for key, value in inputs.items()]
+
+
 def nested_workflow_input(parent: dict, child_run: str, definition_digest: str,
                           document: dict) -> dict:
     """Build child input from the parent's non-secret pinned authority record."""
@@ -94,6 +109,9 @@ class FactoryRun:
         self._explicit_assignment_bindings = False
         self._explicit_factory_binding = False
         self._assignment_ids: dict[tuple[str, str | None], str] = {}
+        self._handoff_records = False
+        self._research_handoffs: list[dict] = []
+        self._draft_handoff: dict | None = None
 
     @workflow.query
     def status(self) -> dict:
@@ -214,6 +232,8 @@ class FactoryRun:
                     verify_closure(input["closure"], package, build_id=BUILD_ID,
                                    definition_digest=self.definition_digest, document=document)
                     service = bindings[branch["service"]]
+                    handoff_identity = ({"handoff_id": f"{at}.{instance}", "handoff_revision": 1}
+                                        if self._handoff_records else {})
                     jobs.append(_activity(assign, self._assignment_input(at, {
                         "run": self.run_id, "digest": self.definition_digest,
                         "instance": instance, "result_type": branch["result_type"],
@@ -223,8 +243,11 @@ class FactoryRun:
                         "contract": input["closure"]["contracts"][branch["service"]],
                         "packet": package["evidence_packet"],
                         "question": self.run_inputs["question"],
+                        **handoff_identity,
                     }, branch=instance)))
                 receipts = await asyncio.gather(*jobs)
+                self._research_handoffs = [receipt["handoff"] for receipt in receipts
+                                           if isinstance(receipt.get("handoff"), dict)]
                 branches = dict(zip(node["branches"], receipts, strict=True))
                 unknown = next((value for value in receipts if "unresolved" in value), None)
                 if unknown:
@@ -243,13 +266,24 @@ class FactoryRun:
                          if self.repair_count else None)
                 findings = self.verdict["findings"] if self.repair_count else None
                 service = bindings[node["service"]]
+                handoff_fields = {}
+                if self._handoff_records:
+                    # Before dispatch: the Task is composed from the research
+                    # hand-offs and, on repair, the rejected draft.
+                    handoff_fields = {"handoff_id": at, "handoff_revision": self.repair_count + 1,
+                                      "consumes": consumed_inputs(*self._research_handoffs,
+                                          self._draft_handoff if self.repair_count else None)}
                 self.current = await _activity(synthesize, self._assignment_input(at, {
                     "run": self.run_id, "digest": self.definition_digest,
                     "revision": f"r{self.repair_count + 1}", "question": self.run_inputs["question"],
                     "packet": package["evidence_packet"], "evidence": joined,
                     "prior": prior, "quality_findings": findings,
                     "binding": service, "contract": input["closure"]["contracts"][node["service"]],
+                    **handoff_fields,
                 }))
+                produced = self.current.pop("handoff", None)
+                if isinstance(produced, dict):
+                    self._draft_handoff = produced
                 if "unresolved" in self.current:
                     return await self._hold_unresolved("synthesis-incident", self.current)
                 self.verdict = None
@@ -269,6 +303,8 @@ class FactoryRun:
                     "policy_digest": input["closure"]["manifest"]["quality_policy_digest"],
                     "rubric_digest": input["closure"]["quality_policy"].get("rubric_digest"),
                     "assignment_id": assignment_id, "attempt": attempt,
+                    **({"consumes": consumed_inputs(self._draft_handoff)}
+                       if self._handoff_records else {}),
                 }))
                 if "inconsistent" in outcome:
                     return await self._hold_unresolved("quality-incident", outcome)
@@ -364,11 +400,17 @@ class FactoryRun:
                     "sha256": self.current["sha256"],
                     "content": self.current["content"],
                 }
-                receipt = await _activity(release, {
+                release_input = {
                     "url": receiver["url"], "identity": receiver["identity"],
                     "mode": "participating",
                     "command": command,
-                })
+                }
+                if self._handoff_records:
+                    # The side-effect release consumes the accepted draft carrier
+                    # and produces no hand-off (output none).
+                    release_input = self._assignment_input(at, {
+                        **release_input, "consumes": consumed_inputs(self._draft_handoff)})
+                receipt = await _activity(release, release_input)
                 if "unresolved" in receipt:
                     return await self._hold_unresolved("unresolved-release", receipt)
                 self.release_receipt = receipt
@@ -473,4 +515,5 @@ class FactoryRun:
                                  if node["type"] == "repair"), 0)
         self._explicit_assignment_bindings = workflow.patched("exo-explicit-assignment-bindings-v1")
         self._explicit_factory_binding = workflow.patched("exo-explicit-factory-binding-v1")
+        self._handoff_records = workflow.patched("exo-handoff-records-v1")
         return await self.run_node(document, input["package"], input)

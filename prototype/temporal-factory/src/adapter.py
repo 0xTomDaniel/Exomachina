@@ -22,7 +22,9 @@ from report_contract import (canonical, packet_evidence_join, research_assignmen
     validate_report, validate_verdict)
 import long_client as a2a
 import fixture
+import handoff
 import receiver_client
+from definition import binding_output
 
 
 class PendingTask(Exception):
@@ -133,8 +135,10 @@ def _invoke_async(binding: dict, contract: dict, command: dict,
                     return _async_unresolved(record)
                 if state == "completed":
                     try:
-                        receipt = a2a.async_receipt(task, command, binding["identity"],
-                                                    expected_revision, role)
+                        receipt = _completed_receipt(task, command, binding,
+                                                     expected_revision, role)
+                    except handoff.OutputMissing:
+                        record = task_incident(record, handoff.OutputMissing.reason)
                     except Exception:
                         record = task_incident(record, "async-artifact-inconsistent")
                     else:
@@ -159,8 +163,12 @@ def _invoke_async(binding: dict, contract: dict, command: dict,
                  task_id=record.task_id, state=state, url=url)
             if state == "completed":
                 try:
-                    receipt = a2a.async_receipt(task, command, binding["identity"],
-                                                expected_revision, role)
+                    receipt = _completed_receipt(task, command, binding,
+                                                 expected_revision, role)
+                except handoff.OutputMissing:
+                    record = task_incident(record, handoff.OutputMissing.reason)
+                    _log("agent-output-missing", action_id=record.action_id,
+                         task_id=record.task_id)
                 except Exception as error:
                     record = task_incident(record, "async-artifact-inconsistent")
                     _log("agent-artifact-incident", action_id=record.action_id,
@@ -184,6 +192,42 @@ def _invoke_async(binding: dict, contract: dict, command: dict,
         raise PendingTask("another Activity attempt advanced the outcome journal")
     finally:
         journal.close()
+
+
+def _completed_receipt(task: dict, command: dict, binding: dict,
+                       expected_revision: str, role: str) -> dict:
+    """On-complete hook: enforce the node's output contract, then normalize.
+
+    A strict `artifacts` node whose completed Task carries no artifact fails
+    here with `output.missing` (never an empty hand-off). With an instance
+    digest key configured, the receipt also carries the content-free produced
+    hand-off items; it is journaled, so Activity retries replay the same record.
+    """
+    at = handoff.now_iso()
+    items = handoff.produced_items(task, binding_output(binding),
+                                   key=handoff.instance_key(), ready_at=at)
+    receipt = a2a.async_receipt(task, command, binding["identity"], expected_revision, role)
+    if items:
+        receipt["handoff"] = {"produced_at": at, "items": items}
+    return receipt
+
+
+def _with_handoff(result: dict, input: dict, *, report: dict | None = None) -> dict:
+    """Bind a produced hand-off record to the identity the Workflow assigned.
+
+    Workflows without hand-off records (older histories) never see the record.
+    The report artifact item keeps the plain sha256 chain reference.
+    """
+    record = result.pop("handoff", None)
+    if not isinstance(record, dict) or not isinstance(input.get("handoff_id"), str):
+        return result
+    items = [dict(item) for item in record["items"]]
+    if report is not None and len(items) == 1 and items[0]["source"] == "artifact":
+        items[0].update(artifact_revision=report["revision"], artifact_sha256=report["sha256"])
+    result["handoff"] = {"handoff_id": input["handoff_id"],
+                         "handoff_revision": input["handoff_revision"],
+                         "produced_at": record["produced_at"], "items": items}
+    return result
 
 
 async def _thread_with_heartbeat(fn, *args):
@@ -344,7 +388,7 @@ async def assign(input: dict) -> dict:
         if canonical(content) != artifact["content"]:
             raise ValueError("noncanonical research content")
         validate_research_result(content, capability, input["packet"])
-        return {**result, "content": content}
+        return _with_handoff({**result, "content": content}, input)
     except PendingTask:
         raise
     except Exception as error:
@@ -376,7 +420,9 @@ async def synthesize(input: dict) -> dict:
         if canonical(content) != artifact["content"]:
             raise ValueError("noncanonical report content")
         validate_report(content, input["revision"], input["question"], input["packet"])
-        return artifact
+        if "handoff" not in result:
+            return artifact
+        return _with_handoff({**artifact, "handoff": result["handoff"]}, input, report=artifact)
     except PendingTask:
         raise
     except Exception as error:
@@ -410,7 +456,9 @@ async def review(input: dict) -> dict:
             expected_task_id=result["task_id"])
         if decision.kind == QualityKind.INCONSISTENT:
             return {"inconsistent": decision.incident, "reasons": list(decision.reasons)}
-        return {**result, "artifact": content}
+        # A gate seals the carrier it consumed; it never mints a new hand-off.
+        return {key: value for key, value in result.items() if key != "handoff"} | {
+            "artifact": content}
     except PendingTask:
         raise
     except Exception as error:
