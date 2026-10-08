@@ -745,6 +745,8 @@ function checkGraphPins(state) {
     }
   }
 }
+// The all-jobs floor runs on one clock; carrier item times move with their job.
+const shiftCarrier = (carrier, offset) => ({ ...carrier, ...(carrier.produced_t != null ? { produced_t:carrier.produced_t + offset } : {}), items:(carrier.items ?? []).map(item => ({ ...item, ready_t:item.ready_t + offset })) });
 function aggregateFloorRuns(state, runs) {
   if (runs.length < 2) return runs;
   const known = runs.filter(run => run.startKnown);
@@ -767,7 +769,7 @@ function aggregateFloorRuns(state, runs) {
     }
     const admissions = starts.filter(Number.isFinite);
     if (admissions.length) events.push({type:"admit",t:Math.max(offset,(Math.min(...admissions)-baseMs)/1000),job:run.id});
-    for (const event of run.timeline) events.push({...event,t:event.t+offset,type:event.type === "end" ? "jobend" : event.type,job:run.id,...(event.item?{item:`${run.id}:${event.item}`}:{})});
+    for (const event of run.timeline) events.push({...event,t:event.t+offset,type:event.type === "end" ? "jobend" : event.type,job:run.id,...(event.item?{item:`${run.id}:${event.item}`}:{}),...(event.carrier?{carrier:shiftCarrier(event.carrier,offset)}:{})});
   }
   events.sort((a,b)=>a.t-b.t);
   const now=Math.max(0,(Date.parse(state.captured_at)-baseMs)/1000);

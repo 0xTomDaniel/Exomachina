@@ -25,6 +25,8 @@
   --w-item:#F5F6F7; --w-item-edge:#1F2429; --w-item-text:#1A1E22;
   --w-led:#59616A; --w-led-on:#F1F4F7; --w-shadow:#0A0C0E;
   --w-done:#12A150;
+  /* Carrier gems sit on the light item face in both themes, so one set serves both. */
+  --w-gem-sapphire:#2456C8; --w-gem-emerald:#0E9A62; --w-gem-amethyst:#8A46D4; --w-gem-topaz:#E8930F; --w-gem-diamond:#E4EDF5; --w-gem-cloud:#A3ABB3;
   /* The Director's console is a physical phosphor screen: same in both themes. */
   --crt-bg:#03130A; --crt-ink:#62FF8E; --crt-hi:#CFFFDA; --crt-dim:#2E9A53; --crt-glow:rgba(90,255,140,.55); --crt-glow-2:rgba(60,255,120,.22);
   --font-crt:"VT323", "ExoTerm Box", ui-monospace, "SF Mono", Menlo, monospace;
@@ -1672,7 +1674,7 @@ const Floor = (() => {
   const cam = { x:0, y:0, s:1 };
 
   /* ---------- palette ---------- */
-  const TOK = {floor:'--w-floor',floorHi:'--w-floor-hi',seam:'--w-seam',inlay:'--w-inlay',zone:'--w-zone',zoneLine:'--w-zone-line',bracket:'--w-bracket',beltEdge:'--w-belt-edge',belt:'--w-belt',beltMark:'--w-belt-mark',beltOn:'--w-belt-on',signal:'--w-signal',signalOn:'--w-signal-on',pod:'--w-pod',podTop:'--w-pod-top',podEdge:'--w-pod-edge',bay:'--w-bay',icon:'--w-icon',item:'--w-item',itemEdge:'--w-item-edge',itemText:'--w-item-text',led:'--w-led',ledOn:'--w-led-on',shadow:'--w-shadow',done:'--w-done',advisory:'--advisory',alarm:'--alarm',action:'--action',focus:'--focus',ink:'--ink',ink2:'--ink-2',ink3:'--ink-3',line:'--line',panel:'--panel'};
+  const TOK = {floor:'--w-floor',floorHi:'--w-floor-hi',seam:'--w-seam',inlay:'--w-inlay',zone:'--w-zone',zoneLine:'--w-zone-line',bracket:'--w-bracket',beltEdge:'--w-belt-edge',belt:'--w-belt',beltMark:'--w-belt-mark',beltOn:'--w-belt-on',signal:'--w-signal',signalOn:'--w-signal-on',pod:'--w-pod',podTop:'--w-pod-top',podEdge:'--w-pod-edge',bay:'--w-bay',icon:'--w-icon',item:'--w-item',itemEdge:'--w-item-edge',itemText:'--w-item-text',led:'--w-led',ledOn:'--w-led-on',shadow:'--w-shadow',done:'--w-done',gemSapphire:'--w-gem-sapphire',gemEmerald:'--w-gem-emerald',gemAmethyst:'--w-gem-amethyst',gemTopaz:'--w-gem-topaz',gemDiamond:'--w-gem-diamond',gemCloud:'--w-gem-cloud',advisory:'--advisory',alarm:'--alarm',action:'--action',focus:'--focus',ink:'--ink',ink2:'--ink-2',ink3:'--ink-3',line:'--line',panel:'--panel'};
   function isDark(){ const a = document.documentElement.getAttribute('data-theme'); if (a === 'dark') return true; if (a === 'light') return false; return matchMedia('(prefers-color-scheme: dark)').matches; }
   function readPalette(){
     const cs = getComputedStyle(document.documentElement); const P = { dark:isDark(), css:{} };
@@ -1821,7 +1823,7 @@ const Floor = (() => {
         pts = routeLoop(a, b, bottom + idx*30, idx, fromBelow);
       }
       const rounded = roundPts(pts, 16);
-      const edge = { id:'e'+i, def:e, loop:!!e.loop, raw:dedupe(pts), path:sampler(rounded), move:sampler(roundPts([A.c, ...pts, Bg.c], 12)) };
+      const edge = { id:'e'+i, def:e, loop:!!e.loop, control:e.kind === 'control', raw:dedupe(pts), path:sampler(rounded), move:sampler(roundPts([A.c, ...pts, Bg.c], 12)) };
       G.edges.push(edge); e._geom = edge;
     });
     // Entry/exit are presentation-only boundary stubs attached to existing graph nodes.
@@ -1986,11 +1988,153 @@ const Floor = (() => {
     }
   }
 
+  /* ---------- carriers and gems ----------
+     A carrier is the factory's content-free hand-off. Its items are gems in rim sockets:
+     cut is the primary signal (colour is secondary), quality is the evidence level.
+     Pure helpers first (tested by slicing this block), then cached canvas textures. */
+  const GEM_CUT = { sapphire:'round', emerald:'square', amethyst:'marquise', topaz:'triangle', diamond:'diamond', unknown:'rough' };
+  const GEM_NAME = { sapphire:'Sapphire, round · text', emerald:'Emerald, square · data', amethyst:'Amethyst, marquise · binary', topaz:'Topaz, triangle · link', diamond:'Clear diamond · message output', unknown:'Cloudy socket · contents not recorded' };
+  const GEM_MAX = 4, GEM_LOW_ZOOM = .5;
+  const gemOfKinds = (source, kinds) => source === 'message' ? 'diamond' : ({ text:'sapphire', data:'emerald', raw:'amethyst', url:'topaz' })[(kinds || [])[0]] || 'unknown';
+  // What the rim shows at time t: gems drop in at their ready time with a brief sparkle,
+  // empty dark sockets wait while the carrier fills, more than four show four and "+N",
+  // and at low zoom the gems collapse to the badge.
+  function carrierGems(c, t, low){
+    if (!c) return null;
+    const inferred = c.evidence === 'inferred';
+    const items = inferred ? [{ gem:'unknown', ready_t:-Infinity }] : (c.items || []);
+    const total = Math.max(c.sockets || 0, items.length);
+    const quality = inferred ? 'inferred' : c.evidence === 'illustrative' ? 'illustrative' : c.digest_match === false ? 'mismatch' : 'flawless';
+    const ready = items.filter(i => t >= (i.ready_t ?? -Infinity)).length;
+    if (low) return { sockets:[], more:0, badge:total ? (ready < total ? `${ready}/${total}` : String(total)) : '', quality, total, ready };
+    const shown = Math.min(GEM_MAX, total), sockets = [];
+    for (let k = 0; k < shown; k++){
+      const it = items[k], rt = it ? (it.ready_t ?? -Infinity) : Infinity, filled = t >= rt;
+      sockets.push({ gem:it ? it.gem : null, filled, sparkle:filled && t - rt < .6 ? 1 - (t - rt) / .6 : 0 });
+    }
+    return { sockets, more:total - shown, badge:total > shown ? `+${total - shown}` : '', quality, total, ready };
+  }
+  const fmtBytes = n => n == null ? 'size not applicable (link)' : n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(1)} MB`;
+  // Inspector rows. Only allowlisted, content-free fields are read: source, part kinds,
+  // media type, size, short digest, ready time (plus the gem and evidence they imply).
+  function carrierRows(c){
+    if (!c) return [];
+    if (c.evidence === 'inferred') return [['Gems', 'One cloudy socket · contents not recorded; hand-off inferred from pinned graph order']];
+    const rows = [];
+    if (c.evidence === 'illustrative') rows.push(['Gems', 'Illustrative Demo gems · not recorded facts']);
+    else rows.push(['Carrier', `${c.filling ? 'Filling' : 'Recorded'} hand-off ${c.handoff_id || '(merged)'}${c.revision ? ' · revision ' + c.revision : ''} · ${c.items.length}${c.sockets > c.items.length ? ' of ' + c.sockets : ''} item${c.sockets === 1 ? '' : 's'}${c.output === 'message' ? ' · message output (lower reliability)' : ''}`]);
+    if (c.merged_from) rows.push(['Merged', `At the join from ${c.merged_from.join(', ')}`]);
+    (c.items || []).forEach((i, k) => {
+      const parts = [GEM_NAME[i.gem] || GEM_NAME.unknown];
+      if (c.evidence !== 'illustrative') parts.push(i.source === 'message' ? 'message' : 'artifact', (i.part_kinds || []).join('+'), i.media_type || 'media type not declared', fmtBytes(i.byte_length), i.digest ? `digest ${i.digest}…` : 'digest pending', i.ready_at ? `ready ${i.ready_at}` : 'ready time not recorded');
+      rows.push([`Item ${i.index ?? k}`, parts.join(' · ')]);
+    });
+    if (c.consumers && c.consumers.length) rows.push(['Consumed', c.consumers.map(x => `${x.node} at ${x.consumed_at}${x.digest_match ? '' : ' (digest mismatch)'}`).join('; ')]);
+    if (c.digest_match === false) rows.push(['Evidence', 'Chipped: a consumer named digests that do not match this hand-off']);
+    else if (c.evidence === 'recorded') rows.push(['Evidence', 'Flawless: recorded hand-off; digests match from producer to consumer']);
+    return rows;
+  }
+  // Socket centres on the rim, per carrier shape (the label keeps the middle).
+  function gemSpots(shape, n){
+    const out = [];
+    if (shape === 'capsule' || shape === 'triangle'){ const y = shape === 'capsule' ? -10 : 9; for (let k = 0; k < n; k++) out.push({ x:(k - (n - 1) / 2) * 8.4, y }); return out; }
+    const r = shape === 'square' ? 12.5 : 13, step = .66;
+    for (let k = 0; k < n; k++){ const a = -Math.PI / 2 + (k - (n - 1) / 2) * step; out.push({ x:Math.cos(a) * r, y:Math.sin(a) * r }); }
+    return out;
+  }
+  /* end carriers and gems helpers */
+  const GEM_COL = { sapphire:'gemSapphire', emerald:'gemEmerald', amethyst:'gemAmethyst', topaz:'gemTopaz', diamond:'gemDiamond', unknown:'gemCloud' };
+  const GEM_PX = 9, GEM_RES = 6;
+  let gemCache = new Map();
+  // One canvas per cut and quality, drawn once and reused by every sprite.
+  function gemTexture(gem, quality){
+    const key = gem + '|' + quality; if (gemCache.has(key)) return gemCache.get(key);
+    const P = S.P, size = GEM_PX * GEM_RES, c = document.createElement('canvas'); c.width = c.height = size + 4;
+    const x = c.getContext('2d'), h = size / 2, o = 2 + h; x.translate(o, o);
+    const dull = quality === 'inferred' || quality === 'mismatch';
+    let base = P[GEM_COL[gem] || 'gemCloud']; if (dull) base = mix(base, P.gemCloud, gem === 'unknown' ? 0 : .55);
+    const hi = mix(base, 0xffffff, .55), lo = mix(base, 0x000000, .45);
+    const R = h * .94, cut = GEM_CUT[gem] || 'rough';
+    const outline = () => { x.beginPath();
+      if (cut === 'round' || cut === 'rough'){ for (let k = 0; k < (cut === 'rough' ? 7 : 16); k++){ const a = k / (cut === 'rough' ? 7 : 16) * Math.PI * 2 - Math.PI / 2, rr = cut === 'rough' ? R * (k % 2 ? .86 : .98) : R; k ? x.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : x.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); } }
+      else if (cut === 'square'){ const s = R * .86, k2 = s * .34; x.moveTo(-s + k2, -s); x.lineTo(s - k2, -s); x.lineTo(s, -s + k2); x.lineTo(s, s - k2); x.lineTo(s - k2, s); x.lineTo(-s + k2, s); x.lineTo(-s, s - k2); x.lineTo(-s, -s + k2); }
+      else if (cut === 'marquise'){ x.moveTo(-R, 0); x.quadraticCurveTo(0, -R * 1.05, R, 0); x.quadraticCurveTo(0, R * 1.05, -R, 0); }
+      else if (cut === 'triangle'){ x.moveTo(0, -R); x.quadraticCurveTo(R * .5, -R * .1, R * .95, R * .72); x.quadraticCurveTo(0, R * .95, -R * .95, R * .72); x.quadraticCurveTo(-R * .5, -R * .1, 0, -R); }
+      else { x.moveTo(0, -R); x.lineTo(R * .88, 0); x.lineTo(0, R); x.lineTo(-R * .88, 0); }
+      x.closePath(); };
+    // body: light from the upper left
+    const gr = x.createLinearGradient(-R, -R, R, R); gr.addColorStop(0, rgba(hi, 1)); gr.addColorStop(.45, rgba(base, 1)); gr.addColorStop(1, rgba(lo, 1));
+    outline(); x.fillStyle = gr; x.globalAlpha = dull ? .82 : 1; x.fill(); x.globalAlpha = 1;
+    // facets: a table and rays to the girdle
+    x.save(); outline(); x.clip();
+    const tb = cut === 'square' ? R * .42 : cut === 'marquise' ? R * .3 : R * .45;
+    x.lineWidth = Math.max(1, GEM_RES * .22); x.strokeStyle = rgba(0xffffff, dull ? .18 : .42);
+    x.beginPath();
+    if (cut === 'square'){ x.rect(-tb, -tb, tb * 2, tb * 2); for (const [a, b] of [[-1,-1],[1,-1],[1,1],[-1,1]]){ x.moveTo(a * tb, b * tb); x.lineTo(a * R, b * R); } }
+    else if (cut === 'marquise'){ x.moveTo(-R, 0); x.lineTo(-tb, -tb * .6); x.lineTo(tb, -tb * .6); x.lineTo(R, 0); x.lineTo(tb, tb * .6); x.lineTo(-tb, tb * .6); x.closePath(); x.moveTo(-tb, -tb * .6); x.lineTo(0, -R * .5); x.lineTo(tb, -tb * .6); x.moveTo(-tb, tb * .6); x.lineTo(0, R * .5); x.lineTo(tb, tb * .6); }
+    else if (cut === 'triangle'){ x.moveTo(0, -tb); x.lineTo(tb * .9, tb * .6); x.lineTo(-tb * .9, tb * .6); x.closePath(); x.moveTo(0, -tb); x.lineTo(0, -R); x.moveTo(tb * .9, tb * .6); x.lineTo(R, R * .75); x.moveTo(-tb * .9, tb * .6); x.lineTo(-R, R * .75); }
+    else if (cut === 'diamond'){ x.moveTo(0, -tb); x.lineTo(tb * .88, 0); x.lineTo(0, tb); x.lineTo(-tb * .88, 0); x.closePath(); for (const [a, b] of [[0,-1],[1,0],[0,1],[-1,0]]){ x.moveTo(a * tb * .88, b * tb); x.lineTo(a * R * .88, b * R); } }
+    else { for (let k = 0; k < 8; k++){ const a = k / 8 * Math.PI * 2 + Math.PI / 8; k ? x.lineTo(Math.cos(a) * tb, Math.sin(a) * tb) : x.moveTo(Math.cos(a) * tb, Math.sin(a) * tb); } x.closePath(); for (let k = 0; k < 8; k++){ const a = k / 8 * Math.PI * 2 + Math.PI / 8; x.moveTo(Math.cos(a) * tb, Math.sin(a) * tb); x.lineTo(Math.cos(a) * R, Math.sin(a) * R); } }
+    x.stroke();
+    // shaded lower facets and the highlight facet (upper left)
+    x.fillStyle = rgba(0x000000, .18); x.beginPath(); x.moveTo(R, -R * .1); x.lineTo(R, R); x.lineTo(-R * .1, R); x.closePath(); x.fill();
+    if (!dull){ x.fillStyle = rgba(0xffffff, .72); x.beginPath(); x.moveTo(-R * .62, -R * .22); x.lineTo(-R * .2, -R * .66); x.lineTo(-R * .02, -R * .44); x.lineTo(-R * .44, -R * .02); x.closePath(); x.fill(); }
+    else { // cloudy: milky blotches over the body
+      for (const [cx, cy, rr] of [[-.3, .2, .55], [.35, -.25, .4], [.1, .45, .35]]){ const rg = x.createRadialGradient(cx * R, cy * R, 0, cx * R, cy * R, rr * R); rg.addColorStop(0, rgba(0xffffff, .45)); rg.addColorStop(1, rgba(0xffffff, 0)); x.fillStyle = rg; x.fillRect(-R, -R, R * 2, R * 2); }
+    }
+    x.restore();
+    outline(); x.lineWidth = Math.max(1, GEM_RES * .3); x.strokeStyle = rgba(gem === 'diamond' ? mix(base, 0x000000, .55) : lo, .95); x.stroke();
+    if (dull){ // chipped corner and a crack line
+      x.save(); x.globalCompositeOperation = 'destination-out'; x.beginPath(); x.moveTo(R * .35, -R); x.lineTo(R * 1.05, -R); x.lineTo(R * 1.05, -R * .3); x.closePath(); x.fill(); x.restore();
+      x.strokeStyle = rgba(quality === 'mismatch' ? P.advisory : mix(lo, 0x000000, .4), .9); x.lineWidth = Math.max(1, GEM_RES * .26);
+      x.beginPath(); x.moveTo(-R * .55, -R * .45); x.lineTo(-R * .1, -R * .05); x.lineTo(-R * .25, R * .25); x.lineTo(R * .25, R * .6); x.stroke();
+    } else { // the glint: a four-point star on the highlight facet
+      const gx = -R * .38, gy = -R * .42, gl = R * .55, gw = R * .1;
+      x.fillStyle = rgba(0xffffff, .95); x.beginPath(); x.moveTo(gx, gy - gl); x.lineTo(gx + gw, gy - gw); x.lineTo(gx + gl, gy); x.lineTo(gx + gw, gy + gw); x.lineTo(gx, gy + gl); x.lineTo(gx - gw, gy + gw); x.lineTo(gx - gl, gy); x.lineTo(gx - gw, gy - gw); x.closePath(); x.fill();
+    }
+    const tex = PIXI.Texture.from(c); textures.push(tex); gemCache.set(key, tex); return tex;
+  }
+  // Rim sockets, gems, the +N badge and the gate seal on one carrier view.
+  function drawCarrier(v, it, st, t){
+    const P = S.P, g = v.g, c = it.carrier;
+    const low = cam.s < GEM_LOW_ZOOM, show = c ? carrierGems(c, t, low) : null;
+    const sockets = show ? show.sockets : [], spots = gemSpots(v.shape, sockets.length);
+    v.gemSprites ||= [];
+    for (let k = 0; k < sockets.length; k++){
+      const p = spots[k], s = sockets[k];
+      g.circle(p.x, p.y, GEM_PX / 2 + .9).fill({ color:P.bay, alpha:.92 }).stroke({ width:.9, color:P.itemEdge, alpha:.6 });
+      let sp = v.gemSprites[k]; if (!sp){ sp = new PIXI.Sprite(); sp.anchor.set(.5); v.gems.addChild(sp); v.gemSprites[k] = sp; }
+      sp.visible = !!(s.filled && s.gem);
+      if (!sp.visible) continue;
+      const tex = gemTexture(s.gem, show.quality); if (sp.texture !== tex) sp.texture = tex;
+      sp.width = sp.height = (GEM_PX * GEM_RES + 4) / GEM_RES * (1 + .45 * s.sparkle); sp.position.set(p.x, p.y - 3 * s.sparkle);
+      if (s.sparkle > 0){ const L = 3 + 6 * s.sparkle; g.moveTo(p.x - L, p.y).lineTo(p.x + L, p.y).moveTo(p.x, p.y - L).lineTo(p.x, p.y + L).stroke({ width:1.1, color:0xffffff, alpha:.9 * s.sparkle }); S.liveBusy = true; }
+    }
+    for (let k = sockets.length; k < v.gemSprites.length; k++) v.gemSprites[k].visible = false;
+    // Gate verdict seal: the same carrier, sealed accepted or rejected (not a gem).
+    const seal = it.seals && [...it.seals].reverse().find(x => x.t <= t);
+    if (seal){ const sx = 13, sy = 10, ok = seal.verdict === 'accepted', col = ok ? P.done : P.advisory, pts = [];
+      for (let k = 0; k < 16; k++){ const a = k / 16 * Math.PI * 2, rr = k % 2 ? 5.4 : 6.6; pts.push(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr); }
+      g.poly(pts, true).fill(col).stroke({ width:.8, color:P.itemEdge, alpha:.7 });
+      if (ok) g.moveTo(sx - 2.6, sy + .2).lineTo(sx - .6, sy + 2.3).lineTo(sx + 2.8, sy - 2.2).stroke({ width:1.5, color:0xffffff, cap:'round', join:'round' });
+      else g.moveTo(sx - 2.2, sy - 2.2).lineTo(sx + 2.2, sy + 2.2).moveTo(sx + 2.2, sy - 2.2).lineTo(sx - 2.2, sy + 2.2).stroke({ width:1.5, color:0xffffff, cap:'round' });
+    }
+    // +N (or the collapsed count at low zoom)
+    const badge = show ? show.badge : '';
+    if (badge){
+      if (!v.badge){ v.badge = new PIXI.Text({ text:'', style:{ fontFamily:['Martian Mono','ui-monospace','monospace'], fontSize:7, fontWeight:'700', fill:0xffffff }, resolution:5 }); v.badge.anchor.set(.5); v.c.addChild(v.badge); }
+      if (v.badge.text !== badge) v.badge.text = badge;
+      const bx = low ? 0 : 19, by = low ? -15 : -9, bw = Math.max(11, v.badge.width + 5);
+      g.roundRect(bx - bw / 2, by - 5, bw, 10, 5).fill({ color:P.bay, alpha:.95 }).stroke({ width:.8, color:P.itemEdge, alpha:.5 });
+      v.badge.position.set(bx, by); v.badge.visible = true;
+    } else if (v.badge) v.badge.visible = false;
+  }
+
   /* ---------- scene ---------- */
   function clearWorld(){
     if (!world) return;
     for (const ch of world.removeChildren()) ch.destroy({ children:true });
-    textures.forEach(t => t.destroy(true)); textures = [];
+    textures.forEach(t => t.destroy(true)); textures = []; gemCache = new Map();
     itemViews = new Map();
   }
   function buildScene(){
@@ -2025,7 +2169,10 @@ const Floor = (() => {
     // Each route keeps its own belt and chevrons so focus can dim it alone.
     S.fg = { steps:new Map(), shadows:new Map(), edges:new Map(), other:[] };
     const edgeBelts = new PIXI.Container(), edgeMarks = new PIXI.Container();
-    G.edges.forEach(e => { const eb = new PIXI.Graphics(), em = new PIXI.Graphics(); drawBelt(eb, e.path, P, e.loop ? 13 : 17); chevrons(em, e.path, 0, 18); em.stroke({ width:1.4, color:P.beltMark, alpha:.9, cap:'round', join:'round' }); edgeBelts.addChild(eb); edgeMarks.addChild(em); S.fg.edges.set(e.id, [eb, em]); });
+    G.edges.forEach(e => { const eb = new PIXI.Graphics(), em = new PIXI.Graphics();
+      // A control edge only sequences work: a thin line with no chevrons and no items.
+      if (e.control){ const pts = e.path.pts; eb.moveTo(pts[0].x, pts[0].y); for (let k = 1; k < pts.length; k++) eb.lineTo(pts[k].x, pts[k].y); eb.stroke({ width:1.6, color:P.beltMark, alpha:.95, cap:'round', join:'round' }); const q = pts[pts.length-1]; eb.circle(q.x, q.y, 2.4).fill(P.beltMark); edgeBelts.addChild(eb); edgeMarks.addChild(em); S.fg.edges.set(e.id, [eb, em]); return; }
+      drawBelt(eb, e.path, P, e.loop ? 13 : 17); chevrons(em, e.path, 0, 18); em.stroke({ width:1.4, color:P.beltMark, alpha:.9, cap:'round', join:'round' }); edgeBelts.addChild(eb); edgeMarks.addChild(em); S.fg.edges.set(e.id, [eb, em]); });
     const ch = new PIXI.Graphics();
     G.entry.forEach(e => chevrons(ch, e.path, 0, 18)); G.exit.forEach(e => chevrons(ch, e.path, 0, 18));
     ch.stroke({ width:1.4, color:P.beltMark, alpha:.9, cap:'round', join:'round' });
@@ -2244,6 +2391,12 @@ const Floor = (() => {
   /* ---------- run compile ---------- */
   function findEdge(from, to){ const G = S.L; return G.edges.find(e => e.def.from === from && e.def.to === to) || null; }
   function straight(from, to){ const a = S.L.steps.get(from).c, b = S.L.steps.get(to).c; return sampler([a, b]); }
+  // Demo artifacts may declare illustrative gems; they drop in as the item is made.
+  function demoCarrier(f, e){
+    const gems = !f.actual && f.artifacts[e.art]?.gems;
+    if (!Array.isArray(gems) || !gems.length) return null;
+    return { evidence:'illustrative', sockets:gems.length, items:gems.map((gem, k) => ({ index:k, gem, ready_t:e.t + .12 * k })), consumers:[] };
+  }
   function compile(f, run){
     const G = S.L, multi = !!run.multi;
     const ev = run.events.map((e,i) => { const x = Object.assign({ i }, e); if (x.job === undefined) x.job = multi ? null : run.id; return x; }).sort((a,b) => a.t - b.t || a.i - b.i);
@@ -2259,17 +2412,17 @@ const Floor = (() => {
         case 'admit': j.admit = e.t; break;
         case 'jobend': j.end = e.t; j.outcome = e.outcome; break;
         case 'spawn': {
-          const n = { id:e.item, job:e.job, art:e.art, label:e.label || '', rev:e.rev || '', sha:e.sha || '', born:e.t, at:e.at, track:[], flags:[], evidence:e.evidence || '', observed:e.observed || '' };
+          const n = { id:e.item, job:e.job, art:e.art, label:e.label || '', rev:e.rev || '', sha:e.sha || '', born:e.t, at:e.at, track:[], flags:[], seals:[], evidence:e.evidence || '', observed:e.observed || '', carrier:e.carrier || demoCarrier(f, e) };
           const en = G.entry.get(e.at);
           if (en){ n.track.push({ k:'move', t0:e.t, t1:e.t+.9, path:en.move, via:en, to:e.at }); n.track.push({ k:'park', t0:e.t+.9, step:e.at, via:en }); n.noPop = true; }
           else n.track.push({ k:'park', t0:e.t, step:e.at, via:null });
           R.items.set(e.item, n); if (j) j.items.push(n); break; }
-        case 'move': { const ed = findEdge(e.from, e.to); it.track.push({ k:'move', t0:e.t, t1:e.t+e.dur, path:ed ? ed.move : straight(e.from, e.to), edge:ed, via:ed, from:e.from, to:e.to, undeclared:!!e.undeclared }); it.track.push({ k:'park', t0:e.t+e.dur, step:e.to, via:ed }); break; }
+        case 'move': { const ed = findEdge(e.from, e.to); it.track.push({ k:'move', t0:e.t, t1:e.t+e.dur, path:ed ? ed.move : straight(e.from, e.to), edge:ed, via:ed, from:e.from, to:e.to, undeclared:!!e.undeclared, control:!!e.control }); it.track.push({ k:'park', t0:e.t+e.dur, step:e.to, via:ed }); break; }
         case 'consume': it.track.push({ k:'gone', t0:e.t, how:'consumed', at:e.at }); it.goneAt = e.at; it.goneT = e.t; it.goneHow = 'consumed'; break;
         case 'release': { const ex = G.exit.get(e.at); it.track.push({ k:'move', t0:e.t, t1:e.t+1.2, path:ex ? ex.move : straight(e.at, e.at), fade:true, exit:true }); it.track.push({ k:'gone', t0:e.t+1.2, how:'released' }); it.goneHow = 'released'; it.goneT = e.t; R.releases.push(e); break; }
         case 'scrap': it.track.push({ k:'shrink', t0:e.t, t1:e.t+.7, step:e.at }); it.track.push({ k:'gone', t0:e.t+.7, how:'aborted' }); it.goneHow = 'aborted'; it.goneT = e.t; R.scraps.push(e); break;
         case 'work': { const w = { ...e, t0:e.t, t1:e.dur == null ? Infinity : e.t+e.dur }; R.works.get(e.step).push(w); if (e.item) push(R.itemWorks, e.item, w); if (e.job != null) push(R.jobWorks, e.job, w); break; }
-        case 'verdict': R.verdicts.push(e); break;
+        case 'verdict': R.verdicts.push(e); if (it) it.seals.push({ t:e.t, verdict:e.verdict, step:e.step }); break;
         case 'flag': it.flags.push({ t0:e.t, t1:e.t1 ?? Infinity, flag:e.flag }); break;
         case 'readout': R.readouts.get(e.step).push(e); break;
         case 'director': { const d = { ...e, t0:e.t, t1:e.t+e.dur }; R.turns.push(d); if (e.item) push(R.itemTurns, e.item, d); break; }
@@ -2535,10 +2688,11 @@ const Floor = (() => {
     const P = S.P, f = S.f, c = new PIXI.Container(), g = new PIXI.Graphics();
     const txt = new PIXI.Text({ text:it.label, style:{ fontFamily:['Martian Mono','ui-monospace','monospace'], fontSize:it.label.length > 2 ? 7.5 : 9, fontWeight:'700', fill:P.itemText }, resolution:5 });
     txt.anchor.set(.5); const shape = f.artifacts[it.art]?.shape || 'circle'; if (shape === 'triangle') txt.y = 3;
-    c.addChild(g, txt); c.eventMode = 'static'; c.cursor = 'pointer'; c.hitArea = new PIXI.Circle(0, 0, 17);
+    const gems = new PIXI.Container();
+    c.addChild(g, gems, txt); c.eventMode = 'static'; c.cursor = 'pointer'; c.hitArea = new PIXI.Circle(0, 0, 17);
     c.on('pointertap', () => { S.itemTap = true; if (wasDrag()) return; if (S.R.multi && it.job) select('job', it.job); else select('item', it.id); });
     layers.items.addChild(c);
-    v = { c, g, txt, shape, label:it.label, x:0, y:0, seen:false }; itemViews.set(it.id, v); return v;
+    v = { c, g, gems, txt, shape, label:it.label, x:0, y:0, seen:false }; itemViews.set(it.id, v); return v;
   }
 
   // Directional belt illumination is presentation of currently observed station
@@ -2632,12 +2786,12 @@ const Floor = (() => {
     const bd = layers.beltDyn, bdd = layers.beltDynDim; bd.clear(); bdd.clear();
     const observedNodes=new Set(store.sourceMode==='live'&&store.observationStatus==='connected'&&store.dashboardActivityFresh?observedActiveNodes(store.dashboardViewModels,R.multi?S.follow:R.run.id,S.f.steps):[]);
     if(store.sourceMode!=='live')for(const [id] of G.steps)if(activeWorks(id,t).length)observedNodes.add(id);
-    const activityBelts=G.edges.filter(e=>observedNodes.has(e.def.to)&&!e.loop);
+    const activityBelts=G.edges.filter(e=>observedNodes.has(e.def.to)&&!e.loop&&!e.control);
     // Animate inbound routes of observed active stations; work items come only from the observed A2A flow events.
     if(observedNodes.size)S.slowBusy=true;
     store.observedActivity={nodes:[...observedNodes],belts:activityBelts.map(e=>e.id),presentationOnly:true};
     const off = calm ? 0 : S.wall * 26, moving = [];
-    G.edges.forEach(e => { if (activeEdges.has(e.id)||activityBelts.includes(e)) moving.push([e.path, e.loop ? 13 : 17, EL(e.id)]); });
+    G.edges.forEach(e => { if (!e.control && (activeEdges.has(e.id)||activityBelts.includes(e))) moving.push([e.path, e.loop ? 13 : 17, EL(e.id)]); });
     if (activeEdges.has('stub')){ G.entry.forEach(e => moving.push([e.path, 16, !foc])); G.exit.forEach(e => moving.push([e.path, 16, !foc])); }
     // Focus splits the moving belts between a lit and a dimmed layer; each draws the same way.
     for (const [gr, lit] of [[bd, true], [bdd, false]]){
@@ -2806,6 +2960,7 @@ const Floor = (() => {
     shapePath(g, v.shape).fill({ color:P.item, alpha:unk ? .5 : 1 }).stroke({ width:1.6, color:P.itemEdge });
     if (unk){ for (let k = -2; k <= 2; k++) g.moveTo(-7 + k*5, 7).lineTo(7 + k*5 - 14 + 7, -7).stroke({ width:1, color:P.itemEdge, alpha:.45 }); }
     const txt = unk ? '?' : v.label; if (v.txt.text !== txt) v.txt.text = txt;
+    const item = S.R.items.get(id); if (item && (item.carrier || item.seals.length)) drawCarrier(v, item, st, S.t);
     if (st.flag === 'rejected') g.circle(0,0,18).stroke({ width:2.6, color:P.advisory });
     if (st.flag === 'exhausted') g.circle(0,0,18).stroke({ width:2.8, color:P.alarm });
     if (st.exit) g.circle(0,0,18).stroke({ width:2.6, color:P.done });
@@ -3463,13 +3618,16 @@ const Floor = (() => {
     const st = itemAt(it, t), nm = x => S.L.steps.get(x)?.s.name || x;
     let where;
     if (t < it.born) where = 'Not produced yet';
-    else if (st && st.moving){ const seg = [...it.track].reverse().find(s => s.k === 'move' && s.t0 <= t); where = seg && seg.from ? `On the belt from ${nm(seg.from)} to ${nm(seg.to)}${seg.undeclared ? ' (route case not declared as a pinned edge)' : ''}` : (seg && seg.exit ? 'Leaving the factory' : 'Arriving'); }
+    else if (st && st.moving){ const seg = [...it.track].reverse().find(s => s.k === 'move' && s.t0 <= t); where = seg && seg.from ? `On the belt from ${nm(seg.from)} to ${nm(seg.to)}${seg.undeclared ? ' (route case not declared as a pinned edge)' : seg.control ? ' (declared control route; inferred item)' : ''}` : (seg && seg.exit ? 'Leaving the factory' : 'Arriving'); }
     else if (st) where = `At ${nm(st.step)}`;
     else where = it.goneHow === 'released' ? 'Released to the caller' : (it.goneHow === 'aborted' ? 'Discarded with the aborted run' : `Used by ${nm(it.goneAt)}`);
     const facts = [['Artifact', `${art.name} · ${art.shape}`], ['Where', where]];
     if (it.sha) facts.push(['Digest', it.sha]);
     if (it.evidence) facts.push(['Evidence', it.evidence]);
     if (it.observed) facts.push(['Observed', it.observed]);
+    facts.push(...carrierRows(it.carrier));
+    const seal = [...(it.seals || [])].reverse().find(x => x.t <= t);
+    if (seal) facts.push(['Seal', `${seal.verdict === 'accepted' ? 'Accepted' : 'Rejected'} at ${nm(seal.step)} · the same carrier, sealed`]);
     const flag = st?.flag; if (flag) facts.push(['State', flag === 'rejected' ? 'Rejected, going back for repair' : (flag === 'exhausted' ? 'Rejected at the repair limit' : 'Outcome unknown, reconciling')]);
     const lineage = it.art === f.mainArt ? [...R.items.values()].filter(x => x.art === f.mainArt && x.born <= t && x.job === it.job).map(x => ({ id:x.id, rev:x.rev || x.label, sha:x.sha, ...revFacts(x, t) })) : [];
     let note = null;
@@ -4317,7 +4475,8 @@ function withBranchPods(f){
   if (!pods.length) return f;
   const via = new Set(pods.map(p => p.node + '\u0000' + p.join)), agents = { ...f.agents };
   const steps = [...f.steps, ...pods.map(p => ({ id:p.id, name:p.binding_name || p.capability, kind:'assign', type:'branch_pod', agent:p.id, capability:p.capability, sub:p.capability, dept:f.steps.find(s => s.id === p.node).dept, presentation_only:true, derived:'observed_assignments', pinnedRoute:{ from:p.node, to:p.join } }))];
-  const edges = [...f.edges.filter(e => !via.has(e.from + '\u0000' + e.to)), ...pods.flatMap(p => [{ from:p.node, to:p.id, loop:false, presentation_only:true, pinned:{ from:p.node, to:p.join } }, { from:p.id, to:p.join, loop:false, presentation_only:true, pinned:{ from:p.node, to:p.join } }])];
+  const kindOf = p => f.edges.find(e => e.from === p.node && e.to === p.join)?.kind, withKind = p => kindOf(p) ? { kind:kindOf(p) } : {};
+  const edges = [...f.edges.filter(e => !via.has(e.from + '\u0000' + e.to)), ...pods.flatMap(p => [{ from:p.node, to:p.id, loop:false, presentation_only:true, pinned:{ from:p.node, to:p.join }, ...withKind(p) }, { from:p.id, to:p.join, loop:false, presentation_only:true, pinned:{ from:p.node, to:p.join }, ...withKind(p) }])];
   for (const p of pods) agents[p.id] = { name:p.name, contract:p.contract || 'Not reported', cap:null, identity:p.identity, derived:'observed_assignments', note:`Branch pod derived from observed assignments (${p.capability}) on the pinned ${p.node} → ${p.join} route; presentation only, not a pinned graph node.` };
   return { ...f, steps, edges, agents, pinnedSteps:f.steps, pinnedEdges:f.edges };
 }
