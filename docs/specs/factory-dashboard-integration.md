@@ -81,7 +81,7 @@ commercial integration; it is not a gate for the basic milestone.
 14. As a demonstrator, I want recorded and interactive scenarios in the same application, so that demonstrations remain available without real inference or payments.
 15. As a maintainer, I want demo and live Adapters checked against the same Interface, so that demonstration changes cannot conceal product incompatibilities.
 16. As a factory owner, I want actual capacity limits and admission queues, so that simultaneous work respects available resources.
-17. As a factory owner, I want to see shared-agent occupancy and nested factory work, so that contention across factories is understandable.
+17. As a factory owner, I want to see shared-agent occupancy and nested factory work, so that contention across factories is understandable. (Agent services hold no capacity queue; see "Work-in-progress limits" below.)
 18. As a factory owner, I want atomic spend reservations and declared cost ceilings, so that concurrent purchases respect my budget.
 19. As an agent owner, I want inference usage and hosting cost attributable to each assignment and attempt, so that I understand the cost of my own agents.
 20. As a factory owner, I want provider costs, markup, service charges, and customer price distinguished, so that I understand my purchasing economics.
@@ -201,7 +201,7 @@ captured provenance and freshness; playback is not fresh Live execution.
 | Scenario timing | Preserve declared start time, event ordering, durations, and an explicit clock basis | Demo Adapter supplies scenario timing even when a fixture has no job-created event; missing Live start time stays unknown |
 | Artifacts and motion | Preserve artifact kind/revision/digest, spatial attribution, transfer and Quality facts where provided | Renderer draws common shapes, belts, verdicts, and releases; Live/Recorded movement follows the A2A floor flow (Tasks at stations from observed assignment/run-node facts, artifacts on belts with observed dwell, evidenced versus inferred hand-offs labelled), while Demo uses explicitly illustrative scenario events |
 | Communication and inbox | Project declared routes, observed waits/incidents, original bindings, and permitted actions | Renderer supplies accessible wires/inbox navigation; runtime policy owns routing and actions, and a navigation link does not establish escalation |
-| Capacity, economics, programs | Preserve declared or illustrative metadata and observed measurements with their provenance | Actual capacity enforcement, commercial accounting, and Engineering behavior belong to their existing runtime Modules, not a Demo price or reducer calculation |
+| Capacity, economics, programs | Preserve declared or illustrative metadata and observed measurements with their provenance | Actual capacity enforcement (the factory's own WIP limit), commercial accounting, and Engineering behavior belong to their existing runtime Modules, not a Demo price or reducer calculation |
 | Recorded graph | Render the authentic graph captured and pinned to that recording | Recording production must retain the graph; if absent, offer an honest evidence-only view or a complete provenance-backed default bundle, never another run's substitute graph |
 | Draft interaction | Maintain isolated draft context and use one shared submission path | UI owns typing, focus, pointer interaction, keyboard access, and retention; an editable draft does not authorize Submit |
 | Reconnect and readiness | Reduce transport/freshness outcomes and expose actual disabled reasons | Transport and runtime restore synchronization, authenticate callers, and enforce submission readiness; UI cannot declare a stale source fresh |
@@ -788,7 +788,7 @@ mode require UI verification rather than model inference.
 | S13 | Reservations and budget limits | Simultaneous admissions compete for one remaining budget; atomic reservations admit only affordable work; restart preserves them |
 | S14 | Usage charging and credits | Rejected/cancelled/failed work follows its pinned terms; late records and credits update obligations without rewriting usage |
 | S15 | Capacity and admission queues | Submit more concurrent jobs than configured capacity; observe waiting, slot release, and admission without exceeding limits |
-| S16 | Shared-agent contention | Two factory instances use one provider; occupancy separates own/other work and respects the advertised shared capacity |
+| S16 | Shared-agent contention | Two factory instances use one provider; occupancy separates own/other work. The former "respects the advertised shared capacity" clause is withdrawn (operator decision, 8 Oct 2026): agent services advertise no capacity |
 | S17 | Versions in flight | Publish v2 with v1 active; new admissions use v2 while old runs retain original graph/contracts/rates where pinned |
 | S18 | Nested factory and fan-out | Actual supplier-style fan-out invokes a nested factory through A2A; collect actual artifacts without exposing private internals |
 | S19 | Nested outcome unknown | Drop a real response; preserve unknown state; reconcile the original remote Task rather than resubmitting opaque work |
@@ -811,6 +811,10 @@ Research and Engineering requirements here qualify the capabilities advertised b
 the floor and preserve the existing maintenance contract. A single controlled
 campaign/promotion can prove a path; it does not establish generalized autonomous
 improvement efficacy or market reliability.
+
+### Work-in-progress limits (operator decision, 8 Oct 2026)
+
+Work-in-progress limits are factory settings. Agent services have no capacity queue and are treated as infinitely scalable; an agent may someday have independent limits of its own, but that is its private business and nothing here models it. Agent-side execution capacity was removed on 8 Oct 2026 by operator decision. S15 covers the factory's own admission queue and limit. S16 keeps only factory-side observation of shared-provider occupancy; it no longer requires an agent-advertised shared capacity, and the agent's `--admission-db`/`--execution-capacity` options and `GET /admission/capacity` no longer exist.
 
 ### Payment and outcome smoke inventory
 

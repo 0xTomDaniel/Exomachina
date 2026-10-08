@@ -515,17 +515,13 @@ The Live dashboard builds a wait command only from current observed `awaiting-di
 
 Historical waits without these facts remain unknown. Recorded sources are read-only. The command builder and bounded regressions are implemented; Runtime human/escalation mounting and operational qualification remain separate pending evidence.
 
-### Current bounded integration allocation and shared capacity approval
+### Current bounded integration allocation and shared capacity approval (capacity part withdrawn 8 Oct 2026)
 
 The lead now owns `src/factory.py`, `src/definition.py`, `dashboard/contract.mjs`, `dashboard/decision.mjs`, and the page outside explicitly allocated Dashboard sections. Runtime retains the harness, runtime source, runtime tests and the human Task projection integration. Observation's temporary Operations source constructor/producer/refresh allocation returns to Runtime after its reviewed handoff; Observation retains its new focused integration test. Dashboard owns usage validation/tests and its current Decisions wait-control section. Commerce owns additive normal model-agent scheduling, adapter factory binding, and their tests. Every allocation preserves earlier migration edits.
 
-S16 approves the additive optional A2A assign `factory_id`, supplied only by actual workflow Director authority under `exo-explicit-factory-binding-v1`. Missing identity remains unknown historically; no run/action parsing or retrofill is permitted. Shared execution capacity requires the explicit pair `--admission-db` and `--execution-capacity`, with no default; zero pauses admission. One queue is owned by the pinned service identity across all caller factories. Accepted Task facts retain explicit caller factory identity, while authenticated occupancy reads report scoped own/other counts without other factories' Task IDs. A GET never constructs/configures a queue; unknown factory identities are unavailable. Capacity-enabled scheduling rejects a missing factory binding before model work. Read-only retained usage owners remain frozen and do not accept capacity configuration. Fixture authentication and synthetic scheduler tests do not qualify production authentication or S16.
+S16 approves the additive optional A2A assign `factory_id`, supplied only by actual workflow Director authority under `exo-explicit-factory-binding-v1`. Missing identity remains unknown historically; no run/action parsing or retrofill is permitted. (A later decoupling pass is expected to remove factory identifiers from agents entirely.)
 
-`AdmissionQueue.read_snapshot()` returns capacity totals and the existing safe
-request projections from one read transaction. Service occupancy groups that
-snapshot using its own accepted Task factory facts; external responses expose
-counts, not other factories' Task identities. Readers must not combine separate
-capacity and request reads when asserting consistent occupancy.
+**Agent-side capacity withdrawn (operator decision, 8 Oct 2026).** Work-in-progress limits are factory settings. Agent services have no capacity queue and are treated as infinitely scalable; an agent may someday have independent limits of its own, but that is its private business and nothing here models it. Agent-side execution capacity was removed on 8 Oct 2026 by operator decision. The model agent no longer imports `src/admission.py`, has no `--admission-db`/`--execution-capacity` options, no `GET /admission/capacity` occupancy read, no capacity-gated scheduling or Task execution claims, and no "factory_id is required" rejection; every accepted Task runs immediately. The earlier text here (one shared queue owned by the pinned service identity across all caller factories, scoped own/other occupancy reads) is superseded. `src/admission.py` and `AdmissionQueue.read_snapshot()` remain factory-only: the harness owns the factory's admission queue and WIP limit.
 
 Engineering's approved additive `OperationsAdapter.publication_context(factory_id)`
 returns exactly `{manifest_digest, quality_policy_digest}` from one verified
