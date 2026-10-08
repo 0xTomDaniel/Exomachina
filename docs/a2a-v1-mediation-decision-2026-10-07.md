@@ -85,10 +85,18 @@ validated when the definition is published.
 | --- | --- | --- |
 | `artifacts` (default) | Strict. Results arrive as A2A Artifacts. | A completed Task with no artifact fails the node's contract at that node (`output.missing`). It never produces an empty hand-off. |
 | `message` | Opt-in, labelled exception for agents that answer with a direct Message or only a status message. | The factory records a hand-off holding one item of source `message`. It is shown and reported as lower reliability. |
-| `none` | Side-effect node (for example the HTTP release receiver). | Completion is the terminal state plus the node's own evidence, such as a receipt. The node has no outgoing material edge (decision 5). |
+| `none` | Opt-in for agents whose completed Task state is itself the whole result (for example a notification that returns nothing). | Completion is the terminal completed state alone. The node has no outgoing material edge (decision 5). |
 
 A hand-off therefore never travels empty. Empty sockets exist only while a
 carrier is still filling inside its station.
+
+The output mode states what a node's A2A Task must return; it does not decide
+when the node is done. Every node, whatever its mode, completes when its A2A Task
+reaches `TASK_STATE_COMPLETED` and passes its output contract. Whether a node is
+a side-effect node is decided by its edges (decision 5), not by its output mode.
+A release or delivery node therefore uses the strict `artifacts` mode: its Task
+must return the receipt as an artifact, and a completed release without a receipt
+fails at the node instead of looking delivered (amended 8 October 2026).
 
 ### 4. The factory records content-free hand-off records
 
@@ -134,8 +142,11 @@ Definition edges declare a kind: `material` (the default) or `control`.
   belt with items on it.
 - A **control edge** only sequences work ("then run C"). It carries no hand-off
   and is drawn as a thin line with no items.
-- A side-effect node (`output: none`) may have incoming material edges but only
-  outgoing control edges. When a later node needs an earlier node's output, the
+- A side-effect node, such as release, changes something outside the factory. It
+  may have incoming material edges but only outgoing control edges, so nothing
+  downstream consumes its output as material. Its recorded output (for example a
+  receipt) is evidence, and its carrier retires at the node. A node with
+  `output: none` must also be a side-effect node. When a later node needs an earlier node's output, the
   definition declares a material edge directly from the producer, so that belt
   bypasses the side-effect node.
 - Route nodes' transitions to repair, Director waits, release, and terminal
@@ -215,8 +226,8 @@ Amended by the operator on 8 October 2026. This is a hard rule, not a preference
   limits of its own, and the factory sees them only as ordinary A2A outcomes
   (for example a rejected or failed Task).
 - **Side-effect services are A2A agents too.** A release or delivery receiver is
-  an agent service with `output: none`. Its receipt is returned through A2A, not
-  by a plain HTTP call.
+  an ordinary agent service. Its Task completes with the receipt as an artifact,
+  returned through A2A rather than by a plain HTTP call.
 - **Test controls stay out of production agents.** Fault injection and similar
   controls belong in test fixtures or a test-only A2A extension that production
   agent cards do not declare.

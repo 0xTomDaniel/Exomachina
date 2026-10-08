@@ -63,7 +63,7 @@ The factory's content-free record of a work product passing from one assignment 
 _Avoid_: Agent-to-agent message, artifact content, carrier (its floor depiction)
 
 **Side-effect node**:
-A factory node whose assignment changes something outside the factory, such as releasing a result, and produces no work product for later nodes. It completes with evidence such as a receipt, and is followed only by control edges.
+A factory node whose assignment changes something outside the factory, such as releasing a result. Like every node, it completes when its A2A Task completes and meets its output contract, for example by returning a receipt. Its output is evidence rather than a work product for later nodes, so it is followed only by control edges.
 _Avoid_: Output-less agent, optional step
 
 **Material edge**:
