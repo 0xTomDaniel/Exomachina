@@ -521,6 +521,63 @@ PAYMENT_ADAPTER_PROFILES = {
         with self.assertRaisesRegex(ValueError, "event data has unallowlisted fields"):
             qualification.attest_public_exports(export)
 
+    def _rewrite_snapshot(self, export: Path, change) -> None:
+        snapshot_path = export / "snapshot.json"
+        snapshot = json.loads(snapshot_path.read_text())
+        change(snapshot["state"]["runs"][0])
+        snapshot_path.write_text(json.dumps(snapshot), encoding="utf-8")
+        bundle_path = export / "bundle.json"
+        bundle = json.loads(bundle_path.read_text())
+        bundle["snapshot"] = snapshot
+        bundle_path.write_text(json.dumps(bundle), encoding="utf-8")
+
+    def test_s33_hand_off_records_pass_only_with_exact_content_free_fields(self):
+        base = {"schema_version": 1, "factory_id": "factory-1", "run_id": "run-1",
+                "assignment_id": "assign-1", "attempt_id": "1", "node": "node-a"}
+        produced = {**base, "handoff_id": "node-a", "handoff_revision": 1,
+                    "produced_at": "2026-10-03T12:00:01Z", "items": [
+                        {"item_index": 0, "source": "artifact", "part_kinds": ["data"],
+                         "media_type": None, "byte_length": 10, "ready_at": "2026-10-03T12:00:01Z",
+                         "digest": "d" * 64, "artifact_revision": "r1", "artifact_sha256": "e" * 64}]}
+        consumed = {**base, "node": "node-b", "consumed_at": "2026-10-03T12:00:02Z",
+                    "inputs": [{"handoff_id": "node-a", "item_digests": ["d" * 64]}]}
+        ready = {**base, "handoff_id": "node-a", "item_index": 0, "part_kinds": ["text", "url"],
+                 "media_type": "text/plain", "ready_at": "2026-10-03T12:00:00Z"}
+        records = {"produced": [produced], "consumed": [consumed], "ready": [ready]}
+
+        export = Path(tempfile.mkdtemp(prefix="exo-public-handoff-", dir="/tmp"))
+        self._write_public_export_fixture(export)
+        self._rewrite_snapshot(export, lambda run: run.update(handoffs=records))
+        self.assertEqual("candidate-for-review", qualification.attest_public_exports(export)["status"])
+
+        def leak(path, value):
+            def change(run):
+                rows = json.loads(json.dumps(records))
+                target = rows
+                for key in path[:-1]:
+                    target = target[key]
+                target[path[-1]] = value
+                run["handoffs"] = rows
+            return change
+        cases = [
+            (leak(("produced", 0, "items", 0, "name"), "secret"), "unallowlisted"),
+            (leak(("produced", 0, "items", 0, "url"), "https://example.invalid"), "unallowlisted"),
+            (leak(("produced", 0, "task_id"), "parent-task"), "unallowlisted"),
+            (leak(("produced", 0, "metadata"), {}), "unallowlisted"),
+            (leak(("consumed", 0, "inputs", 0, "text"), "secret"), "unallowlisted"),
+            (leak(("ready", 0, "artifactId"), "x"), "unallowlisted"),
+            (leak(("produced", 0, "items", 0, "digest"), "not-a-digest"), "digest"),
+            (leak(("produced", 0, "run_id"), "run-other"), "different run"),
+            (lambda run: run.update(handoffs={**records, "bytes": []}), "unsupported lists"),
+        ]
+        for change, message in cases:
+            with self.subTest(message=message):
+                export = Path(tempfile.mkdtemp(prefix="exo-public-handoff-leak-", dir="/tmp"))
+                self._write_public_export_fixture(export)
+                self._rewrite_snapshot(export, change)
+                with self.assertRaisesRegex(ValueError, message):
+                    qualification.attest_public_exports(export)
+
     def test_public_export_attestation_names_missing_canonical_inputs(self):
         export = Path(tempfile.mkdtemp(prefix="exo-public-incomplete-", dir="/tmp"))
         (export / "snapshot.json").write_text("{}", encoding="utf-8")

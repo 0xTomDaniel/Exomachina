@@ -206,7 +206,28 @@ PUBLIC_EVENT_FIELDS = {
         "payment_id", "network", "asset", "amount_atoms", "currency", "atomic_scale",
         "state", "receipt_id", "evidence_status",
     },
+    # Content-free hand-off facts (A2A v1 mediation decision 4; S33 requalified
+    # 2026-10-07). Exact fields at every depth; see _validate_public_handoff.
+    "com.exomachina.handoff.produced.v1": {
+        "node", "handoff_id", "handoff_revision", "produced_at", "items",
+    },
+    "com.exomachina.handoff.consumed.v1": {"node", "consumed_at", "inputs"},
+    "com.exomachina.handoff.item_ready.v1": {
+        "node", "handoff_id", "item_index", "part_kinds", "media_type", "ready_at",
+    },
 }
+PUBLIC_HANDOFF_LISTS = {
+    "produced": "com.exomachina.handoff.produced.v1",
+    "consumed": "com.exomachina.handoff.consumed.v1",
+    "ready": "com.exomachina.handoff.item_ready.v1",
+}
+PUBLIC_HANDOFF_COMMON_FIELDS = {"factory_id", "run_id", "assignment_id", "attempt_id"}
+PUBLIC_HANDOFF_ITEM_FIELDS = {
+    "item_index", "source", "part_kinds", "media_type", "byte_length", "ready_at", "digest",
+    "artifact_revision", "artifact_sha256",
+}
+PUBLIC_HANDOFF_PART_KINDS = {"text", "data", "raw", "url"}
+PUBLIC_MEDIA_TYPE = re.compile(r"^[a-z0-9.+-]+/[a-z0-9.+-]+$")
 PUBLIC_EVENT_COMMON_FIELDS = {
     "factory_id", "run_id", "task_id", "context_id", "assignment_id", "attempt_id",
     "manifest_digest", "package_digest", "definition_digest", "interpreter_build",
@@ -872,9 +893,112 @@ def _record_data(value: Any, label: str) -> Mapping[str, Any]:
     return row
 
 
+def _public_time(value: Any, label: str) -> None:
+    if not isinstance(value, str) or len(value) > 64:
+        raise ValueError(f"{label} must be a timestamp")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"{label} must be a timestamp") from exc
+    if parsed.tzinfo is None:
+        raise ValueError(f"{label} must include a timezone")
+
+
+def _public_part_kinds(value: Any, label: str) -> list[str]:
+    if (not isinstance(value, list) or not value or len(value) > 64
+            or any(kind not in PUBLIC_HANDOFF_PART_KINDS for kind in value)):
+        raise ValueError(f"{label} part kinds are invalid")
+    return value
+
+
+def _public_media_type(value: Any, label: str) -> None:
+    if value is not None and (not isinstance(value, str) or len(value) > 127
+                              or not PUBLIC_MEDIA_TYPE.fullmatch(value)):
+        raise ValueError(f"{label} media type is invalid")
+
+
+def _validate_public_handoff(data: Any, event_type: str, label: str, *,
+                             factory_id: str | None = None, run_id: str | None = None) -> None:
+    """Exact content-free hand-off fact: no Task, pins, content, names or URLs at any depth."""
+    data = _expect_mapping(data, label)
+    allowed = {"schema_version", *PUBLIC_HANDOFF_COMMON_FIELDS, *PUBLIC_EVENT_FIELDS[event_type]}
+    if set(data) - allowed:
+        raise ValueError(f"{label} event data has unallowlisted fields")
+    if set(data) != allowed:
+        raise ValueError(f"{label} event data is missing required public fields")
+    if data["schema_version"] != 1:
+        raise ValueError(f"{label} event data schema_version must be 1")
+    for field in (*sorted(PUBLIC_HANDOFF_COMMON_FIELDS), "node"):
+        _expect_id(data[field], f"{label} {field}")
+    if factory_id is not None and data["factory_id"] != factory_id:
+        raise ValueError(f"{label} event data belongs to a different factory")
+    if run_id is not None and data["run_id"] != run_id:
+        raise ValueError(f"{label} event data belongs to a different run")
+    if event_type == "com.exomachina.handoff.produced.v1":
+        _expect_id(data["handoff_id"], f"{label} handoff id")
+        if type(data["handoff_revision"]) is not int or data["handoff_revision"] < 1:
+            raise ValueError(f"{label} handoff revision must be positive")
+        _public_time(data["produced_at"], f"{label} produced_at")
+        items = data["items"]
+        if not isinstance(items, list) or not 1 <= len(items) <= 256:
+            raise ValueError(f"{label} hand-off items must be a bounded non-empty list")
+        for item in items:
+            item = _expect_mapping(item, f"{label} item")
+            if set(item) - PUBLIC_HANDOFF_ITEM_FIELDS:
+                raise ValueError(f"{label} item has unallowlisted fields")
+            if (PUBLIC_HANDOFF_ITEM_FIELDS - {"artifact_revision", "artifact_sha256"}) - set(item):
+                raise ValueError(f"{label} item is missing required public fields")
+            if item["source"] not in {"artifact", "message"}:
+                raise ValueError(f"{label} item source is invalid")
+            kinds = _public_part_kinds(item["part_kinds"], f"{label} item")
+            _public_media_type(item["media_type"], f"{label} item")
+            if item["byte_length"] is None and "url" not in kinds:
+                raise ValueError(f"{label} item byte length may be null only for url parts")
+            if item["byte_length"] is not None and (type(item["byte_length"]) is not int
+                                                    or item["byte_length"] < 0):
+                raise ValueError(f"{label} item byte length is invalid")
+            _public_time(item["ready_at"], f"{label} item ready_at")
+            _expect_digest(item["digest"], f"{label} item digest")
+            report = {"artifact_revision", "artifact_sha256"} & set(item)
+            if report:
+                if len(report) != 2 or item["source"] != "artifact":
+                    raise ValueError(f"{label} report reference is incomplete")
+                _expect_id(item["artifact_revision"], f"{label} artifact revision")
+                _expect_digest(item["artifact_sha256"], f"{label} artifact sha256")
+    elif event_type == "com.exomachina.handoff.consumed.v1":
+        _public_time(data["consumed_at"], f"{label} consumed_at")
+        inputs = data["inputs"]
+        if not isinstance(inputs, list) or not 1 <= len(inputs) <= 64:
+            raise ValueError(f"{label} inputs must be a bounded non-empty list")
+        for entry in inputs:
+            entry = _expect_mapping(entry, f"{label} input")
+            if set(entry) != {"handoff_id", "item_digests"}:
+                raise ValueError(f"{label} input has unallowlisted fields")
+            _expect_id(entry["handoff_id"], f"{label} input handoff id")
+            digests = entry["item_digests"]
+            if not isinstance(digests, list) or not 1 <= len(digests) <= 256:
+                raise ValueError(f"{label} input digests must be a bounded non-empty list")
+            for digest in digests:
+                _expect_digest(digest, f"{label} input digest")
+    else:
+        _expect_id(data["handoff_id"], f"{label} handoff id")
+        if type(data["item_index"]) is not int or not 0 <= data["item_index"] <= 255:
+            raise ValueError(f"{label} item index is invalid")
+        _public_part_kinds(data["part_kinds"], label)
+        _public_media_type(data["media_type"], label)
+        _public_time(data["ready_at"], f"{label} ready_at")
+
+
 def _validate_public_record(value: Any, label: str, *, factory_id: str | None = None,
                             event_type: str | None = None) -> None:
     row = _expect_mapping(value, label)
+    if row.get("specversion") == "1.0" and row.get("type") in PUBLIC_HANDOFF_LISTS.values():
+        if set(row) != {"specversion", "id", "source", "type", "time", "subject",
+                        "datacontenttype", "dataschema", "data"}:
+            raise ValueError(f"{label} is not a supported public event")
+        _validate_public_handoff(row.get("data"), row["type"], f"{label} event data",
+                                 factory_id=factory_id)
+        return
     if row.get("specversion") == "1.0":
         allowed_envelope = {"specversion", "id", "source", "type", "time", "subject",
                             "datacontenttype", "dataschema", "data"}
@@ -988,6 +1112,17 @@ def _select_run(snapshot: Mapping[str, Any], requested_run_id: str | None) -> Ma
                 row, f"run {field} record", factory_id=factory_id,
                 event_type=PUBLIC_RUN_RECORD_EVENT_TYPES[field],
             )
+    if "handoffs" in run:
+        handoffs = _expect_mapping(run["handoffs"], "run hand-off records")
+        if set(handoffs) != set(PUBLIC_HANDOFF_LISTS):
+            raise ValueError("run hand-off records have unsupported lists")
+        for name, event_type in PUBLIC_HANDOFF_LISTS.items():
+            rows = handoffs[name]
+            if not isinstance(rows, list) or len(rows) > 256:
+                raise ValueError(f"run hand-off {name} must be a bounded public record list")
+            for row in rows:
+                _validate_public_handoff(row, event_type, f"run hand-off {name} record",
+                                         factory_id=factory_id, run_id=run["id"])
     if not isinstance(run.get("pinned"), Mapping):
         raise ValueError("run graph pins are missing")
     _validate_public_record(run["pinned"], "run pins", factory_id=factory_id)
