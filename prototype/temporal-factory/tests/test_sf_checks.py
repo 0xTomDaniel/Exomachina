@@ -48,6 +48,11 @@ class ReviewTwoCheckerTests(unittest.TestCase):
     def fails(self, check: str):
         self.assertFalse(check_evidence(self.e)[check]["pass"], check)
 
+    def test_model_selection_must_match_authoring_and_agent_observations(self):
+        self.e["model_id"] = "gpt-6-luna"
+        for check in ("SF-1", "R1-b", "R1-c", "G-2"):
+            self.fails(check)
+
     def test_f1_quality_candidate_task_and_journal(self):
         accepting = next(t for t in self._tasks(2, "quality") if t["verdict"]["accepted"])
         accepting["verdict"]["candidate"]["sha256"] = "unrelated"

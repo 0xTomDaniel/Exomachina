@@ -227,7 +227,7 @@ async function handleStream(req, send, owned) {
     };
     const events = stream(model, context, { apiKey: auth.auth.apiKey, transport: 'sse', fetch: providerFetch,
       sessionId: req.session, maxRetries: 0, signal: abort.signal,
-      reasoningEffort: req.options?.reasoningEffort || 'low',
+      reasoningEffort: req.options?.reasoningEffort || 'xhigh',
       onResponse: (response) => { httpStatus = response.status; } });
     for await (const ev of events) {
       if (ev.type === 'done') { await finish({ id: req.id, done: ev.message }, 'stream'); return; }

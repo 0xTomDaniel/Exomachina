@@ -9,6 +9,13 @@ to capability contracts, qualification, authority, and active-run version bindin
 See [Architecture principles](docs/architecture-principles.md) for the boundaries
 and their consequences for factory composition.
 
+The [factory dashboard integration specification](docs/specs/factory-dashboard-integration.md)
+defines the live/demo dashboard, operating qualification, and commercial model.
+Its operator-approved **basic working prototype** gate (B01–B10) is the current
+priority: two real dashboard workflows (happy path and repair), truthful progress
+and per-agent usage, local delivery, one active job, reconnect, and isolated demo.
+The full S01–S33/P01–P10 inventory remains later qualification work.
+
 ## Language
 
 **Capability**:
@@ -98,3 +105,45 @@ _Avoid_: Incident response, perpetual unbudgeted experimentation
 **Promotion**:
 A recorded decision to make an evaluated improvement available for a defined scope of future work.
 _Avoid_: Experiment success, changing an active run
+
+## Commercial language
+
+**Commercial contract**:
+The agreement between an agent service and its purchaser defining prices, billable work, cost disclosure, spending limits, and payment conditions for an assignment.
+_Avoid_: Capability contract, model price, payment protocol
+
+**Usage record**:
+Evidence of resources consumed by an agent service for a particular assignment or attempt, including the source and completeness of the measurement.
+_Avoid_: Service charge, model conversation, estimated price
+
+**Inference cost**:
+The cost attributable to model inference used by an agent service, with its rate basis and whether it is measured, provider-reported, estimated, or undisclosed.
+_Avoid_: Service charge, customer price, subscription allocation presented as a charge
+
+**Hosting cost**:
+The cost attributable to infrastructure used by an agent service under a declared metering or allocation rule.
+_Avoid_: Queue wait, service charge, unexplained overhead
+
+**Service charge**:
+The amount an agent service charges its purchaser under the assignment's commercial contract, which may include inference, hosting, and an agreed markup.
+_Avoid_: Inference cost, settled payment, factory customer price
+
+**Customer price**:
+The amount a factory service charges its caller for the work or outcome it sells under its own commercial contract.
+_Avoid_: Production cost, supplier charge, inference cost
+
+**Spend reservation**:
+A portion of an authorized budget committed to pending or in-flight work, retained while the resulting charge remains unresolved.
+_Avoid_: Settled payment, completed usage, estimated spend
+
+**Spend authorization**:
+Permission for a principal to purchase specified work within declared provider, amount, currency, time, and scope limits.
+_Avoid_: Model recommendation, wallet possession, artifact acceptance
+
+**Payment receipt**:
+Evidence of a payment's reported result under its payment method, bound to the relevant purchase and amount.
+_Avoid_: Artifact acceptance, delivery receipt, proof of fulfillment
+
+**Delivery receipt**:
+Evidence that a particular artifact revision was delivered to its declared destination.
+_Avoid_: Payment receipt, artifact acceptance, remote Task completion

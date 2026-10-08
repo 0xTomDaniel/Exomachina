@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 from agent_binding import pin
 from agent_roles import RUBRIC_DIGEST
+from model_broker import DEFAULT_MODEL_ID
 SERVICE_NAMES = (
     "source_alpha", "source_beta", "counter_alpha", "counter_beta", "quality", "release"
 )
@@ -162,7 +163,7 @@ def alive(pid: int) -> bool:
 
 def command_for(name: str, state: Path, port: int, *, delayed_agent: bool = False,
                 delay_seconds: float = 15, profile: str = "legacy",
-                model_provider: str = "scripted", model: str = "gpt-6-sol") -> list[str]:
+                model_provider: str = "scripted", model: str = DEFAULT_MODEL_ID) -> list[str]:
     if profile == "report" and name != "release":
         role = "research" if name.startswith("research_") else "synthesis" if name == "synthesizer" else "quality"
         return [sys.executable, "-B", str(ROOT / "services" / "model_agent.py"),
@@ -188,7 +189,7 @@ def command_for(name: str, state: Path, port: int, *, delayed_agent: bool = Fals
 
 def up(home: Path, port_base: int, *, delayed_agent: bool = False,
        delay_seconds: float = 15, profile: str = "report",
-       model_provider: str = "scripted", model: str = "gpt-6-sol") -> dict:
+       model_provider: str = "scripted", model: str = DEFAULT_MODEL_ID) -> dict:
     if delayed_agent:
         profile = "legacy"
     if profile not in {"report", "legacy"}:
@@ -307,7 +308,7 @@ def main() -> None:
     parser.add_argument("--profile", choices=("report", "legacy"), default="report")
     parser.add_argument("--model-provider", choices=("codex-subscription", "synthetic-loopback", "scripted"),
                         default="scripted")
-    parser.add_argument("--model", default="gpt-6-sol")
+    parser.add_argument("--model", default=DEFAULT_MODEL_ID)
     parser.add_argument("--delayed-agent", action="store_true")
     parser.add_argument("--delay-seconds", type=float, default=15)
     args = parser.parse_args()

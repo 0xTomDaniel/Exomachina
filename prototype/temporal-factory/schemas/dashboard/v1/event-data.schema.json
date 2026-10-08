@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:exomachina:dashboard:event:v1",
+  "title": "Exomachina dashboard event data v1",
+  "type": "object",
+  "required": ["schema_version", "factory_id"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "factory_id": {"$ref": "#/$defs/id"},
+    "run_id": {"$ref": "#/$defs/id"},
+    "task_id": {"$ref": "#/$defs/id"},
+    "context_id": {"$ref": "#/$defs/id"},
+    "assignment_id": {"$ref": "#/$defs/id"},
+    "attempt_id": {"$ref": "#/$defs/id"},
+    "manifest_digest": {"$ref": "#/$defs/digest"},
+    "package_digest": {"$ref": "#/$defs/digest"},
+    "definition_digest": {"$ref": "#/$defs/digest"},
+    "interpreter_build": {"$ref": "#/$defs/id"},
+    "identity": {"$ref": "#/$defs/id"},
+    "provider_identity": {"$ref": "#/$defs/id"},
+    "service_identity": {"$ref": "#/$defs/id"},
+    "model_call_id": {"$ref": "#/$defs/id"},
+    "author_identity": {"$ref": "#/$defs/id"},
+    "reviewer_identity": {"$ref": "#/$defs/id"},
+    "actor_identity": {"$ref": "#/$defs/id"},
+    "owner_identity": {"$ref": "#/$defs/id"},
+    "destination_id": {"$ref": "#/$defs/id"},
+    "destination_identity": {"$ref": "#/$defs/id"},
+    "decision_id": {"$ref": "#/$defs/id"},
+    "command_id": {"$ref": "#/$defs/id"},
+    "receipt_id": {"$ref": "#/$defs/id"},
+    "incident_id": {"$ref": "#/$defs/id"},
+    "admission_id": {"$ref": "#/$defs/id"},
+    "usage_id": {"$ref": "#/$defs/id"},
+    "obligation_id": {"$ref": "#/$defs/id"},
+    "payment_id": {"$ref": "#/$defs/id"},
+    "name": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9 _./-]{0,127}$"},
+    "capability": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._@+-]{0,127}$"},
+    "publication_version": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9 _./-]{0,127}$"},
+    "state": {"$ref": "#/$defs/enum"},
+    "phase": {"$ref": "#/$defs/enum"},
+    "wait_role": {"enum": ["director", "human"]},
+    "wait_actor_identity": {"$ref": "#/$defs/id"},
+    "wait_started_at": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"},
+    "permitted_actions": {"type": "array", "maxItems": 16, "uniqueItems": true, "items": {"$ref": "#/$defs/enum"}},
+    "node": {"$ref": "#/$defs/id"},
+    "action": {"$ref": "#/$defs/enum"},
+    "outcome": {"$ref": "#/$defs/enum"},
+    "expected_state": {"$ref": "#/$defs/enum"},
+    "resulting_state": {"$ref": "#/$defs/enum"},
+    "lifecycle": {"$ref": "#/$defs/enum"},
+    "kind": {"$ref": "#/$defs/enum"},
+    "measurement_source": {"$ref": "#/$defs/enum"},
+    "completeness": {"$ref": "#/$defs/enum"},
+    "reasoning_effort": {"$ref": "#/$defs/enum"},
+    "evidence_status": {"enum": ["measured", "calculated_from_measured_usage", "provider_reported", "estimated", "unknown", "undisclosed"]},
+    "price_basis": {"enum": ["usage", "fixed_assignment", "fixed_attempt", "accepted_outcome"]},
+    "payment_trigger": {"enum": ["upfront", "incremental_use", "attempt_completion", "acceptance"]},
+    "component": {"enum": ["inference_cost", "hosting_cost", "markup", "supplier_charge", "payment_fees", "owner_overhead", "production_cost", "customer_price"]},
+    "artifact_revision": {"$ref": "#/$defs/id"},
+    "previous_revision": {"$ref": "#/$defs/id"},
+    "artifact_sha256": {"$ref": "#/$defs/digest"},
+    "markdown_sha256": {"$ref": "#/$defs/digest"},
+    "previous_sha256": {"$ref": "#/$defs/digest"},
+    "offer_digest": {"$ref": "#/$defs/digest"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "ended_at": {"type": "string", "format": "date-time"},
+    "wait_deadline": {"type": "string", "format": "date-time"},
+    "delivered_at": {"type": "string", "format": "date-time"},
+    "delivery_kind": {"const": "local_file"},
+    "repair_count": {"type": "integer", "minimum": 0},
+    "max_repairs": {"type": "integer", "minimum": 0},
+    "queue_position": {"type": "integer", "minimum": 0},
+    "byte_length": {"type": "integer", "minimum": 0},
+    "finding_count": {"type": "integer", "minimum": 0},
+    "capacity_limit": {"type": "integer", "minimum": 0},
+    "active_count": {"type": "integer", "minimum": 0},
+    "queued_count": {"type": "integer", "minimum": 0},
+    "amount_atoms": {"oneOf": [{"type": "integer", "minimum": 0}, {"type": "null"}]},
+    "atomic_scale": {"type": "integer", "minimum": 0},
+    "markup_bps": {"type": "integer", "minimum": 0},
+    "accepted": {"type": "boolean"},
+    "currency": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]{0,15}$"},
+    "asset": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]{0,15}$"},
+    "network": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]{0,15}$"},
+    "media_type": {"type": "string", "pattern": "^[a-z0-9.+-]+/[a-z0-9.+-]+$"},
+    "unit": {"type": "string", "pattern": "^[a-z][a-z0-9._-]{0,31}$"},
+    "model_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+    "quantity": {"type": "string", "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+    "finding_codes": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/enum"}},
+    "evidence_refs": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/digest"}},
+    "graph_nodes": {"type": "array", "maxItems": 500, "items": {"$ref": "#/$defs/graphNode"}},
+    "service_bindings": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/serviceBinding"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,255}$"},
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "enum": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,63}$"},
+    "graphNode": {
+      "type": "object", "required": ["id", "type"], "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "type": {"$ref": "#/$defs/id"},
+        "capability": {"$ref": "#/properties/capability"},
+        "next": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/id"}}
+      }
+    },
+    "serviceBinding": {
+      "type": "object", "required": ["name", "role", "identity", "contract_digest"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"$ref": "#/properties/name"}, "role": {"$ref": "#/$defs/id"},
+        "identity": {"$ref": "#/$defs/id"}, "capability": {"$ref": "#/properties/capability"},
+        "contract_digest": {"$ref": "#/$defs/digest"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "anyOf": [
+          {"required": ["wait_role"]},
+          {"required": ["wait_actor_identity"]},
+          {"required": ["wait_started_at"]},
+          {"required": ["permitted_actions"]}
+        ]
+      },
+      "then": {"properties": {"phase": {"enum": ["awaiting-director", "awaiting-human"]}}, "required": ["phase"]}
+    },
+    {
+      "if": {"properties": {"wait_role": {"const": "director"}}, "required": ["wait_role"]},
+      "then": {"properties": {"phase": {"const": "awaiting-director"}}, "required": ["phase"]}
+    },
+    {
+      "if": {"properties": {"wait_role": {"const": "human"}}, "required": ["wait_role"]},
+      "then": {"properties": {"phase": {"const": "awaiting-human"}}, "required": ["phase"]}
+    },
+    {
+      "if": {"required": ["usage_id"]},
+      "then": {
+        "required": ["run_id", "assignment_id", "attempt_id", "service_identity", "unit", "measurement_source", "completeness", "evidence_status"],
+        "allOf": [
+          {
+            "if": {"required": ["quantity"]},
+            "then": {"properties": {"completeness": {"const": "complete"}}}
+          },
+          {
+            "if": {"not": {"required": ["quantity"]}},
+            "then": {"properties": {"completeness": {"enum": ["unknown", "undisclosed"]}}}
+          }
+        ]
+      }
+    },
+    {
+      "if": {"required": ["component"]},
+      "then": {
+        "required": ["run_id", "assignment_id", "attempt_id", "obligation_id", "offer_digest", "amount_atoms", "currency", "atomic_scale", "evidence_status", "price_basis", "state"]
+      }
+    },
+    {
+      "if": {"required": ["payment_id"]},
+      "then": {
+        "required": ["run_id", "amount_atoms", "currency", "atomic_scale", "evidence_status", "state"]
+      }
+    },
+    {
+      "if": {"required": ["delivery_kind"]},
+      "then": {
+        "required": ["run_id", "task_id", "context_id", "receipt_id", "artifact_revision",
+          "artifact_sha256", "markdown_sha256", "destination_identity", "byte_length",
+          "delivered_at", "outcome"],
+        "properties": {
+          "delivery_kind": {"const": "local_file"},
+          "outcome": {"const": "local-file-delivered"}
+        }
+      }
+    },
+    {
+      "if": {"required": ["amount_atoms", "evidence_status"]},
+      "then": {
+        "oneOf": [
+          {"properties": {"amount_atoms": {"type": "null"}, "evidence_status": {"enum": ["unknown", "undisclosed"]}}},
+          {"properties": {"amount_atoms": {"type": "integer", "minimum": 0}, "evidence_status": {"not": {"enum": ["unknown", "undisclosed"]}}}}
+        ]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

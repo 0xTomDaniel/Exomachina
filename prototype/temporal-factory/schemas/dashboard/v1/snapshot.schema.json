@@ -1,0 +1,375 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:exomachina:dashboard:v1:snapshot",
+  "title": "Exomachina dashboard snapshot v1",
+  "type": "object",
+  "required": ["schema_version", "cursor", "captured_at", "freshness", "state"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "cursor": {"$ref": "#/$defs/cursor"},
+    "captured_at": {"type": "string", "format": "date-time"},
+    "freshness": {"$ref": "#/$defs/freshness"},
+    "state": {"$ref": "#/$defs/state"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "cursor": {"type": "string", "pattern": "^c1\\.[A-Za-z0-9_-]{16}\\.[A-Za-z0-9_-]{40,48}$"},
+    "id": {"$ref": "urn:exomachina:dashboard:event:v1#/$defs/id"},
+    "digest": {"$ref": "urn:exomachina:dashboard:event:v1#/$defs/digest"},
+    "enum": {"$ref": "urn:exomachina:dashboard:event:v1#/$defs/enum"},
+    "safeText": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[^\\u0000-\\u001f]+$"},
+    "freshness": {
+      "type": "object", "required": ["status", "observed_at"], "additionalProperties": false,
+      "properties": {
+        "status": {"enum": ["fresh", "stale", "disconnected", "unknown"]},
+        "observed_at": {"type": ["string", "null"], "format": "date-time"},
+        "scope": {"enum": ["factory", "run"]},
+        "run_id": {"$ref": "#/$defs/id"},
+        "included_run_ids": {
+          "type": "array", "maxItems": 256, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"}
+        },
+        "factory_status": {"enum": ["fresh", "stale", "disconnected", "unknown"]},
+        "unavailable_run_ids": {
+          "type": "array", "maxItems": 256, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"}
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"scope": {"const": "run"}},
+            "required": ["scope"]
+          },
+          "then": {
+            "required": ["run_id", "included_run_ids", "factory_status"],
+            "properties": {"included_run_ids": {"minItems": 1}}
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {"required": ["run_id"]},
+                {"required": ["included_run_ids"]},
+                {"required": ["factory_status"]}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "state": {
+      "type": "object", "required": ["factory", "runs", "active_publication", "capacity", "commercial"],
+      "additionalProperties": false,
+      "properties": {
+        "factory": {"$ref": "#/$defs/factory"},
+        "runs": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/run"}},
+        "active_publication": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/publicRecord"}]},
+        "capacity": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/publicRecord"}]},
+        "commercial": {"$ref": "#/$defs/commercial"}
+      }
+    },
+    "factory": {
+      "type": "object", "required": ["id", "name", "graph"], "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[^\\u0000-\\u001f]+$"},
+        "identity": {"$ref": "#/$defs/id"},
+        "capability": {"$ref": "#/$defs/id"},
+        "graph": {"$ref": "#/$defs/graph"},
+        "agent_bindings": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/publicRecord"}},
+        "agents": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/publicRecord"}},
+        "source_label": {"$ref": "#/$defs/safeText"},
+        "model_label": {"$ref": "#/$defs/safeText"},
+        "fixture_label": {"$ref": "#/$defs/safeText"}
+      }
+    },
+    "graph": {
+      "type": "object", "required": ["nodes", "edges"], "additionalProperties": false,
+      "properties": {
+        "nodes": {"type": "array", "maxItems": 500, "items": {"$ref": "#/$defs/node"}},
+        "edges": {"type": "array", "maxItems": 50000, "items": {"$ref": "#/$defs/edge"}}
+      }
+    },
+    "pinnedRunGraph": {
+      "type": "object", "required": ["nodes", "edges"], "additionalProperties": false,
+      "properties": {
+        "nodes": {"type": "array", "maxItems": 500, "items": {"$ref": "#/$defs/pinnedRunNode"}},
+        "edges": {"type": "array", "maxItems": 50000, "items": {"$ref": "#/$defs/pinnedRunEdge"}}
+      }
+    },
+    "node": {
+      "type": "object", "required": ["id"],
+      "anyOf": [{"required": ["kind"]}, {"required": ["type"]}],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "type": {"$ref": "#/$defs/id"},
+        "kind": {"$ref": "#/$defs/id"}, "name": {"$ref": "#/$defs/safeText"},
+        "short": {"$ref": "#/$defs/safeText"}, "sub": {"$ref": "#/$defs/safeText"},
+        "capability": {"$ref": "#/$defs/id"}, "agent": {"$ref": "#/$defs/id"},
+        "dept": {"$ref": "#/$defs/id"}, "next": {"$ref": "#/$defs/graphNodeIds"},
+        "loop": {"type": "boolean"}, "responder": {"$ref": "#/$defs/id"},
+        "allowed": {"$ref": "#/$defs/graphNodeIds"},
+        "allowed_actions": {"$ref": "#/$defs/graphNodeIds"}, "role": {"$ref": "#/$defs/safeText"}
+      }
+    },
+    "edge": {
+      "type": "object", "required": ["from", "to"], "additionalProperties": false,
+      "properties": {
+        "from": {"$ref": "#/$defs/id"}, "to": {"$ref": "#/$defs/id"},
+        "label": {"$ref": "#/$defs/safeText"}, "loop": {"type": "boolean"},
+        "kind": {"$ref": "#/$defs/enum"}
+      }
+    },
+    "pinnedRunNode": {
+      "type": "object", "required": ["id", "kind"], "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "kind": {"$ref": "#/$defs/id"},
+        "capability": {"$ref": "#/$defs/id"}
+      }
+    },
+    "pinnedRunEdge": {
+      "type": "object", "required": ["from", "to"], "additionalProperties": false,
+      "properties": {"from": {"$ref": "#/$defs/id"}, "to": {"$ref": "#/$defs/id"}}
+    },
+    "graphNodeIds": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/id"}},
+    "run": {
+      "type": "object",
+      "required": ["id", "task", "status", "pinned", "assignments", "artifacts", "quality", "decisions", "commands", "delivery", "incidents", "admissions"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "task": {"$ref": "#/$defs/task"},
+        "status": {"oneOf": [{"$ref": "#/$defs/enum"}, {"$ref": "#/$defs/runStatus"}]},
+        "started_at": {"type": "string", "format": "date-time"},
+        "graph": {"$ref": "#/$defs/pinnedRunGraph"},
+        "pinned": {"$ref": "#/$defs/pinned"},
+        "assignments": {"$ref": "#/$defs/publicRecordList"},
+        "artifacts": {"$ref": "#/$defs/publicRecordList"},
+        "quality": {"$ref": "#/$defs/publicRecordList"},
+        "decisions": {"$ref": "#/$defs/publicRecordList"},
+        "commands": {"$ref": "#/$defs/publicRecordList"},
+        "delivery": {"$ref": "#/$defs/publicRecordList"},
+        "incidents": {"$ref": "#/$defs/publicRecordList"},
+        "admissions": {"$ref": "#/$defs/publicRecordList"},
+        "model_label": {"$ref": "#/$defs/safeText"},
+        "fixture_label": {"$ref": "#/$defs/safeText"}
+      }
+    },
+    "task": {
+      "type": "object", "required": ["id", "context_id"], "additionalProperties": false,
+      "properties": {"id": {"$ref": "#/$defs/id"}, "context_id": {"$ref": "#/$defs/id"}}
+    },
+    "runStatus": {
+      "type": "object", "required": ["state"], "additionalProperties": false,
+      "properties": {
+        "state": {"$ref": "#/$defs/enum"}, "phase": {"$ref": "#/$defs/enum"},
+        "node": {"$ref": "#/$defs/id"}, "started_at": {"type": "string", "format": "date-time"},
+        "ended_at": {"type": "string", "format": "date-time"},
+        "wait_deadline": {"type": "string", "format": "date-time"},
+        "wait_role": {"enum": ["director", "human"]},
+        "wait_actor_identity": {"$ref": "#/$defs/id"},
+        "wait_started_at": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"},
+        "permitted_actions": {"type": "array", "maxItems": 16, "uniqueItems": true, "items": {"$ref": "#/$defs/enum"}},
+        "outcome": {"$ref": "#/$defs/enum"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "anyOf": [
+              {"required": ["wait_role"]},
+              {"required": ["wait_actor_identity"]},
+              {"required": ["wait_started_at"]},
+              {"required": ["permitted_actions"]}
+            ]
+          },
+          "then": {"properties": {"phase": {"enum": ["awaiting-director", "awaiting-human"]}}, "required": ["phase"]}
+        },
+        {
+          "if": {"properties": {"wait_role": {"const": "director"}}, "required": ["wait_role"]},
+          "then": {"properties": {"phase": {"const": "awaiting-director"}}, "required": ["phase"]}
+        },
+        {
+          "if": {"properties": {"wait_role": {"const": "human"}}, "required": ["wait_role"]},
+          "then": {"properties": {"phase": {"const": "awaiting-human"}}, "required": ["phase"]}
+        }
+      ]
+    },
+    "pinned": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "manifest_digest": {"$ref": "#/$defs/digest"},
+        "package_digest": {"$ref": "#/$defs/digest"},
+        "definition_digest": {"$ref": "#/$defs/digest"},
+        "interpreter_build": {"$ref": "#/$defs/id"},
+        "publication_version": {"$ref": "#/$defs/safeText"},
+        "model_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+        "fixture_label": {"$ref": "#/$defs/safeText"},
+        "model_label": {"$ref": "#/$defs/safeText"}
+      }
+    },
+    "publicRecordList": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/publicRecord"}},
+    "publicRecord": {
+      "oneOf": [
+        {"$ref": "urn:exomachina:dashboard:event:v1"},
+        {"$ref": "#/$defs/normalizedPublicRecord"}
+      ]
+    },
+    "normalizedPublicRecord": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "attempts": {"$ref": "#/$defs/publicRecordList"},
+        "task": {"$ref": "#/$defs/task"},
+        "context_id": {"$ref": "#/$defs/id"},
+        "status": {"oneOf": [{"$ref": "#/$defs/enum"}, {"$ref": "#/$defs/runStatus"}]},
+        "pinned": {"$ref": "#/$defs/pinned"},
+        "graph": {"$ref": "#/$defs/graph"},
+        "assignments": {"$ref": "#/$defs/publicRecordList"},
+        "artifacts": {"$ref": "#/$defs/publicRecordList"},
+        "quality": {"$ref": "#/$defs/publicRecordList"},
+        "decisions": {"$ref": "#/$defs/publicRecordList"},
+        "commands": {"$ref": "#/$defs/publicRecordList"},
+        "delivery": {"$ref": "#/$defs/publicRecordList"},
+        "incidents": {"$ref": "#/$defs/publicRecordList"},
+        "admissions": {"$ref": "#/$defs/publicRecordList"},
+        "run_id": {"$ref": "#/$defs/id"}, "task_id": {"$ref": "#/$defs/id"},
+        "assignment_id": {"$ref": "#/$defs/id"}, "attempt_id": {"$ref": "#/$defs/id"},
+        "artifact_revision": {"$ref": "#/$defs/id"}, "previous_revision": {"$ref": "#/$defs/id"},
+        "node": {"$ref": "#/$defs/id"}, "identity": {"$ref": "#/$defs/id"},
+        "provider_identity": {"$ref": "#/$defs/id"}, "author_identity": {"$ref": "#/$defs/id"},
+        "reviewer_identity": {"$ref": "#/$defs/id"}, "actor_identity": {"$ref": "#/$defs/id"},
+        "owner_identity": {"$ref": "#/$defs/id"},
+        "destination_id": {"$ref": "#/$defs/id"}, "destination_identity": {"$ref": "#/$defs/id"},
+        "decision_id": {"$ref": "#/$defs/id"},
+        "command_id": {"$ref": "#/$defs/id"}, "receipt_id": {"$ref": "#/$defs/id"},
+        "incident_id": {"$ref": "#/$defs/id"}, "admission_id": {"$ref": "#/$defs/id"},
+        "usage_id": {"$ref": "#/$defs/id"}, "model_call_id": {"$ref": "#/$defs/id"},
+        "service_identity": {"$ref": "#/$defs/id"}, "obligation_id": {"$ref": "#/$defs/id"},
+        "payment_id": {"$ref": "#/$defs/id"}, "interpreter_build": {"$ref": "#/$defs/id"},
+        "manifest_digest": {"$ref": "#/$defs/digest"}, "package_digest": {"$ref": "#/$defs/digest"},
+        "definition_digest": {"$ref": "#/$defs/digest"}, "artifact_sha256": {"$ref": "#/$defs/digest"},
+        "markdown_sha256": {"$ref": "#/$defs/digest"},
+        "previous_sha256": {"$ref": "#/$defs/digest"}, "offer_digest": {"$ref": "#/$defs/digest"},
+        "state": {"$ref": "#/$defs/enum"}, "phase": {"$ref": "#/$defs/enum"},
+        "outcome": {"$ref": "#/$defs/enum"}, "expected_state": {"$ref": "#/$defs/enum"},
+        "resulting_state": {"$ref": "#/$defs/enum"}, "lifecycle": {"$ref": "#/$defs/enum"},
+        "kind": {"$ref": "#/$defs/enum"}, "measurement_source": {"$ref": "#/$defs/enum"},
+        "completeness": {"enum": ["complete", "unknown", "undisclosed"]},
+        "reasoning_effort": {"$ref": "#/$defs/enum"},
+        "evidence_status": {"enum": ["measured", "calculated_from_measured_usage", "provider_reported", "estimated", "unknown", "undisclosed"]},
+        "price_basis": {"enum": ["usage", "fixed_assignment", "fixed_attempt", "accepted_outcome"]},
+        "payment_trigger": {"enum": ["upfront", "incremental_use", "attempt_completion", "acceptance"]},
+        "component": {"enum": ["inference_cost", "hosting_cost", "markup", "supplier_charge", "payment_fees", "owner_overhead", "production_cost", "customer_price"]},
+        "started_at": {"type": "string", "format": "date-time"},
+        "ended_at": {"type": "string", "format": "date-time"},
+        "wait_deadline": {"type": "string", "format": "date-time"},
+        "delivered_at": {"type": "string", "format": "date-time"},
+        "delivery_kind": {"const": "local_file"},
+        "repair_count": {"type": "integer", "minimum": 0}, "max_repairs": {"type": "integer", "minimum": 0},
+        "queue_position": {"type": "integer", "minimum": 0}, "byte_length": {"type": "integer", "minimum": 0},
+        "finding_count": {"type": "integer", "minimum": 0}, "capacity_limit": {"type": "integer", "minimum": 0},
+        "active_count": {"type": "integer", "minimum": 0}, "queued_count": {"type": "integer", "minimum": 0},
+        "amount_atoms": {"oneOf": [{"type": "integer", "minimum": 0}, {"type": "null"}]},
+        "atomic_scale": {"type": "integer", "minimum": 0}, "markup_bps": {"type": "integer", "minimum": 0},
+        "accepted": {"type": "boolean"},
+        "name": {"$ref": "#/$defs/safeText"}, "publication_version": {"$ref": "#/$defs/safeText"},
+        "capability": {"$ref": "#/$defs/safeText"},
+        "role": {"$ref": "#/$defs/safeText"},
+        "label": {"$ref": "#/$defs/safeText"}, "digest": {"$ref": "#/$defs/safeText"},
+        "contract_digest": {"$ref": "#/$defs/safeText"}, "source_label": {"$ref": "#/$defs/safeText"},
+        "model_label": {"$ref": "#/$defs/safeText"}, "fixture_label": {"$ref": "#/$defs/safeText"},
+        "version": {"oneOf": [{"$ref": "#/$defs/safeText"}, {"type": "integer", "minimum": 0}]},
+        "limit": {"type": "integer", "minimum": 0},
+        "from": {"$ref": "#/$defs/safeText"}, "to": {"$ref": "#/$defs/safeText"},
+        "loop": {"type": "boolean"},
+        "currency": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]{0,15}$"},
+        "asset": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]{0,15}$"},
+        "network": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]{0,15}$"},
+        "media_type": {"type": "string", "pattern": "^[a-z0-9.+-]+/[a-z0-9.+-]+$"},
+        "unit": {"type": "string", "pattern": "^[a-z][a-z0-9._-]{0,31}$"},
+        "model_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+        "quantity": {"type": "string", "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"}
+      },
+      "allOf": [
+        {
+          "if": {"required": ["delivery_kind"]},
+          "then": {
+            "required": ["run_id", "task_id", "context_id", "receipt_id", "artifact_revision",
+              "artifact_sha256", "markdown_sha256", "destination_identity", "byte_length",
+              "delivered_at", "outcome"],
+            "properties": {
+              "delivery_kind": {"const": "local_file"},
+              "outcome": {"const": "local-file-delivered"}
+            }
+          }
+        }
+      ]
+    },
+    "commercial": {
+      "type": "object", "required": ["usage", "obligations", "payments"], "additionalProperties": false,
+      "properties": {
+        "usage": {"type": "array", "maxItems": 256, "items": {"oneOf": [{"$ref": "#/$defs/usageRow"}, {"$ref": "#/$defs/usageEventData"}]}},
+        "obligations": {"type": "array", "maxItems": 256, "items": {"oneOf": [{"$ref": "#/$defs/obligationRow"}, {"$ref": "#/$defs/obligationEventData"}]}},
+        "payments": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/publicRecord"}}
+      }
+    },
+    "usageEventData": {
+      "allOf": [{"$ref": "urn:exomachina:dashboard:event:v1"}, {"type": "object", "required": ["usage_id"]}]
+    },
+    "obligationEventData": {
+      "allOf": [{"$ref": "urn:exomachina:dashboard:event:v1"}, {"type": "object", "required": ["obligation_id", "component"]}]
+    },
+    "usageRow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["run_id", "assignment_id", "attempt_id", "usage_id", "service_identity", "unit", "completeness", "evidence_status"],
+      "properties": {
+        "run_id": {"$ref": "#/$defs/id"}, "assignment_id": {"$ref": "#/$defs/id"},
+        "attempt_id": {"$ref": "#/$defs/id"}, "usage_id": {"$ref": "#/$defs/id"},
+        "service_identity": {"$ref": "#/$defs/id"}, "model_call_id": {"$ref": "#/$defs/id"},
+        "model_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+        "reasoning_effort": {"$ref": "#/$defs/enum"},
+        "unit": {"type": "string", "pattern": "^[a-z][a-z0-9._-]{0,31}$"},
+        "quantity": {"type": "string", "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+        "measurement_source": {"$ref": "#/$defs/enum"},
+        "completeness": {"enum": ["complete", "unknown", "undisclosed"]},
+        "evidence_status": {"enum": ["measured", "calculated_from_measured_usage", "provider_reported", "estimated", "unknown", "undisclosed"]}
+      },
+      "allOf": [
+        {"if": {"required": ["quantity"]}, "then": {"properties": {"completeness": {"const": "complete"}}}},
+        {"if": {"not": {"required": ["quantity"]}}, "then": {"properties": {"completeness": {"enum": ["unknown", "undisclosed"]}}}}
+      ]
+    },
+    "obligationRow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["run_id", "assignment_id", "attempt_id", "obligation_id", "component", "amount_atoms", "currency", "atomic_scale", "evidence_status", "state"],
+      "properties": {
+        "run_id": {"$ref": "#/$defs/id"}, "assignment_id": {"$ref": "#/$defs/id"},
+        "attempt_id": {"$ref": "#/$defs/id"}, "obligation_id": {"$ref": "#/$defs/id"},
+        "component": {"enum": ["inference_cost", "hosting_cost", "markup", "supplier_charge", "payment_fees", "owner_overhead", "production_cost", "customer_price"]},
+        "offer_digest": {"$ref": "#/$defs/digest"},
+        "amount_atoms": {"oneOf": [{"type": "integer", "minimum": 0}, {"type": "null"}]},
+        "currency": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]{0,15}$"},
+        "atomic_scale": {"type": "integer", "minimum": 0},
+        "evidence_status": {"enum": ["measured", "calculated_from_measured_usage", "provider_reported", "estimated", "unknown", "undisclosed"]},
+        "price_basis": {"enum": ["usage", "fixed_assignment", "fixed_attempt", "accepted_outcome"]},
+        "payment_trigger": {"enum": ["upfront", "incremental_use", "attempt_completion", "acceptance"]},
+        "markup_bps": {"type": "integer", "minimum": 0},
+        "state": {"$ref": "#/$defs/enum"}
+      },
+      "allOf": [
+        {"if": {"properties": {"amount_atoms": {"type": "null"}}, "required": ["amount_atoms"]}, "then": {"properties": {"evidence_status": {"enum": ["unknown", "undisclosed"]}}}},
+        {
+          "if": {
+            "properties": {"amount_atoms": {"type": "integer"}},
+            "required": ["amount_atoms"]
+          },
+          "then": {
+            "properties": {
+              "evidence_status": {"not": {"enum": ["unknown", "undisclosed"]}}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

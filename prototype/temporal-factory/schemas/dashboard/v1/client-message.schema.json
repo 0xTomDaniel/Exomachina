@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:exomachina:dashboard:v1:client-message",
+  "title": "Exomachina dashboard WebSocket client message v1",
+  "oneOf": [
+    {"$ref": "#/$defs/subscribe"},
+    {"$ref": "#/$defs/command"}
+  ],
+  "$defs": {
+    "cursor": {"type": "string", "pattern": "^c1\\.[A-Za-z0-9_-]{16}\\.[A-Za-z0-9_-]{40,48}$"},
+    "id": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,255}$"},
+    "subscribe": {
+      "type": "object", "required": ["op", "factory_id"], "additionalProperties": false,
+      "properties": {
+        "op": {"const": "subscribe"},
+        "factory_id": {"$ref": "#/$defs/id"},
+        "run_id": {"$ref": "#/$defs/id"},
+        "after_cursor": {"$ref": "#/$defs/cursor"}
+      }
+    },
+    "command": {
+      "type": "object", "required": ["op", "factory_id", "command_id", "task_id", "context_id", "expected_state", "action"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {"const": "command"},
+        "factory_id": {"$ref": "#/$defs/id"},
+        "command_id": {"$ref": "#/$defs/id"},
+        "task_id": {"$ref": "#/$defs/id"},
+        "context_id": {"$ref": "#/$defs/id"},
+        "action": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,63}$"},
+        "expected_state": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,63}$"},
+        "expected_revision": {"$ref": "#/$defs/id"},
+        "expected_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

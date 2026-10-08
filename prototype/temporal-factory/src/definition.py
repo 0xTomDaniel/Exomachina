@@ -174,7 +174,10 @@ def _definition(document: dict, children: dict, bindings: dict, *, parent: bool)
         kind = node.get("type")
         if kind not in ALLOWED:
             raise ValueError("arbitrary code or unsupported block")
-        _keys(node, ALLOWED[kind], name)
+        if kind == "director_wait" and "human" in node:
+            _keys(node, ALLOWED[kind] | {"human"}, name)
+        else:
+            _keys(node, ALLOWED[kind], name)
         targets = []
         if "next" in node:
             targets.append(node["next"])
@@ -224,6 +227,14 @@ def _definition(document: dict, children: dict, bindings: dict, *, parent: bool)
         elif kind == "director_wait":
             if node["reason"] != "repair_exhausted" or nodes[node["next"]]["type"] != "abort":
                 raise ValueError("Director wait may only authorize abort after exhaustion")
+            if "human" in node:
+                human = node["human"]
+                _keys(human, {"actor", "timeout_seconds"}, "human escalation policy")
+                if (not isinstance(human["actor"], str) or
+                        not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,255}", human["actor"])):
+                    raise ValueError("human escalation needs an explicit safe actor identity")
+                if type(human["timeout_seconds"]) is not int or not 1 <= human["timeout_seconds"] <= 3600:
+                    raise ValueError("human escalation timeout must be explicit and bounded (1..3600 seconds)")
         elif kind == "release":
             binding = bindings.get(node["service"])
             if not isinstance(binding, dict) or binding.get("role") != "release" or not binding.get("approved"):

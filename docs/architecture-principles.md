@@ -4,6 +4,11 @@ Design principle adopted 28 September 2026. This document states the intended
 architecture; it does not claim that every replacement path is implemented or
 qualified. Terms follow the [project glossary](../CONTEXT.md).
 
+The next prototype follows the
+[factory dashboard integration and agent commerce specification](specs/factory-dashboard-integration.md).
+It binds one live/demo dashboard to actual execution and separates provider cost,
+commercial charges, purchase authority, and payment evidence.
+
 ## Keep process, provider, and implementation independently replaceable
 
 A factory separates three decisions:

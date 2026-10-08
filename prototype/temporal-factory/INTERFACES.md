@@ -191,3 +191,458 @@ The frozen cross-lane contract for the single-factory core-routes spike is in [`
 - Quality is a model-backed async A2A agent;
 - the caller-steered `outcome_mode` is removed;
 - the evidence packet is pinned in the package.
+
+## Factory dashboard v2 contract (2 Oct 2026)
+
+This section is the shared implementation contract for the dashboard integration spec. The
+specification remains the source of requirements; this file defines the interfaces the lanes build.
+The lead owns changes to this section and merges lane changes after review.
+
+### One dashboard-facing Interface
+
+Recorded, isolated demo, and live Adapters implement the same browser contract:
+
+```text
+discover() -> accessible factories and active publications
+snapshot(factory_id, run_id?) -> {schema_version, cursor, captured_at, freshness, state}
+observe(factory_id, after_cursor, run_id?) -> ordered CloudEvents and a continuation cursor
+inspect_artifact(run_id, revision, sha256) -> authorized bytes plus digest metadata
+command(command_id, task_id, context_id, action, expected_state, expected_revision?)
+    -> received, validated/rejected, and applied/failed outcomes
+submit(factory_identity, capability, brief, caller_context) -> original A2A Task/run binding
+```
+
+The first runnable tracer slice is a run using the ordinary `verified-research@1` A2A identity, its
+existing pinned publication, current Temporal execution, and the original Task. Do not add a parallel
+scheduler, graph selector, or authority ledger. A recorded bundle and isolated deterministic demo
+must validate against the same schema and pass through the same reducer and renderer. Demo commands
+never reach runtime credentials, A2A, Temporal, the Commercial Module, or payment Adapters.
+
+Demo scenarios additionally carry one explicitly labelled illustrative layer through that same Seam:
+`state.demo` on the snapshot (label `Illustrative Demo fixture`; scenario clock/start/now, simulated
+budget, agent prices/capacity/shared occupancy, programs, result kind, versions, step cues) and
+`com.exomachina.demo.illustration.v1` events (one allowlisted original timeline entry each: movement,
+artifacts, verdicts, releases, readouts, Director turns, alarms, recommendations, notes, holds). The
+validators accept this layer only when the caller declares source `demo`; the default, Live, and
+Recorded validation rejects it, and `toFloorModel` reads it only for Demo state. It is never a Live fact
+and is not part of the public JSON schemas.
+
+The live transport is WebSocket. The initial transport message binds an authenticated principal,
+factory identity, optional run filter, and last applied cursor. The server emits either an atomic
+snapshot at cursor C followed by every relevant event after C, or a resumption result for the supplied
+cursor. If the cursor is older than retained data, emit `resync_required` and a fresh snapshot; never
+skip an authoritative transition. A run-filtered consumer receives a continuation cursor that advances
+over unrelated factory events.
+Freshness is a source-read fact; a cursor checkpoint does not make disconnected or
+stale source data fresh. Optional bounded snapshot freshness fields are `scope`
+(`factory` or `run`), `run_id`, `included_run_ids`, `factory_status`, and
+`unavailable_run_ids` (unique safe-ID lists, at most 256). A run scope is fresh
+only after successful reads of that exact owned run and descendants linked by
+actual Temporal child-start events. Missing unrelated histories keep factory-wide
+status disconnected and warnings visible. Other RPC failures remain fail closed.
+The owned source may expose authenticated
+`get_run_freshness(principal, factory_id, run_id)` as a cached, authenticated reader.
+Its `SourcePage.run_freshness` optional map is captured under the source lock
+with the factory freshness and records; projection validates the bindings and
+persists that map atomically with state and cursor. Snapshot construction reads
+this committed capture, never a later mutable source cache. Legacy sources retain
+factory-wide freshness. Incomplete source paging cannot establish fresh scope. Scoped freshness
+never authorizes a new factory submission while factory-wide coverage is incomplete. Buffering is bounded; overflow explicitly requests resynchronization or
+closes the slow connection. Duplicate delivery is permitted and reduction is idempotent.
+
+Each event is a CloudEvents 1.0.2 structured envelope with `id`, `source`, `type`, `time`, `subject`,
+`datacontenttype`, `dataschema`, and versioned Exomachina `data`. The stable event ID is derived from
+its durable source record, not the WebSocket delivery. The ordered cursor is transport/projection
+metadata and is not inferred from event time. Payloads carry applicable factory, run, assignment,
+attempt, original Task, pinned publication/manifest/package/build, artifact revision/digest, decision,
+commercial-record, and evidence identities. Only explicitly allowlisted fields are projected. Raw
+Temporal history, run inputs, credentials, signing material, and mandate presentations never enter
+browser payloads. Artifact bytes use an authorized HTTP path and are digest-checked.
+
+The protocol is documented with AsyncAPI and versioned JSON Schemas. WebSocket commands include a
+stable command ID and expected state/revision/digest. Their transport acknowledgement means only
+`received`; validation/rejection and applied/failure are separate authoritative outcomes. Repeating an
+identical command returns its original outcome. Reusing its ID with different intent is rejected.
+Server-side authority binds the principal to the original Task/context and current run state. The
+browser never supplies an actor identity as authority and never paints a command as applied before the
+authoritative result arrives. Live mode has no playback controls or playback keyboard shortcuts.
+
+The v1 WebSocket uses JSON messages with `op`; each embedded snapshot and CloudEvent carries its
+schema version. A client starts with `{op:"subscribe", factory_id, run_id?, after_cursor?}`. The server
+returns `{op:"snapshot", snapshot:{schema_version:1, cursor, captured_at, freshness, state}}` or
+`{op:"resumed", after_cursor, continuation_cursor}`. Subsequent messages are
+`{op:"event", cursor, event:<CloudEvent>}`, `{op:"checkpoint", cursor}`, or
+`{op:"resync_required", reason, minimum_cursor?, latest_cursor?}`. A command is
+`{op:"command", factory_id, command_id, task_id, context_id, expected_state,
+expected_revision?, expected_sha256?, action}`. Its immediate acknowledgement is
+`{op:"command_ack", command_id, lifecycle:"received"}`. The later authoritative outcome arrives as a
+CloudEvent and is never implied by the acknowledgement. Cursors are opaque strings. The ordered
+projection cursor travels alongside the CloudEvent as WebSocket delivery metadata; the CloudEvent `id`
+remains stable across delivery attempts. Authentication comes from the server-side session/principal
+resolver; credentials are not carried in a query string, event, command, or other application message.
+
+### Commercial Interface
+
+The Commercial Module owns supplier offer pinning, authorization, reservations, metering attribution,
+accrued obligations, credit and settlement reconciliation. It does not own execution transitions,
+artifact acceptance, or customer price. A purchase pins the offer/version, supplier and assignment,
+currency and precision, billable units, cost/hosting disclosure basis, explicit basis-point markup and
+its base, maximum authorized charge, expiry, payment trigger, and failure/repair/cancellation/credit
+terms before work is admitted.
+
+Amounts use integer atomic units plus an explicit currency/scale; rates and conversions never use
+binary floating point. Usage values include unit, source, completeness, and assignment/attempt
+identity. Amount evidence is one of `measured`, `calculated_from_measured_usage`,
+`provider_reported`, `estimated`, `unknown`, or `undisclosed`. Missing usage or cost is never zero. Inference cost, hosting cost,
+markup, supplier service charge, payment/network fees, owner overhead, and factory customer price are
+distinct records. A subscription token count is not an invoice. Hosting without a selected metering and
+allocation basis remains unknown; no default rates or markup are supplied here.
+
+Price basis (`usage`, `fixed_assignment`, `fixed_attempt`, `accepted_outcome`) is separate from payment
+trigger (`upfront`, `incremental_use`, `attempt_completion`, `acceptance`). Only a profile implemented
+and qualified by its Adapter may be advertised as supported. Settlement states distinguish
+authorized, reserved, accrued, settlement-pending, settled, credited/refunded, failed, and unresolved.
+Reservations are atomic across runs/processes, remain held for unresolved liabilities, and reconcile
+late usage and credits without rewriting source usage. MPP and x402 remain separate payment Adapter
+profiles. AP2 v0.2 is an authorization Adapter; it grants no implicit nested-factory delegation. This
+contract selects no inference access method, rate, markup, hosting allocation, fee treatment, payment
+network, asset, facilitator, wallet custody, or trust configuration.
+
+Payment Adapter capability declarations are separate from the Commercial Module's purchase and
+usage ledger. The Module exposes an Adapter seam for MPP bounded metered sessions, x402 bounded
+authorization/settlement, and AP2 v0.2 purchase-authorization verification. Each declaration pins
+protocol/profile and version, operation set, environment prerequisites, and status. `available` may
+be advertised only after implementation and profile-specific qualification; `unconfigured`,
+`unsupported`, and `unqualified` remain explicit and cannot authorize work. Adapter evidence exposes
+safe receipt references and outcomes, never credentials, mandate presentations, signatures, wallet
+secrets, or raw payment headers. This prototype supplies only the seam and declarations: no network
+Adapter is selected or invoked, and P01-P10 remain unqualified.
+
+Commercial Observation events are sourced only from the Commercial Module's public read Interface.
+Usage rows preserve run, assignment, attempt, service identity, and model-call identity when available.
+An unreported quantity is omitted and marked `unknown` or `undisclosed`; missing records never imply
+zero usage or zero cost. Inference cost, hosting cost, markup, supplier charge, fees, and customer
+price are separate cost-component facts. Each money fact carries integer `amount_atoms` or `null`
+only when its evidence is `unknown` or `undisclosed`, with explicit currency and `atomic_scale`.
+Absent cost evidence is rendered as unreported/unknown rather than a zero balance. The current
+prototype does not infer provider usage from token estimates or customer subscription limits.
+
+On the wire, `commercial.usage` includes `usage_id`, `service_identity`, `unit`,
+`measurement_source`, `completeness`, and `evidence_status`, plus applicable `model_call_id`,
+`model_id`, and `reasoning_effort`. A reported quantity is an exact decimal string with
+`completeness: "complete"`; an unreported quantity is omitted with completeness `unknown` or
+`undisclosed`. `evidence_status` independently records whether a reported value is measured,
+calculated from measured usage, provider reported, or estimated. `commercial.obligation`
+uses one row per `component` (`inference_cost`, `hosting_cost`, `markup`, `supplier_charge`,
+`payment_fees`, `owner_overhead`, `production_cost`, or `customer_price`) and carries
+`obligation_id`, `offer_digest`, `amount_atoms`, `currency`, `atomic_scale`, `evidence_status`,
+`price_basis`, and the pinned `payment_trigger`/`markup_bps` when applicable. Unknown or undisclosed
+amounts carry `amount_atoms: null`; they are never encoded as numeric zero.
+
+#### Model-usage measurement read Interface
+
+Provider-reported per-call model measurements are a separate, non-financial read Interface. They do
+not create a purchase, supplier obligation, customer charge, or cost estimate. The approved public
+shape is specified here; this contract does not claim that the aggregate endpoint is mounted or
+that every source already populates it:
+
+```text
+GET /usage/measurements
+    ?run_id=...&task_id=...&assignment_id=...&attempt_id=...&model_call_id=...&call_scope=...
+-> {"measurements": [MeasurementView, ...]}
+
+MeasurementReader.list_measurements(*, run_id?, task_id?, assignment_id?, attempt_id?,
+                                    model_call_id?, call_scope?) -> list[MeasurementView]
+```
+
+Filters are optional and combine as narrowing predicates. Results have deterministic
+`recorded_at, model_call_id` order. `GET` is read-only. The Runtime factory app is the aggregate
+endpoint authority: it uses the existing authenticated Runtime principal and scopes results to the
+factory instance that principal may observe. It reads only each journal owner's public
+`list_measurements` Interface (or that owner's authenticated measurement endpoint), using existing
+pinned service bindings; it never opens another component's SQLite database or accepts a caller
+supplied database path, source URL, service identity, or principal. A source owner assigns
+`recorded_at` when it persists the fact; callers cannot set or backdate it.
+
+Each `MeasurementView` contains `measurement_id`, `model_call_id`, `recorded_at`, `call_scope`,
+`provider`, `model_id`, `reasoning_effort`, `unit: "tokens"`, `measurement_source`, `completeness`,
+`evidence_status`, and the safe per-category usage projection. The supported token categories are
+`input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`, and `total_tokens`; each
+is `{value: nonnegative integer, status: "reported"}` when the provider reported it (including a
+reported zero), or `{value: null, status: "unavailable"}` when it did not. No token estimates are
+substituted. The view may also carry `service_identity`, `task_id`, `message_id`, `run_id`,
+`definition_digest`, `assignment_id`, and `attempt_id`; each is nullable until an authoritative fact
+exists. `attempt_id` follows the existing public ID representation and is populated only from the
+actual workflow attempt. An opaque `action_id` is not parsed to manufacture assignment or attempt
+bindings.
+
+`call_scope` is `authoring_overhead`, `director_call`, or `assignment_call`. An authoring overhead
+measurement has `call_scope: "authoring_overhead"`; `task_id`, `run_id`, `assignment_id`, and
+`attempt_id` are null when authoring occurred without those genuine bindings. A Director call keeps
+its real Task and message IDs, while run and definition bindings remain null until the Director
+resolves the Task to an actual run and pinned definition. Assignment measurements carry only IDs
+received from authoritative workflow/A2A facts. Missing bindings remain null; no sentinel IDs are
+allowed.
+
+The measurement response contains no prompt, model arguments, raw provider request/response,
+credentials, or cost fields. Inference cost, hosting cost, markup, supplier charge, payment fees,
+owner overhead, and customer price require separate Commercial evidence. A token count is not a
+cost and never implies a zero cost. An unbound authoring overhead view is available through this
+read Interface only; the current `commercial.usage` CloudEvent requires run, assignment, and attempt
+IDs, so it must not be emitted for such a row without a separately approved event-schema change.
+
+### Shared file ownership for this implementation
+
+Unless a path starts with `../../`, paths below are relative to
+`prototype/temporal-factory`.
+
+| Lane | Owned implementation files |
+| --- | --- |
+| Lead | This contract; cross-lane integration and review |
+| Observation | `src/observation.py`, `src/observation_transport.py`, `schemas/dashboard/v1/*.schema.json`, `specs/dashboard-asyncapi.yaml`, `tests/test_observation.py`, `tests/test_observation_transport.py` |
+| Runtime | `src/harness.py`, `src/factory.py`, `src/director_agent.py`, `src/receiver_client.py`, new `src/artifact_delivery.py`, new `src/observation_source.py`, and their runtime tests; preserve pre-existing model-migration hunks |
+| Dashboard | `../../docs/design/exomachina-floor.html`, `dashboard/contract.mjs`, `dashboard/reducer.mjs`, `dashboard/adapters/{recorded,demo,live}.mjs`, `dashboard/test/dashboard.test.mjs` |
+| Commerce | `src/commercial.py`, `tests/test_commercial.py`; Commercial ledger, Payment Adapter seam, and MPP/x402/AP2 capability declarations; no edits to pre-existing model-migration files without a separately agreed handoff |
+| Qualification | `DASHBOARD-QUALIFICATION.md`, `scenarios/dashboard_qualification.py`, `tests/test_dashboard_qualification.py` |
+
+`src/harness.py` is runtime-owned: the Observation lane exposes a transport module but does not mount
+it there. The Runtime lane calls the Observation transport from the application mount point. The
+Dashboard lane imports the browser schema/reducer contract and does not redefine protocol semantics.
+Qualification does not edit another lane's tests or implementation. All live claims remain
+unqualified until a real smoke record proves them; fixture and deterministic cases keep their labels.
+
+### Resumed qualification allocation (3 Oct 2026)
+
+The lead owns `docs/design/exomachina-floor.html` during browser integration. The Dashboard lane
+owns its adapters, reducer, and tests; page changes are handed to the lead for review and integration.
+Runtime owns the opt-in loopback QA session adapter and its rejection tests. Observation owns
+actual loopback WebSocket smoke checks. Commerce additionally owns `src/model_usage.py`,
+its tests, and additive measurement changes in `services/model_agent.py` and `src/model_broker.py`.
+Those changes must preserve the pre-existing model migration and distinguish missing usage from
+reported zero. Provider usage measurements do not authorize spending or select prices. Commerce
+also owns additive usage journaling in `src/director_agent.py` during this pass; missing initial
+run bindings must stay unavailable until actual work exists. Harness integration remains
+Runtime-owned. The lead owns the narrow fixture-error envelope fix in `src/harness_server.py`
+and `tests/test_fixture_failure.py`. All shared-port suites use `/tmp/exo-qual-suite.lock`.
+
+Browser QA tooling lives outside product source in a pinned temporary Jev checkout. The operator
+selected native OpenRouter Decisions with `typesafe/jev-1.13` for Jev QA, overriding upstream's
+direct TypeSafe default. This does not change the product's `gpt-6-luna`/`xhigh` inference path.
+Credential values are injected only into bounded QA children through Phase; evidence records only
+safe provider metadata, assertions, source revisions and patch digests.
+
+## Local accepted-report delivery
+
+`local_delivery.LocalDelivery(database, destination, *, factory_id,
+destination_identity)` owns the explicitly configured local destination and its
+receipt journal. `deliver(*, run_id, task_id, context_id, artifact)` accepts a
+verified `DeliveredMarkdown` from the authenticated public Observation artifact
+reader and `accepted_markdown`; `list_receipts(*, run_id=None)` returns safe
+receipts after verifying the deposited bytes. It exposes no SQL connection,
+filesystem path, report text, price, or payment information in its views.
+
+`local_delivery_routes.install_local_delivery_routes` mounts `POST /deliveries`
+and `GET /deliveries` on the existing Runtime factory app. Runtime supplies its
+principal resolver and factory identity. The optional server configuration is
+exactly `local_delivery: {destination: <absolute owned path>, identity: <stable
+destination identity>}`; absence reports unavailable. Requests cannot configure
+a destination. POST accepts only `{run_id, revision, sha256}`, verifies the final
+observed accepted artifact and original Task/context, then deposits the exact
+Markdown once. A changed binding or changed deposited file fails closed.
+
+The safe receipt has `receipt_id`, `factory_id`, `run_id`, `task_id`, `context_id`,
+`artifact_revision`, `artifact_sha256` (accepted report envelope),
+`markdown_sha256` (exact deposited Markdown), `destination_identity`,
+`state: delivered`, `delivery_kind: local_file`, `byte_length`, and writer UTC
+`recorded_at`; the POST result also reports `duplicate`. This is a distinct local
+delivery receipt. It does not establish a remote customer's receipt or payment.
+The original workflow's HTTP fixture receipt remains separately identified.
+The direct HTTP receipt fields are not silently added to Observation CloudEvents.
+
+### Approved local delivery Observation projection
+
+The lead-approved `delivery.receipt` extension allows `markdown_sha256`,
+`destination_identity`, `delivery_kind`, and `byte_length`. When
+`delivery_kind: local_file` is present, the original Task/context, run, receipt,
+accepted artifact revision/digest, Markdown digest, destination identity,
+byte length, and `delivered_at` must all be present; `outcome` must be
+`local-file-delivered`. The timestamp comes from the receipt writer's UTC fact.
+Paths, report text, cost, and payment fields remain excluded.
+
+Runtime projects only its injected LocalDelivery public `list_receipts` reader,
+with an immutable source identity per receipt. Existing fixture receipt facts
+remain separate. The shared renderer labels the local outcome “Saved to local
+destination”; it does not assert receipt by a remote customer.
+
+The Floor's local receipt counter uses `delivered_at` over a rolling five-minute
+window, deduplicated by receipt identity. It does not use workflow completion as
+the deposit time. Historical receipts remain inspectable in Outputs even when
+outside that window. Demo's declared simulated delivery counter is unchanged.
+
+Outputs offers “Save to local destination” for an exact observed artifact through
+this authenticated public POST. The request contains only run/revision/hash;
+Runtime verifies final acceptance and chooses its explicitly configured local
+destination. A retry reuses the existing receipt. The browser does not choose a
+filesystem path or acquire a payment authority.
+
+New Workflow executions behind Temporal patch
+`exo-explicit-assignment-bindings-v1` carry engine-issued opaque assignment and
+attempt UUIDs separately from model-call IDs and Quality's ordinal `attempt`.
+Assignment identity remains stable per graph node/parallel branch across logical
+revisions; a logical invocation receives a new attempt identity. Activity retries
+reuse the persisted input. Actual `node` is explicit. Legacy histories keep their
+original activity envelopes and do not acquire invented identifiers.
+
+### Optional bounded human escalation
+
+A newly published `director_wait` may declare
+`human: {actor: <explicit safe identity>, timeout_seconds: <integer 1..3600>}`.
+Absence retains the existing abort-only Director policy. The declaration is part
+of the pinned definition; it selects no production actor or deadline by default.
+Director can escalate an exhausted rejected candidate to that actor on the same
+original Task/run/revision/digest. Human can abort only, with a separate declared
+deadline and the same owner fence. Stale/wrong-actor/concurrent answers fail.
+Self-escalation to the Director identity fails before model work. Applied decision
+receipts remain available for resolving a lost reply after escalation.
+
+This workflow slice does not grant extra repair, alter Quality acceptance, or
+increase spending authority. Public Runtime/A2A mounting and operational browser
+proof remain required; synthetic workflow tests are not S08 qualification.
+
+### Current wait commands from the dashboard
+
+The Live dashboard builds a wait command only from current observed `awaiting-director` or `awaiting-human` facts, the published permitted actions, the original Task/context, and the exact current rejected Quality/artifact revision pair. It fetches and verifies those candidate bytes through the owned artifact Interface before sending `expected_revision` and `expected_sha256`, then rechecks the current observed wait. Missing facts, a changed candidate, accepted Quality, or unverifiable bytes leave commands unavailable. This browser check does not grant authority: Runtime must still validate the authenticated principal, pinned actor, original Task, current phase, deadline, candidate and update fence.
+
+Historical waits without these facts remain unknown. Recorded sources are read-only. The command builder and bounded regressions are implemented; Runtime human/escalation mounting and operational qualification remain separate pending evidence.
+
+### Current bounded integration allocation and shared capacity approval
+
+The lead now owns `src/factory.py`, `src/definition.py`, `dashboard/contract.mjs`, `dashboard/decision.mjs`, and the page outside explicitly allocated Dashboard sections. Runtime retains the harness, runtime source, runtime tests and the human Task projection integration. Observation's temporary Operations source constructor/producer/refresh allocation returns to Runtime after its reviewed handoff; Observation retains its new focused integration test. Dashboard owns usage validation/tests and its current Decisions wait-control section. Commerce owns additive normal model-agent scheduling, adapter factory binding, and their tests. Every allocation preserves earlier migration edits.
+
+S16 approves the additive optional A2A assign `factory_id`, supplied only by actual workflow Director authority under `exo-explicit-factory-binding-v1`. Missing identity remains unknown historically; no run/action parsing or retrofill is permitted. Shared execution capacity requires the explicit pair `--admission-db` and `--execution-capacity`, with no default; zero pauses admission. One queue is owned by the pinned service identity across all caller factories. Accepted Task facts retain explicit caller factory identity, while authenticated occupancy reads report scoped own/other counts without other factories' Task IDs. A GET never constructs/configures a queue; unknown factory identities are unavailable. Capacity-enabled scheduling rejects a missing factory binding before model work. Read-only retained usage owners remain frozen and do not accept capacity configuration. Fixture authentication and synthetic scheduler tests do not qualify production authentication or S16.
+
+`AdmissionQueue.read_snapshot()` returns capacity totals and the existing safe
+request projections from one read transaction. Service occupancy groups that
+snapshot using its own accepted Task factory facts; external responses expose
+counts, not other factories' Task identities. Readers must not combine separate
+capacity and request reads when asserting consistent occupancy.
+
+Engineering's approved additive `OperationsAdapter.publication_context(factory_id)`
+returns exactly `{manifest_digest, quality_policy_digest}` from one verified
+active publication closure. Evaluation and research requests must use that
+atomic context and fail closed when unavailable; they cannot fall back to two
+independent reads. Manifest-only operations retain their existing reader. This
+contract does not enable candidate evaluation, promotion or research execution
+by itself.
+
+### Bounded supplier destination allocation (implementation in progress)
+
+Commerce owns `src/supplier_protocol.py` and its focused tests; Runtime owns the
+normal factory harness/Director destination integration. An explicitly enabled
+`nested_supplier_enabled` profile may accept `nested_factory` with the exact
+SupplierFanout parent/child binding tuple and `payload: {inputs: {...}}`.
+The requested child definition must match the destination's active publication.
+Only this separate operation may accept a caller-issued opaque child run ID as
+its actual workflow ID; collisions and a changed accepted tuple fail closed.
+Ordinary start identity and publication selection retain their existing rules.
+
+The destination persists the accepted tuple with its original remote A2A Task
+and context and executes through normal admission/Temporal paths. An enabled
+profile must echo the accepted tuple in Task metadata and its structured
+artifact, preserving the exact accepted report bytes. A normal ModelAgent does
+not own this operation and must not advertise it. Opaque reconciliation remains
+unknown without a durable action lookup; no fixture lookup is advertised by a
+generic destination. This allocation does not qualify S18/S19 or authorize new
+paid execution, and the retained instance keeps the profile disabled.
+
+### Basic prototype milestone — operator scope change (2026-10-03)
+
+Deferred supplier, extended human/repair, capacity queue/contention, Engineering,
+research, payment and full recovery/version qualification work is paused at safe
+edit boundaries. Existing changes and evidence remain preserved. The operator
+owns the canonical spec and CONTEXT scope update. Current implementation work
+prioritizes truthful Board progress, normal dashboard submission/provider
+readiness, a single active job with explicit rejection of another, usage with
+honest gaps and unknown costs, reconnect and source isolation. Two dashboard
+submitted real Luna xhigh cases require resolved execution allowance; retained
+recordings do not satisfy that gate. No additional paid execution is authorized
+by this coordination checkpoint.
+
+Basic provider readiness consumes additive public model-agent health fields
+`provider`, `model_id`, `reasoning_effort` (nullable safe strings),
+`inference_enabled` and `read_only_usage` (booleans). They describe configuration
+and writable mode, not sign-in or successful inference. Read-only owners expose
+null model metadata and inference disabled; scripted work exposes no model/effort
+and is not real provider evidence. Runtime must verify identities and contracts
+against the pinned publication and separately check redacted broker readiness
+before allowing a new live job. No pricing fact follows from token measurements.
+
+The operator subsequently completed the B01–B10 canonical scope update and
+explicitly authorized the two necessary real dashboard workflows in B03. That
+new instruction resolves the earlier basic-run allowance checkpoint for those
+two workflows only. Use existing approved Luna xhigh access and finite existing
+Director, model-call and repair limits; do not repeat failed paid workflows or
+start a third paid workflow automatically. B06 may use deterministic normal
+Runtime command proof. The canonical basic gate governs current qualification;
+historical S/P evidence remains preserved as later roadmap evidence.
+
+Basic admission uses the existing normal factory A2A `message/send` path. The
+explicit instance option `basic_single_active_job: true` reserves one durable
+Director-owned slot before provider preflight or model selection, including the
+interval before a run exists. Another original Task is rejected rather than
+queued. This option refuses legacy structured commands and external nested
+supplier entry points. It does not change local Temporal child semantics.
+The Runtime supplies a synchronous `Director.submission_preflight` callback;
+missing readiness fails closed before model scheduling. Completed submission
+replay is bound to the same message, original Task/context, actor and brief
+fingerprint. Pending or uncertain delivery never schedules a duplicate turn.
+Terminal release uses the owned FactoryTaskStore reader and the Director's
+durable closed outcome, never an inferred timestamp or dashboard count.
+Uncertain interrupted model outcomes remain occupied; automatic recovery is
+deferred. `basic_job_status()` exposes occupancy only, without Task IDs or caller
+identity. Twelve focused synthetic gate tests and eighteen existing harness
+regressions pass together. Bound uncertainty is reconciled only through its
+durable original Task alias; unbound uncertainty remains fail-closed. Actual
+simultaneous-dashboard rejection remains to be demonstrated during the
+authorized pair.
+
+
+## Current submission readiness versus historical observation (2026-10-05)
+
+Authenticated `GET /submission/readiness` is bound to this Runtime factory and
+rejects query selectors. Loopback operator session/fixture operator is supported;
+observer principal is denied. It uses a fresh existing submission-readiness check
+(pinned model owners, approved subscription profile, registered worker/pollers)
+and public Director `basic_job_status()` / `unfinished()` readers. It starts no
+Task, workflow, model call, reservation or payment. Unknown state fails closed.
+
+Response fields are exactly `schema_version:1`, `factory_id`, writer-assigned UTC
+`observed_at`, `status:ready|blocked`, `reason_code:null|enum`; no-store. Blocker
+codes: `director_profile_unapproved`, `default_broker_path_overridden`,
+`subscription_status_unavailable`, `pinned_writable_model_owners_unavailable`,
+`pinned_worker_pollers_unavailable`, `factory_busy`, `factory_uncertain`,
+`unfinished_runs`, `current_state_unavailable`. This is a point-in-time view,
+not a slot lease, inference proof, cost estimate or production-auth qualification.
+
+Bootstrap supplies `submissionReadinessEndpoint`. The Live Adapter requires an
+open current factory socket, checks the authenticated same-origin endpoint anew
+before a new-work POST (5s request bound; observed time within 30s), and aborts
+before POST if selection/socket changed. The existing A2A preflight and atomic
+single-job fence remain authoritative. Responses cannot select a different
+factory or arbitrary source URL. Without the configured Interface the old
+conservative gate remains in place.
+
+Task-bound follow-ups and operator commands still require fresh run observation
+and original Task/context. Terminal histories may be expired/disconnected while
+current factory submission is ready; those historical facts are not upgraded.
+Direct A2A text replies are displayed as text, bounded, inside the composer;
+only an actual returned factory Task with run metadata is followed as workflow
+work. Missing observation of that Task does not create a substitute run.
+
+#### Exact submitted Task following and assignment linkage (2026-10-05)
+
+The dashboard follows an accepted A2A Task using the returned explicit `metadata.run_id`, Task ID and context ID. Authenticated scoped Observation must retain that same Task/context before its graph is selected. A factory-wide unavailable history is not a substitute for the returned run. While awaiting a scoped snapshot, old job surfaces and summaries are cleared; failure displays unavailable instead of the previous job. Restoring an unavailable historical selection can prefer an available pinned run, retaining the historical-coverage warning.
+
+Both reducers carry only `started_at`, `provider_identity` and `node` across updates of the same assignment/attempt when omitted by the newer fact. They do not carry queue positions or transfer fields to another attempt. Nonterminal/unknown updates without `ended_at` remove the previously projected end. Raw source facts remain unchanged.
+
+Runtime may append a deterministic `projection-correction:assignment-node-link-v1:` fact using only an explicit activity-input `node` that is present in that workflow's pinned definition. The correction retains the original event time, state, capability, provider and assignment/attempt bindings. An opaque Temporal activity ID is not node evidence. The shared Floor presents its selected observed state and Quality independently from delivery and exposes Board/Outputs without triggering submissions.

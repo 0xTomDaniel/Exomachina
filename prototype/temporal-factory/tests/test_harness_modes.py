@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import asyncio
 import signal
+import socket
 import subprocess
 import sys
 import tempfile
@@ -10,8 +12,9 @@ import time
 import unittest
 import urllib.error
 import urllib.request
+from types import SimpleNamespace
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -80,6 +83,113 @@ class DirectorBoundaryTests(unittest.TestCase):
         with second.connect() as db:
             second.fence(db)
 
+    def test_direct_script_and_import_share_the_authenticated_actor_context(self):
+        source_path = SRC / "harness.py"
+        probe = r'''
+import ast, pathlib, sys, types
+path = pathlib.Path(sys.argv[1])
+tree = ast.parse(path.read_text())
+assert isinstance(tree.body[-1], ast.If)
+module = types.ModuleType("__main__")
+module.__file__ = str(path)
+sys.modules["__main__"] = module
+exec(compile(ast.Module(body=tree.body[:-1], type_ignores=[]), str(path), "exec"),
+     module.__dict__)
+import harness
+assert harness is module
+token = harness.CURRENT_ACTOR.set("fixture-operator")
+assert module.CURRENT_ACTOR.get() == "fixture-operator"
+harness.CURRENT_ACTOR.reset(token)
+print("same-context")
+'''
+        completed = subprocess.run(
+            [sys.executable, "-c", probe, str(source_path)],
+            cwd=SRC, capture_output=True, text=True, timeout=30)
+        self.assertEqual(completed.returncode, 0, "direct-entrypoint identity probe failed")
+        self.assertEqual(completed.stdout.strip(), "same-context")
+
+    def test_start_preserves_start_rpc_error_when_reconciliation_query_is_not_found(self):
+        class MissingWorkflow(Exception):
+            pass
+
+        start_error = RuntimeError("synthetic start RPC failure")
+        handle = SimpleNamespace(query=AsyncMock(side_effect=[
+            MissingWorkflow("no existing execution"),
+            MissingWorkflow("still no execution"),
+        ]))
+        start_workflow = AsyncMock(side_effect=start_error)
+        client = SimpleNamespace(
+            get_workflow_handle=lambda _run_id: handle,
+            start_workflow=start_workflow,
+        )
+        run = {"run_id": "run-synthetic", "package_digest": "package-synthetic",
+               "manifest_digest": "manifest-synthetic", "run_inputs_digest": "inputs-synthetic"}
+        package = {"root": {"nodes": {}}}
+        publication = {"build_id": "build-synthetic", "closure": {}}
+        with (patch.object(self.director, "client", new_callable=AsyncMock,
+                           return_value=client),
+              patch.object(harness, "RPCError", MissingWorkflow),
+              patch.object(harness, "verify_closure"),
+              patch.object(harness, "build_workflow_input", return_value={"run": "run-synthetic"}),
+              patch.object(harness, "_workflow_execution_timeout_seconds", return_value=30),
+              self.assertRaises(RuntimeError) as raised):
+            asyncio.run(self.director._start(run, package, publication))
+        self.assertIs(raised.exception, start_error)
+        self.assertEqual(handle.query.await_count, 2)
+        self.assertEqual(start_workflow.await_count, 1)
+
+    def test_basic_readiness_requires_both_live_pollers_for_exact_pinned_build(self):
+        ready = harness._worker_readiness_evidence("build-pinned", {
+            "build_id": "build-pinned", "registered": True,
+            "live_pollers": {
+                "TASK_QUEUE_TYPE_WORKFLOW": ["worker-a"],
+                "TASK_QUEUE_TYPE_ACTIVITY": ["worker-b"],
+            },
+        })
+        self.assertEqual(ready, {"status": "ready", "build_id": "build-pinned",
+            "registered": True, "workflow_poller_count": 1,
+            "activity_poller_count": 1})
+        missing_activity = harness._worker_readiness_evidence("build-pinned", {
+            "build_id": "build-pinned", "registered": True,
+            "live_pollers": {"TASK_QUEUE_TYPE_WORKFLOW": ["worker-a"]},
+        })
+        self.assertEqual(missing_activity["status"], "unavailable")
+        self.assertEqual(missing_activity["activity_poller_count"], 0)
+        wrong_build = harness._worker_readiness_evidence("build-pinned", {
+            "build_id": "other-build", "registered": True,
+            "live_pollers": {"TASK_QUEUE_TYPE_WORKFLOW": ["worker-a"],
+                             "TASK_QUEUE_TYPE_ACTIVITY": ["worker-b"]},
+        })
+        self.assertEqual(wrong_build["status"], "unavailable")
+        self.assertIsNone(wrong_build["workflow_poller_count"])
+
+    def test_basic_preflight_starts_only_the_pinned_worker_before_ready(self):
+        self.director.basic_single_active_job = True
+        unavailable = {"submission_ready": False,
+            "submission_blockers": ["pinned_worker_pollers_unavailable"],
+            "temporal_worker": {"build_id": "build-pinned", "status": "unavailable"}}
+        ready = {"submission_ready": True, "submission_blockers": [],
+            "temporal_worker": {"build_id": "build-pinned", "status": "ready"}}
+        with patch.object(harness, "_submission_readiness",
+                          side_effect=[unavailable, ready]) as readiness:
+            _read, preflight = harness._submission_readiness_callbacks(
+                self.director, self.config)
+            preflight()
+        self.assertEqual(readiness.call_count, 2)
+        self.assertEqual(self.director.module.runner.started,
+                         ["basic-submission-worker-readiness"])
+        self.assertEqual(self.director.module.runner.workers, ["build-pinned"])
+
+    def test_prerun_director_rows_keep_coverage_partial_without_filling_run_pin(self):
+        report = {"queries_failed": 0, "rows_rejected": 0, "conflicts": 0}
+        bound = [{"call_scope": "director_call", "run_id": "run-bound"}]
+        unbound = [{"call_scope": "director_call", "run_id": None,
+                    "definition_digest": None, "task_id": "task-authorized"}]
+        self.assertEqual(harness._director_coverage_status(report, bound), "available")
+        self.assertEqual(harness._director_coverage_status(report, unbound), "partial")
+        self.assertEqual(unbound[0]["run_id"], None)
+        self.assertEqual(unbound[0]["definition_digest"], None)
+
     def test_recovery_starts_only_for_unfinished_runs(self):
         runner = self.director.module.runner
         self.assertIsNone(self.director.recover())
@@ -96,6 +206,165 @@ class DirectorBoundaryTests(unittest.TestCase):
         self.assertEqual(self.director.recover(), {"reason": "recover-unfinished:1"})
         self.assertEqual(len(runner.started), 1)
         self.assertTrue(runner.started[0].startswith("recover-unfinished"))
+
+    def test_admission_capacity_requires_explicit_nonnegative_factory_config(self):
+        configured = harness.init_instance(
+            self.home / "instances" / "admission",
+            name="admission-test", mode="factory", port=44876, home=self.home,
+            admission_capacity=0)
+        self.assertEqual(configured["admission_capacity"], 0)
+        self.assertEqual(harness.load_config(self.home / "instances" / "admission")
+                         ["admission_capacity"], 0)
+        with self.assertRaisesRegex(ValueError, "non-negative integer"):
+            harness.init_instance(self.home / "instances" / "invalid-admission",
+                name="invalid-admission", mode="factory", port=44877, home=self.home,
+                admission_capacity=True)
+        with self.assertRaisesRegex(ValueError, "factory mode"):
+            harness.init_instance(self.home / "instances" / "agent-admission",
+                name="agent-admission", mode="agent", port=44878, home=self.home,
+                admission_capacity=1)
+
+    def test_start_waits_for_admission_and_terminal_release_promotes_fifo(self):
+        queue = harness.AdmissionQueue(
+            self.instance / "admission.sqlite3", factory_id=self.director.identity,
+            capacity=1)
+        self.director.admission_queue = queue
+        publication = {"manifest_digest": "a" * 64, "package_digest": "b" * 64,
+                       "build_id": "build-test", "closure": {}}
+        package = {"root": {"nodes": {}}, "bindings": {}, "run_inputs": {}}
+        with (patch.object(self.director.module.publications, "active",
+                           return_value=publication),
+              patch.object(self.director.module.publications, "get",
+                           return_value=publication),
+              patch.object(self.director.module, "package", return_value=package),
+              patch.object(self.director, "ensure_runner") as ensure_runner,
+              patch.object(self.director, "_start", new_callable=AsyncMock) as start_workflow):
+            actor = harness.CURRENT_ACTOR.set("fixture-operator")
+            try:
+                first = self.director.perform(
+                    {"op": "start", "action_id": "action-1", "inputs": {}},
+                    "task-1", "context-1")
+                second = self.director.perform(
+                    {"op": "start", "action_id": "action-2", "inputs": {}},
+                    "task-2", "context-2")
+            finally:
+                harness.CURRENT_ACTOR.reset(actor)
+
+            self.assertEqual(first["admission_state"], "admitted")
+            self.assertEqual(second["admission_state"], "queued")
+            self.assertEqual(start_workflow.await_count, 1)
+            self.assertEqual(ensure_runner.call_count, 1)
+            queued_task = harness.sync(harness.FactoryTaskStore(self.director).get("task-2"))
+            self.assertEqual(queued_task.status.state.value, "working")
+            self.assertEqual(start_workflow.await_count, 1)
+
+            run_id = self.director.run_id_for("action-1")
+            self.director.close_run(run_id, {"state": "completed", "status": {},
+                                               "result": None, "incident": None})
+            with self.assertRaisesRegex(harness.Rejected, "persisted Task outcome"):
+                harness.sync(self.director._release_terminal_admission(
+                    "task-1", run_id, "failed"))
+            released = harness.sync(self.director._release_terminal_admission(
+                "task-1", run_id, "completed"))
+
+        self.assertEqual(released["released"]["state"], "released")
+        self.assertEqual([item["task_id"] for item in released["admitted"]], ["task-2"])
+        self.assertEqual(queue.get("action-2")["state"], "admitted")
+        self.assertEqual(start_workflow.await_count, 2)
+        self.assertEqual(ensure_runner.call_count, 2)
+        self.assertEqual(queue.capacity_view()["admitted_count"], 1)
+
+    def test_zero_capacity_leaves_task_queued_without_starting_runner(self):
+        queue = harness.AdmissionQueue(
+            self.instance / "admission-zero.sqlite3", factory_id=self.director.identity,
+            capacity=0)
+        self.director.admission_queue = queue
+        publication = {"manifest_digest": "a" * 64, "package_digest": "b" * 64,
+                       "build_id": "build-test", "closure": {}}
+        package = {"root": {"nodes": {}}, "bindings": {}, "run_inputs": {}}
+        with (patch.object(self.director.module.publications, "active",
+                           return_value=publication),
+              patch.object(self.director.module, "package", return_value=package),
+              patch.object(self.director, "ensure_runner") as ensure_runner,
+              patch.object(self.director, "_start", new_callable=AsyncMock) as start_workflow):
+            actor = harness.CURRENT_ACTOR.set("fixture-operator")
+            try:
+                accepted = self.director.perform(
+                    {"op": "start", "action_id": "action-paused", "inputs": {}},
+                    "task-paused", "context-paused")
+            finally:
+                harness.CURRENT_ACTOR.reset(actor)
+            self.assertEqual(accepted["admission_state"], "queued")
+            task = harness.sync(harness.FactoryTaskStore(self.director).get("task-paused"))
+        self.assertEqual(task.status.state.value, "working")
+        self.assertEqual(queue.get("action-paused")["state"], "queued")
+        self.assertEqual(ensure_runner.call_count, 0)
+        self.assertEqual(start_workflow.await_count, 0)
+
+    def test_lifecycle_reconciler_releases_terminal_and_promotes_without_task_poll(self):
+        queue = harness.AdmissionQueue(
+            self.instance / "admission.sqlite3", factory_id=self.director.identity,
+            capacity=1)
+        self.director.admission_queue = queue
+        publication = {"manifest_digest": "a" * 64, "package_digest": "b" * 64,
+                       "build_id": "build-test", "closure": {}}
+        package = {"root": {"nodes": {}}, "bindings": {}, "run_inputs": {}}
+
+        class Handle:
+            async def describe(self):
+                return SimpleNamespace(status=SimpleNamespace(name="COMPLETED"))
+
+            async def query(self, _query):
+                return {"phase": "accepted"}
+
+            async def result(self):
+                return {"status": "accepted"}
+
+        class Client:
+            def get_workflow_handle(self, _run_id):
+                return Handle()
+
+        class QueryFailureHandle:
+            async def describe(self):
+                raise TimeoutError("synthetic Temporal query timeout")
+
+        class QueryFailureClient:
+            def get_workflow_handle(self, _run_id):
+                return QueryFailureHandle()
+
+        with (patch.object(self.director.module.publications, "active",
+                           return_value=publication),
+              patch.object(self.director.module.publications, "get",
+                           return_value=publication),
+              patch.object(self.director.module, "package", return_value=package),
+              patch.object(self.director, "_start", new_callable=AsyncMock) as start_workflow):
+            actor = harness.CURRENT_ACTOR.set("fixture-operator")
+            try:
+                self.director.perform(
+                    {"op": "start", "action_id": "action-1", "inputs": {}},
+                    "task-1", "context-1")
+                self.director.perform(
+                    {"op": "start", "action_id": "action-2", "inputs": {}},
+                    "task-2", "context-2")
+            finally:
+                harness.CURRENT_ACTOR.reset(actor)
+            store = harness.FactoryTaskStore(self.director)
+            with patch.object(self.director, "client", new_callable=AsyncMock,
+                              return_value=QueryFailureClient()):
+                failed = harness.sync(store.reconcile_admitted())
+            self.assertEqual(failed, {"checked": 0, "query_errors": 1})
+            self.assertEqual(queue.get("action-1")["state"], "admitted")
+            self.assertEqual(queue.get("action-2")["state"], "queued")
+
+            with patch.object(self.director, "client", new_callable=AsyncMock,
+                              return_value=Client()):
+                passed = harness.sync(store.reconcile_admitted())
+
+        self.assertEqual(passed, {"checked": 1, "query_errors": 0})
+        self.assertEqual(queue.get("action-1")["state"], "released")
+        self.assertEqual(queue.get("action-2")["state"], "admitted")
+        self.assertEqual(start_workflow.await_count, 2)
+        self.assertEqual(queue.capacity_view()["admitted_count"], 1)
 
     def test_public_commands_keep_graph_selection_inside_instance(self):
         director = self.director
@@ -184,16 +453,128 @@ class DirectorBoundaryTests(unittest.TestCase):
                "quality_verdict": {"findings": [{"problem": "uncited claim"}]},
                "deadline": 123.0, "token": "hidden", "graph": {"secret": "hidden"},
                "owner_epoch": 4, "run_inputs": {"question": "hidden"}}
+        raw.update(decision_actor="director-id", permitted_actions=["abort", "escalate"],
+                   applied_decisions={"decision-1": "escalate-recorded"})
         def fake_sync(coroutine):
             coroutine.close()
             return raw
         with patch.object(self.director, "task_binding", return_value=("run", "context")), \
+             patch.object(self.director, "run_record", return_value={"closed": 0}), \
              patch.object(harness, "sync", side_effect=fake_sync):
             observed = self.director.inspect_bound_run("task")
-        self.assertEqual(observed, {"phase": "awaiting-director",
+        self.assertEqual(observed, {"run_id": None, "node": None,
+            "phase": "awaiting-director",
             "current_revision": "r3", "current_sha256": "a" * 64,
             "repair_count": 2, "max_repairs": 2,
-            "quality_findings": [{"problem": "uncited claim"}], "wait_deadline": 123.0})
+            "quality_findings": [{"problem": "uncited claim"}], "wait_started_at": None,
+            "wait_deadline": 123.0,
+            "decision_actor": "director-id", "permitted_actions": ["abort", "escalate"],
+            "applied_decisions": {"decision-1": "escalate-recorded"}})
+
+    def test_execution_timeout_covers_published_director_and_human_waits(self):
+        package = {"root": {"nodes": {
+            "wait": {"type": "director_wait", "human": {
+                "actor": "operator-7", "timeout_seconds": 3600}}}},
+            "children": {"child": {"nodes": {
+                "second": {"type": "director_wait"}}}}}
+        self.assertEqual(harness._workflow_execution_timeout_seconds(package, 900),
+                         3 * ((900 + 3600) + 900) + 600)
+
+    def test_human_wait_task_projection_keeps_original_binding_and_safe_actions(self):
+        store = harness.FactoryTaskStore(self.director)
+        task = store._task("original-task", "original-context", {
+            "run_id": "run-human", "label": "pinned", "manifest_digest": "m" * 64,
+            "package_digest": "p" * 64, "build_id": "build-1",
+            "run_inputs_digest": "d" * 64}, {
+                "state": "input-required", "status": {
+                    "phase": "awaiting-child", "child_id": "run-human:child:abc"},
+                "decision_status": {"phase": "awaiting-human",
+                    "decision_actor": "fixture-observer", "permitted_actions": ["abort"],
+                    "deadline": 1234.5,
+                    "applied_decisions": {"escalate-1": "escalate-recorded",
+                                          "ignored": {"secret": True}}},
+                "result": None, "incident": None})
+        self.assertEqual(task.id, "original-task")
+        self.assertEqual(task.context_id, "original-context")
+        self.assertEqual(task.status.state.value, "input-required")
+        self.assertEqual(task.status.message.parts[0].root.data, {"director_wait": {
+            "phase": "awaiting-human", "child_id": "run-human:child:abc",
+            "decision_actor": "fixture-observer", "permitted_actions": ["abort"],
+            "deadline": 1234.5, "applied_decisions": {"escalate-1": "escalate-recorded"}}})
+
+    def test_director_perform_binds_human_abort_to_authenticated_principal(self):
+        run_id = "run-human"
+        with self.director.connect() as db:
+            db.execute("INSERT INTO runs (run_id,task_id,context_id,package_digest,manifest_digest,"
+                       "build_id,label,run_inputs_json,run_inputs_digest,authorized_actor,"
+                       "input_authority_json,closed) VALUES (?,?,?,?,?,?,?,?,?,?,?,0)",
+                       (run_id,"original-task","original-context","p"*64,"m"*64,
+                        "build-1","pinned","{}","d"*64,"fixture-operator","{}"))
+            db.execute("INSERT INTO aliases VALUES (?,?,?)",
+                       ("original-task",run_id,"original-context"))
+        human_wait = {"phase": "awaiting-human", "decision_actor": "fixture-observer",
+            "permitted_actions": ["abort"], "current_revision": "r1",
+            "current_sha256": "a"*64, "applied_decisions": {}}
+        with patch.object(self.director, "inspect_bound_run", return_value=human_wait), \
+             patch.object(self.director, "ensure_runner"), \
+             patch.object(self.director, "_director_decision", new_callable=AsyncMock,
+                          return_value={"command_id":"human-abort","action":"abort",
+                              "lifecycle":"applied","outcome":"abort-recorded"}) as update:
+            actor = harness.CURRENT_ACTOR.set("fixture-observer")
+            try:
+                result = self.director.perform({"op":"abort","action_id":"human-abort",
+                    "revision":"r1","sha256":"a"*64},"original-task","original-context")
+            finally:
+                harness.CURRENT_ACTOR.reset(actor)
+            self.assertEqual(result["outcome"], "abort-recorded")
+            self.assertEqual(update.await_args.args[-1], "fixture-observer")
+
+            actor = harness.CURRENT_ACTOR.set("fixture-operator")
+            try:
+                with self.assertRaisesRegex(harness.Rejected, "not authorized"):
+                    self.director.perform({"op":"abort","action_id":"wrong-human",
+                        "revision":"r1","sha256":"a"*64},
+                        "original-task","original-context")
+            finally:
+                harness.CURRENT_ACTOR.reset(actor)
+            self.assertEqual(update.await_count, 1)
+
+    def test_temporal_human_update_uses_pinned_actor_and_live_deadline(self):
+        child_status = {"phase": "awaiting-human", "decision_actor": "fixture-observer",
+            "permitted_actions": ["abort"], "current_revision": "r1",
+            "current_sha256": "a" * 64, "owner_epoch": self.director.incarnation,
+            "deadline": time.time() + 60, "run": "run-human",
+            "definition_digest": "f" * 64, "applied_decisions": {}}
+        updates = []
+
+        class ParentHandle:
+            async def query(self, _query):
+                return {"child_id": "run-human:child:abc"}
+
+        class ChildHandle:
+            async def query(self, _query):
+                return dict(child_status)
+
+            async def execute_update(self, _update, command):
+                updates.append(command)
+                return "abort-recorded"
+
+        class Client:
+            def get_workflow_handle(self, workflow_id):
+                return ParentHandle() if workflow_id == "run-human" else ChildHandle()
+
+        with patch.object(self.director, "client", new_callable=AsyncMock,
+                          return_value=Client()):
+            result = harness.sync(self.director._director_decision(
+                "run-human", "human-abort-1", "r1", "a" * 64,
+                "abort", "fixture-observer"))
+            self.assertEqual(result["outcome"], "abort-recorded")
+            self.assertEqual(updates[0]["actor"], "fixture-observer")
+            with self.assertRaisesRegex(harness.Rejected, "decision actor"):
+                harness.sync(self.director._director_decision(
+                    "run-human", "wrong-human-2", "r1", "a" * 64,
+                    "abort", "fixture-operator"))
+            self.assertEqual(len(updates), 1)
 
 
 class AgentModeTests(unittest.TestCase):
@@ -210,6 +591,11 @@ class AgentModeTests(unittest.TestCase):
                 return json.load(response)
 
         def launch():
+            # A stale server left on the fixed port would answer /health for
+            # this launch and mask the incarnation under test.
+            with socket.socket() as probe:
+                if probe.connect_ex(("127.0.0.1", 44875)) == 0:
+                    self.fail("port 44875 is already serving; stop the stale agent first")
             log = (state / "agent.log").open("a")
             try:
                 process = subprocess.Popen(
@@ -218,20 +604,28 @@ class AgentModeTests(unittest.TestCase):
                     stdout=log, stderr=subprocess.STDOUT)
             finally:
                 log.close()
-            deadline = time.monotonic() + 20
-            while time.monotonic() < deadline:
-                if process.poll() is not None:
-                    self.fail(f"agent server exited during startup; see {state / 'agent.log'}")
-                try:
-                    return process, get_json("/health")
-                except (urllib.error.URLError, TimeoutError, ValueError):
-                    time.sleep(0.1)
-            self.fail(f"agent server did not become healthy; see {state / 'agent.log'}")
+            try:
+                deadline = time.monotonic() + 20
+                while time.monotonic() < deadline:
+                    if process.poll() is not None:
+                        self.fail(f"agent server exited during startup; see {state / 'agent.log'}")
+                    try:
+                        return process, get_json("/health")
+                    except (urllib.error.URLError, TimeoutError, ValueError):
+                        time.sleep(0.1)
+                self.fail(f"agent server did not become healthy; see {state / 'agent.log'}")
+            except BaseException:
+                stop(process)
+                raise
 
         def stop(process):
             if process.poll() is None:
                 process.send_signal(signal.SIGTERM)
-            process.wait(timeout=15)
+            try:
+                process.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
 
         process = None
         try:

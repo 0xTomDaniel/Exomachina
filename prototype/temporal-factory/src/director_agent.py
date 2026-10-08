@@ -9,11 +9,14 @@ import asyncio
 import hashlib
 import json
 import time
+from collections.abc import Callable
+from uuid import uuid4
 
 from strands import Agent, tool
 from strands.models import Model
 
-from model_broker import ModelBroker, PiBrokerModel
+from model_broker import DEFAULT_MODEL_ID, ModelBroker, PiBrokerModel
+from model_usage import ModelUsageJournal, unavailable_usage
 
 
 LIMITS = {"max_model_calls": 4, "max_tool_calls": 4, "deadline_seconds": 90}
@@ -24,8 +27,14 @@ class DirectorBudgetExhausted(RuntimeError):
 
 
 class BudgetedModel(Model):
-    def __init__(self, model: Model, deadline: float, max_calls: int):
+    def __init__(self, model: Model, deadline: float, max_calls: int, *,
+                 usage_journal: ModelUsageJournal | None = None,
+                 usage_context: Callable[[], dict] | None = None,
+                 usage_observer: Callable[[dict, dict], None] | None = None):
         self.model, self.deadline, self.max_calls, self.calls = model, deadline, max_calls, 0
+        self.usage_journal = usage_journal
+        self.usage_context = usage_context
+        self.usage_observer = usage_observer
 
     def update_config(self, **config):
         self.model.update_config(**config)
@@ -44,6 +53,16 @@ class BudgetedModel(Model):
         if self.calls >= self.max_calls:
             raise DirectorBudgetExhausted("model_call_limit")
         self.calls += 1
+        usage_recorded = False
+        usage_context = self.usage_context() if self.usage_context is not None else {}
+        model_call_id = f"urn:exomachina:director-model-call:{uuid4()}"
+        set_usage_context = getattr(self.model, "set_usage_context", None)
+        if self.usage_observer is not None and callable(set_usage_context):
+            def record_provider_usage(record: dict) -> None:
+                nonlocal usage_recorded
+                usage_recorded = True
+                self.usage_observer(record, usage_context)
+            set_usage_context(model_call_id=model_call_id, callback=record_provider_usage)
         try:
             async with asyncio.timeout(remaining):
                 async for event in self.model.stream(messages, tool_specs=tool_specs,
@@ -51,6 +70,14 @@ class BudgetedModel(Model):
                     yield event
         except TimeoutError as error:
             raise DirectorBudgetExhausted("deadline") from error
+        finally:
+            if self.usage_observer is not None and not usage_recorded:
+                model_id = self.model.get_config().get("model_id")
+                self.usage_observer({"model_call_id": model_call_id,
+                                     "provider": getattr(self.model, "provider", None),
+                                     "model_id": model_id,
+                                     "reasoning_effort": getattr(self.model, "reasoning_effort", None),
+                                     "usage": unavailable_usage()}, usage_context)
 
 
 def selected_model(config: dict, *, session_id: str) -> tuple[Model, str]:
@@ -62,14 +89,15 @@ def selected_model(config: dict, *, session_id: str) -> tuple[Model, str]:
         import os
         if "EXO_MODEL_HOME" in os.environ or "EXO_CODEX_BASE_URL" in os.environ:
             raise ValueError("live Director requires the default model home and endpoint")
-    model = PiBrokerModel(ModelBroker(), model_id=selection.get("model", "gpt-6-sol"),
+    model = PiBrokerModel(ModelBroker(), model_id=selection.get("model", DEFAULT_MODEL_ID),
                           session_id=session_id)
     return model, "synthetic" if provider == "synthetic-loopback" else "live"
 
 
 class DirectorTurn:
     def __init__(self, director, task_id: str, context_id: str, message_id: str,
-                 model_kind: str, *, limits: dict | None = None):
+                 model_kind: str, *, limits: dict | None = None,
+                 usage_journal: ModelUsageJournal | None = None):
         self.director = director
         self.task_id, self.context_id, self.message_id = task_id, context_id, message_id
         self.model_kind = model_kind
@@ -77,6 +105,53 @@ class DirectorTurn:
         self.deadline = time.monotonic() + self.limits["deadline_seconds"]
         self.calls: list[dict] = []
         self.accepted: list[str] = []
+        self.service_identity = getattr(director, "identity", None)
+        self.usage_journal = usage_journal
+        if self.usage_journal is None:
+            database = getattr(director, "database", None)
+            if database is not None and self.service_identity:
+                self.usage_journal = ModelUsageJournal(database)
+
+    def _current_run_binding(self) -> dict:
+        """Resolve only a run and root definition already bound to this Task."""
+        task_binding = getattr(self.director, "task_binding", None)
+        if not callable(task_binding):
+            return {"run_id": None, "definition_digest": None}
+        binding = task_binding(self.task_id)
+        if not binding:
+            return {"run_id": None, "definition_digest": None}
+        run_id = binding[0] if isinstance(binding, (tuple, list)) and binding else None
+        if not isinstance(run_id, str) or not run_id:
+            return {"run_id": None, "definition_digest": None}
+        digest = None
+        run_reader = getattr(self.director, "run_record", None)
+        module = getattr(self.director, "module", None)
+        publications = getattr(module, "publications", None)
+        if callable(run_reader) and publications is not None:
+            record = run_reader(run_id)
+            manifest_digest = record.get("manifest_digest") if isinstance(record, dict) else None
+            if isinstance(manifest_digest, str) and manifest_digest:
+                publication = publications.get(manifest_digest)
+                closure = publication.get("closure") if isinstance(publication, dict) else None
+                manifest = closure.get("manifest") if isinstance(closure, dict) else None
+                candidate = manifest.get("root_digest") if isinstance(manifest, dict) else None
+                if isinstance(candidate, str) and candidate:
+                    digest = candidate
+        return {"run_id": run_id, "definition_digest": digest}
+
+    def _record_model_usage(self, record: dict, binding: dict) -> None:
+        if self.usage_journal is None or not self.service_identity:
+            return
+        model = record.get("model_id")
+        provider = record.get("provider")
+        if not isinstance(model, str) or not model or not isinstance(provider, str) or not provider:
+            return
+        self.usage_journal.record(
+            model_call_id=record["model_call_id"], service_identity=self.service_identity,
+            task_id=self.task_id, action_id=None, message_id=self.message_id,
+            run_id=binding["run_id"], definition_digest=binding["definition_digest"],
+            provider=provider, model_id=model,
+            reasoning_effort=record.get("reasoning_effort"), usage=record["usage"])
 
     def action_id(self, operation: str) -> str:
         raw = json.dumps([self.task_id, operation, self.message_id], separators=(",", ":"))
@@ -159,7 +234,11 @@ class DirectorTurn:
             return json.dumps(self.call("decide_wait", {"action": action, "revision": revision,
                 "sha256": sha256, "rationale": rationale}), sort_keys=True)
 
-        budgeted = BudgetedModel(model, self.deadline, self.limits["max_model_calls"])
+        budgeted = BudgetedModel(
+            model, self.deadline, self.limits["max_model_calls"],
+            usage_journal=self.usage_journal,
+            usage_context=self._current_run_binding if self.usage_journal is not None else None,
+            usage_observer=self._record_model_usage if self.usage_journal is not None else None)
         agent = Agent(name="Factory Director", model=budgeted,
                       tools=[start_research, inspect_run, decide_wait],
                       system_prompt=("You are the Director for one verified-research Task. "

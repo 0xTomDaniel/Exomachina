@@ -82,6 +82,10 @@ button{background:transparent;border:0;padding:0;border-radius:0;cursor:pointer}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 .app{height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto}
+.app > .topbar{grid-row:1}
+.app > .runbar{grid-row:2}
+.app > .stage{grid-row:3}
+.app > .transport{grid-row:4}
 
 /* Top bar */
 .topbar{display:flex;align-items:center;gap:18px;padding:9px 16px;background:var(--panel);border-bottom:1px solid var(--line);min-width:0;flex-wrap:wrap;row-gap:8px}
@@ -91,7 +95,7 @@ button{background:transparent;border:0;padding:0;border-radius:0;cursor:pointer}
 .fpick{display:flex;align-items:center;gap:10px;min-width:0}
 .fpick select{appearance:none;-webkit-appearance:none;font:600 14px/1.2 var(--font-ui);color:var(--ink);background:var(--panel-2) no-repeat right 9px center/10px 6px;background-image:linear-gradient(45deg,transparent 50%,var(--ink-2) 50%),linear-gradient(135deg,var(--ink-2) 50%,transparent 50%);background-size:5px 5px,5px 5px;background-position:right 13px center,right 8px center;border:1px solid var(--line);border-radius:8px;padding:6px 30px 6px 11px}
 .fmeta{display:flex;flex-direction:column;gap:1px;min-width:0}
-.fmeta .cap{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fmeta .cap{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px}
 .fmeta .prov{font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px}
 .chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;padding:2px 7px;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);white-space:nowrap}
 .views{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
@@ -100,6 +104,21 @@ button{background:transparent;border:0;padding:0;border-radius:0;cursor:pointer}
 .views button.on{color:var(--ink);background:var(--panel-2);box-shadow:inset 0 -2px 0 var(--ink)}
 .grow{flex:1 1 auto}
 .mockchip{font-size:11px;color:var(--ink-2);border:1px dashed var(--ink-3);border-radius:999px;padding:3px 9px;white-space:nowrap}
+/* Observation source row (dashboard chrome). Its status pill is the one visible source status, so the mockup chip steps aside. */
+.topbar.has-source > .mockchip{display:none}
+.exo-source{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.exo-source select{appearance:none;-webkit-appearance:none;min-width:0;max-width:220px;font:600 12px/1.2 var(--font-ui);color:var(--ink);background-color:var(--panel-2);background-image:linear-gradient(45deg,transparent 50%,var(--ink-2) 50%),linear-gradient(135deg,var(--ink-2) 50%,transparent 50%);background-repeat:no-repeat;background-size:5px 5px,5px 5px;background-position:right 12px center,right 7px center;border:1px solid var(--line);border-radius:7px;padding:5px 26px 5px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.exo-source select:hover{border-color:var(--ink-3)}
+.exo-source select:disabled{opacity:.55;cursor:not-allowed}
+#exo-source-status{font-size:11px;line-height:1.35;color:var(--ink-2);border:1px dashed var(--ink-3);border-radius:999px;padding:3px 9px;min-width:0;overflow-wrap:anywhere}
+#exo-source-status:empty,#exo-submission-status:empty{display:none}
+#exo-submission-status{font-size:11px;color:var(--ink-2)}
+#exo-live-reconnect{font-size:11.5px;color:var(--ink);padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2);white-space:nowrap}
+#exo-live-reconnect:hover{border-color:var(--ink-3)}
+#exo-live-reconnect:disabled{opacity:.45;cursor:not-allowed}
+#exo-floor-unavailable-navigation p{margin:0 0 10px;font-size:12.5px;color:var(--ink-2)}
+#exo-floor-unavailable-navigation button{font-size:12px;font-weight:600;color:var(--ink);padding:5px 10px;margin-right:6px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)}
+#exo-floor-unavailable-navigation button:hover{border-color:var(--ink-3)}
 .toggle{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2);white-space:nowrap}
 .toggle .sw{width:28px;height:16px;border-radius:999px;background:var(--line);position:relative;transition:background .2s}
 .toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--panel);box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
@@ -134,6 +153,7 @@ button{background:transparent;border:0;padding:0;border-radius:0;cursor:pointer}
 #pixi canvas{display:block}
 #ov{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;--lbl:1}
 #ov > *{position:absolute}
+#ov.focusing > :not(.lit){opacity:var(--dim,1)}
 .mach{pointer-events:auto;border:0;background:transparent;border-radius:16px;padding:0}
 .mach:focus-visible{outline:2px solid var(--focus);outline-offset:6px}
 .mlabel{pointer-events:auto;cursor:pointer;transform:translateX(-50%);text-align:center;font-size:calc(12px * var(--lbl));line-height:1.18;color:var(--ink);text-shadow:0 0 3px var(--halo),0 0 6px var(--halo),0 0 10px var(--halo)}
@@ -141,6 +161,7 @@ button{background:transparent;border:0;padding:0;border-radius:0;cursor:pointer}
 .mlabel span{display:block;font-size:.8em;color:var(--ink-2);margin-top:1px}
 .zlabel{font-family:var(--font-mark);font-size:calc(10px * var(--lbl));letter-spacing:.22em;color:var(--ink-2);opacity:.8;white-space:nowrap}
 .zlabel i{font-style:normal;letter-spacing:0;margin-right:.6em}
+.zlabel .zq{display:block;font-family:var(--font-mono);font-size:.76em;letter-spacing:.14em;margin-top:.3em;color:var(--ink-3)}
 .bubble{width:36px;height:36px;border-radius:50%;border:1.3px solid var(--ink-2);background:var(--panel);display:grid;grid-template-rows:1fr 1fr;place-items:center;font-family:var(--font-mono);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.15);transform:scale(var(--lbl));transform-origin:50% 50%}
 .bubble::after{content:"";position:absolute;left:3px;right:3px;top:50%;border-top:1px solid var(--ink-3)}
 .bubble .tag{font-size:7.5px;letter-spacing:.06em;color:var(--ink-2);align-self:end;padding-bottom:1px}
@@ -238,9 +259,9 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
 .runbar.multi .alarms{flex:none;justify-content:flex-start}
 .railsum{flex:none;display:flex;flex-direction:column;justify-content:center;gap:3px;padding-right:8px;margin-right:2px;border-right:1px solid var(--line-2);white-space:nowrap;font-size:10.5px;color:var(--ink-3)}
 .railsum b{font:700 16px/1 var(--font-mono);color:var(--ink)}
-.ticket{flex:none;width:124px;display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:1px 4px;text-align:left;padding:4px 8px 5px;border:1px solid var(--line);border-top:3px solid var(--ink-3);border-radius:3px 3px 7px 7px;background:var(--panel-2);position:relative}
+.ticket{flex:none;width:auto;min-width:124px;max-width:176px;display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:1px 4px;text-align:left;padding:4px 8px 5px;border:1px solid var(--line);border-top:3px solid var(--ink-3);border-radius:3px 3px 7px 7px;background:var(--panel-2);position:relative}
 .ticket:hover{border-color:var(--ink-3)}
-.ticket .jn{font:700 11.5px/1.25 var(--font-mono);color:var(--ink)}
+.ticket .jn{font:700 11.5px/1.25 var(--font-mono);color:var(--ink);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ticket .bdg{display:flex;gap:3px}
 .ticket .bdg i{font:600 9px/1 var(--font-mono);font-style:normal;padding:2px 4px;border:1px solid var(--ink-3);border-radius:3px;color:var(--ink-2)}
 .ticket .wh{grid-column:1/-1;font-size:11px;line-height:1.3;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -549,7 +570,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
 
 @media (max-width: 1440px){
   .brand-sub{display:none}
-  .fmeta .prov{max-width:250px}
+  .fmeta .prov,.fmeta .cap{max-width:250px}
   .topbar{gap:14px}
 }
 @media (max-width: 1340px){
@@ -561,7 +582,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
 @media (max-width: 900px){
   .views,.kbd{display:none}
   .hud{display:none}
-  .fmeta .prov{max-width:180px}
+  .fmeta .prov,.fmeta .cap{max-width:180px}
 }
 @media (max-width: 760px){
   .insp{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:58%}
@@ -592,13 +613,13 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
         </template>
       </select>
       <div class="fmeta">
-        <span class="cap"><span x-text="$store.floor.capability"></span> · <span x-text="$store.floor.versionLabel"></span></span>
+        <span class="cap" :title="$store.floor.capability + ' · ' + $store.floor.versionLabel"><span x-text="$store.floor.capability"></span> · <span x-text="$store.floor.versionLabel"></span></span>
         <span class="prov"><span class="verchip" x-show="$store.floor.oldJobs.n" x-text="$store.floor.oldJobs.text" :title="$store.floor.oldJobs.title"></span><span x-text="$store.floor.provenance"></span></span>
       </div>
     </div>
     <nav class="views" aria-label="Factory views">
       <template x-for="v in ['Floor','Board','Decisions','Outputs','Definition','Agents']" :key="v">
-        <button type="button" :class="{on: v === $store.floor.view}" :aria-current="v === $store.floor.view ? 'page' : null" @click="(v === 'Floor' || v === 'Board') ? $store.floor.setView(v) : (v === 'Decisions' ? $store.floor.select('inbox') : $store.floor.soon(v))" x-text="v"></button>
+        <button type="button" :class="{on: v === $store.floor.view}" :aria-current="v === $store.floor.view ? 'page' : null" @click="$store.floor.setView(v)" x-text="v"></button>
       </template>
     </nav>
     <div class="grow"></div>
@@ -608,7 +629,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
     </button>
   </header>
 
-  <div class="runbar" :class="{multi: $store.floor.multi}">
+  <div class="runbar" x-show="$store.floor.ready" :class="{multi: $store.floor.multi}">
     <div class="rail" aria-label="Jobs, oldest first">
       <div class="railsum"><b x-text="$store.floor.hud.jobs.active"></b><span x-text="($store.floor.hud.jobs.active === 1 ? 'job' : 'jobs') + ' active'"></span></div>
       <template x-for="k in $store.floor.rail" :key="k.id">
@@ -647,7 +668,16 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
           <button type="button" :class="{on: b.lanes === 'none'}" @click="$store.floor.setBoard('lanes','none')">None</button>
           <button type="button" :class="{on: b.lanes === 'version'}" @click="$store.floor.setBoard('lanes','version')">Version</button>
         </div>
-        <span class="bnote">Columns follow the route from left to right. Working shows the agent's slots; hatched slots are held by other factories that share the agent. A card can sit in two columns while its branches run in parallel.</span>
+        <span class="bnote" x-show="$store.floor.sourceMode === 'demo'">Columns follow the route from left to right. Working shows the agent's slots; hatched slots are held by other factories that share the agent. A card can sit in two columns while its branches run in parallel.</span>
+        <span class="bnote" x-show="$store.floor.sourceMode !== 'demo'">Columns follow observed lifecycle facts. Capacity and shared occupancy are shown only when reported.</span>
+      </div>
+      <div class="bnote" role="status" aria-label="Historical assignment outcomes"
+           x-show="($store.floor.dashboardViewModels?.assignments || []).some(row => row.outcome_unknown)">
+        <span>Historical assignment outcomes · </span>
+        <span x-text="($store.floor.dashboardViewModels?.assignments || []).filter(row => row.outcome_unknown).length"></span>
+        <template x-for="assignment in ($store.floor.dashboardViewModels?.assignments || []).filter(row => row.outcome_unknown)" :key="assignment.run_id + ':' + assignment.assignment_id + ':' + assignment.attempt_id">
+          <span> · <strong x-text="assignment.activity_label"></strong> · <span x-text="assignment.capability || assignment.assignment_id || 'assignment'"></span> · run <span x-text="assignment.run_id"></span></span>
+        </template>
       </div>
       <div class="bgrid bhead" :style="'--nc:' + b.cols.length">
         <template x-for="c in b.cols" :key="c.key">
@@ -709,6 +739,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
       <ul>
         <li class="wide"><svg width="120" height="16" viewBox="0 0 120 16"><circle cx="8" cy="8" r="6" fill="var(--w-item)" stroke="var(--w-item-edge)"/><rect x="21" y="2" width="12" height="12" rx="2" fill="var(--w-item)" stroke="var(--w-item-edge)"/><path d="M46 2l6 12h-12z" fill="var(--w-item)" stroke="var(--w-item-edge)"/><path d="M66 2l6 3.5v7L66 16l-6-3.5v-7z" fill="var(--w-item)" stroke="var(--w-item-edge)"/><path d="M86 2l6 4.4-2.3 7.1h-7.4L80 6.4z" fill="var(--w-item)" stroke="var(--w-item-edge)"/><rect x="99" y="4" width="18" height="9" rx="4.5" fill="var(--w-item)" stroke="var(--w-item-edge)"/></svg></li>
         <li class="wide">Shape = kind of artifact. The label is its revision.</li>
+        <li class="wide" x-show="$store.floor.sourceMode !== 'demo'">Live: circle T = Task, capsule TO = Task output (artifact not recorded; hand-off inferred from graph order), square R1/R2 = report artifact evidenced by sha256. Belt dwell is the observed gap; hops under 0.8 s are shown at 0.8 s. Branch pods are derived from observed assignments.</li>
       </ul>
       <h4>Many jobs</h4>
       <ul>
@@ -723,6 +754,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
         <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--w-belt-edge)" stroke-width="8" stroke-linecap="round"/><path d="M2 5h26" stroke="var(--w-belt)" stroke-width="5" stroke-linecap="round"/></svg>Work belt</li>
         <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--w-signal)" stroke-width="1.5" stroke-dasharray="4 3"/></svg>Director signal</li>
         <li><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h22" stroke="var(--w-signal)" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/><circle cx="26" cy="5" r="2.6" fill="var(--w-signal)"/></svg>Your line</li>
+        <li class="wide"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--w-bracket)" stroke-width="1.4" stroke-dasharray="1 5"/></svg>View link · presentation only; no message</li>
         <li class="wide"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M2 5h26" stroke="var(--action)" stroke-width="2.2" stroke-linecap="round"/></svg>Blue while a decision waits for you</li>
       </ul>
       <h4>State (ISA-101)</h4>
@@ -772,7 +804,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
         </div>
       </div>
       <div class="m opt">
-        <span class="k">Delivered · 5 min</span>
+        <span class="k" x-text="h.del.label || 'Delivered · 5 min'"></span>
         <span class="v"><span x-text="h.del.n"></span><div id="spark" aria-hidden="true"></div></span>
         <span class="s" x-text="h.del.sub"></span>
       </div>
@@ -822,7 +854,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
           <div>
             <div class="acts">
               <template x-for="(a, k) in d.allowed" :key="a">
-                <button type="button" :class="{primary: d.recAction ? a === d.recAction : k === 0}" :disabled="!d.atLive || !!d.pending" @click="$store.floor.decide(a, d.job)" x-text="a"></button>
+                <button type="button" :class="{primary: d.recAction ? a === d.recAction : k === 0}" :disabled="($store.floor.sourceMode !== 'demo' && !d.atLive) || !!d.pending" @click="$store.floor.decide(a, d.job)" x-text="a"></button>
               </template>
               <button type="button" class="ghost" @click="$store.floor.select('inbox')">Open inbox</button>
             </div>
@@ -838,7 +870,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
       </div>
     </template>
 
-    <aside class="float insp float-ui" :class="{term: $store.floor.term}" aria-label="Job card">
+    <aside class="float insp float-ui" x-show="$store.floor.ready" :class="{term: $store.floor.term}" aria-label="Job card">
       <template x-if="!$store.floor.panel">
         <button type="button" class="insp-tab" @click="$store.floor.panel = true; $store.floor.refit()">Job card ‹</button>
       </template>
@@ -874,6 +906,18 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
                 <template x-if="i.kind === 'job'"><button type="button" class="back" @click="$store.floor.select('run')">‹ Floor</button></template>
                 <div class="titlerow"><h2 x-text="i.title"></h2><span class="state" :class="'tone-' + i.outcome.tone" x-text="i.outcome.label"></span></div>
                 <p class="brief" x-text="i.brief"></p>
+                <template x-if="$store.floor.observedJobSummary">
+                  <section data-observed-job-summary aria-label="Observed job progress" x-data="{ get summary(){ return $store.floor.observedJobSummary } }">
+                    <h3>Observed progress</h3>
+                    <p class="prov">Lit stations show observed current activity. Tasks sit at stations for their observed start→end; artifacts ride belts from the producing station's completion to the next observed start (hops under 0.8 s are shown at 0.8 s). Task outputs are not recorded as artifacts, so their hand-off follows pinned graph order. Branch agent pods are derived from observed assignments.</p>
+                    <p class="note" x-text="summary.state + (summary.phase ? ' · ' + summary.phase : '') + ' · ' + summary.activeAssignments + ' active assignment facts · ' + summary.completedAssignments + ' completed' + (summary.unknownAssignments ? ' · ' + summary.unknownAssignments + ' outcomes unreported' : '') + '. Quality: ' + summary.quality + (summary.qualityScope === 'original Task scope' ? ' (original Task scope)' : '') + '.'"></p>
+                    <p class="prov" :title="summary.taskId || ''" x-text="summary.taskId ? 'Task ' + summary.taskId.slice(0,8) : 'Original Task unreported'"></p>
+                    <div class="btnrow">
+                      <button type="button" @click="$store.floor.setView('Board')">View work</button>
+                      <button type="button" @click="$store.floor.setView('Outputs')">View outputs</button>
+                    </div>
+                  </section>
+                </template>
                 <template x-if="i.kind === 'job'">
                   <div class="btnrow">
                     <button type="button" class="followbtn" :class="{on: i.tracking}" @click="$store.floor.track()" x-text="i.tracking ? 'Following on the floor' : 'Follow on the floor'"></button>
@@ -889,7 +933,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
                   <template x-if="i.verNote"><div style="display:contents"><dt></dt><dd style="color:var(--ink-2)" x-text="i.verNote"></dd></div></template>
                   <dt>Started</dt><dd x-text="i.started"></dd>
                   <template x-if="i.spend"><div style="display:contents"><dt>Spend</dt><dd><span x-text="i.spend"></span><span style="display:block;font-size:11px;color:var(--ink-3)" x-text="i.spendParts"></span></dd></div></template>
-                  <dt>Departments</dt><dd x-text="i.depts"></dd>
+                  <dt>Floor groups</dt><dd x-text="i.depts"></dd>
                   <dt>Programs</dt><dd x-text="i.programs"></dd>
                 </dl>
                 <h3>Operations</h3>
@@ -961,7 +1005,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
                       <input type="text" x-model="$store.floor.chatDraft" :disabled="!i.canChat" :placeholder="i.canChat ? 'Message the Director' : 'Chat is off'" aria-label="Message the Director" autocomplete="off">
                       <button type="submit" :disabled="!i.canChat || !$store.floor.chatDraft.trim()">Send</button>
                     </form>
-                    <div class="chatoff" x-show="!i.canChat"><span x-text="i.chatOff"></span> <button type="button" class="lnk" x-show="$store.floor.live" @click="$store.floor.toLive()">Jump to now</button></div>
+                    <div class="chatoff" x-show="!i.canChat"><span x-text="i.chatOff"></span> <button type="button" class="lnk" x-show="$store.floor.live && $store.floor.sourceMode !== 'live'" @click="$store.floor.toLive()">Jump to now</button></div>
                   </div>
                 </template>
                 <template x-if="$store.floor.dirTab === 'activity'">
@@ -989,7 +1033,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
                     <template x-if="it.rec"><div class="irec"><span class="rl">Director recommends</span><b x-text="it.rec.text"></b><span x-show="it.rec.why" x-text="it.rec.why"></span></div></template>
                     <template x-if="it.reviewing"><div class="irec dim">The Director is reviewing this now and will attach a recommendation.</div></template>
                     <div class="acts">
-                      <template x-for="(a, k) in it.allowed" :key="a"><button type="button" :class="{primary: it.rec ? a === it.rec.action : k === 0}" :disabled="!i.atLive || i.busy" @click="$store.floor.decide(a, it.job)" x-text="a"></button></template>
+                      <template x-for="(a, k) in it.allowed" :key="a"><button type="button" :class="{primary: it.rec ? a === it.rec.action : k === 0}" :disabled="($store.floor.sourceMode !== 'demo' && !i.atLive) || i.busy" @click="$store.floor.decide(a, it.job)" x-text="a"></button></template>
                     </div>
                     <template x-if="it.pending">
                       <div class="lifecycle" aria-live="polite"><template x-for="(st, k) in ['Requested','Validated','Applied']" :key="st"><span :class="{on: k <= it.pending.stage}" x-text="st"></span></template><span style="border:0" x-text="it.pending.action"></span></div>
@@ -997,7 +1041,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
                     <div class="iexp" x-text="it.expires"></div>
                   </div>
                 </template>
-                <div class="chatoff" x-show="i.items.length && !i.atLive"><span x-text="i.live ? 'You are watching a replay. Jump to now to decide.' : 'This run has finished.'"></span> <button type="button" class="lnk" x-show="i.live" @click="$store.floor.toLive()">Jump to now</button></div>
+                <div class="chatoff" x-show="i.items.length && !i.atLive"><span x-text="i.live ? 'You are watching a replay. Jump to now to decide.' : 'This run has finished.'"></span> <button type="button" class="lnk" x-show="i.live && $store.floor.sourceMode !== 'live'" @click="$store.floor.toLive()">Jump to now</button></div>
                 <div class="empty2" x-show="!i.items.length">Nothing needs you right now. The Director handles what it can and escalates the rest here.</div>
                 <template x-if="i.done.length">
                   <div>
@@ -1066,7 +1110,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
     </aside>
   </main>
 
-  <footer class="transport">
+  <footer class="transport" x-show="$store.floor.sourceMode !== 'live' || ($store.floor.ready && !$store.floor.live)" x-cloak>
     <div class="tbtns">
       <button type="button" @click="$store.floor.restart()" aria-label="Replay from the start" title="Replay from the start"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2v10M12 2L5 7l7 5z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button>
       <button type="button" @click="$store.floor.jump(-1)" aria-label="Previous event" title="Previous event (←)"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 3L4 7l5 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -1711,7 +1755,13 @@ const Floor = (() => {
     const stepById = Object.fromEntries(f.steps.map(s => [s.id, s]));
     f.edges.forEach((e,i) => { if (e.loop) return; const a = stepById[e.from], b = stepById[e.to];
       const c = (a.dept && a.dept === b.dept) ? depts.get(a.dept) : root; c.edges.push({ id:'e'+i, sources:[e.from], targets:[e.to] }); });
-    const res = await new ELK().layout(root);
+    const engine=new ELK();let layoutTimer,timedOut=false;
+    let res;
+    try{res=await Promise.race([engine.layout(root),new Promise((_,reject)=>{layoutTimer=setTimeout(()=>{timedOut=true;reject(new Error('Floor layout timed out'));},5_000);})]);}
+    // Only a stuck layout needs its worker released. The bundled build runs ELK
+    // in-thread with a fake worker that has no terminate(), so terminating after
+    // a successful layout would throw and discard the result.
+    finally{clearTimeout(layoutTimer);if(timedOut){try{engine.terminateWorker?.();}catch{}}}
     const pos = {}, zones = [];
     for (const c of res.children){
       if (c.id.startsWith('dept:')){ zones.push({ id:c.id.slice(5), x:c.x, y:c.y, w:c.width, h:c.height }); for (const k of c.children) pos[k.id] = { x:c.x+k.x, y:c.y+k.y }; }
@@ -1774,11 +1824,11 @@ const Floor = (() => {
       const edge = { id:'e'+i, def:e, loop:!!e.loop, raw:dedupe(pts), path:sampler(rounded), move:sampler(roundPts([A.c, ...pts, Bg.c], 12)) };
       G.edges.push(edge); e._geom = edge;
     });
-    // entry and exit stubs
-    for (const [id,g] of G.steps){
-      if (g.s.kind === 'intake'){ const pts = [{x:g.x-104,y:g.c.y},{x:g.x+6,y:g.c.y}]; G.entry.set(id, { path:sampler(pts), move:sampler([{x:g.x-104,y:g.c.y}, g.c]) }); }
-      if (g.s.kind === 'output'){ const pts = [{x:g.x+g.w-6,y:g.c.y},{x:g.x+g.w+116,y:g.c.y}]; G.exit.set(id, { path:sampler(pts), move:sampler([g.c, {x:g.x+g.w+116,y:g.c.y}]) }); }
-    }
+    // Entry/exit are presentation-only boundary stubs attached to existing graph nodes.
+    const entryIds = Array.isArray(f.boundaries?.entry) ? f.boundaries.entry : f.steps.filter(s => s.kind === 'intake').map(s => s.id);
+    const exitIds = Array.isArray(f.boundaries?.exit) ? f.boundaries.exit : f.steps.filter(s => s.kind === 'output').map(s => s.id);
+    for (const id of entryIds){ const g = G.steps.get(id); if (!g) continue; const pts = [{x:g.x-104,y:g.c.y},{x:g.x+6,y:g.c.y}]; G.entry.set(id, { path:sampler(pts), move:sampler([{x:g.x-104,y:g.c.y}, g.c]) }); }
+    for (const id of exitIds){ const g = G.steps.get(id); if (!g) continue; const pts = [{x:g.x+g.w-6,y:g.c.y},{x:g.x+g.w+116,y:g.c.y}]; G.exit.set(id, { path:sampler(pts), move:sampler([g.c, {x:g.x+g.w+116,y:g.c.y}]) }); }
     // Queues: where a waiting item stops on each belt, and how far back the belt can hold a line.
     const inside = (g, p, m) => p.x > g.x - m && p.x < g.x + g.w + m && p.y > g.y - m && p.y < g.y + g.h + m;
     const qGeom = (path, from, to) => { let e = path.len; while (e > 0 && inside(to, path.at(e), 17)) e -= 2; let b = 0; if (from) while (b < path.len && inside(from, path.at(b), 16)) b += 2; return { qEnd:e, qMin:b + 8 }; };
@@ -1807,16 +1857,17 @@ const Floor = (() => {
       else if (R.x - 30 > booth.x + booth.w){ const s0 = { x:booth.x+booth.w, y:booth.y+booth.h/2 }; const dv = Math.min(46, (R.y-s0.y)/2); pts = [s0,{x:R.x-dv,y:s0.y},{x:R.x,y:s0.y+dv},R]; }
       else { const sx = clamp(R.x, booth.x+30, booth.x+booth.w-30), s0 = { x:sx, y:booth.y+booth.h }, adx = Math.abs(R.x-sx), dy = R.y-s0.y;
         pts = adx < 1 ? [s0,R] : (dy > adx+40 ? [s0,{x:sx,y:R.y-20-adx},{x:R.x,y:R.y-20},R] : [s0,R]); }
-      G.signals.push({ target:id, recv:R, path:sampler(roundPts(pts, 14)) });
+      G.signals.push({ target:id, kind:f.communication?.director?.routes?.find(route=>route.node_id===id)?.kind||'declared_control', recv:R, path:sampler(roundPts(pts, 14)) });
     }
     // Your desk sits on the same wall as the Director's booth. Decisions that need a person arrive here:
     // by policy (an approval) or by the Director's escalation. Its wires enter each decision beside the Director's.
     G.desk = null; G.deskWires = []; G.deskLink = null;
-    const mine = f.steps.filter(s => s.kind === 'wait' && (s.human || s.escalateTo));
-    if (mine.length){
-      const dw = 244, dh = 86, tx = mine.reduce((a, s) => { const g = G.steps.get(s.id); return a + g.x + g.w*.74; }, 0) / mine.length;
+    const humanTargets = new Set(f.communication?.humanInbox?.targets || []);
+    const mine = f.steps.filter(s => humanTargets.has(s.id));
+    { // The inbox is always visible; its presence is not an escalation declaration.
+      const dw = 244, dh = 86, tx = mine.length ? mine.reduce((a, s) => { const g = G.steps.get(s.id); return a + g.x + g.w*.74; }, 0) / mine.length : booth.x + booth.w + 242;
       const desk = { x:Math.max(booth.x + booth.w + 120, tx - dw/2), y:booth.y - 12, w:dw, h:dh }; G.desk = desk;
-      desk.who = (mine[0].escalateTo || mine[0].responder || 'You').replace(/^You · /, '');
+      desk.who = 'Human inbox';
       const ly = booth.y + 22; G.deskLink = { path:sampler([{ x:booth.x + booth.w, y:ly }, { x:desk.x, y:ly }]) };
       const s0y = desk.y + desk.h, lane = booth.y + booth.h + 34;
       const clear = (g, x) => ![...G.steps.values()].some(o => o !== g && o.y + o.h <= g.y + 1 && o.y > s0y && o.x < x + 16 && o.x + o.w > x - 16);
@@ -1833,10 +1884,15 @@ const Floor = (() => {
         G.deskWires.push({ target:st.id, recv:R, path:sampler(roundPts(pts, 14)) });
       }
     }
+    // Independent incident projection: a UI navigation route, not a Director delivery dependency.
+    G.incidentView = { x:G.desk.x, y:G.desk.y+G.desk.h+24, w:G.desk.w, h:46 };
+    G.incidentLink = { path:sampler([{x:G.desk.x+G.desk.w/2,y:G.desk.y+G.desk.h},{x:G.incidentView.x+G.incidentView.w/2,y:G.incidentView.y}]) };
     // bounds
     let x0 = booth.x, y0 = booth.y-56, x1 = booth.x+booth.w+120, y1 = booth.y+booth.h;
     if (G.desk){ x1 = Math.max(x1, G.desk.x + G.desk.w + 40); y0 = Math.min(y0, G.desk.y - 56); }
     const grow = (x,y) => { x0 = Math.min(x0,x); y0 = Math.min(y0,y); x1 = Math.max(x1,x); y1 = Math.max(y1,y); };
+    grow(G.incidentView.x, G.incidentView.y);
+    grow(G.incidentView.x+G.incidentView.w, G.incidentView.y+G.incidentView.h+24);
     for (const [,g] of G.steps){ grow(g.x-20, g.y-24); grow(g.x+g.w+30, g.y+g.h+LABEL_REACH); }
     G.zones.forEach(z => { grow(z.x, z.y); grow(z.x+z.w, z.y+z.h); });
     G.edges.forEach(e => e.path.pts.forEach(p => grow(p.x, p.y+18)));
@@ -1966,36 +2022,46 @@ const Floor = (() => {
     const bg = new PIXI.Graphics();
     G.entry.forEach(e => drawBelt(bg, e.path, P, 16));
     G.exit.forEach(e => drawBelt(bg, e.path, P, 16));
-    G.edges.forEach(e => drawBelt(bg, e.path, P, e.loop ? 13 : 17));
+    // Each route keeps its own belt and chevrons so focus can dim it alone.
+    S.fg = { steps:new Map(), shadows:new Map(), edges:new Map(), other:[] };
+    const edgeBelts = new PIXI.Container(), edgeMarks = new PIXI.Container();
+    G.edges.forEach(e => { const eb = new PIXI.Graphics(), em = new PIXI.Graphics(); drawBelt(eb, e.path, P, e.loop ? 13 : 17); chevrons(em, e.path, 0, 18); em.stroke({ width:1.4, color:P.beltMark, alpha:.9, cap:'round', join:'round' }); edgeBelts.addChild(eb); edgeMarks.addChild(em); S.fg.edges.set(e.id, [eb, em]); });
     const ch = new PIXI.Graphics();
-    G.edges.forEach(e => chevrons(ch, e.path, 0, 18)); G.entry.forEach(e => chevrons(ch, e.path, 0, 18)); G.exit.forEach(e => chevrons(ch, e.path, 0, 18));
+    G.entry.forEach(e => chevrons(ch, e.path, 0, 18)); G.exit.forEach(e => chevrons(ch, e.path, 0, 18));
     ch.stroke({ width:1.4, color:P.beltMark, alpha:.9, cap:'round', join:'round' });
     // wall portals at stub ends
     G.entry.forEach(e => { const p = e.path.pts[0]; bg.rect(p.x-6, p.y-15, 4, 30).fill(P.bracket); bg.rect(p.x-12, p.y-15, 3, 30).fill({ color:P.bracket, alpha:.5 }); });
     G.exit.forEach(e => { const p = e.path.pts[e.path.pts.length-1]; bg.rect(p.x+2, p.y-15, 4, 30).fill(P.bracket); bg.rect(p.x+9, p.y-15, 3, 30).fill({ color:P.bracket, alpha:.5 }); });
-    layers.belts.addChild(bg, ch);
+    layers.belts.addChild(bg, edgeBelts, ch, edgeMarks); S.fg.other.push(bg, ch);
+    layers.beltDynDim = new PIXI.Graphics(); layers.belts.addChild(layers.beltDynDim);
     layers.beltDyn = new PIXI.Graphics(); layers.belts.addChild(layers.beltDyn);
     // signals (static dashed)
     const sg = new PIXI.Graphics();
-    G.signals.forEach(s => { dashed(sg, s.path, 6, 5); });
+    G.signals.filter(s=>s.kind!=='presentation_navigation').forEach(s => { dashed(sg, s.path, 6, 5); });
     sg.stroke({ width:1.6, color:P.signal, cap:'round' });
-    G.signals.forEach(s => { const r = s.recv; sg.poly([r.x, r.y-7, r.x+6, r.y-1, r.x, r.y+5, r.x-6, r.y-1], true).fill(P.signal); });
+    G.signals.filter(s=>s.kind!=='presentation_navigation').forEach(s => { const r = s.recv; sg.poly([r.x, r.y-7, r.x+6, r.y-1, r.x, r.y+5, r.x-6, r.y-1], true).fill(P.signal); });
     // your wires: dotted, ending in a round receiver (the Director's end in a diamond)
     const yg = new PIXI.Graphics();
     G.deskWires.forEach(w => dashed(yg, w.path, 2, 5));
-    if (G.deskLink) dashed(yg, G.deskLink.path, 2, 5);
+    const ng=new PIXI.Graphics();
+    G.signals.filter(s=>s.kind==='presentation_navigation').forEach(s=>dashed(ng,s.path,1,5));
+    if(G.deskLink)dashed(ng,G.deskLink.path,1,5);
+    if(G.incidentLink)dashed(ng,G.incidentLink.path,1,5);
+    ng.stroke({width:1.4,color:P.bracket,alpha:.85,cap:'round'});
     yg.stroke({ width:2, color:P.signal, cap:'round' });
     G.deskWires.forEach(w => yg.circle(w.recv.x, w.recv.y, 4.2).fill(P.signal));
-    layers.signals.addChild(sg, yg);
+    layers.signals.addChild(sg, yg, ng);
     layers.sigDyn = new PIXI.Graphics(); layers.signals.addChild(layers.sigDyn);
     // shadows
-    const addShadow = (x,y,w,h,r) => { const s2 = shadowTex(w,h,r); const sp = new PIXI.Sprite(s2.t); sp.position.set(x-s2.pad, y-s2.pad+8); sp.tint = P.shadow; sp.alpha = P.dark ? .7 : .30; layers.shadows.addChild(sp); };
-    for (const [,g] of G.steps) addShadow(g.x, g.y, g.w, g.h, podRadius(g));
-    addShadow(G.booth.x, G.booth.y, G.booth.w, G.booth.h, 18);
-    if (G.desk) addShadow(G.desk.x, G.desk.y, G.desk.w, G.desk.h, 16);
+    const addShadow = (x,y,w,h,r) => { const s2 = shadowTex(w,h,r); const sp = new PIXI.Sprite(s2.t); sp.position.set(x-s2.pad, y-s2.pad+8); sp.tint = P.shadow; sp.alpha = sp.baseAlpha = P.dark ? .7 : .30; layers.shadows.addChild(sp); return sp; };
+    for (const [id,g] of G.steps) S.fg.shadows.set(id, addShadow(g.x, g.y, g.w, g.h, podRadius(g)));
+    S.fg.other.push(addShadow(G.booth.x, G.booth.y, G.booth.w, G.booth.h, 18));
+    if (G.desk) S.fg.other.push(addShadow(G.desk.x, G.desk.y, G.desk.w, G.desk.h, 16));
     // pods (static)
     const pg = new PIXI.Graphics();
-    for (const [,g] of G.steps){
+    const podOf = id => { let gr = S.fg.steps.get(id); if (!gr){ gr = new PIXI.Graphics(); layers.pods.addChild(gr); S.fg.steps.set(id, gr); } return gr; };
+    for (const [sid,g] of G.steps){
+      const pg = podOf(sid);
       const r = podRadius(g), k = g.s.kind;
       if (k === 'join'){ pg.circle(g.x+g.w/2, g.y+g.h/2, g.h/2).fill(P.pod).stroke({ width:1, color:P.podEdge }); pg.circle(g.x+g.w/2, g.y+g.h/2-3, g.h/2-5).fill({ color:P.podTop, alpha:.55 }); }
       else {
@@ -2033,10 +2099,13 @@ const Floor = (() => {
       pg.roundRect(d.x+66, d.y+12, d.w-78, d.h-24, 10).fill(P.bay).stroke({ width:1, color:P.podEdge, alpha:.8 });
     }
     // leader lines to instrument bubbles
-    for (const [,g] of G.steps){ if (!g.bubble) continue; pg.moveTo(g.x+g.w-10, g.y+4).lineTo(g.bubble.x-9, g.bubble.y+9).stroke({ width:1, color:P.ink3, alpha:.8 }); }
-    layers.pods.addChild(pg);
+    for (const [sid,g] of G.steps){ if (!g.bubble) continue; podOf(sid).moveTo(g.x+g.w-10, g.y+4).lineTo(g.bubble.x-9, g.bubble.y+9).stroke({ width:1, color:P.ink3, alpha:.8 }); }
+    layers.pods.addChild(pg); S.fg.other.push(pg);
+    layers.podDynDim = new PIXI.Graphics(); layers.pods.addChild(layers.podDynDim);
     layers.podDyn = new PIXI.Graphics(); layers.pods.addChild(layers.podDyn);
+    layers.fxDim = new PIXI.Graphics(); world.addChild(layers.fxDim);
     layers.fx = new PIXI.Graphics(); world.addChild(layers.fx);
+    S.focusOvKey = null;
   }
 
   /* ---------- instruments ---------- */
@@ -2049,46 +2118,73 @@ const Floor = (() => {
   function buildOverlay(){
     ov.innerHTML = '';
     const G = S.L, f = S.f;
-    for (const z of G.zones) el('div','zlabel',{ left:(z.x+22)+'px', top:(z.y+20)+'px' }, `<i>${esc(z.d?.glyph || '')}</i>${esc((z.d?.name || z.id).toUpperCase())}`);
+    for (const z of G.zones){
+      const group=z.d?.source==='visual_kind'?'Visual group':z.d?.source==='declared_graph'?'Declared graph group':'';
+      const label=(z.d?.name||z.id).toUpperCase();
+      // Stack the qualifier ("visual group" / "graph group") under the name so a narrow zone's label stays inside its zone.
+      const [groupName,...qualifier]=label.split(' · ');
+      const groupLabel=el('div','zlabel',{ left:(z.x+22)+'px', top:(z.y+20)+'px' }, `<i>${esc(z.d?.glyph || '')}</i>${esc(groupName)}${qualifier.length?`<span class="zq"><span class="sr-only"> · </span>${esc(qualifier.join(' · '))}</span>`:''}`);
+      groupLabel.dataset.presentationGroup=z.id;groupLabel.dataset.source=z.d?.source||'declared_graph';groupLabel.setAttribute('aria-label',z.d?.name||z.id);groupLabel.title=group;
+    }
     for (const [id,g] of G.steps){
       const dept = g.s.dept ? f.departments.find(d => d.id === g.s.dept) : null;
+      const groupLabel = dept?.name;
       const agent = g.s.agent ? f.agents[g.s.agent] : null;
       const sub = g.s.sub || (agent ? agent.name : KIND_NAME[g.s.kind]);
       const b = el('button','mach',{ left:g.x+'px', top:g.y+'px', width:g.w+'px', height:g.h+'px' });
-      b.type = 'button'; b.setAttribute('aria-label', `${g.s.name}. ${KIND_NAME[g.s.kind]}${dept ? ', ' + dept.name : ''}. Open its details.`);
-      b.addEventListener('click', () => { if (!wasDrag()) select('step', id); });
+      b.type = 'button'; b.setAttribute('aria-label', `${g.s.name}. ${KIND_NAME[g.s.kind]}${groupLabel ? ', ' + groupLabel : ''}. Open its details.`);
+      b.addEventListener('click', () => { if (!wasDrag()) select('step', id); }); b.dataset.step = id;
       const l = el('div','mlabel',{ left:(g.x+g.w/2)+'px', top:(g.y+g.h+7)+'px', width:`calc(${g.w+48}px * var(--lbl))` }, `<b>${esc(g.s.name)}</b><span>${esc(sub)}</span>`);
-      l.addEventListener('click', () => { if (!wasDrag()) select('step', id); });
-      if (g.bubble){ const bb = el('div','bubble',{ left:(g.bubble.x-17)+'px', top:(g.bubble.y-17)+'px' }, `<span class="tag">${g.bubble.tag}</span><span class="val">—</span>`); g.bubbleVal = bb.querySelector('.val'); g.bubbleLast = null; }
-      { const r = podRadius(g); g.ringEl = el('div','waitring',{ left:(g.x-6)+'px', top:(g.y-6)+'px', width:(g.w+12)+'px', height:(g.h+12)+'px', borderRadius:(r+6)+'px' }); g.ringKey = ''; }
-      if (g.res){ g.moreEl = el('div','qmore',{ left:'0px', top:'0px' }); g.moreKey = ''; }
-      if (g.res && g.s.kind !== 'intake'){ g.lodEl = el('div','lod',{ left:(g.x+g.w/2)+'px', top:(g.y-16)+'px' }); g.lodKey = ''; }
+      l.addEventListener('click', () => { if (!wasDrag()) select('step', id); }); l.dataset.step = id;
+      if (g.bubble){ const bb = el('div','bubble',{ left:(g.bubble.x-17)+'px', top:(g.bubble.y-17)+'px' }, `<span class="tag">${g.bubble.tag}</span><span class="val">—</span>`); g.bubbleVal = bb.querySelector('.val'); g.bubbleLast = null; bb.dataset.step = id; }
+      { const r = podRadius(g); g.ringEl = el('div','waitring',{ left:(g.x-6)+'px', top:(g.y-6)+'px', width:(g.w+12)+'px', height:(g.h+12)+'px', borderRadius:(r+6)+'px' }); g.ringKey = ''; g.ringEl.dataset.step = id; }
+      if (g.res){ g.moreEl = el('div','qmore',{ left:'0px', top:'0px' }); g.moreKey = ''; g.moreEl.dataset.step = id; }
+      if (g.res && g.s.kind !== 'intake'){ g.lodEl = el('div','lod',{ left:(g.x+g.w/2)+'px', top:(g.y-16)+'px' }); g.lodKey = ''; g.lodEl.dataset.step = id; }
     }
     for (const e of G.edges){
       if (!e.def.label) continue;
       // Loops: centered on the return lane. Forward routes: a sign that ends at the target's input port.
-      if (e.loop){ const p = labelSpot(e.raw) || e.path.at(e.path.len/2); el('div','elabel',{ left:p.x+'px', top:p.y+'px' }, esc(e.def.label)); }
-      else { const p = e.def._b; el('div','elabel at-port',{ left:(p.x-12)+'px', top:p.y+'px' }, esc(e.def.label)); }
+      if (e.loop){ const p = labelSpot(e.raw) || e.path.at(e.path.len/2); el('div','elabel',{ left:p.x+'px', top:p.y+'px' }, esc(e.def.label)).dataset.edge = e.id; }
+      else { const p = e.def._b; el('div','elabel at-port',{ left:(p.x-12)+'px', top:p.y+'px' }, esc(e.def.label)).dataset.edge = e.id; }
     }
-    G.entry.forEach(e => { const p = e.path.pts[0]; el('div','wall in',{ left:(p.x-6)+'px', top:(p.y-14)+'px' }, 'FROM CALLER'); S.startEl = el('div','startq',{ left:(p.x-6)+'px', top:(p.y+14)+'px' }); S.startKey = ''; });
-    G.exit.forEach(e => { const p = e.path.pts[e.path.pts.length-1]; el('div','wall out',{ left:(p.x+6)+'px', top:(p.y-14)+'px' }, 'TO CALLER'); });
+    G.entry.forEach(e => {
+      const p = e.path.pts[0], wall = el('div','wall in',{ left:(p.x-6)+'px', top:(p.y-14)+'px' }, 'FACTORY ENTRY');
+      wall.setAttribute('role','img'); wall.setAttribute('aria-label','Factory entry · presentation boundary');
+      wall.dataset.boundary='entry';wall.dataset.source=f.boundaries?.entry_basis||'declared_intake';
+      wall.title='Visual attachment to the supplied graph; not a new execution node.';
+      S.startEl = el('div','startq',{ left:(p.x-6)+'px', top:(p.y+14)+'px' }); S.startKey = '';
+      // Under the entry stub, right-aligned like the FACTORY ENTRY sign, and below the "waiting to start" count.
+      const send = el('button','boundary-send float-ui',{ left:(p.x-6)+'px', top:`calc(${p.y+18}px + 12px * var(--lbl))`, zIndex:'15', pointerEvents:'auto', padding:'5px 9px', border:'1px solid var(--line)', borderRadius:'999px', background:'var(--panel)', color:'var(--ink)', font:'600 11px var(--font-mono)', cursor:'pointer' });
+      send.type='button'; send.textContent='Send work';send.dataset.sendWork=''; send.setAttribute('aria-label','Send work'); send.setAttribute('aria-controls','exo-floor-brief');
+      send.style.transform='translateX(-100%) scale(var(--lbl))';send.style.transformOrigin='right top';
+      send.style.whiteSpace='nowrap';send.style.width='max-content';
+      send.addEventListener('click',event=>{event.stopPropagation();window.EXO_DASHBOARD_OPEN_BRIEF?.(send);});
+    });
+    G.exit.forEach(e => { const p = e.path.pts[e.path.pts.length-1], wall = el('div','wall out',{ left:(p.x+6)+'px', top:(p.y-14)+'px' }, 'FACTORY EXIT'); wall.setAttribute('role','img'); wall.setAttribute('aria-label','Factory exit · presentation boundary');wall.dataset.boundary='exit';wall.title='Factory exit is not evidence of accepted output or delivery.'; });
     const bo = G.booth;
     const bt = el('button','booth',{ left:bo.x+'px', top:bo.y+'px', width:bo.w+'px', height:bo.h+'px' });
-    bt.type = 'button'; bt.setAttribute('aria-label','Director. Open its chat and activity.');
+    bt.type = 'button'; bt.setAttribute('aria-label','Director. Open its console and activity.');bt.dataset.director='';bt.classList.add('float-ui');
     bt.addEventListener('click', () => { if (!wasDrag()) select('director'); });
     const bl = el('div','boothlabel',{ left:(bo.x+2)+'px', top:(bo.y-8)+'px' }, `<b>◆ DIRECTOR</b><span class="bs">Idle · watching the floor</span>`);
     bl.addEventListener('click', () => { if (!wasDrag()) select('director'); });
     S.desk = null;
     if (G.desk){ const d = G.desk;
       const db = el('button','booth',{ left:d.x+'px', top:d.y+'px', width:d.w+'px', height:d.h+'px' });
-      db.type = 'button'; db.setAttribute('aria-label','Your desk. Open your inbox of decisions.');
-      db.addEventListener('click', () => { if (!wasDrag()) select('inbox'); });
-      const dl = el('div','boothlabel',{ left:(d.x+2)+'px', top:(d.y-8)+'px' }, `<b>● YOU</b><span class="bs">${esc(d.who)} · nothing waiting</span>`);
-      dl.addEventListener('click', () => { if (!wasDrag()) select('inbox'); });
+      db.type = 'button'; db.setAttribute('aria-label','Human inbox. Open observed decisions.');db.dataset.humanInbox='';db.classList.add('float-ui');db.title=f.communication?.humanInbox?.reason||'Observed human waits only; this view does not configure escalation.';
+      db.addEventListener('click', () => { window.EXO_DASHBOARD_OPEN_DECISIONS?.('human'); });
+      const dl = el('div','boothlabel',{ left:(d.x+2)+'px', top:(d.y-8)+'px' }, `<b>● HUMAN INBOX</b><span class="bs">No observed pending items</span>`);
+      dl.addEventListener('click', () => { window.EXO_DASHBOARD_OPEN_DECISIONS?.('human'); });
       const ring = el('div','waitring',{ left:(d.x-6)+'px', top:(d.y-6)+'px', width:(d.w+12)+'px', height:(d.h+12)+'px', borderRadius:'22px' });
       const tray = el('div','desktray',{ left:(d.x+66)+'px', top:(d.y+12)+'px', width:(d.w-78)+'px', height:(d.h-24)+'px' });
       S.desk = { stat:dl.querySelector('.bs'), ring, tray, key:'\u0000', who:d.who };
     }
+    const channel = G.incidentView;
+    const channelButton=el('button','float-ui',{left:channel.x+'px',top:channel.y+'px',width:channel.w+'px',minHeight:channel.h+'px',border:'1px dashed var(--line)',borderRadius:'10px',background:'var(--panel)',color:'var(--ink)',font:'11px var(--font-mono)',pointerEvents:'auto'});
+    channelButton.type='button';channelButton.dataset.incidentChannel='';channelButton.title='Independent incident projection; this view does not require a Director response. No recovery action is implemented.';
+    channelButton.addEventListener('click',()=>window.EXO_DASHBOARD_OPEN_DECISIONS?.('incidents'));S.incidentButton=channelButton;
+    const linkLabel=el('div','boothlabel',{left:(bo.x+bo.w+14)+'px',top:(bo.y+34)+'px'},'<span>View link · no message</span>');linkLabel.dataset.communicationRoute='presentation_navigation';
+    G.signals.forEach(w=>{const route=f.communication?.director?.routes?.find(r=>r.node_id===w.target);const point=w.path.at(w.path.len*.55);const label=el('div','boothlabel',{left:point.x+'px',top:(point.y-14)+'px'},`<span>${esc(route?.label||'Declared decision route')}</span>`);label.dataset.communicationRoute=route?.kind||'declared_control';label.dataset.target=w.target;label.title='Dashed communication reference; not an observed message or work belt.';});
+    G.deskWires.forEach(w=>{const label=el('div','boothlabel',{left:w.recv.x+'px',top:(w.recv.y-35)+'px'},'<span>Declared human route</span>');label.dataset.communicationRoute='declared_human';label.dataset.target=w.target;});
     S.boothStat = bl.querySelector('.bs');
     S.boothLast = null;
     const sc = G.screen;
@@ -2097,6 +2193,45 @@ const Floor = (() => {
     [S.crtHdL, S.crtHdR] = S.crt.querySelectorAll('.hd span'); S.crtLog = S.crt.querySelector('.log'); S.crtKey = '';
     if (!reduced()) gsap.fromTo(S.crt, { scaleY:.015, filter:'brightness(3.5)' }, { scaleY:1, filter:'brightness(1)', duration:.6, delay:.2, ease:'power3.out', clearProps:'transform,filter' });
     S.stampLayer = el('div', null, { left:'0px', top:'0px' });
+    S.labelsDirty = true;
+  }
+  // Labels scale with --lbl when zoomed out, so their footprint changes with the camera. Group labels and
+  // communication-route labels are nudged to the nearest free spot (all reads, then all writes) so nothing overlaps
+  // machines, their labels, signs, badges, the booths or each other. Pinned geometry and wires do not move.
+  function declutterLabels(){
+    S.labelsDirty = false;
+    if (!ov || !S.L || !ov.isConnected) return;
+    const movers = [...ov.querySelectorAll('.zlabel, [data-communication-route]')];
+    for (const m of movers){ if (m.dataset.bx == null){ m.dataset.bx = parseFloat(m.style.left) || 0; m.dataset.by = parseFloat(m.style.top) || 0; } m.style.left = m.dataset.bx + 'px'; m.style.top = m.dataset.by + 'px'; }
+    const o = ov.getBoundingClientRect(), k = cam.s || 1;
+    const box = r => r && r.width > 0 && r.height > 0 ? { x0:(r.left - o.left)/k, y0:(r.top - o.top)/k, x1:(r.right - o.left)/k, y1:(r.bottom - o.top)/k } : null;
+    // Text extent, not the block box: a machine label's box is far wider than its words.
+    const inkBox = e => { let u = null; const w = document.createTreeWalker(e, NodeFilter.SHOW_TEXT), rg = document.createRange();
+      for (let n = w.nextNode(); n; n = w.nextNode()){ if (!n.nodeValue.trim() || n.parentElement.closest('.sr-only')) continue; rg.selectNodeContents(n); const b = box(rg.getBoundingClientRect()); if (b) u = u ? { x0:Math.min(u.x0,b.x0), y0:Math.min(u.y0,b.y0), x1:Math.max(u.x1,b.x1), y1:Math.max(u.y1,b.y1) } : b; }
+      return u; };
+    const fixed = [];
+    for (const e of ov.querySelectorAll('.mach, .booth, .crt, [data-incident-channel], .wall, .boundary-send, .elabel, .bubble, .lod, .mlabel, .boothlabel:not([data-communication-route])')){
+      const b = e.matches('.mlabel, .boothlabel, .wall') ? inkBox(e) : box(e.getBoundingClientRect()); if (b) fixed.push(b);
+    }
+    const zones = new Map(S.L.zones.map(z => [z.id, z]));
+    const items = movers.map(e => ({ e, b:inkBox(e), zone:e.classList.contains('zlabel') ? zones.get(e.dataset.presentationGroup) : null }));
+    const placed = [], gap = 4;
+    const free = b => !fixed.some(q => b.x0 < q.x1 + gap && q.x0 < b.x1 + gap && b.y0 < q.y1 + gap && q.y0 < b.y1 + gap) && !placed.some(q => b.x0 < q.x1 + gap && q.x0 < b.x1 + gap && b.y0 < q.y1 + gap && q.y0 < b.y1 + gap);
+    const writes = [];
+    // Group labels first: they slide along their zone's top edge, then rise into the aisle above it.
+    for (const it of items.filter(x => x.b && x.zone).concat(items.filter(x => x.b && !x.zone))){
+      const { b, zone } = it, h = b.y1 - b.y0, cands = [];
+      if (zone){ const room = Math.max(0, zone.x + zone.w - 8 - b.x1); for (let dy = 0; dy >= -(h + 40); dy -= 4) for (let dx = 0; dx <= room; dx += 12) cands.push([dx, dy, dx + 2*Math.abs(dy)]); }
+      else for (let dy = -160; dy <= 160; dy += 6) for (let dx = -160; dx <= 160; dx += 12) cands.push([dx, dy, Math.hypot(dx, dy*1.2)]);
+      cands.sort((a, c) => a[2] - c[2]);
+      let pick = null;
+      for (const [dx, dy] of cands){ const nb = { x0:b.x0+dx, y0:b.y0+dy, x1:b.x1+dx, y1:b.y1+dy };
+        if (zone && nb.y0 < zone.y + 4 && nb.y1 > zone.y - 4) continue; // never straddle the zone's own bracket line
+        if (free(nb)){ pick = [dx, dy, nb]; break; } }
+      if (!pick) pick = [0, 0, b];
+      placed.push(pick[2]); if (pick[0] || pick[1]) writes.push([it.e, pick[0], pick[1]]);
+    }
+    for (const [e, dx, dy] of writes){ e.style.left = (+e.dataset.bx + dx) + 'px'; e.style.top = (+e.dataset.by + dy) + 'px'; }
   }
   function buildStamps(){
     S.stampLayer.innerHTML = ''; stampEls = [];
@@ -2115,25 +2250,25 @@ const Floor = (() => {
     const R = { run, multi, ev, times:ev.map(e => e.t), items:new Map(), works:new Map(), verdicts:[], releases:[], scraps:[], waits:[], turns:[], alarms:[], commands:[], msgs:[], readouts:new Map(), decides:[], escalations:[], notes:[], end:null,
       jobs:new Map(), itemWorks:new Map(), itemTurns:new Map(), jobWorks:new Map(), opsCache:new Map() };
     f.steps.forEach(s => { R.works.set(s.id, []); R.readouts.set(s.id, []); });
-    const jobOf = id => { if (id == null) return null; let j = R.jobs.get(id); if (!j){ j = { id, version:f.version, arrive:null, admit:null, end:null, outcome:null, items:[], brief:run.brief }; R.jobs.set(id, j); } return j; };
+    const jobOf = id => { if (id == null) return null; let j = R.jobs.get(id); if (!j){ j = { id, version:f.actual ? null : f.version, arrive:null, admit:null, end:null, outcome:null, items:[], brief:run.brief }; R.jobs.set(id, j); } return j; };
     const push = (m, k, v) => (m.get(k) || m.set(k, []).get(k)).push(v);
     for (const e of ev){
       const it = e.item ? R.items.get(e.item) : null, j = jobOf(e.job);
       switch (e.type){
-        case 'job': j.arrive = e.t; j.version = e.version || f.version; if (e.brief) j.brief = e.brief; break;
+        case 'job': j.arrive = e.t; j.version = e.version ?? (f.actual ? null : f.version); if (e.brief) j.brief = e.brief; break;
         case 'admit': j.admit = e.t; break;
         case 'jobend': j.end = e.t; j.outcome = e.outcome; break;
         case 'spawn': {
-          const n = { id:e.item, job:e.job, art:e.art, label:e.label || '', rev:e.rev || '', sha:e.sha || '', born:e.t, at:e.at, track:[], flags:[] };
+          const n = { id:e.item, job:e.job, art:e.art, label:e.label || '', rev:e.rev || '', sha:e.sha || '', born:e.t, at:e.at, track:[], flags:[], evidence:e.evidence || '', observed:e.observed || '' };
           const en = G.entry.get(e.at);
           if (en){ n.track.push({ k:'move', t0:e.t, t1:e.t+.9, path:en.move, via:en, to:e.at }); n.track.push({ k:'park', t0:e.t+.9, step:e.at, via:en }); n.noPop = true; }
           else n.track.push({ k:'park', t0:e.t, step:e.at, via:null });
           R.items.set(e.item, n); if (j) j.items.push(n); break; }
-        case 'move': { const ed = findEdge(e.from, e.to); it.track.push({ k:'move', t0:e.t, t1:e.t+e.dur, path:ed ? ed.move : straight(e.from, e.to), edge:ed, via:ed, from:e.from, to:e.to }); it.track.push({ k:'park', t0:e.t+e.dur, step:e.to, via:ed }); break; }
+        case 'move': { const ed = findEdge(e.from, e.to); it.track.push({ k:'move', t0:e.t, t1:e.t+e.dur, path:ed ? ed.move : straight(e.from, e.to), edge:ed, via:ed, from:e.from, to:e.to, undeclared:!!e.undeclared }); it.track.push({ k:'park', t0:e.t+e.dur, step:e.to, via:ed }); break; }
         case 'consume': it.track.push({ k:'gone', t0:e.t, how:'consumed', at:e.at }); it.goneAt = e.at; it.goneT = e.t; it.goneHow = 'consumed'; break;
         case 'release': { const ex = G.exit.get(e.at); it.track.push({ k:'move', t0:e.t, t1:e.t+1.2, path:ex ? ex.move : straight(e.at, e.at), fade:true, exit:true }); it.track.push({ k:'gone', t0:e.t+1.2, how:'released' }); it.goneHow = 'released'; it.goneT = e.t; R.releases.push(e); break; }
         case 'scrap': it.track.push({ k:'shrink', t0:e.t, t1:e.t+.7, step:e.at }); it.track.push({ k:'gone', t0:e.t+.7, how:'aborted' }); it.goneHow = 'aborted'; it.goneT = e.t; R.scraps.push(e); break;
-        case 'work': { const w = { ...e, t0:e.t, t1:e.t+e.dur }; R.works.get(e.step).push(w); if (e.item) push(R.itemWorks, e.item, w); if (e.job != null) push(R.jobWorks, e.job, w); break; }
+        case 'work': { const w = { ...e, t0:e.t, t1:e.dur == null ? Infinity : e.t+e.dur }; R.works.get(e.step).push(w); if (e.item) push(R.itemWorks, e.item, w); if (e.job != null) push(R.jobWorks, e.job, w); break; }
         case 'verdict': R.verdicts.push(e); break;
         case 'flag': it.flags.push({ t0:e.t, t1:e.t1 ?? Infinity, flag:e.flag }); break;
         case 'readout': R.readouts.get(e.step).push(e); break;
@@ -2149,7 +2284,7 @@ const Floor = (() => {
       if (e.msg) R.msgs.push({ t:e.t, text:e.msg, level:e.level2 || e.level || (e.type === 'wait' ? 'action' : 'normal'), i:e.i, job:e.job, tick:!!e.tick });
     }
     // A single hand-authored run is one job.
-    if (!multi){ const j = jobOf(run.id); j.arrive = j.admit = ev.length ? ev[0].t : 0; if (R.end){ j.end = R.end.t; j.outcome = R.end.outcome; } }
+    if (!multi && run.id){ const j = jobOf(run.id); j.arrive = j.admit = f.actual&&run.startKnown ? 0 : (ev.length ? ev[0].t : 0); if (R.end){ j.end = R.end.t; j.outcome = R.end.outcome; } }
     // An item that arrives at a busy station stops on its belt: mark those parks, and the move that leads into them.
     for (const it of R.items.values()){
       const tr = it.track;
@@ -2157,7 +2292,8 @@ const Floor = (() => {
         const seg = tr[k]; if (seg.k !== 'park') continue;
         const g = G.steps.get(seg.step); if (!g || !g.res || !seg.via) continue;
         const starts = g.s.kind === 'intake' ? (R.itemTurns.get(it.id) || []) : (R.itemWorks.get(it.id) || []).filter(w => w.step === seg.step);
-        const w = starts.find(x => x.t0 >= seg.t0 - .01);
+        // Work already in progress on this item at this station counts as arrival (a minimum visible hop can land after an observed start).
+        const w = starts.find(x => x.t0 >= seg.t0 - .01) || starts.find(x => x.t0 < seg.t0 && x.t1 > seg.t0);
         seg.queued = !w || w.t0 - seg.t0 > .05;
         if (seg.queued && k > 0 && tr[k-1].k === 'move') tr[k-1].qTo = seg.step;
       }
@@ -2169,7 +2305,7 @@ const Floor = (() => {
     const dp = f.budget?.director || 0; if (dp) for (const d of R.turns) R.costs.push({ t0:d.t0, t1:d.t1, amt:dp, job:d.job, agent:'director' });
     R.accrued = (t, pick) => { let s = 0; for (const c of R.costs){ if (c.t0 > t || (pick && !pick(c))) continue; s += c.t1 <= t ? c.amt : c.amt * (t - c.t0) / Math.max(1e-6, c.t1 - c.t0); } return s; };
     R.spendBase = f.budget ? f.budget.spentAt.usd - R.accrued(f.budget.spentAt.t) : 0;
-    R.tMax = run.live ? run.now : (R.end ? R.end.t : Math.max(...R.times) + 2);
+    R.tMax = run.live ? run.now : (R.end ? R.end.t : Math.max(0, ...R.times) + (R.times.length ? 2 : 0));
     R.ops = multi ? [] : buildOps(f, R, null);
     R.opsFor = id => { if (!R.opsCache.has(id)) R.opsCache.set(id, buildOps(f, R, id)); return R.opsCache.get(id); };
     R.con = buildConsole(f, R);
@@ -2405,12 +2541,28 @@ const Floor = (() => {
     v = { c, g, txt, shape, label:it.label, x:0, y:0, seen:false }; itemViews.set(it.id, v); return v;
   }
 
+  // Directional belt illumination is presentation of currently observed station
+  // activity, not an artifact handoff or transport receipt.
+  function observedActiveNodes(vm,runId,steps){
+    const run=vm?.runs?.find(row=>row.run_id===runId),state=run?.state||{};
+    if(!run||['completed','failed','cancelled','aborted','released','succeeded'].includes(state.state))return [];
+    const valid=new Set(steps.map(step=>step.id)),nodes=new Set();
+    if(['working','running','active'].includes(state.state)&&valid.has(state.node))nodes.add(state.node);
+    for(const row of vm.assignments||[])if(row.run_id===runId&&row.active&&valid.has(row.node_id||row.node)){const node=row.node_id||row.node,pod=`pod:${node}:${row.capability}`;nodes.add(valid.has(pod)?pod:node);}
+    return [...nodes];
+  }
   /* ---------- per frame ---------- */
   function frame(dtWall){
-    const R = S.R; if (!R) return;
-    if (S.playing){ S.t = Math.min(S.t + dtWall * S.speed, R.tMax); if (S.t >= R.tMax - 1e-6 && !R.run.live) S.playing = false; }
-    // A live run's edge keeps moving in real time; while playing at the edge, the view follows it.
-    if (R.run.live && S.t >= R.tMax - .05){ R.tMax += dtWall; R.run.now = R.tMax; if (S.playing) S.t = R.tMax; }
+    const R = S.R; if (!R || !store.ready) return;
+    if (store.sourceMode === 'live' && (R.run.live || !S.liveReplay)){
+      // Live presents the latest observation immediately. A disconnected clock stays
+      // at its last observed position while the connection notice remains visible.
+      if (R.run.live && store.observationStatus === 'connected'){ R.tMax += dtWall; R.run.now = R.tMax; }
+      S.t = R.tMax;
+    } else {
+      if (S.playing){ S.t = Math.min(S.t + dtWall * S.speed, R.tMax); if (S.t >= R.tMax - 1e-6 && !R.run.live) S.playing = false; }
+      if (R.run.live && S.t >= R.tMax - .05){ R.tMax += dtWall; R.run.now = R.tMax; if (S.playing) S.t = R.tMax; }
+    }
     S.wall += dtWall;
     const t = S.t, P = S.P, G = S.L, calm = store.calm || reduced();
     // items: work sits in the station's bay; work that finds every slot busy stops on the belt it came in on
@@ -2454,6 +2606,7 @@ const Floor = (() => {
     for (const st of inbound){ const key = st.via.id + '>' + st.qTo; let tail = tails.has(key) ? tails.get(key) : st.via.qEnd; tail -= (bumped.get(key) || 0) * QSP; if (st.d > tail){ const p = st.path.at(Math.max(0, tail)); st.x = p.x; st.y = p.y; st.bumped = true; bumped.set(key, (bumped.get(key) || 0) + 1); } }
     // Following a job: dim the rest, and keep its work in the middle of the view.
     S.liveBusy = false; S.slowBusy = false; S.camBusy = false;
+    const foc = applyFocus(dtWall), FL = foc ? (id => foc.steps.has(id)) : () => true, EL = foc ? (id => foc.edges.has(id)) : () => true;
     if (S.follow && S.track && !pts.size && !gsap.isTweening(cam)){
       let sx = 0, sy = 0, n = 0;
       for (const it of (R.jobs.get(S.follow)?.items || [])){ const st = states.get(it.id); if (st && !st.hidden && st.x != null){ sx += st.x; sy += st.y; n++; } }
@@ -2476,22 +2629,34 @@ const Floor = (() => {
     for (const ws of R.works.values()) if (ws.some(w => t >= w.t0 && t < w.t1)){ S.slowBusy = true; break; }
     if (!S.slowBusy && R.turns.some(x => t >= x.t0 && t < x.t1)) S.slowBusy = true;
     // belts (dynamic chevrons)
-    const bd = layers.beltDyn; bd.clear();
-    const off = t * 26, moving = [];
-    G.edges.forEach(e => { if (activeEdges.has(e.id)) moving.push([e.path, e.loop ? 13 : 17]); });
-    if (activeEdges.has('stub')){ G.entry.forEach(e => moving.push([e.path, 16])); G.exit.forEach(e => moving.push([e.path, 16])); }
-    // A running belt repaints its own surface over the idle chevrons, then draws them moving.
-    for (const [path, w] of moving){ const pts = path.pts; bd.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) bd.lineTo(pts[i].x, pts[i].y); bd.stroke({ width:w-5, color:P.belt, cap:'round', join:'round' }); }
-    for (const [path] of moving) chevrons(bd, path, off, 18);
-    if (moving.length) bd.stroke({ width:1.8, color:P.beltOn, alpha:1, cap:'round', join:'round' });
-    // A backed-up belt: its queued stretch darkens, like a compressed Factorio belt.
-    for (const [,g] of G.steps) for (const q of g.qLines || []){ if (q.to - q.from < 2) continue; const n = Math.max(2, Math.ceil((q.to - q.from)/6)); for (let k = 0; k <= n; k++){ const p = q.v.move.at(q.from - 13 + (q.to - q.from + 13) * k/n); k ? bd.lineTo(p.x, p.y) : bd.moveTo(p.x, p.y); } }
-    bd.stroke({ width:11, color:P.beltEdge, alpha:P.dark ? .55 : .32, cap:'round', join:'round' });
-    G.edges.forEach(e => { if (rejectedEdges.has(e.id)){ const pts = e.path.pts; bd.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) bd.lineTo(pts[i].x, pts[i].y); } });
-    if (rejectedEdges.size) bd.stroke({ width:14, color:P.advisory, alpha:.28, cap:'round', join:'round' });
+    const bd = layers.beltDyn, bdd = layers.beltDynDim; bd.clear(); bdd.clear();
+    const observedNodes=new Set(store.sourceMode==='live'&&store.observationStatus==='connected'&&store.dashboardActivityFresh?observedActiveNodes(store.dashboardViewModels,R.multi?S.follow:R.run.id,S.f.steps):[]);
+    if(store.sourceMode!=='live')for(const [id] of G.steps)if(activeWorks(id,t).length)observedNodes.add(id);
+    const activityBelts=G.edges.filter(e=>observedNodes.has(e.def.to)&&!e.loop);
+    // Animate inbound routes of observed active stations; work items come only from the observed A2A flow events.
+    if(observedNodes.size)S.slowBusy=true;
+    store.observedActivity={nodes:[...observedNodes],belts:activityBelts.map(e=>e.id),presentationOnly:true};
+    const off = calm ? 0 : S.wall * 26, moving = [];
+    G.edges.forEach(e => { if (activeEdges.has(e.id)||activityBelts.includes(e)) moving.push([e.path, e.loop ? 13 : 17, EL(e.id)]); });
+    if (activeEdges.has('stub')){ G.entry.forEach(e => moving.push([e.path, 16, !foc])); G.exit.forEach(e => moving.push([e.path, 16, !foc])); }
+    // Focus splits the moving belts between a lit and a dimmed layer; each draws the same way.
+    for (const [gr, lit] of [[bd, true], [bdd, false]]){
+      const mine = moving.filter(m => m[2] === lit);
+      // A running belt repaints its own surface over the idle chevrons, then draws them moving.
+      for (const [path, w] of mine){ const pts = path.pts; gr.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) gr.lineTo(pts[i].x, pts[i].y); gr.stroke({ width:w-5, color:P.belt, cap:'round', join:'round' }); }
+      for (const [path] of mine) chevrons(gr, path, off, 18);
+      if (mine.length) gr.stroke({ width:1.8, color:P.beltOn, alpha:1, cap:'round', join:'round' });
+      // A backed-up belt: its queued stretch darkens, like a compressed Factorio belt.
+      for (const [qid,g] of G.steps){ if (FL(qid) !== lit) continue; for (const q of g.qLines || []){ if (q.to - q.from < 2) continue; const n = Math.max(2, Math.ceil((q.to - q.from)/6)); for (let k = 0; k <= n; k++){ const p = q.v.move.at(q.from - 13 + (q.to - q.from + 13) * k/n); k ? gr.lineTo(p.x, p.y) : gr.moveTo(p.x, p.y); } } }
+      gr.stroke({ width:11, color:P.beltEdge, alpha:P.dark ? .55 : .32, cap:'round', join:'round' });
+      let rejected = 0;
+      G.edges.forEach(e => { if (rejectedEdges.has(e.id) && EL(e.id) === lit){ rejected++; const pts = e.path.pts; gr.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) gr.lineTo(pts[i].x, pts[i].y); } });
+      if (rejected) gr.stroke({ width:14, color:P.advisory, alpha:.28, cap:'round', join:'round' });
+    }
     // pods (dynamic)
-    const pd = layers.podDyn; pd.clear();
+    const pdLit = layers.podDyn, pdDim = layers.podDynDim; pdLit.clear(); pdDim.clear();
     for (const [id, g] of G.steps){
+      const pd = FL(id) ? pdLit : pdDim;
       const k = g.s.kind, act = activeWorks(id, t), wt = waitAt(id, t);
       if (act.length && (!g.res || k === 'intake')){ const p = act.reduce((a,w) => a + (t-w.t0)/(w.t1-w.t0), 0)/act.length; pd.rect(g.x+g.w/2-20, g.y+g.h-7, 40*clamp(p,0,1), 2).fill(P.ledOn); }
       if (g.res && k !== 'intake'){
@@ -2508,7 +2673,7 @@ const Floor = (() => {
           const p0 = g.ring.at(0); pd.moveTo(p0.x, p0.y); for (let d = 5; d < L2; d += 5){ const q = g.ring.at(d); pd.lineTo(q.x, q.y); } const pe = g.ring.at(L2); pd.lineTo(pe.x, pe.y);
           pd.stroke({ width:adv ? 3.2 : 2.4, color:adv ? P.advisory : P.ink3, alpha:adv ? 1 : .8, cap:'round', join:'round' });
         }
-        if (g.lodEl){ const txt = `${si.here}/${Math.max(0, si.cap - si.oth)}${g.qn ? ' · ' + g.qn + ' queued' : ''}`, key = txt + (g.qOld >= QADV() ? '!' : ''); if (key !== g.lodKey){ g.lodKey = key; g.lodEl.textContent = txt; g.lodEl.className = 'lod' + (g.qn && g.qOld >= QADV() ? ' advisory' : ''); } }
+        if (g.lodEl){ const txt = `${si.here}/${Math.max(0, si.cap - si.oth)}${g.qn ? ' · ' + g.qn + ' queued' : ''}`, key = txt + (g.qOld >= QADV() ? '!' : ''); if (key !== g.lodKey){ if (g.lodEl.textContent.length !== txt.length) S.labelsDirty = true; g.lodKey = key; g.lodEl.textContent = txt; g.lodEl.className = 'lod' + (g.qn && g.qOld >= QADV() ? ' advisory' : ''); } }
       }
       if (g.moreEl){
         const on = g.qMore > 0 && g.qMoreAt, adv = g.qOld >= QADV(), key = on ? `${g.qMore}|${Math.round(g.qMoreAt.x)}|${Math.round(g.qMoreAt.y)}|${adv}` : '';
@@ -2516,24 +2681,26 @@ const Floor = (() => {
       }
       let led = P.led, la = 1;
       if (wt){ led = wt.level === 'action' ? P.action : P.alarm; la = 1; }
-      else if (act.length){ led = P.ledOn; la = calm ? .95 : .6 + .4*Math.sin(S.wall*3.2); }
+      else if (act.length||observedNodes.has(id)){ led = P.ledOn; la = calm ? .95 : .6 + .4*Math.sin(S.wall*3.2); }
       const rel = !wt && R.releases.find(r => r.at === id && t >= r.t && t - r.t < 2.4);
       if (rel){ const p = (t - rel.t)/2.4; led = P.done; la = 1; const r = podRadius(g); pd.roundRect(g.x-5, g.y-5, g.w+10, g.h+10, r+5).stroke({ width:2.5, color:P.done, alpha:.95*(1-p) }); pd.roundRect(g.x+3, g.y+3, g.w-6, g.h-6, Math.max(4, r-3)).fill({ color:P.done, alpha:.16*(1-p) }); }
       pd.circle(g.x+g.w-(k === 'join' ? g.w/2 : 14), g.y+(k === 'join' ? g.h-12 : 14), 3.3).fill({ color:led, alpha:la });
       if (k === 'gate') drawValve(pd, g, t);
-      if (k === 'gate' && act.length){ const b = g.bay, yy = calm ? b.y + b.h*.5 : b.y + 4 + (b.h-8)*(.5 + .5*Math.sin(t*3.4)); pd.moveTo(b.x+5, yy).lineTo(b.x+b.w-5, yy).stroke({ width:1.6, color:P.ledOn, alpha:.75 }); }
+      if (k === 'gate' && (act.length||observedNodes.has(id))){ const b = g.bay, yy = calm ? b.y + b.h*.5 : b.y + 4 + (b.h-8)*(.5 + .5*Math.sin(t*3.4)); pd.moveTo(b.x+5, yy).lineTo(b.x+b.w-5, yy).stroke({ width:1.6, color:P.ledOn, alpha:.75 }); }
       if ((k === 'assign' || k === 'nested') && act.length && !calm){ const ph = (S.wall*.55 + (g.x % 7)/7) % 1, gx = g.x + 16 + (g.w-32)*ph; pd.moveTo(gx-10, g.y+2).lineTo(gx+10, g.y+2).stroke({ width:1.5, color:0xffffff, alpha:.35*Math.sin(ph*Math.PI) }); }
       const rk = wt ? 'waitring on ' + wt.level : 'waitring'; if (g.ringEl && rk !== g.ringKey){ g.ringKey = rk; g.ringEl.className = rk; }
       if (S.sel.type === 'step' && S.sel.id === id){ const r = podRadius(g); pd.roundRect(g.x-4, g.y-4, g.w+8, g.h+8, r+4).stroke({ width:2, color:P.focus, alpha:.95 }); }
       if (g.bubbleVal){ const v = readoutAt(g, t); if (v !== g.bubbleLast){ g.bubbleVal.textContent = v; g.bubbleLast = v; } }
     }
+    // A far-zoom badge changed width: re-place the group and route labels around it.
+    if (S.labelsDirty && S.lodFar) declutterLabels();
     // Director booth + signals
     const sd = layers.sigDyn; sd.clear();
     const turn = R.turns.find(x => t >= x.t0 && t < x.t1);
     const bo = G.booth, dcx = bo.x+38, dcy = bo.y+bo.h/2;
     drawConsole(t, !!turn);
     if (turn){
-      const sig = G.signals.find(s => s.target === turn.target);
+      const sig = G.signals.find(s => s.target === turn.target&&s.kind!=='presentation_navigation');
       if (sig){ for (let k = 0; k < 3; k++){ const ph = ((t - turn.t0)*.55 + k/3) % 1; const p = sig.path.at(ph * sig.path.len); sd.circle(p.x, p.y, 3.4).fill({ color:P.signalOn, alpha:.9 }); } }
       const rot = calm ? 0 : S.wall*1.6;
       for (let k = 0; k < 4; k++){ const a0 = rot + k*Math.PI/2; sd.moveTo(dcx + Math.cos(a0)*17, dcy + Math.sin(a0)*17); sd.arc(dcx, dcy, 17, a0, a0 + .9); }
@@ -2562,18 +2729,19 @@ const Floor = (() => {
       for (const e of R.escalations){ const dt = t - e.t; if (dt < 0 || dt > 2.2) continue; S.liveBusy = true;
         for (let k = 0; k < 3; k++){ const ph = clamp(dt/1.4 - k*.14, 0, 1), p = G.deskLink.path.at(ph * G.deskLink.path.len); sd.circle(p.x, p.y, 3.8).fill({ color:P.action, alpha:.95 * (dt > 1.7 ? 1 - (dt-1.7)/.5 : 1) }); } }
     }
-    if (S.startEl){ let n = 0; if (R.multi) for (const j of R.jobs.values()) if (j.arrive != null && j.arrive <= t && (j.admit == null || j.admit > t)) n++; const key = String(n); if (key !== S.startKey){ S.startKey = key; S.startEl.className = 'startq' + (n ? ' on' : ''); S.startEl.textContent = `${n} WAITING TO START`; } }
+    if(S.f.communication){const c=S.f.communication;S.boothStat.textContent=c.director.label||'Director activity unreported';S.boothStat.classList.remove('on');if(S.desk){const inbox=c.humanInbox;S.desk.stat.textContent=inbox.state==='pending'?`${inbox.items.length} observed human waits`:inbox.state==='empty'?'No observed pending items':'Inbox observation unavailable';S.desk.tray.textContent=inbox.state==='pending'?`${inbox.items.length} pending`:inbox.state==='empty'?'Empty':'Unavailable';S.desk.ring.className='waitring'+(inbox.state==='pending'?' on action':'');}if(S.incidentButton){const channel=c.incidentChannel;S.incidentButton.textContent=`Incident view · ${channel.state==='items'||channel.state==='pending'?channel.items.length+' observed':channel.state==='empty'?'no records':'unavailable'}`;S.incidentButton.dataset.state=channel.state;}}
+    if (S.startEl){ let n = 0; if (R.multi) for (const j of R.jobs.values()) if (j.arrive != null && j.arrive <= t && (j.admit == null || j.admit > t) && (j.end == null || j.end > t)) n++; const key = String(n); if (key !== S.startKey){ S.startKey = key; S.startEl.className = 'startq' + (n ? ' on' : ''); S.startEl.textContent = `${n} WAITING TO START`; } }
     // effects
-    const fx = layers.fx; fx.clear();
+    const fxLit = layers.fx, fxDim = layers.fxDim; fxLit.clear(); fxDim.clear(); let fx = fxLit; const fxAt = id => FL(id) ? fxLit : fxDim;
     // Delivery is the one moment that turns green: an event, never a resting state.
-    for (const r of R.releases){ const dt = t - r.t; if (dt < 0 || dt > 1.6) continue; const g = G.steps.get(r.at), p = dt/1.6; S.liveBusy = true;
+    for (const r of R.releases){ const dt = t - r.t; if (dt < 0 || dt > 1.6) continue; const g = G.steps.get(r.at), p = dt/1.6; fx = fxAt(r.at); S.liveBusy = true;
       fx.circle(g.c.x, g.c.y, 18 + 70*EASE.out(p)).stroke({ width:2.4, color:P.done, alpha:.75*(1-p) });
       fx.circle(g.c.x, g.c.y, 10 + 38*EASE.out(p)).stroke({ width:1.2, color:P.done, alpha:.55*(1-p) });
       for (let k = 0; k < 14; k++){ const a = k/14*Math.PI*2 + .2, d = 14 + 78*EASE.out(p); fx.rect(g.c.x + Math.cos(a)*d - 1.6, g.c.y + Math.sin(a)*d - 1.6, 3.2, 3.2).fill({ color:P.done, alpha:.9*(1-p) }); } }
-    for (const v of R.verdicts){ const dt = t - v.t; if (dt < 0 || dt > 1) continue; const g = G.steps.get(v.step), p = dt;
+    for (const v of R.verdicts){ const dt = t - v.t; if (dt < 0 || dt > 1) continue; const g = G.steps.get(v.step), p = dt; fx = fxAt(v.step);
       const col = v.verdict === 'accepted' ? P.signalOn : (v.limit ? P.alarm : P.advisory);
       fx.roundRect(g.x-4-12*p, g.y-4-12*p, g.w+8+24*p, g.h+8+24*p, 20+12*p).stroke({ width:2, color:col, alpha:.7*(1-p) }); }
-    for (const s2 of R.scraps){ const dt = t - s2.t; if (dt < 0 || dt > .9) continue; const g = G.steps.get(s2.at), p = dt/.9; fx.circle(g.c.x, g.c.y, 40*(1-p) + 6).stroke({ width:2, color:P.signalOn, alpha:.6*(1-p) }); }
+    for (const s2 of R.scraps){ const dt = t - s2.t; if (dt < 0 || dt > .9) continue; const g = G.steps.get(s2.at), p = dt/.9; fx = fxAt(s2.at); fx.circle(g.c.x, g.c.y, 40*(1-p) + 6).stroke({ width:2, color:P.signalOn, alpha:.6*(1-p) }); }
     // stamps
     for (const s3 of stampEls){ const dt = t - s3.t; if (dt < 0 || dt > 2.6){ if (s3.on){ s3.el.style.opacity = 0; s3.on = false; } continue; } S.liveBusy = true;
       const sc = dt < .2 ? 1.9 - .9*EASE.out(dt/.2) : 1, op = dt > 2.1 ? 1 - (dt-2.1)/.5 : Math.min(1, dt/.08);
@@ -2592,6 +2760,37 @@ const Floor = (() => {
     for (const [,g] of S.L.steps) if (g.s.kind === 'intake') n += g.qn || 0;
     return n;
   }
+  // Live graphs name the work, not the binding: assignments, nested factories and Quality review are agent stations even without an agent id.
+  const agentStation = g => g.s.kind !== 'intake' && (!!g.s.agent || g.s.kind === 'assign' || g.s.kind === 'nested' || g.s.type === 'quality');
+  // Focus: an opened agent station keeps itself, its routes and the stations at their other ends lit; the rest of the floor dims.
+  function focusSet(){
+    const G = S.L, id = S.sel.type === 'step' ? S.sel.id : null, g = id != null && G ? G.steps.get(id) : null;
+    if (!g || !agentStation(g)) return null;
+    const key = id + '|' + G.edges.length;
+    if (S.focusCache?.key === key && S.focusCache.L === G) return S.focusCache;
+    const edges = G.edges.filter(e => e.def.from === id || e.def.to === id);
+    return S.focusCache = { key, L:G, id, edges:new Set(edges.map(e => e.id)), steps:new Set([id, ...edges.flatMap(e => [e.def.from, e.def.to])]) };
+  }
+  function applyFocus(dt){
+    if (!S.fg) return null;
+    const next = focusSet(), target = next ? 1 : 0;
+    if (next) S.focus = next;
+    const k = S.snap || reduced() ? 1 : 1 - Math.exp(-(dt || 0) * 12);
+    S.focusMix = (S.focusMix || 0) + (target - (S.focusMix || 0)) * k;
+    if (Math.abs(target - S.focusMix) < .01) S.focusMix = target; else S.liveBusy = true;
+    if (!S.focusMix) S.focus = null;
+    const F = S.focus, dim = 1 - .8 * S.focusMix, a = lit => lit ? 1 : dim;
+    for (const [id, gr] of S.fg.steps) gr.alpha = a(!F || F.steps.has(id));
+    for (const [id, sp] of S.fg.shadows) sp.alpha = sp.baseAlpha * a(!F || F.steps.has(id));
+    for (const [id, grs] of S.fg.edges) for (const gr of grs) gr.alpha = a(!F || F.edges.has(id));
+    for (const o of S.fg.other) o.alpha = (o.baseAlpha ?? 1) * dim;
+    layers.zones.alpha = layers.sheen.alpha = layers.signals.alpha = dim;
+    layers.beltDynDim.alpha = layers.podDynDim.alpha = layers.fxDim.alpha = dim;
+    const key = F ? F.key : '';
+    if (key !== S.focusOvKey){ S.focusOvKey = key; for (const n of ov.children){ const lit = !!F && ((n.dataset.step != null && F.steps.has(n.dataset.step)) || (n.dataset.edge != null && F.edges.has(n.dataset.edge))); n.classList.toggle('lit', lit); } }
+    ov.classList.toggle('focusing', S.focusMix > 0); ov.style.setProperty('--dim', dim.toFixed(3));
+    return F && S.focusMix > 0 ? F : null;
+  }
   let miniAcc = 0;
   function drawItem(v, st, id, dt){
     const P = S.P, g = v.g; g.clear();
@@ -2600,8 +2799,9 @@ const Floor = (() => {
     const jump = Math.hypot(st.x - v.x, st.y - v.y), ease = !S.snap && v.seen && (!st.moving || st.bumped) && jump < 320;
     const k = ease ? 1 - Math.exp(-(dt || 0) * 11) : 1;
     v.x += (st.x - v.x) * k; v.y += (st.y - v.y) * k; v.seen = true;
-    const faded = S.follow && st.job !== S.follow;
-    v.c.position.set(v.x, v.y); v.c.scale.set(s); v.c.alpha = (st.alpha ?? 1) * (faded ? .2 : 1);
+    const faded = S.follow && st.job !== S.follow, F = S.focusMix ? S.focus : null;
+    const outside = F && !(F.steps.has(st.step) || F.steps.has(st.qTo) || (st.edge && F.edges.has(st.edge.id)) || (st.via && F.edges.has(st.via.id)));
+    v.c.position.set(v.x, v.y); v.c.scale.set(s); v.c.alpha = (st.alpha ?? 1) * (faded ? .2 : 1) * (outside ? 1 - .8*S.focusMix : 1);
     const unk = st.flag === 'unknown';
     shapePath(g, v.shape).fill({ color:P.item, alpha:unk ? .5 : 1 }).stroke({ width:1.6, color:P.itemEdge });
     if (unk){ for (let k = -2; k <= 2; k++) g.moveTo(-7 + k*5, 7).lineTo(7 + k*5 - 14 + 7, -7).stroke({ width:1, color:P.itemEdge, alpha:.45 }); }
@@ -2649,7 +2849,10 @@ const Floor = (() => {
   /* ---------- HUD sync ---------- */
   let hudAcc = 0, lastCursor = -1, lastInspWall = 0, lastDecKey = '', lastToastKey = '', lastAlarmKey = '', lastRailKey = '', lastRailWall = -9, lastHudKey = '', lastHudWall = -9, lastBoardKey = '', lastBoardWall = -9, lastTickWall = 0, lastSparkKey = '';
   function cursorAt(t){ const a = S.R.times; let lo = 0, hi = a.length; while (lo < hi){ const m = (lo+hi) >> 1; if (a[m] <= t) lo = m+1; else hi = m; } return lo; }
+  let dashboardPresentationSource = null;
   function syncHUD(dt, force, settle){
+    // The boot illustration must never publish into another source’s controls.
+    if (dashboardPresentationSource !== null && S.f?.dashboardSource !== dashboardPresentationSource) return;
     if (force) invalidate();
     hudAcc += dt || 0; if (!force && !settle && hudAcc < .1) return; hudAcc = 0;
     const R = S.R, t = S.t, st = store;
@@ -2710,6 +2913,7 @@ const Floor = (() => {
   /* ---------- jobs: rail, HUD strip and board ---------- */
   const shortName = g => g.s.short || g.s.name.split(' ')[0];
   const verLabel = j => j.version && j.version !== S.f.version ? j.version : '';
+  const outcomeText = outcome => outcome === 'released' ? 'Delivered' : ({'delivery-unverified':'Delivery unverified','local-file-delivered':'Saved to local destination','fixture-received':'Delivered to fixture',accepted:'Accepted · delivery unreported',completed:'Completed · delivery unreported',aborted:'Aborted',expired:'Expired',failed:'Failed',cancelled:'Cancelled',canceled:'Cancelled',closed:'Closed'}[outcome] || 'Closed · outcome unreported');
   function jobTone(j, places, t){
     if (places.some(p => p.mode === 'decision')) return places.some(p => p.human) ? 'action' : 'alarm';
     if (places.some(p => p.mode === 'queued' && t - p.since >= QADV()) || (j.admit != null && t - j.admit > SLA())) return 'advisory';
@@ -2719,8 +2923,8 @@ const Floor = (() => {
     const R = S.R, out = [], pend = [];
     for (const j of R.jobs.values()){
       if (j.arrive == null || j.arrive > t) continue;
-      if (j.end != null && t >= j.end){ if (t - j.end < 2.4) out.push({ id:j.id, ver:verLabel(j), rep:'', where:j.outcome === 'released' ? 'Delivered' : 'Aborted', age:fmtAge(j.end - (j.admit ?? j.arrive)), pct:100, tone:'', done:j.outcome === 'released', title:`Job ${j.id} · ${j.outcome}`, o:j.admit ?? j.arrive }); continue; }
-      if (j.admit == null || j.admit > t){ pend.push({ id:j.id, ver:verLabel(j), rep:'', where:'Waiting to start', age:fmtAge(t - j.arrive), pct:0, tone:'', pending:true, title:`Job ${j.id} is waiting to start: the admission limit is reached.`, o:j.arrive }); continue; }
+      if (j.end != null && t >= j.end){ if (t - j.end < 2.4 || S.f.actual) out.push({ id:j.id, ver:verLabel(j), rep:'', where:outcomeText(j.outcome), age:fmtAge(j.end - (j.admit ?? j.arrive)), pct:100, tone:'', done:j.outcome === 'released', title:`Job ${j.id} · ${j.outcome}`, o:j.admit ?? j.arrive }); continue; }
+      if (j.admit == null || j.admit > t){ pend.push({ id:j.id, ver:verLabel(j), rep:'', where:'Waiting to start', age:fmtAge(t - j.arrive), pct:0, tone:'', pending:true, title:`Job ${j.id}: admission has not been observed.`, o:j.arrive }); continue; }
       const ps = jobPlaces(j, t), order = { decision:0, working:1, queued:2, branches:3, moving:4, waiting:5 };
       ps.sort((a,b) => order[a.mode] - order[b.mode]);
       const names = [...new Set(ps.map(p => p.mode === 'decision' ? (p.human ? 'Needs you' : 'Needs Director') : shortName(p.g) + (p.mode === 'queued' ? ' · queued' : '')))];
@@ -2734,17 +2938,20 @@ const Floor = (() => {
     return [...out, ...pend].map(({ o, ...k }) => k);
   }
   function buildHud(t){
-    const R = S.R, f = S.f, limit = f.admission?.limit ?? 8;
+    const R = S.R, f = S.f, limit = f.admission?.limit ?? null;
     let active = 0, waiting = 0; const olds = {};
     for (const j of R.jobs.values()){
       if (j.arrive == null || j.arrive > t || (j.end != null && j.end <= t)) continue;
       if (j.admit != null && j.admit <= t){ active++; if (verLabel(j)) olds[j.version] = (olds[j.version] || 0) + 1; } else waiting++;
     }
-    const cells = Array.from({ length:Math.max(limit, active) }, (_, k) => k < active ? 'on' : '');
+    const cells = Array.from({ length:Math.max(limit ?? 0, active) }, (_, k) => k < active ? 'on' : '');
     const done = [...R.jobs.values()].filter(j => j.end != null && j.end <= t && j.end > t - 300);
-    const del = done.filter(j => j.outcome === 'released'), ab = done.length - del.length;
+    const del = done.filter(j => j.outcome === 'released'), ab = done.filter(j => j.outcome === 'aborted').length;
     const buckets = Array.from({ length:10 }, (_, k) => del.filter(j => j.end > t - 300 + k*30 && j.end <= t - 270 + k*30).length);
     const leads = del.map(j => j.end - j.arrive).sort((a,b) => a-b), med = leads.length ? leads[Math.floor(leads.length/2)] : null;
+    const localRows = (R.run.delivery || []).filter(row => row.delivery_kind === 'local_file');
+    const local = localRows.length && window.exoRecentLocalDeliveries
+      ? window.exoRecentLocalDeliveries(localRows, Math.round(Date.parse(R.run.start) + t * 1000)) : null;
     let slow = null;
     for (const [,g] of S.L.steps){ if (!g.res || g.s.kind === 'intake') continue; const si = slotInfo(g, t), util = si.here / Math.max(1, si.cap - si.oth);
       const score = g.qn ? 1000 + g.qOld : util; if (!slow || score > slow.score) slow = { score, g, si }; }
@@ -2761,8 +2968,9 @@ const Floor = (() => {
       : { on:false, level:'', left:0, held:0, value:'—', of:'', sub:'No budget set', title:'' };
     return {
       spend,
-      jobs:{ active, limit, waiting, cells, sub:waiting ? `${waiting} waiting to start` : (active >= limit ? 'At the limit' : 'Admission open') },
-      del:{ n:del.length, buckets, sub:`${ab ? ab + ' aborted · ' : ''}${med != null ? 'median ' + fmtAge(med) + ' per job' : 'none yet'}` },
+      jobs:{ active, limit:limit ?? '?', waiting, cells, sub:waiting ? `${waiting} awaiting observed admission` : (limit == null ? 'Capacity unreported' : (active >= limit ? 'At the limit' : 'Below reported capacity')) },
+      del:local ? { label:'Saved locally · 5 min', n:local.total, buckets:local.buckets.map(bucket => bucket.count), sub:local.total ? 'Verified local file receipts' : 'No local receipts in this window' }
+        : { label:'Delivered · 5 min', n:del.length, buckets, sub:`${ab ? ab + ' aborted · ' : ''}${med != null ? 'median ' + fmtAge(med) + ' per job' : 'none yet'}` },
       slow:sl,
       dec:{ you, director:dir, level:you ? 'action' : (dir ? 'alarm' : ''), sub:ow.length ? `oldest ${oldest}` : 'None owed' },
       old:{ n:on, text:ov.map(([v,n]) => `${n} job${n === 1 ? '' : 's'} still on ${v}`).join(' · '), title:ov.map(([v]) => `${v} · ${f.versions?.[v]?.digest || ''}. ${f.versions?.[v]?.note || ''}`).join(' ') },
@@ -2781,15 +2989,17 @@ const Floor = (() => {
   }
   let boardCache = null;
   function boardCols(group){
-    const f = S.f, key = f.id + ':' + group; if (boardCache && boardCache.key === key) return boardCache.cols;
-    const cols = [{ key:'start', name:'Waiting to start', meta:`Factory · admission limit ${f.admission?.limit ?? 8}`, factory:true, steps:[] }], by = new Map();
+    const f = S.f, demo = store.sourceMode === 'demo', key = f.id + ':' + group + ':' + store.sourceMode; if (boardCache && boardCache.key === key) return boardCache.cols;
+    const admissionLimit = f.admission?.limit;
+    const admissionMeta = demo ? `Factory · admission limit ${admissionLimit ?? 8}` : `Factory · ${Number.isFinite(admissionLimit) ? 'reported admission limit ' + admissionLimit : 'admission capacity unreported'}`;
+    const cols = [{ key:'start', name:'Waiting to start', meta:admissionMeta, factory:true, steps:[] }], by = new Map();
     for (const sid of routeOrder()){
       const s = f.steps.find(x => x.id === sid), k = s.kind; if (k === 'output' || k === 'end') continue;
       let ck, col;
-      if (group === 'step'){ ck = 'step:' + sid; col = { key:ck, name:s.name, meta:s.agent ? f.agents[s.agent].name : (k === 'intake' ? 'Director · start turn' : (k === 'wait' ? 'Responder · ' + s.responder : 'Factory · ' + KIND_NAME[k].toLowerCase())), factory:!s.agent && k !== 'intake' && k !== 'wait', res:s.agent || (k === 'intake' || (k === 'wait' && !s.human) ? 'director' : null) }; }
-      else if (k === 'intake' || (k === 'wait' && !s.human)){ ck = 'director'; col = { key:ck, name:'Director', meta:'Starts jobs, owns decisions · one turn at a time', res:'director' }; }
+      if (group === 'step'){ ck = 'step:' + sid; col = { key:ck, name:s.name, meta:s.agent ? (f.agents[s.agent]?.name || s.agent) : (k === 'intake' ? 'Director · start turn' : (k === 'wait' ? 'Responder · ' + s.responder : 'Factory · ' + KIND_NAME[k].toLowerCase())), factory:!s.agent && k !== 'intake' && k !== 'wait', res:s.agent || (k === 'intake' || (k === 'wait' && !s.human) ? 'director' : null) }; }
+      else if (k === 'intake' || (k === 'wait' && !s.human)){ ck = 'director'; col = { key:ck, name:'Director', meta:demo ? 'Starts jobs, owns decisions · one turn at a time' : 'Observed Director activity · capacity unreported', res:'director' }; }
       else if (k === 'wait'){ ck = 'resp:' + s.responder; col = { key:ck, name:s.responder, meta:'Person · decisions owed', res:null }; }
-      else if (s.agent){ const a = f.agents[s.agent]; ck = 'agent:' + s.agent; col = { key:ck, name:a.name, meta:`${a.contract} · cap ${a.cap || 1}${a.others ? ' · shared' : ''}`, res:s.agent }; }
+      else if (s.agent){ const a = f.agents[s.agent] || {name:s.agent,contract:'Binding unreported',cap:null}; ck = 'agent:' + s.agent; col = { key:ck, name:a.name, meta:demo ? `${a.contract} · cap ${a.cap ?? 'unknown'}${a.others ? ' · shared' : ''}` : `${a.contract} · ${Number.isFinite(a.cap) ? 'reported capacity ' + a.cap : 'capacity unreported'}`, res:s.agent }; }
       else { ck = 'factory:' + k; col = { key:ck, name:k === 'join' ? 'Waiting on branches' : 'Fanning out', meta:'Factory · no agent', factory:true, res:null }; }
       if (!by.has(ck)){ col.steps = []; by.set(ck, col); cols.push(col); }
       by.get(ck).steps.push(sid);
@@ -2799,7 +3009,7 @@ const Floor = (() => {
     boardCache = { key, cols }; return cols;
   }
   function buildBoard(t){
-    const R = S.R, f = S.f, group = store.boardGroup, lanes = store.boardLanes, cols = boardCols(group);
+    const R = S.R, f = S.f, group = store.boardGroup, lanes = store.boardLanes, cols = boardCols(group), demo = store.sourceMode === 'demo';
     const colOf = new Map(); cols.forEach(c => c.steps.forEach(sid => colOf.set(sid, c.key)));
     const cards = new Map(cols.map(c => [c.key, { working:[], queued:[], waiting:[], done:[] }]));
     const mk = (j, p, extra) => { const pm = placeMode(p, t), al = attemptLabel(p), arrived = `${f.artifacts[p.it.art]?.name || 'Branch'} arrived`;
@@ -2809,8 +3019,8 @@ const Floor = (() => {
     let active = 0, waiting = 0;
     for (const j of R.jobs.values()){
       if (j.arrive == null || j.arrive > t) continue;
-      if (j.end != null && j.end <= t){ if (t - j.end < 300) cards.get('done').done.push({ type:'card', key:j.id + ':done', job:j.id, ver:verLabel(j), age:fmtAge(t - j.end), since:-j.end, lane:j.version, st:j.outcome === 'released' ? 'Delivered' : 'Aborted · no release', cls:j.outcome === 'released' ? 'done-ok' : 'faded' }); continue; }
-      if (j.admit == null || j.admit > t){ waiting++; cards.get('start').queued.push({ type:'card', key:j.id + ':start', job:j.id, ver:verLabel(j), age:fmtAge(t - j.arrive), since:j.arrive, lane:j.version, st:'Admission limit reached', cls:'' }); continue; }
+      if (j.end != null && j.end <= t){ if (t - j.end < 300) cards.get('done').done.push({ type:'card', key:j.id + ':done', job:j.id, ver:verLabel(j), age:fmtAge(t - j.end), since:-j.end, lane:j.version, st:outcomeText(j.outcome), cls:j.outcome === 'released' ? 'done-ok' : 'faded' }); continue; }
+      if (j.admit == null || j.admit > t){ waiting++; cards.get('start').queued.push({ type:'card', key:j.id + ':start', job:j.id, ver:verLabel(j), age:fmtAge(t - j.arrive), since:j.arrive, lane:j.version, st:'Admission unreported', cls:'' }); continue; }
       active++;
       for (const p of jobPlaces(j, t)){ const ck = p.human && cards.has('resp:' + p.responder) ? 'resp:' + p.responder : colOf.get(p.step); if (!ck) continue; const b = cards.get(ck);
         if (p.mode === 'working') b.working.push(mk(j, p)); else if (p.mode === 'branches' || p.mode === 'waiting') b.waiting.push(mk(j, p)); else b.queued.push(mk(j, p)); }
@@ -2819,7 +3029,7 @@ const Floor = (() => {
     const byLane = (list, ln) => list.filter(c => ln.key === 'all' || c.lane === ln.key).sort((a,b) => a.since - b.since);
     const head = cols.map(c => {
       const b = cards.get(c.key); let count = '', level = '';
-      if (c.res){ const g = S.L.steps.get(c.steps[0]), si = slotInfo(g, t); count = `${b.working.length}/${Math.max(0, si.cap - si.oth)}`; if (b.queued.some(x => t - x.since >= QADV())) level = 'advisory'; }
+      if (c.res){ const g = S.L.steps.get(c.steps[0]), si = slotInfo(g, t), reportedCap = c.res === 'director' ? null : S.f.agents[c.res]?.cap; count = `${b.working.length}/${demo ? Math.max(0, si.cap - si.oth) : (Number.isFinite(reportedCap) ? reportedCap : '?')}`; if (b.queued.some(x => t - x.since >= QADV())) level = 'advisory'; }
       else count = String(b.working.length + b.queued.length + b.waiting.length + b.done.length);
       return { key:c.key, name:c.name, meta:c.meta, factory:!!c.factory, count, level };
     });
@@ -2829,11 +3039,12 @@ const Floor = (() => {
       if (c.key === 'start') secs.push({ key:'q', name:'Queued', count:String(byLane(b.queued, ln).length), rows:byLane(b.queued, ln).map(strip), empty:'Admission open', factory:true });
       else if (c.key === 'done') secs.push({ key:'d', name:'Recent', count:String(byLane(b.done, ln).length), rows:byLane(b.done, ln).slice(0, 10).map(strip), empty:'Nothing finished yet', factory:true });
       else if (c.res){
-        const g = S.L.steps.get(c.steps[0]), si = slotInfo(g, t), a = f.agents[c.res], wk = byLane(b.working, ln).map(strip);
+        const g = S.L.steps.get(c.steps[0]), si = slotInfo(g, t), a = f.agents[c.res], wk = byLane(b.working, ln).map(strip), reportedCap = c.res === 'director' ? null : a?.cap, capKnown = demo || Number.isFinite(reportedCap);
         const rowsW = [...wk];
-        if (ln.key === 'all'){ for (let k = 0; k < si.oth; k++) rowsW.push({ type:'other', key:'o' + k, label:(a?.sharedWith || ['Another factory'])[k % (a?.sharedWith?.length || 1)] });
+        if (demo && ln.key === 'all'){ for (let k = 0; k < si.oth; k++) rowsW.push({ type:'other', key:'o' + k, label:(a?.sharedWith || ['Another factory'])[k % (a?.sharedWith?.length || 1)] });
           for (let k = wk.length + si.oth; k < si.cap; k++) rowsW.push({ type:'free', key:'f' + k }); }
-        secs.push({ key:'w', name:'Working', count:`${wk.length}/${Math.max(0, si.cap - si.oth)}`, rows:rowsW, empty:'Idle' });
+        const workingCount = demo ? Math.max(0, si.cap - si.oth) : (Number.isFinite(reportedCap) ? reportedCap : '?');
+        secs.push({ key:'w', name:'Working', count:`${wk.length}/${workingCount}`, rows:rowsW, empty:capKnown ? 'No observed work' : 'Capacity unreported · no observed work' });
         const qq = byLane(b.queued, ln);
         secs.push({ key:'q', name:c.key === 'director' ? 'Inbox' : 'Queued', count:String(qq.length), rows:qq.map(strip), empty:'No queue' });
       } else {
@@ -2856,7 +3067,7 @@ const Floor = (() => {
   }
   const backLabel = () => S.follow ? 'Job ' + S.follow : (S.R.multi ? 'Floor' : 'Job card');
   function jobOutcome(j, t, places){
-    if (j.end != null && t >= j.end) return { label:j.outcome === 'released' ? 'Released' : 'Aborted · 0 releases', tone:'normal' };
+    if (j.end != null && t >= j.end) return { label:outcomeText(j.outcome), tone:'normal' };
     if (j.admit == null || j.admit > t) return { label:'Waiting to start', tone:'normal' };
     const tone = jobTone(j, places, t);
     if (tone === 'alarm') return { label:'Waiting · Director', tone };
@@ -2881,10 +3092,10 @@ const Floor = (() => {
   function inspFloor(){
     const R = S.R, f = S.f, t = S.t, h = buildHud(t);
     const agents = [];
-    for (const [id, g] of S.L.steps){ if (!g.res || g.s.kind === 'intake') continue; const a = f.agents[g.res], si = slotInfo(g, t), capHere = Math.max(0, si.cap - si.oth);
-      agents.push({ step:id, name:a.name, cells:Array.from({ length:si.cap }, (_, k) => k < si.here ? 'on' : (k < si.here + si.oth ? 'other' : '')), busy:`${si.here}/${capHere}`,
+    for (const [id, g] of S.L.steps){ if (!g.res || g.s.kind === 'intake') continue; const a = f.agents[g.res] || {name:g.res}, si = slotInfo(g, t), capKnown = Number.isFinite(a.cap), capHere = capKnown ? Math.max(0, si.cap - si.oth) : '?';
+      agents.push({ step:id, name:a.name, cells:Array.from({ length:capKnown ? si.cap : si.here }, (_, k) => k < si.here ? 'on' : (k < si.here + si.oth ? 'other' : '')), busy:`${si.here}/${capHere}`,
         queue:g.qn ? `${g.qn} queued · ${fmtAge(g.qOld)}` : 'no queue', level:g.qn && g.qOld >= QADV() ? 'advisory' : '',
-        meta:`exo-agent.${g.res} · ${si.cap} slot${si.cap === 1 ? '' : 's'} · ${a.price ? (a.price.task ? usd(a.price.task) + '/Task' : usd(a.price.sec, 3) + '/s') : 'no price'} · ${usd(R.accrued(t, c => c.agent === g.res) - R.accrued(t - 300, c => c.agent === g.res))} in 5 min${si.oth ? ` · ${si.oth} held by ${(a.sharedWith || ['other factories']).join(' and ')}` : ''}` }); }
+        meta:`${g.res} · ${capKnown ? si.cap + ' reported slots' : 'Capacity unreported'} · ${a.price ? 'Illustrative price ' + priceText(a) : 'Cost unreported'}${si.oth ? ` · ${si.oth} held by ${(a.sharedWith || ['other factories']).join(' and ')}` : ''}` }); }
     const adv = S.L && [...S.L.steps.values()].some(g => g.qn && g.qOld >= QADV());
     const outcome = h.dec.director || h.dec.you ? { label:h.dec.you ? 'Needs you' : 'Director owes decisions', tone:h.dec.you ? 'action' : 'alarm' } : (adv ? { label:'Running · advisory', tone:'advisory' } : { label:'Running', tone:'normal' });
     const byVer = {}; for (const j of R.jobs.values()) if (j.admit != null && j.admit <= t && (j.end == null || j.end > t)) byVer[j.version] = (byVer[j.version] || 0) + 1;
@@ -2892,9 +3103,9 @@ const Floor = (() => {
     for (const [v, info] of Object.entries(f.versions || {})) if (byVer[v]) versions.push([`${v} · ${info.digest}`, `${byVer[v]} job${byVer[v] === 1 ? '' : 's'} still running · they finish on ${v}`]);
     return { kind:'floor', title:f.name, outcome, brief:R.run.brief,
       facts:[['Bound to', `${f.capability} ${f.version} · ${f.digest}`], ['Active', `${h.jobs.active} of ${h.jobs.limit} jobs`],
-        ...(f.budget ? (sp => [['Spend', `${usd(sp.spent, 0)} today of ${usd(sp.day, 0)} · ${usd(sp.burn, 0)}/h · ${usd(sp.held, 0)} held for running jobs`]])(spendAt(t)) : []), ['Waiting', h.jobs.waiting ? `${h.jobs.waiting} to start · admission queues them` : 'None · admission open'], ['Delivered', `${h.del.n} in 5 min · ${h.del.sub}`], ['Decisions', h.dec.director + h.dec.you ? `${h.dec.director} for the Director · ${h.dec.you} for you` : 'None owed']],
+        ...(f.budget ? (sp => [['Spend', `${usd(sp.spent, 0)} today of ${usd(sp.day, 0)} · ${usd(sp.burn, 0)}/h · ${usd(sp.held, 0)} held for running jobs`]])(spendAt(t)) : []), ['Waiting', h.jobs.waiting ? `${h.jobs.waiting} without observed admission` : 'No waiting jobs observed'], [h.del.label?.startsWith('Saved locally') ? 'Saved locally' : 'Delivered', `${h.del.n} in 5 min · ${h.del.sub}`], ['Decisions', h.dec.director + h.dec.you ? `${h.dec.director} for the Director · ${h.dec.you} for you` : 'None owed']],
       agents, versions,
-      capNote:'Capacity belongs to each agent binding in the catalog, not to this factory. Every factory on this installation draws from one task queue per agent, so the slots and the line you see are the ones the engine runs. Weighted fairness keeps one factory from starving another. The Director takes one turn at a time; decisions go before new starts.',
+      capNote:'Occupancy reflects observed assignments. Capacity is shown only when a binding reports it; missing capacity and cost remain unreported.',
       provenance:`${f.provenance}. Pick a ticket or any shape on the floor to follow one job.` };
   }
   /* ---------- Director panel and your inbox ---------- */
@@ -2977,8 +3188,8 @@ const Floor = (() => {
     if (id){
       const j = R.jobs.get(id), J1 = { job:id };
       if (!j || j.arrive == null || j.arrive > t) return { intent:'job', parts:[T(`I don't see Job ${id} on this floor.`)] };
-      if (j.end != null && j.end <= t) return { intent:'job', parts:[J1, T(j.outcome === 'released' ? ` was delivered ${fmtAge(t - j.end)} ago.` : ` was aborted ${fmtAge(t - j.end)} ago, with no release.`)] };
-      if (j.admit == null || j.admit > t) return { intent:'job', parts:[J1, T(` hasn't started: the floor is at its admission limit of ${h.jobs.limit}. It has waited ${fmtAge(t - j.arrive)}.`)] };
+      if (j.end != null && j.end <= t) return { intent:'job', parts:[J1, T(` reached ${outcomeText(j.outcome).toLowerCase()} ${fmtAge(t - j.end)} ago.`)] };
+      if (j.admit == null || j.admit > t) return { intent:'job', parts:[J1, T(` has no observed admission yet. It arrived ${fmtAge(t - j.arrive)} ago.`)] };
       const hw = R.waits.find(w => w.job === id && w.human && t >= w.t0 && t < w.t1);
       if (hw) return { intent:'job', parts:[J1, T(` is waiting on you. ${hw.escalated ? 'I escalated it. ' + hw.reason + ' ' : 'Policy asks a person to approve it. '}${hw.rec && hw.rec.t <= t ? 'I recommend: ' + hw.rec.text + ' ' : ''}`), { inbox:true, label:'Open your inbox' }] };
       const dw = R.waits.find(w => w.job === id && !w.human && t >= w.t0 && t < w.t1);
@@ -3204,7 +3415,7 @@ const Floor = (() => {
     const commands = R.commands.filter(c => c.t <= t).map(c => ({ k:c.i, tl:fmtT(c.t).slice(2), by:c.by, cmd:c.cmd, outcome:c.outcome }));
     let outcome = { label:'Running', tone:'normal' };
     const w = R.waits.find(x => t >= x.t0 && t < x.t1);
-    if (R.end && t >= R.end.t) outcome = { label:R.end.outcome === 'released' ? 'Released' : 'Aborted · 0 releases', tone:'normal' };
+    if (R.end && t >= R.end.t) outcome = { label:outcomeText(R.end.outcome), tone:'normal' };
     else if (w) outcome = w.human ? { label:'Needs you', tone:'action' } : { label:'Waiting · Director', tone:'alarm' };
     else if (R.alarms.some(a => t >= a.t0 && t < a.t1 && a.level === 'advisory')) outcome = { label:'Running · advisory', tone:'advisory' };
     const agents = Object.values(f.agents).map(a => a.name).join(', ');
@@ -3252,11 +3463,13 @@ const Floor = (() => {
     const st = itemAt(it, t), nm = x => S.L.steps.get(x)?.s.name || x;
     let where;
     if (t < it.born) where = 'Not produced yet';
-    else if (st && st.moving){ const seg = [...it.track].reverse().find(s => s.k === 'move' && s.t0 <= t); where = seg && seg.from ? `On the belt from ${nm(seg.from)} to ${nm(seg.to)}` : (seg && seg.exit ? 'Leaving the factory' : 'Arriving'); }
+    else if (st && st.moving){ const seg = [...it.track].reverse().find(s => s.k === 'move' && s.t0 <= t); where = seg && seg.from ? `On the belt from ${nm(seg.from)} to ${nm(seg.to)}${seg.undeclared ? ' (route case not declared as a pinned edge)' : ''}` : (seg && seg.exit ? 'Leaving the factory' : 'Arriving'); }
     else if (st) where = `At ${nm(st.step)}`;
     else where = it.goneHow === 'released' ? 'Released to the caller' : (it.goneHow === 'aborted' ? 'Discarded with the aborted run' : `Used by ${nm(it.goneAt)}`);
     const facts = [['Artifact', `${art.name} · ${art.shape}`], ['Where', where]];
     if (it.sha) facts.push(['Digest', it.sha]);
+    if (it.evidence) facts.push(['Evidence', it.evidence]);
+    if (it.observed) facts.push(['Observed', it.observed]);
     const flag = st?.flag; if (flag) facts.push(['State', flag === 'rejected' ? 'Rejected, going back for repair' : (flag === 'exhausted' ? 'Rejected at the repair limit' : 'Outcome unknown, reconciling')]);
     const lineage = it.art === f.mainArt ? [...R.items.values()].filter(x => x.art === f.mainArt && x.born <= t && x.job === it.job).map(x => ({ id:x.id, rev:x.rev || x.label, sha:x.sha, ...revFacts(x, t) })) : [];
     let note = null;
@@ -3305,24 +3518,30 @@ const Floor = (() => {
     // Labels keep a readable size when zoomed out. Step the size in 5% increments so a moving camera
     // does not restyle and re-lay out every label on every frame.
     const lbl = Math.round(clamp(.92/cam.s, 1, 1.8) * 20) / 20;
-    if (lbl !== S.lbl){ S.lbl = lbl; ov.style.setProperty('--lbl', String(lbl)); }
-    const far = cam.s < .38; if (far !== S.lodFar){ S.lodFar = far; stageEl.classList.toggle('lod-far', far); }
+    let relabel = S.labelsDirty;
+    if (lbl !== S.lbl){ S.lbl = lbl; ov.style.setProperty('--lbl', String(lbl)); relabel = true; }
+    const far = cam.s < .38; if (far !== S.lodFar){ S.lodFar = far; stageEl.classList.toggle('lod-far', far); relabel = true; }
+    if (relabel) declutterLabels();
   }
   function panelSpace(){ return store.panel && store.wide ? store.pwv + 24 : 0; }
+  // The scale at which the whole floor fits the visible stage (above the HUD, beside the panel).
+  function fitScale(){ const b = S.L.content, W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight - 64, pad = 48; return Math.min((W - pad*2)/(b.x1 - b.x0), (H - pad*2)/(b.y1 - b.y0)); }
   function fit(animate = true){
-    S.focusedDirector = false; stopTrack();
+    S.focusedDirector = false; stopTrack(); S.camAuto = 'fit';
     const b = S.L.content, W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight - 64, pad = 48;
-    const s = clamp(Math.min((W - pad*2)/(b.x1 - b.x0), (H - pad*2)/(b.y1 - b.y0)), .28, 1.05);
+    const s = clamp(fitScale(), .28, 1.05);
     const tx = pad + (W - pad*2 - (b.x1 - b.x0)*s)/2 - b.x0*s, ty = pad + (H - pad*2 - (b.y1 - b.y0)*s)/2 - b.y0*s;
     gsap.killTweensOf(cam);
     if (animate && !reduced()) gsap.to(cam, { x:tx, y:ty, s, duration:.8, ease:'power3.inOut', onUpdate:applyCam });
     else { cam.x = tx; cam.y = ty; cam.s = s; applyCam(); }
   }
   // First view: fit the floor if it stays readable; otherwise frame the action at a readable zoom, like a game camera.
+  // The first view stays automatic until the viewer pans, zooms, follows a job or leans into the Director:
+  // a stage resize (the run rail or source row appearing, the window changing) reframes it; a manual camera is kept.
   function initialView(){
     const b = S.L.content, W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight, pad = 56;
-    const sFit = Math.min((W - pad*2)/(b.x1 - b.x0), (H - pad*2)/(b.y1 - b.y0));
-    if (sFit >= .42) return fit(false);
+    if (fitScale() >= .34) return fit(false);
+    S.focusedDirector = false; S.camAuto = 'initial';
     const t = S.t, R = S.R, s = .62;
     const w = R.waits.find(x => t >= x.t0 && t < x.t1);
     let p = w ? S.L.steps.get(w.step).c : null;
@@ -3336,16 +3555,17 @@ const Floor = (() => {
     if (w && w.human && S.L.desk) cam.y = Math.max(cam.y, 72 - (S.L.desk.y - 36)*s);
     applyCam();
   }
+  function reframe(){ if (!S.L || S.track || S.focusedDirector || gsap.isTweening(cam)) return; if (S.camAuto === 'fit') fit(false); else if (S.camAuto === 'initial') initialView(); }
   // Clicking the console leans in so its text is readable; clicking again steps back out.
   function focusDirector(){
     const bo = S.L.booth, W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight;
     if (S.focusedDirector && cam.s > 1){ S.focusedDirector = false; return fit(); }
     const s = clamp(Math.min(1.5, (W - 80)/bo.w, (H - 140)/bo.h), .6, 2.6);
-    S.focusedDirector = true; gsap.killTweensOf(cam);
+    S.focusedDirector = true; S.camAuto = false; gsap.killTweensOf(cam);
     gsap.to(cam, { x:W/2 - (bo.x + bo.w/2)*s, y:H/2 - (bo.y + bo.h/2)*s + 24, s, duration:reduced() ? 0 : .8, ease:'power3.inOut', onUpdate:applyCam });
   }
   function zoomAt(k, sx, sy){ const ns = clamp(cam.s*k, .25, 2.6), r = ns/cam.s; cam.x = sx - (sx - cam.x)*r; cam.y = sy - (sy - cam.y)*r; cam.s = ns; applyCam(); }
-  function zoom(dir){ const W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight; const target = { s:clamp(cam.s*(dir > 0 ? 1.3 : 1/1.3), .25, 2.6) }; const r = target.s/cam.s; gsap.killTweensOf(cam); gsap.to(cam, { x:W/2 - (W/2 - cam.x)*r, y:H/2 - (H/2 - cam.y)*r, s:target.s, duration:reduced() ? 0 : .35, ease:'power2.out', onUpdate:applyCam }); }
+  function zoom(dir){ S.camAuto = false; const W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight; const target = { s:clamp(cam.s*(dir > 0 ? 1.3 : 1/1.3), .25, 2.6) }; const r = target.s/cam.s; gsap.killTweensOf(cam); gsap.to(cam, { x:W/2 - (W/2 - cam.x)*r, y:H/2 - (H/2 - cam.y)*r, s:target.s, duration:reduced() ? 0 : .35, ease:'power2.out', onUpdate:applyCam }); }
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------- input ---------- */
@@ -3360,12 +3580,12 @@ const Floor = (() => {
     });
     window.addEventListener('pointermove', e => {
       if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
-      if (pts.size === 1 && panStart){ const dx = e.clientX - panStart.x, dy = e.clientY - panStart.y; if (!moved && Math.hypot(dx, dy) > 4){ moved = true; gsap.killTweensOf(cam); stopTrack(); } if (moved){ cam.x = panStart.cx + dx; cam.y = panStart.cy + dy; applyCam(); } }
-      else if (pts.size === 2 && pinch0){ moved = true; const [a,b] = [...pts.values()]; const r = stageEl.getBoundingClientRect(); const d = Math.hypot(a.x-b.x, a.y-b.y); const ns = clamp(pinch0.s * d/pinch0.d, .25, 2.6), k = ns/pinch0.s; const mx = pinch0.mx - r.left, my = pinch0.my - r.top; cam.s = ns; cam.x = mx - (mx - pinch0.cx)*k + ((a.x+b.x)/2 - pinch0.mx); cam.y = my - (my - pinch0.cy)*k + ((a.y+b.y)/2 - pinch0.my); applyCam(); }
+      if (pts.size === 1 && panStart){ const dx = e.clientX - panStart.x, dy = e.clientY - panStart.y; if (!moved && Math.hypot(dx, dy) > 4){ moved = true; S.camAuto = false; gsap.killTweensOf(cam); stopTrack(); } if (moved){ cam.x = panStart.cx + dx; cam.y = panStart.cy + dy; applyCam(); } }
+      else if (pts.size === 2 && pinch0){ moved = true; S.camAuto = false; const [a,b] = [...pts.values()]; const r = stageEl.getBoundingClientRect(); const d = Math.hypot(a.x-b.x, a.y-b.y); const ns = clamp(pinch0.s * d/pinch0.d, .25, 2.6), k = ns/pinch0.s; const mx = pinch0.mx - r.left, my = pinch0.my - r.top; cam.s = ns; cam.x = mx - (mx - pinch0.cx)*k + ((a.x+b.x)/2 - pinch0.mx); cam.y = my - (my - pinch0.cy)*k + ((a.y+b.y)/2 - pinch0.my); applyCam(); }
     });
     const up = e => { if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if (pts.size === 0){ panStart = null; pinch0 = null; setTimeout(() => { moved = false; }, 0); } else if (pts.size === 1){ const [p] = [...pts.values()]; panStart = { x:p.x, y:p.y, cx:cam.x, cy:cam.y }; pinch0 = null; } };
     window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
-    stageEl.addEventListener('wheel', e => { if (e.target.closest('.insp') || e.target.closest('.legend')) return; e.preventDefault(); gsap.killTweensOf(cam); stopTrack(); const r = stageEl.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? .012 : .0016)), e.clientX - r.left, e.clientY - r.top); }, { passive:false });
+    stageEl.addEventListener('wheel', e => { if (e.target.closest('.insp') || e.target.closest('.legend')) return; e.preventDefault(); S.camAuto = false; gsap.killTweensOf(cam); stopTrack(); const r = stageEl.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? .012 : .0016)), e.clientX - r.left, e.clientY - r.top); }, { passive:false });
     app.canvas.addEventListener('click', () => { if (moved) return; if (!S.itemTap && (S.sel.type !== 'run' || S.follow)) select('run'); S.itemTap = false; });
     // scrubber
     const scrub = document.getElementById('scrub'); let scrubbing = false;
@@ -3374,16 +3594,18 @@ const Floor = (() => {
     scrub.addEventListener('pointermove', e => { if (scrubbing) seekFrom(e); });
     scrub.addEventListener('pointerup', () => { scrubbing = false; });
     // minimap
-    mini.addEventListener('pointerdown', e => { const r = mini.getBoundingClientRect(), xf = S.miniXf; if (!xf) return; const mx = (e.clientX - r.left) * (mini.width/r.width), my = (e.clientY - r.top) * (mini.height/r.height); const wx = (mx - xf.ox)/xf.sc, wy = (my - xf.oy)/xf.sc; const W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight; gsap.killTweensOf(cam); gsap.to(cam, { x:W/2 - wx*cam.s, y:H/2 - wy*cam.s, duration:reduced() ? 0 : .45, ease:'power2.out', onUpdate:applyCam }); });
+    mini.addEventListener('pointerdown', e => { const r = mini.getBoundingClientRect(), xf = S.miniXf; if (!xf) return; const mx = (e.clientX - r.left) * (mini.width/r.width), my = (e.clientY - r.top) * (mini.height/r.height); const wx = (mx - xf.ox)/xf.sc, wy = (my - xf.oy)/xf.sc; const W = stageEl.clientWidth - panelSpace(), H = stageEl.clientHeight; S.camAuto = false; gsap.killTweensOf(cam); gsap.to(cam, { x:W/2 - wx*cam.s, y:H/2 - wy*cam.s, duration:reduced() ? 0 : .45, ease:'power2.out', onUpdate:applyCam }); });
     // keys
     window.addEventListener('keydown', e => {
       if (e.target.closest && e.target.closest('select, input, textarea')) return;
       // With the console open it owns the keyboard, like a terminal: typing lands at its prompt, not on floor shortcuts.
       if (store.term && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace') && !(e.target.closest && e.target.closest('button') && e.key === 'Enter')){ const inp = document.querySelector('.tty-in'); if (inp){ inp.focus({ preventScroll:true }); return; } }
+      if (store.sourceMode === 'live' && S.R?.run.live && (e.code === 'Space' || e.key === 'ArrowRight' || e.key === 'ArrowLeft')) return;
       if (e.code === 'Space' && !e.target.closest('button, [role="slider"]')){ e.preventDefault(); toggle(); }
       else if (e.key === 'ArrowRight' && !e.target.closest('[role="slider"]')) jump(1);
       else if (e.key === 'ArrowLeft' && !e.target.closest('[role="slider"]')) jump(-1);
       else if (e.key === 'f' || e.key === 'F') fit();
+      else if (e.key === 'Escape' && S.sel.type === 'step') back();
       else if (e.key === 'Escape' && S.follow) select('run');
       else if (e.key === '+' || e.key === '=') zoom(1);
       else if (e.key === '-') zoom(-1);
@@ -3397,14 +3619,15 @@ const Floor = (() => {
   /* ---------- actions ---------- */
   function stopTrack(){ if (S.track){ S.track = false; if (S.sel.type === 'job') syncHUD(0, true); } }
   function select(type, id = null){
-    if (type === 'job' && !S.R.multi){ type = 'run'; id = null; }
-    if (type === 'job'){ S.follow = id; S.track = true; S.trackScale = clamp(Math.max(cam.s, .78), .5, 1.3); }
-    if (type === 'run'){ S.follow = null; S.track = false; }
+    const followSingleRun = type === 'job' && !S.R.multi;
+    if (followSingleRun) type = 'run';
+    if (type === 'job' || followSingleRun){ S.follow = id; S.track = true; S.camAuto = false; S.trackScale = clamp(Math.max(cam.s, .78), .5, 1.3); }
+    else if (type === 'run'){ S.follow = null; S.track = false; }
     store.follow = S.follow;
-    S.sel = { type, id }; if (type !== 'run' && !store.panel) store.panel = true; syncHUD(0, true); invalidate(2);
+    S.sel = { type, id:followSingleRun?null:id }; if (type !== 'run' && !store.panel) store.panel = true; syncHUD(0, true); invalidate(2);
   }
-  function pickJob(id){ if (S.R.multi && S.follow === id && S.sel.type === 'job') return select('run'); select('job', id); }
-  function track(){ if (!S.follow) return; S.track = !S.track; if (S.track){ S.trackScale = clamp(Math.max(cam.s, .78), .5, 1.3); if (store.view !== 'Floor') setView('Floor'); } syncHUD(0, true); invalidate(2); }
+  function pickJob(id){ if (S.follow === id) return select('run'); select('job', id); }
+  function track(){ if (!S.follow) return; S.track = !S.track; if (S.track){ S.camAuto = false; S.trackScale = clamp(Math.max(cam.s, .78), .5, 1.3); if (store.view !== 'Floor') setView('Floor'); } syncHUD(0, true); invalidate(2); }
   function back(){ if (S.follow) select('job', S.follow); else select('run'); }
   function setView(v){
     store.view = v;
@@ -3413,25 +3636,67 @@ const Floor = (() => {
     syncHUD(0, true); invalidate(3);
   }
   function setBoard(k, v){ if (k === 'group') store.boardGroup = v; else store.boardLanes = v; lastBoardWall = -9; syncHUD(0, true); }
-  function seek(t){ S.snap = true; S.t = clamp(t, 0, S.R.tMax); if (S.t < S.R.tMax - .01 && !S.playing && S.autoResume) S.playing = true; syncHUD(0, true); }
-  function toggle(){ if (!S.R) return; if (!S.playing && S.t >= S.R.tMax - .01 && !S.R.run.live) S.t = 0; S.playing = !S.playing; syncHUD(0, true); }
-  function jump(dir){ S.snap = true; const ms = (S.R.multi ? S.R.msgs.filter(m => m.level !== 'normal' || m.tick || (S.follow && m.job === S.follow)) : S.R.msgs).map(m => m.t); let tt; if (dir > 0) tt = ms.find(x => x > S.t + .05); else tt = [...ms].reverse().find(x => x < S.t - .4); if (tt == null) tt = dir > 0 ? S.R.tMax : 0; S.t = clamp(tt + (dir > 0 ? .02 : .02), 0, S.R.tMax); syncHUD(0, true); }
-  function setSpeed(s){ S.speed = s; syncHUD(0, true); }
+  function seek(t){ if (store.sourceMode === 'live' && (!S.R || S.R.run.live)) return; if (store.sourceMode === 'live') S.liveReplay = true; S.snap = true; S.t = clamp(t, 0, S.R.tMax); if (S.t < S.R.tMax - .01 && !S.playing && S.autoResume) S.playing = true; syncHUD(0, true); }
+  function toggle(){ if (!S.R || (store.sourceMode === 'live' && S.R.run.live)) return; if (store.sourceMode === 'live') S.liveReplay = true; if (!S.playing && S.t >= S.R.tMax - .01 && !S.R.run.live) S.t = 0; S.playing = !S.playing; syncHUD(0, true); }
+  function jump(dir){ if (!S.R || (store.sourceMode === 'live' && S.R.run.live)) return; if (store.sourceMode === 'live') S.liveReplay = true; S.snap = true; const ms = (S.R.multi ? S.R.msgs.filter(m => m.level !== 'normal' || m.tick || (S.follow && m.job === S.follow)) : S.R.msgs).map(m => m.t); let tt; if (dir > 0) tt = ms.find(x => x > S.t + .05); else tt = [...ms].reverse().find(x => x < S.t - .4); if (tt == null) tt = dir > 0 ? S.R.tMax : 0; S.t = clamp(tt + (dir > 0 ? .02 : .02), 0, S.R.tMax); syncHUD(0, true); }
+  function setSpeed(s){ if (store.sourceMode === 'live' && S.R?.run.live) return; S.speed = s; syncHUD(0, true); }
   function nudge(d){ seek(S.t + d); }
   // Live means following the present, so jumping to now also plays.
-  function toLive(){ S.t = S.R.tMax; S.playing = true; syncHUD(0, true); invalidate(2); }
+  function toLive(){ if (!S.R || (store.sourceMode === 'live' && S.R.run.live)) return; S.liveReplay = false; S.t = S.R.tMax; S.playing = true; syncHUD(0, true); invalidate(2); }
   function setRun(id, first){
     const run = S.f.runs.find(r => r.id === id) || S.f.runs[0];
-    S.R = compile(S.f, run); S.sel = { type:'run', id:null }; S.pending = null; S.follow = null; S.track = false; store.follow = null;
+    S.R = compile(S.f, run); S.sel = { type:'run', id:null }; S.pending = null; S.follow = null; S.track = false; store.follow = null; S.liveReplay = false;
     buildItems(); buildStamps();
-    S.actSeen = S.t = run.startAt || 0;
+    S.actSeen = S.t = store.sourceMode === 'live' ? S.R.tMax : (run.startAt || 0);
     S.crtHdL.textContent = `DIRECTOR  ${S.f.capability}`; S.crtHdR.textContent = run.multi ? 'ALL JOBS' : `JOB ${run.id}`; S.crtKey = '';
-    S.t = run.startAt || 0; S.playing = true;
+    S.t = store.sourceMode === 'live' ? S.R.tMax : (run.startAt || 0); S.playing = true;
     store.runId = run.id; store.multi = !!run.multi;
     setTicks();
     // A sentinel, not '': an empty result must still replace the previous factory's cards.
     lastAlarmKey = lastToastKey = lastDecKey = lastRailKey = lastHudKey = lastBoardKey = '\u0000'; lastRailWall = lastHudWall = lastBoardWall = -9; lastCursor = -1; boardCache = null;
     syncHUD(0, true);
+  }
+  let dashboardGraphKey = '';
+  async function loadDashboardFactory(f){
+    S.autoFollowKey = null;
+    if (!f || !Array.isArray(f.steps) || !f.steps.length){
+      store.ready=false;store.dashboardUnavailable='The pinned graph is unavailable; no substitute definition is loaded.';store.error=store.dashboardUnavailable;
+      store.runs=[];store.rail=[];store.alarms=[];store.board={...store.board,cols:[],rows:[],sub:'Pinned graph unavailable'};
+      const pixiEl=document.getElementById('pixi'),overlayEl=document.getElementById('ov');if(pixiEl)pixiEl.style.display='none';if(overlayEl)overlayEl.style.display='none';return;
+    }
+    const pixiEl=document.getElementById('pixi'),overlayEl=document.getElementById('ov');if(pixiEl)pixiEl.style.display='';if(overlayEl)overlayEl.style.display='';store.error='';
+    store.ready = false; S.f = f; store.factoryId = f.id; S.chat = []; S.chatTurns = []; S.chatClear = null; store.chatDraft = '';
+    dashboardGraphKey = JSON.stringify([f.id,f.steps,f.edges,f.signals,f.communication?.humanInbox?.targets]);
+    S.L = await layoutFactory(f); assignBubbles(); buildScene(); buildOverlay();
+    store.capability = f.capability || 'Capability not reported'; store.versionLabel = `${f.version} · ${f.digest}`; store.provenance = f.provenance || 'Observation data';
+    if (f.runs.length) setRun(f.defaultRun || f.runs[0]?.id, true);
+    else {
+      const emptyRun = { id:'', brief:'', events:[], multi:false, live:false, start:new Date().toISOString(), now:0 };
+      S.R = compile(f, emptyRun); S.sel = { type:'factory', id:f.id }; S.pending = null; S.follow = null; S.track = false; S.t = 0; S.playing = false;
+      buildItems(); buildStamps(); store.runs = []; store.runId = ''; store.multi = false; store.follow = null; setTicks(); syncHUD(0, true);
+    }
+    S.frameNext = false; initialView(); store.ready = true; store.dashboardUnavailable = '';
+  }
+  async function updateDashboardFactory(f){
+    if (!S.f || S.f.id !== f?.id || dashboardGraphKey !== JSON.stringify([f.id,f.steps,f.edges,f.signals,f.communication?.humanInbox?.targets])) return loadDashboardFactory(f);
+    if (!Array.isArray(f.runs)) return;
+    for(const id of ['pixi','ov']){const element=document.getElementById(id);if(element)element.style.display='';}
+    S.f = f; store.factoryId = f.id; store.capability = f.capability || 'Capability not reported'; store.versionLabel = `${f.version} · ${f.digest}`; store.provenance = f.provenance || 'Observation data';
+    if (!f.runs.length) {
+      const emptyRun = { id:'', brief:'', events:[], multi:false, live:false, start:new Date().toISOString(), now:0 };
+      S.R = compile(f, emptyRun); buildItems(); buildStamps(); S.t = 0; S.playing = false; store.runs = []; store.runId = ''; store.multi = false; setTicks();
+      syncHUD(0, true); invalidate(2); store.ready=true;store.error='';store.dashboardUnavailable='';
+      if (S.frameNext){ S.frameNext = false; initialView(); }
+      return;
+    }
+    const run = (f.scope === 'all' ? f.runs.find(r => r.id === f.defaultRun) : null) || f.runs.find(r => r.id === store.dashboardRunId) || f.runs.find(r => r.id === store.runId) || f.runs[0];
+    if(run.id!==S.R?.run?.id){S.sel={type:run.multi?'factory':'run',id:null};S.follow=null;S.track=false;store.follow=null;}
+    const keepT = S.t; S.R = compile(f, run); buildItems(); buildStamps();
+    S.t = (store.sourceMode === 'live' && !S.liveReplay) || run.live ? S.R.tMax : Math.min(keepT, S.R.tMax); if (run.live) S.playing = true;
+    store.runs = f.runs.map(r => ({ id:r.id, name:r.name || r.id, status:r.outcomeLabel || 'Unknown' })); store.runId = run.id; store.multi = !!run.multi;
+    lastAlarmKey = lastToastKey = lastDecKey = lastRailKey = lastHudKey = lastBoardKey = '\u0000'; lastRailWall = lastHudWall = lastBoardWall = -9; lastCursor = -1; boardCache = null;
+    syncHUD(0, true); invalidate(2);store.ready=true;store.error='';store.dashboardUnavailable='';
+    if (S.frameNext){ S.frameNext = false; initialView(); }
   }
   async function loadFactory(id){
     const f = FACTORIES.find(x => x.id === id) || FACTORIES[0];
@@ -3493,10 +3758,12 @@ const Floor = (() => {
     invalidate(2);
     const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('change', rebuildTheme);
     new MutationObserver(rebuildTheme).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
-    new ResizeObserver(() => { if (store.ready) invalidate(3); }).observe(stageEl);
+    new ResizeObserver(() => { if (!store.ready) return; invalidate(3); reframe(); }).observe(stageEl);
   }
 
-  return { boot, loadFactory, setRun, toggle, jump, setSpeed, seek, nudge, toLive, select, pickJob, track, back, setView, setBoard, decide, fit, zoom, focusDirector, wasDrag, sendChat, chatAct, refresh:() => syncHUD(0, true) };
+  // A new or followed job in the factory-wide view is selected once per job, so its items are easy to find.
+  function followJob(id){ if (!id || !S.R?.multi || !S.R.jobs.has(id)) return; const key = S.f.id + '\u0000' + id; if (S.autoFollowKey === key) return; S.autoFollowKey = key; select('job', id); }
+  return { followJob, resetDashboardSource(source){dashboardPresentationSource=source;S.frameNext=true;S.playing=false;store.decision=null;store.insp=null;store.toasts=[];store.oldJobs={n:0,text:'',title:''};store.versionLabel='Publication not loaded';store.capability='Capability not loaded';store.provenance='No validated snapshot';/* The previous source's scenario clock, live edge and ticks must not survive into the next source. */store.live=false;store.atLive=false;store.clock='';store.tLabel='';store.ticks=[];store.alarms=[];}, boot, loadFactory, loadDashboardFactory, updateDashboardFactory, setRun, toggle, jump, setSpeed, seek, nudge, toLive, select, pickJob, track, back, setView, setBoard, decide, fit, zoom, focusDirector, wasDrag, sendChat, chatAct, refresh:() => syncHUD(0, true) };
 })();
 
 document.addEventListener('alpine:init', () => {
@@ -3531,9 +3798,588 @@ document.addEventListener('alpine:init', () => {
     soon(v){ this.notice = `${v} is not part of this mockup yet`; clearTimeout(this._nt); this._nt = setTimeout(() => { this.notice = ''; }, 2600); },
   });
 });
-document.addEventListener('alpine:initialized', () => { Floor.boot(); });
+window.EXO_DASHBOARD_DEMO_FIXTURES = FACTORIES;
+window.EXO_DASHBOARD_FLOOR = Floor;
+document.addEventListener('alpine:initialized', () => { window.EXO_DASHBOARD_FLOOR_READY = Floor.boot(); });
 </script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.17.4/cdn.min.js"></script>
+<script type="module">
+import { validateBundle, validateSnapshot } from '/dashboard-assets/contract.mjs';
+import { createDashboardState, dashboardViewModels, reduceDashboard, reduceTransportStatus, toFloorModel } from '/dashboard-assets/reducer.mjs';
+import { createDemoAdapter } from '/dashboard-assets/adapters/demo.mjs';
+import { loadRecordedAdapter } from '/dashboard-assets/adapters/recorded.mjs';
+import { createLiveAdapter } from '/dashboard-assets/adapters/live.mjs';
+import { measurementGroups } from '/dashboard-assets/usage.mjs';
+import { makeWaitCommand } from '/dashboard-assets/decision.mjs';
+import { communicationPresentation, preferredFloorRunId } from '/dashboard-assets/presentation.mjs';
+import { briefInputPolicy, createDraftStore } from '/dashboard-assets/draft.mjs';
+import { readDeliveries, recentLocalDeliveries, saveLocalDelivery } from '/dashboard-assets/delivery.mjs';
+window.exoRecentLocalDeliveries = recentLocalDeliveries;
+
+const bootstrap = window.EXO_DASHBOARD_BOOTSTRAP || {};
+const sourceNames = ['demo','recorded','live'];
+// Display-only retained factory snapshot: other jobs on the followed job's pinned graph.
+// It never selects, binds or commands a run; dashboardState stays the authoritative selection.
+let liveHistory = null, liveHistoryLoading = false;
+let adapter = null, dashboardState = null, activeFactoryId = null, activeSubscription = null, currentSource = null, renderEpoch = 0, sourceGeneration = 0, renderedFactoryId = null;
+let submissionReadiness={ready:false,reason:'Provider readiness has not been checked.'};
+const briefDrafts=createDraftStore();
+let liveRunChoices=new Map();
+const SELECTION_STORAGE_KEY='exo-dashboard-selection.v1', SAFE_SELECTION_ID=/^[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,255}$/;
+function readSavedSelection(){
+  try{
+    const value=JSON.parse(sessionStorage.getItem(SELECTION_STORAGE_KEY)||'null');
+    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).sort().join(',')!=='factory_id,run_id,schema_version,source')return null;
+    if(value.schema_version!==1||!sourceNames.includes(value.source)||typeof value.factory_id!=='string'||!SAFE_SELECTION_ID.test(value.factory_id))return null;
+    if(value.run_id!==null&&(typeof value.run_id!=='string'||!SAFE_SELECTION_ID.test(value.run_id)))return null;
+    return value;
+  }catch{return null;}
+}
+function persistSelection(factoryId=activeFactoryId,runId=null){
+  const store=window.Alpine?.store('floor');
+  if(!sourceNames.includes(currentSource)||typeof factoryId!=='string'||!SAFE_SELECTION_ID.test(factoryId)||!store?.factories?.some(row=>row.id===factoryId))return false;
+  if(runId!==null&&(typeof runId!=='string'||!SAFE_SELECTION_ID.test(runId)||dashboardState?.factoryId!==factoryId||!dashboardState?.runs?.has(runId)))return false;
+  try{sessionStorage.setItem(SELECTION_STORAGE_KEY,JSON.stringify({schema_version:1,source:currentSource,factory_id:factoryId,run_id:runId}));return true;}catch{return false;}
+}
+const text = (node,value) => { node.textContent = value == null ? '' : String(value); };
+const safeLabel = row => [row?.component,row?.state,row?.outcome,row?.artifact_revision,row?.receipt_id,row?.decision_id,row?.command_id,row?.run_id].filter(Boolean).join(' · ') || row?.id || row?.usage_id || row?.obligation_id || 'Observed record';
+function ensureChrome(){
+  const topbar=document.querySelector('.topbar'),grow=topbar?.querySelector('.grow');
+  if(!topbar||document.getElementById('exo-source-picker'))return;
+  const wrap=document.createElement('label');wrap.className='exo-source';wrap.setAttribute('aria-label','Observation source');
+  const select=document.createElement('select');select.id='exo-source-picker';select.setAttribute('aria-label','Observation source');
+  for(const value of sourceNames){const option=document.createElement('option');option.value=value;option.textContent=value==='demo'?'Demo · isolated':value==='recorded'?'Recorded evidence':'Live observation';select.append(option);}
+  const status=document.createElement('span');status.id='exo-source-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+  const runSelect=document.createElement('select');runSelect.id='exo-run-picker';runSelect.setAttribute('aria-label','Floor run');runSelect.title='Select the run whose pinned graph the floor displays';
+  runSelect.addEventListener('change',()=>{const store=window.Alpine.store('floor'),runId=runSelect.value||null;if(runId&&!dashboardState?.runs?.has(runId)&&!(currentSource==='live'&&liveRunChoices.has(runId)))return;if(currentSource==='live'&&!runId){store.dashboardScope='all';floorRenderRequested++;queueMicrotask(()=>void renderLatestFloor());return;}if(currentSource==='live')store.dashboardScope='run';store.dashboardRunId=runId;if(currentSource==='live'){void selectRun(runId);return;}persistSelection(activeFactoryId,runId);floorRenderRequested++;queueMicrotask(()=>void renderLatestFloor());});
+  const reconnect=document.createElement('button');reconnect.id='exo-live-reconnect';reconnect.type='button';reconnect.textContent='Reconnect';reconnect.setAttribute('aria-label','Reconnect to Live observation');reconnect.hidden=true;reconnect.addEventListener('click',()=>void reconnectLive());
+  const submissionStatus=document.createElement('span');submissionStatus.id='exo-submission-status';submissionStatus.setAttribute('role','status');submissionStatus.style.margin='0 10px';
+  wrap.append(select,runSelect,status,submissionStatus);if(grow)grow.before(wrap);else topbar.append(wrap);topbar.classList.add('has-source');
+  if(grow)grow.before(reconnect);else topbar.append(reconnect);
+  if(bootstrap.qaSessionLogin==='/qa/login'){
+    const login=document.createElement('a');login.id='exo-local-session';login.href='/qa/login';login.textContent='Open local session';login.title='Explicit loopback QA session; does not submit work';login.style.margin='0 12px';topbar.append(login);
+  }
+  select.addEventListener('change',()=>void switchSource(select.value));
+  const main=document.getElementById('stage');
+  const fallback=document.createElement('nav');fallback.id='exo-floor-unavailable-navigation';fallback.className='float-ui';fallback.setAttribute('aria-label','Floor observation unavailable');fallback.style.cssText='position:absolute;left:12px;top:60px;max-width:calc(100% - 24px);padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;z-index:20';
+  const unavailable=document.createElement('p');unavailable.textContent='Inbox and incident observation unavailable; open the evidence view to inspect reported facts.';fallback.append(unavailable);
+  for(const [label,section]of [['Human inbox','human'],['Incident view','incidents']]){const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.floorUnavailableNavigation=section;button.addEventListener('click',()=>window.EXO_DASHBOARD_OPEN_DECISIONS?.(section));fallback.append(button);}main.append(fallback);
+  const panel=document.createElement('section');panel.id='exo-schema-view';panel.setAttribute('aria-live','polite');panel.style.cssText='display:none;position:absolute;inset:0;overflow:auto;padding:24px 28px;background:var(--panel);z-index:2';main.append(panel);
+  const brief=document.createElement('section');brief.id='exo-floor-brief';brief.className='float-ui';brief.dataset.sendWorkComposer='';brief.setAttribute('aria-label','Send work composer');brief.hidden=true;
+  brief.style.cssText='position:absolute;left:24px;top:24px;width:min(470px,calc(100% - 48px));max-height:calc(100% - 48px);overflow:auto;padding:20px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 30px #0003;z-index:30';main.append(brief);
+}
+function sourceStatus(message){const node=document.getElementById('exo-source-status');if(node)text(node,message);if(window.Alpine?.store('floor'))window.Alpine.store('floor').notice=message;}
+function setTransport(status,detail=''){
+  if(window.Alpine?.store('floor'))window.Alpine.store('floor').observationStatus=status;
+  const store=window.Alpine?.store('floor');
+  if(store&&!store.ready&&['error','disconnected','unauthenticated'].includes(status)){
+    store.error=`Observation unavailable · ${detail||status}`;store.dashboardUnavailable=store.error;
+  }
+  if(dashboardState)dashboardState=reduceTransportStatus(dashboardState,status,detail);
+  const freshness=dashboardState?.freshness?.status??(status==='unauthenticated'?'unavailable':'unknown');
+  if(store)store.dashboardActivityFresh=status==='connected'&&freshness==='fresh';
+  const scope=dashboardState?.freshness;
+  sourceStatus(`${currentSource==='live'&&bootstrap.submissionReadinessEndpoint?'Run history':currentSource||'source'} · ${status}${freshness?` · freshness ${freshness}`:''}${scope?.scope==='run'?` · run scope ${scope.run_id} · factory ${scope.factory_status}`:''}${scope?.unavailable_run_ids?.length?` · ${scope.unavailable_run_ids.length} historical histories unavailable`:''}${dashboardState?.transport?.gap?' · gap; resync required':''}${detail?` · ${detail}`:''}`);
+  updateDirectorControls();
+}
+window.EXO_DASHBOARD_OPEN_DECISIONS=section=>{const store=window.Alpine.store('floor');store.setView('Decisions');queueMicrotask(()=>{renderSchemaView();const target=document.querySelector(section==='incidents'?'[data-incident-heading]':section==='human'?'[data-human-inbox-heading]':'#exo-schema-view');target?.scrollIntoView({block:'nearest'});target?.focus({preventScroll:true});});};
+function observedJobSummary(vm,runId){
+  const run=vm?.runs?.find(row=>row.run_id===runId);
+  if(!run)return null;
+  const relatedIds=new Set([runId,...(run.task?.id&&run.task?.context_id?(vm.runs||[]).filter(row=>row.task?.id===run.task.id&&row.task?.context_id===run.task.context_id).map(row=>row.run_id):[])]);
+  const assignments=(vm.assignments||[]).filter(row=>relatedIds.has(row.run_id));
+  const quality=(vm.quality||[]).filter(row=>relatedIds.has(row.run_id)).at(-1);
+  return {taskId:run.task?.id||null,state:run.state?.state||'unknown',phase:run.state?.phase||null,
+    startedAt:run.state?.started_at||null,endedAt:run.state?.ended_at||null,
+    activeAssignments:assignments.filter(row=>row.active).length,
+    completedAssignments:assignments.filter(row=>row.state==='completed').length,
+    unknownAssignments:assignments.filter(row=>row.outcome_unknown).length,
+    quality:quality?.accepted===true?'accepted':quality?.accepted===false?'rejected':'unreported',qualityScope:quality&&quality.run_id!==runId?'original Task scope':'selected run'};
+}
+function renderObservedJobSummary(){
+  const store=window.Alpine?.store('floor');if(!store)return;
+  // Progress belongs to the selected job inspector, never a floating Floor layer.
+  document.getElementById('exo-observed-job')?.remove();
+  const summary=currentSource==='demo'?null:observedJobSummary(store.dashboardViewModels,store.dashboardRunId);
+  if(JSON.stringify(store.observedJobSummary)!==JSON.stringify(summary))store.observedJobSummary=summary;
+}
+function schemaViewRevision(store,vm){
+  return JSON.stringify([store.view,currentSource,activeFactoryId,vm,
+    dashboardState?.freshness?.status,dashboardState?.freshness?.scope,dashboardState?.freshness?.factory_status,
+    dashboardState?.transport?.status,bootstrap.authorizedSession,submissionReadiness.ready,submissionReadiness.reason,
+    store.measurementRows,store.measurementGroups,store.measurementCoverage,store.measurementStatus,store.deliveryReceipts,store.deliveryStatus]);
+}
+function renderSchemaView(){
+  renderObservedJobSummary();
+  const panel=document.getElementById('exo-schema-view'),store=window.Alpine?.store('floor');if(!panel||!store)return;
+  const fallback=document.getElementById('exo-floor-unavailable-navigation');if(fallback)fallback.hidden=!!store.ready||store.view!=='Floor';
+  const active=document.activeElement;const briefSelection=active?.name==='brief'&&panel.contains(active)?{start:active.selectionStart,end:active.selectionEnd}:null;
+  const focusedHeading=active?.hasAttribute?.('data-human-inbox-heading')?'[data-human-inbox-heading]':active?.hasAttribute?.('data-incident-heading')?'[data-incident-heading]':null;
+  const view=store.view,vm=store.dashboardViewModels??(dashboardState?.runs instanceof Map?dashboardViewModels(dashboardState):null);
+  panel.style.display=['Decisions','Outputs','Definition','Agents'].includes(view)?'block':'none';
+  const revision=schemaViewRevision(store,vm);if(panel.dataset.observationRevision===revision)return;panel.dataset.observationRevision=revision;panel.replaceChildren();
+  if(panel.style.display==='none')return;
+  const h=document.createElement('h2');text(h,view);panel.append(h);
+  const addRows=(title,rows,empty)=>{const heading=document.createElement('h3');text(heading,title);panel.append(heading);if(!rows?.length){const p=document.createElement('p');text(p,empty);panel.append(p);return;}const list=document.createElement('ul');for(const row of rows){const li=document.createElement('li');const button=document.createElement('button');button.type='button';button.style.cssText='display:block;margin:5px 0;padding:8px 10px;text-align:left;border:1px solid var(--line);border-radius:7px;background:transparent;color:inherit;max-width:100%;overflow-wrap:anywhere';text(button,safeLabel(row)+(row.receipt_conflict?' · Receipt conflict; delivery unverified':row.display?` · ${row.display}`:''));button.addEventListener('click',()=>{const detail=document.createElement('pre');detail.style.whiteSpace='pre-wrap';detail.textContent=JSON.stringify(row,null,2);panel.querySelector('.exo-detail')?.remove();detail.className='exo-detail';panel.append(detail);if(row.run_id&&row.artifact_revision&&row.artifact_sha256){const inspect=document.createElement('button');inspect.type='button';inspect.textContent='Inspect exact artifact bytes';inspect.addEventListener('click',async()=>{inspect.disabled=true;try{const result=await adapter.inspect_artifact(row.run_id,row.artifact_revision,row.artifact_sha256);detail.textContent=result.valid?`SHA-256 verified · ${result.sha256} · ${result.bytes.byteLength} bytes`:result.reason||'Artifact unavailable';}catch(error){detail.textContent=`Artifact unavailable · ${error.message}`;}finally{inspect.disabled=false;}});panel.append(inspect);if(currentSource==='live'&&bootstrap.authorizedSession===true&&bootstrap.deliveryEndpoint&&['accepted','completed'].includes(vm.runs.find(run=>run.run_id===row.run_id)?.state?.state)&&(()=>{const final=vm.outputs.filter(item=>item.run_id===row.run_id&&item.artifact_revision&&item.artifact_sha256&&!item.receipt_id).at(-1);return final?.artifact_revision===row.artifact_revision&&final?.artifact_sha256===row.artifact_sha256;})()){const save=document.createElement('button');save.type='button';save.textContent='Save to local destination';save.title='Save the exact accepted Markdown to the destination configured by this factory';const generation=sourceGeneration,factory=activeFactoryId;save.addEventListener('click',async()=>{if(currentSource!=='live'||generation!==sourceGeneration||factory!==activeFactoryId)return;save.disabled=true;try{const result=await saveLocalDelivery({endpoint:bootstrap.deliveryEndpoint,runId:row.run_id,revision:row.artifact_revision,sha256:row.artifact_sha256,factoryId:factory,authenticated:bootstrap.authorizedSession===true});if(generation!==sourceGeneration||factory!==activeFactoryId)return;await refreshDeliveries();const notice=document.createElement('p');notice.className='exo-delivery-result';notice.setAttribute('role','status');notice.textContent=`Saved to local destination · ${result.receipt.receipt_id}${result.duplicate?' · existing receipt reused':''}`;panel.append(notice);}catch(error){if(generation===sourceGeneration&&factory===activeFactoryId)detail.textContent=`Local delivery unavailable · ${error.message}`;}finally{save.disabled=false;}});panel.append(save);}if(currentSource==='live'&&typeof bootstrap.artifactEndpoint==='function'){try{const url=new URL(bootstrap.artifactEndpoint({run_id:row.run_id,revision:row.artifact_revision,sha256:row.artifact_sha256}),location.href);if(url.origin===location.origin&&!url.username&&!url.password&&!url.search&&!url.hash){const download=document.createElement('a');download.href=url.pathname+'/markdown';download.download='accepted-report.md';download.textContent='Download accepted Markdown';download.style.display='block';panel.append(download);}}catch{}}}});li.append(button);list.append(li);}panel.append(list);};
+  if(!vm){const p=document.createElement('p');text(p,'No validated Observation snapshot is available.');panel.append(p);return;}
+  if(view==='Decisions') {
+    appendBriefForm(panel,briefSelection);
+    const inboxHeading=document.createElement('h3');inboxHeading.textContent='Human inbox';inboxHeading.dataset.humanInboxHeading='';inboxHeading.tabIndex=-1;panel.append(inboxHeading);
+    const inboxNotice=document.createElement('p'),inbox=store.communicationPresentation?.humanInbox;inboxNotice.textContent=inbox?.state==='pending'?`${inbox.items.length} observed human waits`:inbox?.state==='empty'?'No observed pending human items.':'Human inbox observation unavailable.';panel.append(inboxNotice);
+    addRows('Observed human waits',(vm.waits||[]).filter(wait=>wait.wait_role==='human'),'No human wait facts reported in this snapshot.');
+    addRows('Decisions',vm.decisions,'No observed decisions in this snapshot.');
+    const waits=vm.waits||[];
+    addRows('Active waits',waits,'No active wait facts reported in this snapshot.');
+    for(const wait of waits){
+      const recommendation=document.createElement('p');
+      recommendation.textContent=`${wait.run_id} · Recommendation ${typeof wait.recommendation==='string'?wait.recommendation:'unavailable'}`;
+      panel.append(recommendation);
+      if(currentSource==='live'&&Array.isArray(wait.permitted_actions)){
+        const reason=controlReason({runId:wait.run_id});
+        const deadlineMs=wait.wait_deadline?Date.parse(wait.wait_deadline):NaN;
+        const expired=Number.isFinite(deadlineMs)&&deadlineMs<=Date.now();
+        for(const action of wait.permitted_actions){
+          const button=document.createElement('button');button.type='button';button.textContent=action;
+          button.disabled=!!reason||expired;if(reason||expired)button.title=reason||'Wait deadline has expired.';
+          button.addEventListener('click',()=>{
+            const currentReason=controlReason({runId:wait.run_id});
+            const currentDeadline=wait.wait_deadline?Date.parse(wait.wait_deadline):NaN;
+            if(currentReason){sourceStatus(currentReason);return;}
+            if(Number.isFinite(currentDeadline)&&currentDeadline<=Date.now()){button.disabled=true;button.title='Wait deadline has expired.';sourceStatus(button.title);return;}
+            void store.decide(action,wait.run_id);
+          });
+          panel.append(button);
+        }
+      }
+    }
+    const unavailable=document.createElement('p');unavailable.textContent='Incident recovery and undeclared human escalation are unavailable. Only observed permitted wait actions are supported.';panel.append(unavailable);
+    addRows('Command outcomes',vm.commands,'No observed command outcomes.');
+    const incidents=vm.incidents||[];
+    const incidentHeading=document.createElement('h3');text(incidentHeading,'Incidents');incidentHeading.dataset.incidentHeading='';incidentHeading.tabIndex=-1;panel.append(incidentHeading);
+    if(!incidents.length){const empty=document.createElement('p');text(empty,'No incident records reported in this snapshot.');panel.append(empty);}
+    else{const incidentList=document.createElement('ul');for(const row of incidents){const item=document.createElement('li'),button=document.createElement('button');button.type='button';button.style.cssText='display:block;margin:5px 0;padding:8px 10px;text-align:left;border:1px solid var(--line);border-radius:7px;background:transparent;color:inherit;max-width:100%;overflow-wrap:anywhere';text(button,`Failure class ${row.kind??'unknown'} · Run ${row.run_id??'unreported'} · Origin ${row.node??'unreported'} · Owner ${row.owner_identity??'unreported'} · State ${row.state??'unknown'}`);button.addEventListener('click',()=>{const detail=document.createElement('pre');detail.style.whiteSpace='pre-wrap';detail.textContent=JSON.stringify(row,null,2);panel.querySelector('.exo-detail')?.remove();detail.className='exo-detail';panel.append(detail);});item.append(button);incidentList.append(item);}panel.append(incidentList);}
+    addRows('Admissions',vm.admissions||[],'No admission records reported in this snapshot.');
+    addRows('Commercial usage',vm.commercial.usage.map(r=>({...r,display:r.quantity_display})),'No measured usage records.');
+    addRows('Commercial obligations',vm.commercial.obligations.map(r=>({...r,display:r.amount_display})),'No obligation records.');
+  }
+  if(view==='Outputs') {
+    addRows('Runs',vm.runs.map(r=>({run_id:r.run_id,state:r.state?.state,task:r.task,pinned:r.pinned})),'No recorded run facts in this snapshot.');
+    addRows('Artifacts',vm.outputs.filter(r=>r.artifact_revision||r.artifact_sha256),'No artifact facts in this snapshot.');
+    addRows('Observed delivery receipts',vm.outputs.filter(r=>r.receipt_id),'No delivery receipts in this snapshot.');
+    addRows('Quality verdicts',vm.quality,'No quality verdicts in this snapshot.');
+    if(currentSource==='live'){
+      const status=document.createElement('p');status.textContent=`Local file delivery reader · ${store.deliveryStatus||'not loaded'} · remote customer receipt unqualified`;panel.append(status);
+      const refresh=document.createElement('button');refresh.type='button';refresh.textContent='Refresh local delivery receipts';refresh.disabled=store.deliveryStatus==='loading'||!bootstrap.deliveryEndpoint;refresh.addEventListener('click',()=>void refreshDeliveries());panel.append(refresh);
+      addRows('Verified local file receipts',store.deliveryReceipts||[],'No verified local file receipts have been read.');
+    }
+  }
+  if(view==='Definition') {const graph=vm.definition.graph;addRows('Graph nodes',graph.nodes??[],'No published graph nodes are available.');addRows('Graph edges',graph.edges??[],'No published graph edges are available.');addRows('Publication',vm.definition.publication?[vm.definition.publication]:[],'No active publication reported.');addRows('Pinned service contracts',vm.definition.service_bindings||[],'No matching pinned service contracts available.');}
+  if(view==='Agents') {
+    addRows('Agent bindings',vm.agents,'No agent bindings reported.');
+    addRows('Observed assignments',vm.assignments||[],'No observed assignment facts.');
+    const status=document.createElement('p');status.textContent=currentSource==='live'?`Token measurement reader · ${store.measurementStatus||'not loaded'} · cost unavailable`:'Token measurements are not included in this source.';panel.append(status);
+    if(currentSource==='live'){
+      const refresh=document.createElement('button');refresh.type='button';refresh.textContent='Refresh token measurements';refresh.disabled=store.measurementStatus==='loading'||typeof adapter?.measurements!=='function';refresh.addEventListener('click',()=>void refreshMeasurements());panel.append(refresh);
+      addRows('Measurement coverage',store.measurementCoverage?[store.measurementCoverage]:[],'Coverage has not been read.');
+      addRows('Token measurements',(store.measurementRows||[]).map(row=>{const token=key=>row.usage?.[key]?.status==='reported'?String(row.usage[key].value):'unknown';const viewRow={...row};Object.defineProperty(viewRow,'display',{value:[row.call_scope??'unknown',row.service_identity??'unknown',row.model_id??'unknown',row.measurement_id??'unknown',`input ${token('input_tokens')}`,`output ${token('output_tokens')}`,`assignment ${row.assignment_id??'unavailable'}`,`attempt ${row.attempt_id??'unavailable'}`].join(' · ')});return viewRow;}),'No factory-scoped measurement facts are available; this does not establish zero usage.');
+    }
+  }
+  if(focusedHeading)panel.querySelector(focusedHeading)?.focus({preventScroll:true});
+}
+async function refreshDeliveries(){
+  const store=window.Alpine.store('floor');if(currentSource!=='live'||store.deliveryStatus==='loading')return;
+  const generation=sourceGeneration,factory=activeFactoryId;store.deliveryStatus='loading';renderSchemaView();
+  try{
+    const result=await readDeliveries({endpoint:bootstrap.deliveryEndpoint,factoryId:factory,authenticated:bootstrap.authorizedSession===true});
+    if(generation!==sourceGeneration||factory!==activeFactoryId)return;
+    store.deliveryReceipts=result.receipts;store.deliveryStatus=result.status+(result.reason?` · ${result.reason}`:'');
+  }catch(error){if(generation===sourceGeneration&&factory===activeFactoryId){store.deliveryReceipts=[];store.deliveryStatus=`unavailable · ${error.message}`;}}
+  finally{if(generation===sourceGeneration&&factory===activeFactoryId)renderSchemaView();}
+}
+async function refreshMeasurements(){
+  const store=window.Alpine.store('floor');if(currentSource!=='live'||store.measurementStatus==='loading'||!adapter?.measurements)return;
+  const generation=sourceGeneration,factory=activeFactoryId,reader=adapter;store.measurementStatus='loading';renderSchemaView();
+  try{
+    const result=await reader.measurements();
+    if(generation!==sourceGeneration||factory!==activeFactoryId||reader!==adapter)return;
+    if(result.coverage.factory_id&&result.coverage.factory_id!==factory)throw new Error('measurement factory does not match this observer');
+    store.measurementRows=result.measurements;store.measurementGroups=measurementGroups(result.measurements);store.measurementCoverage=result.coverage;store.measurementStatus=result.coverage.status;
+  }catch(error){if(generation===sourceGeneration&&factory===activeFactoryId){store.measurementRows=[];store.measurementGroups=[];store.measurementCoverage=null;store.measurementStatus=`unavailable · ${error.message}`;}}
+  finally{if(generation===sourceGeneration&&factory===activeFactoryId)renderSchemaView();}
+}
+function selectFloorGraph(state,store){
+  const runs=[...state.runs.values()];
+  if(currentSource==='live')for(const run of runs)liveRunChoices.set(run.run_id,{run_id:run.run_id,pinned:run.pinned,graph:run.graph});
+  const choices=currentSource==='live'?[...liveRunChoices.values()]:runs;
+  if(store.dashboardSubmittedTask?.factoryId!==state.factoryId)store.dashboardSubmittedTask=null;
+  const pendingTask=store.dashboardSubmittedTask;
+  if(pendingTask){const matching=runs.filter(run=>(!pendingTask.runId||run.run_id===pendingTask.runId)&&run.task?.id===pendingTask.taskId&&run.task?.context_id===pendingTask.contextId);const matchingId=preferredFloorRunId(matching,state.freshness?.unavailable_run_ids||[]);if(matchingId){store.dashboardRunId=matchingId;store.dashboardSubmittedTask=null;if(currentSource==='live'&&!pendingTask.runId)queueMicrotask(()=>void selectRun(matchingId));}else{return null;}}
+  const incompatible=["manifest_digest","definition_digest"].some(key=>new Set(choices.map(run=>run.pinned?.[key]).filter(Boolean)).size>1);
+  if(store.dashboardRunId&&!state.runs.has(store.dashboardRunId))store.dashboardRunId=null;
+  if(!store.dashboardRunId&&incompatible){const available=runs.filter(run=>run.graph?.nodes?.length).sort((a,b)=>b.graph.nodes.length-a.graph.nodes.length);if(available.length)store.dashboardRunId=available[0].run_id;}
+  const select=document.getElementById('exo-run-picker');
+  if(select){
+    const key=JSON.stringify([choices.map(run=>run.run_id),incompatible]);
+    if(select.dataset.optionsKey!==key){select.replaceChildren();const all=document.createElement('option');all.value='';all.textContent='All jobs · shared graph';all.disabled=incompatible&&currentSource!=='live';select.append(all);for(const run of choices){const option=document.createElement('option');option.value=run.run_id;option.textContent=run.run_id;select.append(option);}select.dataset.optionsKey=key;}
+    select.disabled=!choices.length;select.value=currentSource==='live'&&store.dashboardScope!=='run'?'':(store.dashboardRunId||'');
+  }
+  return store.dashboardRunId||null;
+}
+let floorRenderRequested=0,floorRendering=false;
+async function renderLatestFloor(){
+  if(floorRendering||!(dashboardState?.runs instanceof Map))return;
+  floorRendering=true;
+  const request=floorRenderRequested,epoch=renderEpoch,state=dashboardState;
+  try{
+    const store=window.Alpine.store('floor'),runId=selectFloorGraph(state,store),selected=state.runs.get(runId);
+    store.dashboardViewModels=dashboardViewModels(state);
+    if(selected?.graph){const vm=store.dashboardViewModels;vm.definition={...vm.definition,graph:structuredClone(selected.graph),graph_nodes:structuredClone(selected.graph.nodes),publication:structuredClone(selected.pinned)};if(selected.pinned.manifest_digest!==state.publication?.manifest_digest){vm.definition.service_bindings=[];vm.agents=[];}}
+    setTransport(state.transport?.status||'connected',state.transport?.notice||'');
+    // Live defaults to all jobs on the followed job's pinned graph. Retained runs come
+    // from a display-only factory snapshot; the selected run's own stream wins on overlap.
+    // While a submission is pending, only retained runs are shown and none is followed.
+    if(currentSource==='live'&&store.dashboardScope!=='run'&&liveHistory?.factoryId!==state.factoryId&&!liveHistoryLoading&&activeFactoryId===state.factoryId)void refreshLiveHistory();
+    const scopeAll=currentSource==='live'&&store.dashboardScope!=='run',retained=scopeAll&&liveHistory?.factoryId===state.factoryId?liveHistory.runs:null;
+    let model;
+    if(scopeAll&&retained){
+      const runs=new Map(retained);if(!store.dashboardSubmittedTask)for(const [id,run] of state.runs)runs.set(id,run);
+      const floorState={...state,runs},anchor=store.dashboardSubmittedTask?null:runId;
+      const graphOf=anchor&&runs.has(anchor)?anchor:preferredFloorRunId([...runs.values()].map(run=>({...run,state:run.state})),[]);
+      model=graphOf?toFloorModel(floorState,{graphOf}):toFloorModel({...state,runs:new Map()},{});
+      if(model){model.scope='all';model.followJob=anchor;}
+    }else model=toFloorModel(store.dashboardSubmittedTask?{...state,runs:new Map()}:state,{runId});
+    store.provenance=adapter?.provenance?.label||adapter?.provenance?.model_label||store.provenance;
+    if(model){
+      const fixture=currentSource==='demo'?(window.EXO_DASHBOARD_DEMO_FIXTURES||[]).find(row=>row.id===model.id):null;
+      const graph=store.dashboardViewModels.definition.graph;
+      model.communication=communicationPresentation({source:currentSource,freshness:state.freshness,graph,waits:store.dashboardViewModels.waits,incidents:store.dashboardViewModels.incidents,declaredRoutes:{entryTargets:model.boundaries?.entry||[],directorTargets:fixture?.signals||[],humanTargets:(fixture?.steps||[]).filter(node=>node.human||node.escalateTo).map(node=>node.id)}});
+      model.dashboardSource=currentSource;
+      model.signals=model.communication.director.targets;
+      store.communicationPresentation=model.communication;
+      model.provenance=adapter?.provenance?.label||adapter?.provenance?.model_label||model.provenance;
+      const floorModel=withBranchPods(model);
+      if(renderedFactoryId===model.id)await window.EXO_DASHBOARD_FLOOR.updateDashboardFactory(floorModel);
+      else {renderedFactoryId=model.id;await window.EXO_DASHBOARD_FLOOR.loadDashboardFactory(floorModel);}
+      if(model.followJob)window.EXO_DASHBOARD_FLOOR.followJob(model.followJob);
+      const reveal=store.dashboardRevealTask;
+      if(reveal&&selected?.task?.id===reveal.taskId&&selected?.task?.context_id===reveal.contextId){if(model.scope==='all'){store.panel=true;}else{store.panel=true;store.select('run');store.refit();}store.dashboardRevealTask=null;}
+    }else{
+      renderedFactoryId=null;
+      await window.EXO_DASHBOARD_FLOOR.loadDashboardFactory({id:state.factoryId,steps:[],edges:[],runs:[]});
+    }
+    if(epoch===renderEpoch){renderSchemaView();updateDirectorControls();}
+  }catch(error){if(epoch===renderEpoch){const store=window.Alpine.store('floor');store.ready=false;store.dashboardUnavailable=error.message;store.error=`Floor unavailable · ${error.message}`;store.runs=[];store.rail=[];store.alarms=[];renderedFactoryId=null;const panel=document.getElementById('exo-schema-view');if(panel){const notice=document.createElement('p');notice.textContent=`View unavailable · ${error.message}`;if(store.view==='Floor')panel.replaceChildren(notice);else renderSchemaView();}for(const id of ['pixi','ov']){const node=document.getElementById(id);if(node)node.style.display='none';}sourceStatus(`Floor unavailable · ${error.message}`);updateDirectorControls();}}
+  finally{floorRendering=false;if(epoch!==renderEpoch&&!(dashboardState?.runs instanceof Map)){const store=window.Alpine.store('floor');store.ready=false;for(const id of ['pixi','ov']){const node=document.getElementById(id);if(node)node.style.display='none';}}if(request!==floorRenderRequested)queueMicrotask(()=>void renderLatestFloor());}
+}
+function renderFrame(frame,epoch){
+  if(epoch!==renderEpoch)return;
+  try{
+    dashboardState=reduceDashboard(dashboardState,frame);
+    const store=window.Alpine.store('floor');
+    store.sourceMode=currentSource;store.dashboardFactory=dashboardState.factoryId;store.dashboardAuthorized=bootstrap.authorizedSession===true;
+    floorRenderRequested++;queueMicrotask(()=>void renderLatestFloor());
+  }catch(error){if(dashboardState)dashboardState={...dashboardState,freshness:{...dashboardState.freshness,status:'stale'}};setTransport('error',`invalid Observation data · ${error.message}`);}
+}
+function populateFactories(rows){
+  const select=document.getElementById('factorySel'),store=window.Alpine.store('floor');if(!select)return;
+  store.factories=rows.map(row=>({id:row.id||row.factory_id,name:row.name||row.id||row.factory_id}));select.replaceChildren();
+  for(const row of store.factories){const option=document.createElement('option');option.value=row.id;option.textContent=row.name;select.append(option);}
+}
+function currentRunTask(runId){const runs=dashboardState?.runs,store=window.Alpine?.store('floor');const run=runs?.get(runId)||((!runId||runId===store?.runId)?runs?.get(store?.follow):null);return run?.task&&run.task.id&&run.task.context_id?run:null;}
+function controlReason({requireRun=true,runId=null,requireSubmission=false}={}){
+  if(currentSource==='recorded')return 'Recorded evidence is read-only.';
+  if(!adapter)return 'Observation source is not ready.';
+  if(currentSource==='live'){
+    if(bootstrap.authorizedSession!==true)return 'Unauthenticated: no server-authorized same-origin session is configured.';
+    if(requireSubmission&&bootstrap.submissionReadinessEndpoint){
+      if(!bootstrap.a2aMessageSendEndpoint)return 'A2A message/send endpoint is not configured by server bootstrap.';
+      if(!adapter.submissionConnectionReady?.())return 'Factory connection is unavailable; reconnect before submitting.';
+      if(!submissionReadiness.ready)return submissionReadiness.reason;
+      return '';
+    }
+    if(dashboardState?.transport?.status!=='connected'||dashboardState?.freshness?.status!=='fresh')return 'Live Observation is not current and connected; commands are unavailable.';
+    if(requireSubmission&&dashboardState?.freshness?.scope==='run'&&dashboardState.freshness.factory_status!=='fresh')return 'Selected run is current, but factory-wide Observation is incomplete; new submission is unavailable.';
+    if(requireSubmission&&!bootstrap.a2aMessageSendEndpoint)return 'A2A message/send endpoint is not configured by server bootstrap.';
+    if(requireSubmission&&!submissionReadiness.ready)return submissionReadiness.reason;
+  }
+  if(requireRun&&!currentRunTask(runId||window.Alpine.store('floor').runId))return 'No observed Task and context IDs are available for this action.';
+  return '';
+}
+function updateDirectorControls(){
+  const commandReason=controlReason(),messageReason=chatReason();
+  document.querySelectorAll('.insp button,.composer button,.composer input,.tty-in').forEach(node=>{
+    const handler=node.getAttribute('@click')||'';
+    const mutates=/\.(decide|sendChat|chatAct)\(/.test(handler)||node.matches('.composer button,.composer input,.tty-in');
+    if(!mutates||!('disabled'in node))return;
+    const reason=node.matches('.tty-in')||/\.sendChat\(/.test(handler)?messageReason:commandReason;
+    if(reason){node.disabled=true;node.dataset.observationDisabled='true';node.title=reason;}
+    else if(node.dataset.observationDisabled){node.disabled=false;delete node.dataset.observationDisabled;node.removeAttribute('title');}
+  });
+  const store=window.Alpine?.store('floor');if(store)store.directorDisabledReason=messageReason;
+  const fallback=document.getElementById('exo-floor-unavailable-navigation');if(fallback&&store)fallback.hidden=!!store.ready||store.view!=='Floor';
+  renderFloorBrief();
+}
+// Director console messages are follow-ups on one job's Task; say how to get there instead of naming missing IDs.
+function chatReason(){const reason=controlReason();return reason==='No observed Task and context IDs are available for this action.'?'Choose a job in the run picker to message the Director about it.':reason;}
+const briefOutcomeByFactory=new Map();
+let submissionReadinessRequest=0;
+async function refreshSubmissionReadiness(){
+  if(currentSource!=='live'||!bootstrap.submissionReadinessEndpoint||!adapter?.submissionReadiness)return;
+  const generation=sourceGeneration,factory=activeFactoryId,reader=adapter,request=++submissionReadinessRequest;
+  submissionReadiness={ready:false,reason:'Checking current factory submission readiness…'};
+  renderFloorBrief();
+  try{
+    const result=await reader.submissionReadiness(factory);
+    if(generation!==sourceGeneration||factory!==activeFactoryId||reader!==adapter||request!==submissionReadinessRequest)return;
+    submissionReadiness=result.status==='ready'?{ready:true,reason:''}:{ready:false,reason:`Current factory cannot accept work: ${result.reason_code}.`};
+  }catch(error){if(generation!==sourceGeneration||factory!==activeFactoryId||reader!==adapter||request!==submissionReadinessRequest)return;submissionReadiness={ready:false,reason:`Current factory readiness unavailable: ${error.message}`};}
+  const node=document.getElementById('exo-submission-status');if(node)node.textContent=submissionReadiness.ready?'Factory ready for work':'Factory submission unavailable';
+  renderFloorBrief();
+}
+let briefOpener=null;
+function closeFloorBrief(){
+  const panel=document.getElementById('exo-floor-brief');if(panel)panel.hidden=true;
+  if(briefOpener?.isConnected)briefOpener.focus({preventScroll:true});briefOpener=null;
+}
+function renderFloorBrief({focus=false}={}){
+  const panel=document.getElementById('exo-floor-brief'),store=window.Alpine?.store('floor');if(!panel||panel.hidden||!store)return;
+  if(store.view!=='Floor'){closeFloorBrief();return;}
+  const reason=controlReason({requireRun:false,requireSubmission:true}),factory=activeFactoryId||store.factoryId;
+  const signature=JSON.stringify([currentSource,sourceGeneration,factory,reason]);
+  const active=document.activeElement,selection=panel.contains(active)&&active.name==='brief'?{start:active.selectionStart,end:active.selectionEnd}:null;
+  if(panel.dataset.signature!==signature){
+    panel.replaceChildren();panel.dataset.signature=signature;
+    const heading=document.createElement('h2');heading.textContent='Send work';panel.append(heading);
+    const context=document.createElement('p');context.textContent=`Factory: ${store.factories?.find(row=>row.id===factory)?.name||factory||'unavailable'} · Source: ${{live:'Live observation',demo:'Demo (local only)',recorded:'Recorded (read-only)'}[currentSource]||'unavailable'}`;panel.append(context);
+    const close=document.createElement('button');close.type='button';close.textContent='Close composer';close.dataset.closeComposer='';close.addEventListener('click',closeFloorBrief);panel.append(close);
+    close.style.cssText='padding:6px 10px;margin:4px 0 10px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--ink)';
+    appendBriefForm(panel,selection);
+  }
+  if(focus||selection)panel.querySelector('input[name=brief]')?.focus({preventScroll:true});
+}
+window.EXO_DASHBOARD_OPEN_BRIEF=opener=>{
+  const panel=document.getElementById('exo-floor-brief');if(!panel)return;
+  briefOpener=opener;panel.hidden=false;renderFloorBrief({focus:true});void refreshSubmissionReadiness();
+};
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!document.getElementById('exo-floor-brief')?.hidden){closeFloorBrief();event.stopPropagation();}});
+async function submitBrief(value,run=null,onStatus=()=>{}){
+  // A Director turn whose model call failed is not a refusal: say that no job started and why, from the turn the factory returns.
+  const DIRECTOR_FAILURE_TEXT={SubscriptionAuthRequired:'the model sign-in needs renewing',SubscriptionQuotaExhausted:'the model usage limit is reached',ModelThrottledException:'the model provider is rate limiting',TimeoutError:'the model call timed out'};
+  function briefReplyError(parts){
+    const data=(parts||[]).map(part=>part?.data).find(value=>value&&typeof value.error==='string');
+    if(!data)return null;
+    const turn=data.director_turn;
+    if(turn&&typeof turn.failure==='string'&&!(turn.accepted||[]).length){
+      const why=DIRECTOR_FAILURE_TEXT[turn.failure]||`the model provider returned an error (${turn.failure.slice(0,64)})`;
+      return `No job started: the Director could not act because ${why}. The factory is free; try again once the model provider recovers.`;
+    }
+    return data.error;
+  }
+  const report=text=>{briefOutcomeByFactory.set(JSON.stringify([currentSource,activeFactoryId]),text);sourceStatus(text);onStatus(text);};
+  const reason=run?controlReason({runId:run.run_id}):controlReason({requireRun:false,requireSubmission:true});if(reason){report(reason);return;}
+  const brief=String(value||'').trim();if(!brief){report('Enter a brief before submitting.');return;}
+  const selectedAdapter=adapter,generation=sourceGeneration,submittingFactory=activeFactoryId;
+  const message={messageId:`dash-${crypto.randomUUID()}`,role:'user',parts:[{kind:'text',text:brief}]};
+  if(run){message.contextId=run.task.context_id;message.taskId=run.task.id;}
+  report(currentSource==='demo'?'Checking local Demo brief…':'Submitting brief through A2A…');
+  try{
+    const result=await selectedAdapter.submit(currentSource==='demo'?{text:brief}:{jsonrpc:'2.0',id:message.messageId,method:'message/send',params:{message}});
+    if(generation!==sourceGeneration||submittingFactory!==activeFactoryId)return;
+    const replyError=briefReplyError(result?.result?.parts||result?.result?.status?.message?.parts);
+    if(['rejected','unavailable'].includes(result?.lifecycle)||result?.error||replyError){report(result.reason||result.error?.message||replyError||'Submission rejected');return;}
+    if(currentSource==='demo'){report('Demo only: no real work was started. '+(result.reason||'The brief stays local.'));return;}
+    const acceptedTask=result?.result,replyParts=acceptedTask?.parts||acceptedTask?.status?.message?.parts||[];
+    const replyText=replyParts.filter(part=>part.kind==='text'&&typeof part.text==='string').map(part=>part.text).join('\n').slice(0,4000);
+    report(replyText?`Factory reply: ${replyText}`:'Brief received by A2A; workflow outcome is pending Observation.');
+    if(SAFE_SELECTION_ID.test(acceptedTask?.metadata?.run_id||'')&&SAFE_SELECTION_ID.test(acceptedTask?.id||'')&&SAFE_SELECTION_ID.test(acceptedTask?.contextId||'')){const store=window.Alpine.store('floor');store.dashboardRevealTask={taskId:acceptedTask.id,contextId:acceptedTask.contextId};store.dashboardRunId=null;store.dashboardScope='all';liveHistory=null;store.setView('Floor');await selectFactoryAndRestore(submittingFactory,null,{runId:acceptedTask.metadata.run_id,taskId:acceptedTask.id,contextId:acceptedTask.contextId});}
+    if(generation===sourceGeneration&&submittingFactory===activeFactoryId)await refreshSubmissionReadiness();
+  }catch(error){if(generation===sourceGeneration&&submittingFactory===activeFactoryId)report(`Submission unavailable · ${error.message}`);}
+}
+function appendBriefForm(panel,selection=null){
+  const form=document.createElement('form');form.setAttribute('aria-label','New factory brief');
+  const label=document.createElement('label');label.textContent='New factory brief ';
+  const input=document.createElement('input');input.name='brief';input.required=true;input.maxLength=4000;input.setAttribute('aria-label','New factory brief');
+  const draftSelection={source:currentSource,factoryId:activeFactoryId};
+  input.value=briefDrafts.get(draftSelection);input.addEventListener('input',()=>{briefDrafts.set(draftSelection,input.value);window.Alpine.store('floor').dashboardBriefDraft=input.value;});
+  const button=document.createElement('button');button.type='submit';button.textContent='Submit brief';
+  const policy=briefInputPolicy(currentSource,controlReason({requireRun:false,requireSubmission:true}));
+  const reason=policy.reason;input.readOnly=policy.readOnly;input.disabled=policy.disabled;button.disabled=policy.submitDisabled;button.setAttribute('aria-describedby','exo-brief-status-'+currentSource);if(reason)button.title=reason;
+  button.style.cssText='padding:8px 12px;border:1px solid var(--ink-2);border-radius:6px;background:var(--panel);color:var(--ink)';button.style.opacity=reason?'0.55':'1';
+  input.style.cssText='display:block;width:100%;box-sizing:border-box;margin:8px 0;padding:10px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px';
+  const notice=document.createElement('p');notice.setAttribute('role','status');notice.dataset.disabledReason='';notice.id='exo-brief-status-'+currentSource;notice.style.cssText='padding:10px;border:1px solid var(--line);border-radius:6px;white-space:normal';notice.textContent=reason?'Submission blocked: '+reason:(currentSource==='demo'?'Demo work stays local and isolated.':'Send this brief to the live factory. Only one job can run at a time.');
+  const factory=activeFactoryId,generation=sourceGeneration;
+  const outcome=document.createElement('p');outcome.dataset.briefResult='';outcome.setAttribute('role','status');outcome.textContent=briefOutcomeByFactory.get(JSON.stringify([currentSource,factory]))||'';
+  label.append(input);form.append(label,button,notice,outcome);form.addEventListener('submit',async event=>{event.preventDefault();if(factory!==activeFactoryId||generation!==sourceGeneration||form.dataset.submitting==='true')return;form.dataset.submitting='true';button.disabled=true;try{await submitBrief(input.value,null,text=>{notice.textContent=text;outcome.textContent=text;});}finally{delete form.dataset.submitting;button.disabled=briefInputPolicy(currentSource,controlReason({requireRun:false,requireSubmission:true})).submitDisabled;}});panel.append(form);
+  if(selection){input.focus({preventScroll:true});input.setSelectionRange(selection.start,selection.end);}
+}
+function installStoreBridge(){
+  const store=window.Alpine.store('floor');
+  store.sourceMode=currentSource||'demo';store.setFactory=id=>void selectFactory(id);store.setRun=id=>void selectRun(id);
+  const pickJob=store.pickJob.bind(store);store.pickJob=id=>{pickJob(id);updateDirectorControls();};
+  store.setView=view=>{if(view!=='Floor')closeFloorBrief();window.EXO_DASHBOARD_FLOOR.setView(view);renderSchemaView();if(view==='Agents'&&currentSource==='live'&&store.measurementStatus==='not loaded')void refreshMeasurements();if(view==='Outputs'&&currentSource==='live'&&store.deliveryStatus==='not loaded')void refreshDeliveries();};
+  store.decide=async(action,runId=null)=>{
+    const id=runId||store.runId,reason=controlReason({runId:id});if(reason){sourceStatus(reason);return;}
+    const run=currentRunTask(id),commandId=`dash-${crypto.randomUUID()}`,generation=sourceGeneration;
+    const target=currentSource==='demo'?adapter:activeSubscription;
+    if(typeof target?.command!=='function'){sourceStatus('Command transport is not connected.');return;}
+    const normalizedAction=String(action).toLowerCase().replace(/[^a-z0-9_.-]/g,'_');
+    try{
+      let command={op:'command',factory_id:dashboardState.factoryId,command_id:commandId,task_id:run.task.id,context_id:run.task.context_id,action:normalizedAction,expected_state:run.state?.state||'unknown'};
+      if(currentSource==='live'){
+        const candidate=run.quality?.at(-1);
+        if(!candidate?.artifact_revision||!candidate?.artifact_sha256)throw new Error('The current rejected candidate binding is unavailable.');
+        const inspected=await adapter.inspect_artifact(run.run_id,candidate.artifact_revision,candidate.artifact_sha256);
+        if(generation!==sourceGeneration)return;
+        command=makeWaitCommand({factoryId:dashboardState.factoryId,run:currentRunTask(id),action:normalizedAction,commandId,inspected});
+      }
+      const ack=await target.command(command);if(generation!==sourceGeneration)return;
+      sourceStatus(`command ${ack?.lifecycle||'sent'} · outcome is recorded in Decisions`);
+    }catch(error){if(generation===sourceGeneration)sourceStatus(`command unavailable · ${error.message}`);}
+  };
+  store.sendChat=value=>{const reason=chatReason();if(reason){sourceStatus(reason);return;}return submitBrief(value,currentRunTask(store.runId));};
+  store.chatAct=()=>{const reason=controlReason();sourceStatus(reason||'Select an observed decision action in Decisions.');};
+}
+async function selectRun(runId){
+  if(!adapter||!activeFactoryId)return;
+  if(activeSubscription?.close)activeSubscription.close();
+  const epoch=++renderEpoch,selectedAdapter=adapter,selectedSource=currentSource,selectedFactory=activeFactoryId;dashboardState={source:selectedSource};
+  if(selectedSource==='live'){
+    const store=window.Alpine.store('floor');store.ready=false;store.dashboardViewModels=null;store.runs=[];store.rail=[];store.error='Loading selected job from Observation…';for(const id of ['pixi','ov']){const surface=document.getElementById(id);if(surface)surface.style.display='none';}renderObservedJobSummary();
+    try{const snapshot=validateSnapshot(await selectedAdapter.snapshot(selectedFactory,runId));if(epoch!==renderEpoch||selectedAdapter!==adapter||selectedSource!==currentSource||selectedFactory!==activeFactoryId)return;renderFrame({op:'snapshot',snapshot},epoch);window.Alpine.store('floor').dashboardRunId=runId;persistSelection(selectedFactory,runId);activeSubscription=selectedAdapter.observe(selectedFactory,snapshot.cursor,runId,frame=>renderFrame(frame,epoch),(...args)=>{if(epoch===renderEpoch&&selectedAdapter===adapter)setTransport(...args);});}
+    catch(error){if(epoch!==renderEpoch||selectedAdapter!==adapter)return;const store=window.Alpine.store('floor');store.dashboardViewModels=null;store.runs=[];store.rail=[];for(const id of ['pixi','ov']){const surface=document.getElementById(id);if(surface)surface.style.display='none';}renderObservedJobSummary();setTransport(/Unauthenticated/.test(error.message)?'unauthenticated':'disconnected',error.message);}
+  }else{
+    const sub=selectedAdapter.observe(selectedFactory,null,runId);if(epoch!==renderEpoch||selectedAdapter!==adapter||selectedSource!==currentSource){sub.close?.();return;}activeSubscription=sub;if(selectedSource==='recorded')sub.play?.();
+  }
+  updateDirectorControls();
+}
+async function selectFactory(factoryId){
+  return selectFactoryAndRestore(factoryId,null);
+}
+function submittedTaskDetailRun(snapshot,factoryId,target){
+  if(snapshot?.state?.factory?.id!==factoryId)return null;
+  const runs=(snapshot.state.runs||[]).filter(row=>row.task?.id===target.taskId&&row.task?.context_id===target.contextId)
+    .map(row=>({...row,run_id:row.id,state:row.status}));
+  return preferredFloorRunId(runs,snapshot.freshness?.unavailable_run_ids||[]);
+}
+async function selectFactoryAndRestore(factoryId,preferredRunId=null,acceptedTask=null){
+  const store=window.Alpine.store('floor'),knownFactory=store.factories?.some(row=>row.id===factoryId);
+  if(!knownFactory){sourceStatus('Factory selection is unavailable; choose a discovered authorized factory.');return;}
+  closeFloorBrief();
+  const generation=sourceGeneration,selectedReader=adapter,expectedEpoch=renderEpoch+1;
+  if(acceptedTask)store.dashboardSubmittedTask={...acceptedTask,factoryId};
+  const changed=activeFactoryId!==factoryId,restoreRunId=preferredRunId??(!changed?store.dashboardRunId:null);activeFactoryId=factoryId;store.dashboardRunId=null;store.factoryId=factoryId;
+  store.dashboardBriefDraft=briefDrafts.get({source:currentSource,factoryId});
+  if(changed){if(!acceptedTask)store.dashboardSubmittedTask=null;liveHistory=null;liveRunChoices=new Map();store.measurementRows=[];store.measurementGroups=[];store.measurementCoverage=null;store.measurementStatus='not loaded';store.deliveryReceipts=[];store.deliveryStatus='not loaded';}
+  await selectRun(acceptedTask?.runId||null);
+  if(generation!==sourceGeneration||activeFactoryId!==factoryId||selectedReader!==adapter||renderEpoch!==expectedEpoch)return;
+  const hasSnapshot=dashboardState?.factoryId===factoryId&&dashboardState.runs instanceof Map;
+  const acceptedRunId=hasSnapshot&&acceptedTask?preferredFloorRunId([...dashboardState.runs.values()].filter(run=>(!acceptedTask.runId||run.run_id===acceptedTask.runId)&&run.task?.id===acceptedTask.taskId&&run.task?.context_id===acceptedTask.contextId),dashboardState.freshness?.unavailable_run_ids||[]):null;
+  const validRunId=acceptedTask?acceptedRunId:(hasSnapshot&&restoreRunId&&dashboardState.runs.has(restoreRunId)&&!dashboardState.freshness?.unavailable_run_ids?.includes(restoreRunId)?restoreRunId:
+    hasSnapshot&&currentSource==='live'?preferredFloorRunId([...dashboardState.runs.values()],dashboardState.freshness?.unavailable_run_ids||[]):null);
+  if(currentSource==='live'&&validRunId&&validRunId!==acceptedTask?.runId){const runEpoch=renderEpoch+1;await selectRun(validRunId);if(generation!==sourceGeneration||activeFactoryId!==factoryId||selectedReader!==adapter||renderEpoch!==runEpoch)return;}
+  let detailRunId=validRunId;
+  // Root scope exposes only that run. Discover a detailed child through the
+  // same authenticated factory, matching explicit original Task/context facts.
+  // Failure of this optional read leaves the already loaded root usable.
+  if(acceptedTask&&validRunId&&typeof selectedReader.snapshot==='function'){
+    let detailEpoch=renderEpoch;
+    try{
+      let candidate=null;
+      for(let discovery=0;discovery<3;discovery++){
+        if(discovery)await new Promise(resolve=>setTimeout(resolve,1000));
+        if(generation!==sourceGeneration||activeFactoryId!==factoryId||selectedReader!==adapter||renderEpoch!==detailEpoch)return;
+        const overview=validateSnapshot(await selectedReader.snapshot(factoryId));
+        if(generation!==sourceGeneration||activeFactoryId!==factoryId||selectedReader!==adapter||renderEpoch!==detailEpoch)return;
+        candidate=submittedTaskDetailRun(overview,factoryId,acceptedTask);
+        if(candidate&&candidate!==validRunId)break;
+      }
+      if(candidate&&candidate!==validRunId){store.dashboardSubmittedTask={...acceptedTask,runId:candidate,factoryId};detailEpoch++;await selectRun(candidate);if(renderEpoch!==detailEpoch)return;if(dashboardState?.runs?.has(candidate)){detailRunId=candidate;}else{store.dashboardSubmittedTask={...acceptedTask,runId:validRunId,factoryId};detailEpoch++;await selectRun(validRunId);}}
+    }catch{/* Keep the original Task's successfully loaded root; never resubmit. */}
+    if(generation!==sourceGeneration||activeFactoryId!==factoryId||selectedReader!==adapter||renderEpoch!==detailEpoch)return;
+  }
+  store.dashboardRunId=detailRunId;if(hasSnapshot||!restoreRunId)persistSelection(factoryId,detailRunId);floorRenderRequested++;queueMicrotask(()=>void renderLatestFloor());
+  if(currentSource==='live'&&activeFactoryId===factoryId){if(changed)void refreshSubmissionReadiness();if(store.view==='Agents'&&store.measurementStatus==='not loaded')void refreshMeasurements();if(store.view==='Outputs'&&store.deliveryStatus==='not loaded')void refreshDeliveries();}
+}
+async function reconnectLive(){
+  const store=window.Alpine.store('floor'),factoryId=activeFactoryId;
+  if(currentSource!=='live')return;
+  if(!store.factories?.some(row=>row.id===factoryId)){sourceStatus('Retrying authorized factory discovery…');await switchSource('live');return;}
+  const saved=readSavedSelection(),runId=dashboardState?.factoryId===factoryId&&dashboardState.runs?.has(store.dashboardRunId)?store.dashboardRunId:(saved?.source==='live'&&saved.factory_id===factoryId?saved.run_id:null);
+  sourceStatus('Reconnecting to the selected Live factory and run…');
+  await selectFactoryAndRestore(factoryId,runId);
+  await refreshSubmissionReadiness();
+}
+// Presentation-only branch agent pods: a fan-out node whose observed assignments name
+// distinct capabilities gets one pod per capability on its pinned route to the join.
+// The pinned steps/edges stay in pinnedSteps/pinnedEdges; pods are never graph facts.
+function withBranchPods(f){
+  const pods = (f?.branchPods || []).filter(p => f.steps.some(s => s.id === p.node) && f.steps.some(s => s.id === p.join) && !f.steps.some(s => s.id === p.id));
+  if (!pods.length) return f;
+  const via = new Set(pods.map(p => p.node + '\u0000' + p.join)), agents = { ...f.agents };
+  const steps = [...f.steps, ...pods.map(p => ({ id:p.id, name:p.binding_name || p.capability, kind:'assign', type:'branch_pod', agent:p.id, capability:p.capability, sub:p.capability, dept:f.steps.find(s => s.id === p.node).dept, presentation_only:true, derived:'observed_assignments', pinnedRoute:{ from:p.node, to:p.join } }))];
+  const edges = [...f.edges.filter(e => !via.has(e.from + '\u0000' + e.to)), ...pods.flatMap(p => [{ from:p.node, to:p.id, loop:false, presentation_only:true, pinned:{ from:p.node, to:p.join } }, { from:p.id, to:p.join, loop:false, presentation_only:true, pinned:{ from:p.node, to:p.join } }])];
+  for (const p of pods) agents[p.id] = { name:p.name, contract:p.contract || 'Not reported', cap:null, identity:p.identity, derived:'observed_assignments', note:`Branch pod derived from observed assignments (${p.capability}) on the pinned ${p.node} → ${p.join} route; presentation only, not a pinned graph node.` };
+  return { ...f, steps, edges, agents, pinnedSteps:f.steps, pinnedEdges:f.edges };
+}
+async function refreshLiveHistory(){
+  if(currentSource!=='live'||typeof adapter?.snapshot!=='function'||!activeFactoryId)return;
+  const generation=sourceGeneration,factory=activeFactoryId,reader=adapter;liveHistoryLoading=true;
+  try{const snapshot=validateSnapshot(await reader.snapshot(factory));if(generation!==sourceGeneration||factory!==activeFactoryId||reader!==adapter)return;liveHistory=createDashboardState(snapshot,{source:'live'});floorRenderRequested++;queueMicrotask(()=>void renderLatestFloor());}
+  catch{/* Display-only history: the selected run stays usable without it. */}
+  finally{liveHistoryLoading=false;}
+}
+async function switchSource(mode){
+  closeFloorBrief();
+  if(!sourceNames.includes(mode))return;const generation=++sourceGeneration;currentSource=mode;renderEpoch++;renderedFactoryId=null;liveRunChoices=new Map();liveHistory=null;activeSubscription?.close?.();activeSubscription=null;adapter=null;activeFactoryId=null;dashboardState={source:mode};
+  const store=window.Alpine.store('floor');window.EXO_DASHBOARD_FLOOR.resetDashboardSource(mode);store.sourceMode=mode;store.dashboardSubmittedTask=null;store.dashboardScope='all';const submissionStatus=document.getElementById('exo-submission-status');if(submissionStatus){submissionStatus.hidden=mode!=='live';submissionStatus.textContent='Current factory readiness not checked';}store.dashboardAuthorized=bootstrap.authorizedSession===true;store.ready=false;store.runId='';store.dashboardRunId=null;store.runs=[];store.dashboardViewModels=null;store.communicationPresentation=null;store.dashboardBriefDraft='';store.rail=[];store.alarms=[];store.follow=null;store.error='Connecting to Observation source…';store.board={...store.board,cols:[],rows:[]};
+  const reconnectButton=document.getElementById('exo-live-reconnect');if(reconnectButton){reconnectButton.hidden=mode!=='live';reconnectButton.disabled=mode==='live'&&bootstrap.authorizedSession!==true;}
+  const loginLink=document.getElementById('exo-local-session');if(loginLink)loginLink.hidden=mode!=='live';
+  store.measurementRows=[];store.measurementGroups=[];store.measurementCoverage=null;store.measurementStatus='not loaded';store.deliveryReceipts=[];store.deliveryStatus='not loaded';
+  for(const id of ['pixi','ov']){const node=document.getElementById(id);if(node)node.style.display='none';}
+  renderSchemaView();
+  sourceStatus(mode==='live'&&bootstrap.authorizedSession!==true?'unauthenticated · server-side principal resolver/session not selected':'connecting');
+  try{
+    const onFrame=frame=>{if(generation===sourceGeneration)renderFrame(frame,renderEpoch);};
+    let nextAdapter;
+    if(mode==='demo')nextAdapter=await createDemoAdapter({fixtures:window.EXO_DASHBOARD_DEMO_FIXTURES||[],onFrame});
+    else if(mode==='recorded')nextAdapter=await loadRecordedAdapter({bundle:bootstrap.recordedBundle,url:bootstrap.recordedBundleUrl||'/dashboard-assets/recordings/codex-subscription-3.bundle.json',artifactManifestUrl:bootstrap.recordedArtifactManifestUrl??(bootstrap.recordedBundle?null:'/dashboard-assets/recordings/codex-subscription-3-artifacts.json'),artifactRefs:bootstrap.recordedArtifactRefs||[],onFrame});
+    else nextAdapter=createLiveAdapter({observationEndpoint:bootstrap.observationEndpoint,discoveryEndpoint:bootstrap.discoveryEndpoint,artifactEndpoint:bootstrap.artifactEndpoint,a2aMessageSendEndpoint:bootstrap.a2aMessageSendEndpoint,usageEndpoint:bootstrap.usageEndpoint,submissionReadinessEndpoint:bootstrap.submissionReadinessEndpoint,principalResolverReady:bootstrap.authorizedSession===true});
+    if(generation!==sourceGeneration)return;adapter=nextAdapter;
+    const discovered=await nextAdapter.discover();if(generation!==sourceGeneration)return;populateFactories(discovered);
+    const saved=readSavedSelection(),savedFactoryId=saved?.source===mode&&discovered.some(row=>(row.id||row.factory_id)===saved.factory_id)?saved.factory_id:null;
+    activeFactoryId=savedFactoryId||discovered[0]?.factory_id||discovered[0]?.id;
+    if(!activeFactoryId)throw new Error('source has no authorized factory');
+    const factoryPicker=document.getElementById('factorySel');if(factoryPicker)factoryPicker.value=activeFactoryId;
+    if(mode==='recorded'&&adapter.provenance)sourceStatus(`${adapter.provenance.label||'Recorded evidence'} · ${adapter.provenance.model_label||'model label unavailable'} · ${adapter.provenance.completeness||'partial'}`);
+    if(mode==='demo')sourceStatus('isolated deterministic demo · local only');
+    if(mode==='live'&&bootstrap.authorizedSession!==true)throw new Error('Unauthenticated: the server-side Observation principal resolver/session is not selected.');
+    if(mode==='live'&&bootstrap.submissionReadinessEndpoint){await refreshSubmissionReadiness();}
+    else if(mode==='live'){
+      submissionReadiness={ready:false,reason:'Provider readiness is being checked.'};
+      try{
+        const response=await fetch('/health',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(5000)});
+        const health=response.ok?await response.json():null;
+        if(generation!==sourceGeneration)return;
+        submissionReadiness=health?.readiness?.submission_ready===true?{ready:true,reason:''}:{ready:false,reason:'Provider submission readiness is unavailable; work cannot be submitted.'};
+      }catch{if(generation!==sourceGeneration)return;submissionReadiness={ready:false,reason:'Provider submission readiness could not be read; work cannot be submitted.'};}
+    }
+    await selectFactoryAndRestore(activeFactoryId,savedFactoryId?saved.run_id:null);if(generation!==sourceGeneration)return;
+  }catch(error){if(generation!==sourceGeneration)return;store.ready=false;store.error=error.message;store.dashboardUnavailable=error.message;sourceStatus(`${mode==='live'&&/Unauthenticated/.test(error.message)?'unauthenticated':'unavailable'} · ${error.message}`);updateDirectorControls();}
+  if(generation!==sourceGeneration)return;const picker=document.getElementById('exo-source-picker');if(picker)picker.value=mode;
+}
+async function start(){
+  ensureChrome();
+  while(!window.Alpine?.store('floor')||!window.EXO_DASHBOARD_FLOOR)await new Promise(resolve=>setTimeout(resolve,20));
+  if(window.EXO_DASHBOARD_FLOOR_READY)await window.EXO_DASHBOARD_FLOOR_READY;
+  installStoreBridge();
+  document.querySelector('.views')?.addEventListener('click',event=>{const button=event.target.closest('button');if(!button)return;event.preventDefault();event.stopImmediatePropagation();window.Alpine.store('floor').setView(button.textContent.trim());},true);
+  document.addEventListener('keydown',event=>{if(event.target.closest?.('input,textarea,select,[contenteditable="true"]'))return;if(currentSource==='live'&&(event.code==='Space'||['ArrowRight','ArrowLeft','Home','End','PageUp','PageDown'].includes(event.key))){event.preventDefault();event.stopImmediatePropagation();}},true);
+  new MutationObserver(()=>updateDirectorControls()).observe(document.getElementById('ov'),{childList:true,subtree:true});
+  const saved=readSavedSelection();await switchSource(saved?.source||bootstrap.source||'demo');
+  document.getElementById('exo-source-picker').value=currentSource;
+}
+void start();
+</script>
 
 </body>
 </html>

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
 import sqlite3
 import sys
 import tempfile
@@ -19,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "services"))
 sys.path.insert(0, str(ROOT / "src"))
 import agent_binding  # noqa: E402
-from model_agent import canonical, create_app, digest  # noqa: E402
+from model_agent import canonical, contract_for, create_app, digest  # noqa: E402
 import model_agent  # noqa: E402
 
 AUTH = {"Authorization": "Bearer fixture-token"}
@@ -89,6 +90,33 @@ class ModelAgentTests(unittest.TestCase):
         return create_app(self.state, port, role="synthesis", capability="report_synthesis@1",
                           model_provider="scripted", roles=self.roles, **kw)
 
+    def pinned_legacy_contract(self, identity, *, capability="report_synthesis@1"):
+        document = contract_for(capability)
+        document["request"]["data"].pop("optional_fields")
+        protocol_path = self.state / f"pinned-protocol-{identity}.json"
+        protocol_path.write_text(canonical(document), encoding="utf-8")
+        protocol_digest = digest(document)
+        declaration_role, declaration_name = model_agent.PINNED_DECLARATION_IDENTITY[
+            ("synthesis", capability)]
+        descriptor = {
+            "a2a_extension": {"uri": model_agent.EXTENSION_URI,
+                               "contract": model_agent.CONTRACT_NAME,
+                               "contract_digest": protocol_digest},
+            "capability": capability,
+            "card_sha256": model_agent.agent_card_digest(model_agent.agent_card(
+                "synthesis", capability, 45748, identity, document)),
+            "name": declaration_name,
+            "reconcile": "a2a-idempotent-resend",
+            "role": declaration_role,
+        }
+        descriptor_path = self.state / f"pinned-descriptor-{identity}.json"
+        descriptor_path.write_text(canonical(descriptor), encoding="utf-8")
+        return {"pinned_descriptor_document": descriptor_path,
+                "protocol_document": protocol_path,
+                "expected_descriptor_digest": digest(descriptor),
+                "expected_protocol_digest": protocol_digest,
+                "expected_identity": identity}, document
+
     def test_replay_conflict_card_pin_and_artifact(self):
         with TestClient(self.app()) as client:
             card = client.get("/.well-known/agent-card.json").json()
@@ -136,8 +164,328 @@ class ModelAgentTests(unittest.TestCase):
             self.assertEqual(len(calls), 2)
             self.assertEqual({row["session_id"] for row in calls},
                              {f"{identity}:{one['id']}", f"{identity}:{two['id']}"})
-            self.assertTrue(all(row["live"] is False and row["model_id"] == "gpt-6-sol"
+            self.assertTrue(all(row["live"] is False and row["model_id"] == model_agent.DEFAULT_MODEL_ID
                                 for row in calls))
+
+    def test_public_health_reports_configured_inference_mode_without_model_calls(self):
+        with patch.dict(os.environ, {}, clear=True), patch.object(
+                model_agent.ModelBroker, "ensure_started",
+                side_effect=AssertionError("health must not start a model broker")) as started:
+            live_app = create_app(
+                self.state, 45748, role="synthesis", capability="report_synthesis@1",
+                model_provider="codex-subscription", model=model_agent.DEFAULT_MODEL_ID,
+                roles=self.roles)
+            with TestClient(live_app) as client:
+                response = client.get("/health")  # health is intentionally public
+                self.assertEqual(response.status_code, 200)
+                health = response.json()
+                self.assertEqual(health["provider"], "codex-subscription")
+                self.assertEqual(health["model_id"], model_agent.DEFAULT_MODEL_ID)
+                self.assertEqual(health["reasoning_effort"], "xhigh")
+                self.assertIs(health["inference_enabled"], True)
+                self.assertIs(health["read_only_usage"], False)
+                self.assertNotIn("credential_status", health)
+                self.assertNotIn("signed_in", health)
+            scripted_app = self.app()
+            with TestClient(scripted_app) as client:
+                health = client.get("/health").json()
+                self.assertEqual(health["provider"], "scripted")
+                self.assertIsNone(health["model_id"])
+                self.assertIsNone(health["reasoning_effort"])
+                self.assertIs(health["inference_enabled"], False)
+                self.assertIs(health["read_only_usage"], False)
+            started.assert_not_called()
+
+    def test_explicit_assignment_usage_bindings_persist_and_legacy_stays_null(self):
+        bound_command = {**command("bound", "run-bound"),
+                         "assignment_id": "assignment-synthetic-1",
+                         "attempt_id": "attempt-synthetic-1"}
+        legacy_command = command("legacy", "run-legacy")
+        with TestClient(self.app()) as client:
+            contract = client.get("/contract", headers=AUTH).json()
+            self.assertEqual(contract["request"]["data"]["optional_fields"],
+                             ["assignment_id", "attempt_id", "factory_id"])
+            bound_task = client.post("/", json=send(bound_command), headers=AUTH).json()["result"]
+            completed(client, bound_task["id"])
+            replay = client.post("/", json=send(bound_command), headers=AUTH).json()["result"]
+            self.assertEqual(replay["id"], bound_task["id"])
+            changed_binding = {**bound_command, "attempt_id": "attempt-synthetic-conflict"}
+            conflict = client.post("/", json=send(changed_binding), headers=AUTH).json()
+            self.assertEqual(conflict["error"]["code"], -32602)
+            legacy_task = client.post("/", json=send(legacy_command), headers=AUTH).json()["result"]
+            completed(client, legacy_task["id"])
+
+            bound = client.get("/usage/measurements", params={
+                "run_id": "run-bound", "assignment_id": "assignment-synthetic-1",
+                "attempt_id": "attempt-synthetic-1",
+            }, headers=AUTH).json()["measurements"]
+            self.assertEqual(len(bound), 1)
+            self.assertEqual(bound[0]["call_scope"], "assignment_call")
+            self.assertEqual(bound[0]["assignment_id"], "assignment-synthetic-1")
+            self.assertEqual(bound[0]["attempt_id"], "attempt-synthetic-1")
+            self.assertEqual(bound[0]["evidence_status"], "unknown")
+            self.assertNotIn("cost", bound[0])
+
+            legacy = client.get("/usage/measurements", params={"run_id": "run-legacy"},
+                                headers=AUTH).json()["measurements"]
+            self.assertEqual(len(legacy), 1)
+            self.assertEqual(legacy[0]["call_scope"], "assignment_call")
+            self.assertIsNone(legacy[0]["assignment_id"])
+            self.assertIsNone(legacy[0]["attempt_id"])
+            self.assertEqual(legacy[0]["evidence_status"], "unknown")
+
+        # A new service instance over the same owner state reads the original rows.
+        with TestClient(self.app(port=45749)) as restarted:
+            restored = restarted.get("/usage/measurements", params={"run_id": "run-bound"},
+                                     headers=AUTH).json()["measurements"]
+            self.assertEqual(restored, bound)
+
+    def test_read_only_usage_owner_preserves_card_reads_journal_and_never_recovers(self):
+        port = 45748
+        with TestClient(self.app(port=port)) as normal:
+            pinned_card = normal.get("/.well-known/agent-card.json").json()
+            pinned_contract = normal.get("/contract", headers=AUTH).json()
+
+        ledger = model_agent.Ledger(self.state)
+        task_id = "working-task-synthetic"
+        task_command = command("working-action-synthetic", "working-run-synthetic")
+        committed_id, created = ledger.accept(task_command, task_id, "working-context-synthetic")
+        self.assertTrue(created)
+        self.assertEqual(committed_id, task_id)
+        identity, incarnation = ledger.identity, ledger.incarnation
+
+        journal = model_agent.ModelUsageJournal(ledger.database)
+        measurement = journal.record(
+            model_call_id=f"urn:exomachina:model-call:{identity}:synthetic",
+            service_identity=identity, task_id=task_id, action_id=task_command["action_id"],
+            run_id=task_command["run_id"],
+            definition_digest=task_command["definition_digest"],
+            call_scope="assignment_call", assignment_id="assignment-synthetic",
+            attempt_id="attempt-synthetic", provider="synthetic-provider",
+            model_id="synthetic-model-v1", reasoning_effort="xhigh",
+            usage=model_agent.unavailable_usage())
+        pinned_args, old_contract = self.pinned_legacy_contract(identity)
+
+        with patch.object(model_agent, "Service", side_effect=AssertionError(
+                "read-only mode must not construct the recovering service")), \
+             patch.object(model_agent.ModelBroker, "ensure_started", side_effect=AssertionError(
+                 "read-only mode must not start a model broker")):
+            with TestClient(self.app(port=port, read_only_usage=True, **pinned_args)) as readonly:
+                readonly_card = readonly.get("/.well-known/agent-card.json").json()
+                self.assertEqual(readonly_card["capabilities"]["extensions"][0]["params"]["identity"],
+                                 identity)
+                self.assertEqual(readonly_card["capabilities"]["extensions"][0]["params"][
+                    "contract_digest"], digest(old_contract))
+                self.assertEqual(readonly.get("/contract", headers=AUTH).json(), old_contract)
+                self.assertNotEqual(pinned_card["capabilities"]["extensions"][0]["params"][
+                    "contract_digest"], digest(old_contract))
+                self.assertEqual(pinned_contract["request"]["data"]["optional_fields"],
+                                 ["assignment_id", "attempt_id", "factory_id"])
+                health = readonly.get("/health").json()
+                self.assertEqual((health["identity"], health["incarnation"]),
+                                 (identity, incarnation))
+                self.assertTrue(health["read_only_usage"])
+                self.assertIsNone(health["provider"])
+                self.assertIsNone(health["model_id"])
+                self.assertIsNone(health["reasoning_effort"])
+                self.assertIs(health["inference_enabled"], False)
+
+                response = readonly.get("/usage/measurements", headers=AUTH)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()["measurements"], [measurement])
+                self.assertEqual(readonly.get("/usage/measurements").status_code, 401)
+
+                # A2A tasks/get remains a safe read; mutation RPC and test writes are rejected.
+                pending = readonly.post("/", json=get(task_id), headers=AUTH)
+                self.assertEqual(pending.status_code, 200)
+                self.assertEqual(pending.json()["result"]["status"]["state"], "working")
+                self.assertEqual(readonly.post("/", json=send(command(
+                    "blocked-action-synthetic", "blocked-run-synthetic")), headers=AUTH).status_code,
+                    503)
+                cancel = {"jsonrpc": "2.0", "id": "cancel-synthetic", "method": "tasks/cancel",
+                          "params": {"id": task_id}}
+                self.assertEqual(readonly.post("/", json=cancel, headers=AUTH).status_code, 503)
+                self.assertEqual(readonly.post("/_test/stimulus", json={}, headers=AUTH).status_code,
+                                 503)
+                self.assertEqual(readonly.put("/usage/measurements", json={}, headers=AUTH).status_code,
+                                 503)
+
+        restored = model_agent.Ledger(self.state, read_only=True)
+        self.assertEqual(restored.task(task_id).status.state.value, "working")
+        self.assertEqual(restored.call_count(task_id), 0)
+        self.assertEqual((restored.identity, restored.incarnation), (identity, incarnation))
+        self.assertEqual(journal.list_measurements(model_call_id=measurement["model_call_id"]),
+                         [measurement])
+
+        # Relative --state values are resolved to an existing file before mode=ro URI access.
+        relative_state = Path(os.path.relpath(self.state, Path.cwd()))
+        with TestClient(create_app(relative_state, port, role="synthesis",
+                                   capability="report_synthesis@1", read_only_usage=True,
+                                   **pinned_args)) as client:
+            self.assertEqual(client.get("/usage/measurements", headers=AUTH).status_code, 200)
+
+    def test_read_only_usage_owner_fails_closed_without_existing_identity_or_journal(self):
+        pinned_args, _ = self.pinned_legacy_contract("identity-not-created")
+        missing = self.state / "missing-owner"
+        with self.assertRaisesRegex(FileNotFoundError, "existing model-agent owner state"):
+            create_app(missing, 45750, role="synthesis", capability="report_synthesis@1",
+                       read_only_usage=True, **pinned_args)
+        self.assertFalse(missing.exists())
+
+        empty = self.state / "empty-owner"
+        empty.mkdir()
+        database = empty / "model-agent.sqlite3"
+        with sqlite3.connect(database) as db:
+            db.execute("CREATE TABLE marker(value TEXT)")
+        with self.assertRaisesRegex(RuntimeError, "existing model-agent identity"):
+            create_app(empty, 45750, role="synthesis", capability="report_synthesis@1",
+                       read_only_usage=True, **pinned_args)
+        with sqlite3.connect(database) as db:
+            self.assertEqual(db.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall(),
+                [("marker",)])
+
+    def test_read_only_usage_owner_projects_legacy_journal_without_migration(self):
+        state = self.state / "legacy-usage-owner"
+        state.mkdir()
+        database = state / "model-agent.sqlite3"
+        usage = model_agent.unavailable_usage()
+        recorded_at = "2026-10-03T10:11:12.123456+00:00"
+        with sqlite3.connect(database) as db:
+            db.execute("CREATE TABLE identity(singleton INTEGER PRIMARY KEY, id TEXT, incarnation INTEGER)")
+            db.execute("INSERT INTO identity VALUES (1, 'identity-legacy-synthetic', 7)")
+            db.execute("""CREATE TABLE model_usage_measurements(
+                model_call_id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL,
+                measurement_id TEXT NOT NULL UNIQUE, service_identity TEXT NOT NULL,
+                task_id TEXT NOT NULL, action_id TEXT NOT NULL, run_id TEXT NOT NULL,
+                definition_digest TEXT NOT NULL, provider TEXT NOT NULL, model_id TEXT NOT NULL,
+                reasoning_effort TEXT, usage_json TEXT NOT NULL, measurement_source TEXT NOT NULL,
+                completeness TEXT NOT NULL, evidence_status TEXT NOT NULL, recorded_at TEXT NOT NULL)""")
+            db.execute("""INSERT INTO model_usage_measurements VALUES
+                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
+                "urn:synthetic:model-call:legacy-1", "fingerprint-legacy-synthetic",
+                "mu-legacy-synthetic", "identity-legacy-synthetic", "task-legacy-synthetic",
+                "action-legacy-synthetic", "run-legacy-synthetic", "definition-legacy-synthetic",
+                "synthetic-provider", "synthetic-model-v1", "xhigh", canonical(usage),
+                "unknown", "unknown", "unknown", recorded_at))
+
+        pinned_args, old_contract = self.pinned_legacy_contract("identity-legacy-synthetic")
+        app = create_app(state, 45751, role="synthesis", capability="report_synthesis@1",
+                         read_only_usage=True, **pinned_args)
+        with TestClient(app) as client:
+            contract_response = client.get("/contract", headers=AUTH)
+            self.assertEqual(contract_response.status_code, 200)
+            self.assertEqual(contract_response.json(), old_contract)
+            card = client.get("/.well-known/agent-card.json").json()
+            extension = card["capabilities"]["extensions"][0]
+            self.assertEqual(extension["params"]["identity"], "identity-legacy-synthetic")
+            self.assertEqual(extension["params"]["contract_digest"], pinned_args[
+                "expected_protocol_digest"])
+            response = client.get("/usage/measurements", headers=AUTH)
+            self.assertEqual(response.status_code, 200)
+            rows = response.json()["measurements"]
+            self.assertEqual(len(rows), 1)
+            row = rows[0]
+            self.assertEqual(row["measurement_id"], "mu-legacy-synthetic")
+            self.assertEqual(row["recorded_at"], recorded_at)
+            self.assertEqual(row["usage"], usage)
+            self.assertEqual(row["call_scope"], "assignment_call")
+            self.assertIsNone(row["assignment_id"])
+            self.assertIsNone(row["attempt_id"])
+            self.assertIsNone(row["message_id"])
+            self.assertEqual(client.get("/usage/measurements", params={
+                "assignment_id": "assignment-not-recorded"}, headers=AUTH).json()["measurements"], [])
+            self.assertEqual(client.get("/usage/measurements", params={
+                "attempt_id": "attempt-not-recorded"}, headers=AUTH).json()["measurements"], [])
+            scoped = client.get("/usage/measurements", params={"call_scope": "assignment_call"},
+                                headers=AUTH)
+            self.assertEqual(scoped.json()["measurements"], rows)
+
+        with sqlite3.connect(database) as db:
+            columns = {row[1] for row in db.execute(
+                "PRAGMA table_info(model_usage_measurements)").fetchall()}
+        self.assertNotIn("call_scope", columns)
+        self.assertNotIn("assignment_id", columns)
+        self.assertNotIn("attempt_id", columns)
+
+        wrong_identity = {**pinned_args, "expected_identity": "identity-other-synthetic"}
+        with self.assertRaisesRegex(RuntimeError, "differs from the pinned identity"):
+            create_app(state, 45751, role="synthesis", capability="report_synthesis@1",
+                       read_only_usage=True, **wrong_identity)
+        wrong_digest = {**pinned_args, "expected_descriptor_digest": "0" * 64}
+        with self.assertRaisesRegex(ValueError, "digest mismatch"):
+            create_app(state, 45751, role="synthesis", capability="report_synthesis@1",
+                       read_only_usage=True, **wrong_digest)
+        wrong_protocol_digest = {**pinned_args, "expected_protocol_digest": "0" * 64}
+        with self.assertRaisesRegex(ValueError, "differs from the expected protocol pin"):
+            create_app(state, 45751, role="synthesis", capability="report_synthesis@1",
+                       read_only_usage=True, **wrong_protocol_digest)
+        protocol_document = json.loads(pinned_args["protocol_document"].read_text())
+        protocol_document["completion"]["artifact_count"] = 2
+        tampered_protocol_path = self.state / "tampered-pinned-protocol.json"
+        tampered_protocol_path.write_text(canonical(protocol_document), encoding="utf-8")
+        tampered_protocol = {**pinned_args, "protocol_document": tampered_protocol_path}
+        with self.assertRaisesRegex(ValueError, "protocol document digest mismatch"):
+            create_app(state, 45751, role="synthesis", capability="report_synthesis@1",
+                       read_only_usage=True, **tampered_protocol)
+
+        descriptor = json.loads(pinned_args["pinned_descriptor_document"].read_text())
+        descriptor["name"] = "unrecognized-synthetic-owner"
+        bad_descriptor_path = self.state / "bad-pinned-descriptor.json"
+        bad_descriptor_path.write_text(canonical(descriptor), encoding="utf-8")
+        wrong_name = {**pinned_args,
+                      "pinned_descriptor_document": bad_descriptor_path,
+                      "expected_descriptor_digest": digest(descriptor)}
+        with self.assertRaisesRegex(ValueError, "role or capability mismatch"):
+            create_app(state, 45751, role="synthesis", capability="report_synthesis@1",
+                       read_only_usage=True, **wrong_name)
+
+    def test_legacy_task_schema_migrates_missing_usage_bindings_as_null(self):
+        state = Path(tempfile.mkdtemp(prefix="exo-sf-agent-legacy-", dir="/tmp"))
+        database = state / "model-agent.sqlite3"
+        with sqlite3.connect(database) as db:
+            db.execute("""CREATE TABLE tasks (
+                task_id TEXT PRIMARY KEY, context_id TEXT NOT NULL,
+                action_id TEXT NOT NULL UNIQUE, fingerprint TEXT NOT NULL, state TEXT NOT NULL,
+                run_id TEXT NOT NULL, definition_digest TEXT NOT NULL, brief TEXT NOT NULL,
+                artifact TEXT, created_at REAL NOT NULL, updated_at REAL NOT NULL)""")
+            db.execute("""INSERT INTO tasks VALUES (?,?,?,?,?,?,?,?,?,?,?)""", (
+                "legacy-task-synthetic", "legacy-context-synthetic", "legacy-action-synthetic",
+                "legacy-fingerprint-synthetic", "completed", "legacy-run-synthetic",
+                "legacy-definition-synthetic", canonical({"revision": "r1"}), None, 1.0, 2.0))
+
+        ledger = model_agent.Ledger(state)
+        restored = ledger.row("legacy-task-synthetic")
+        self.assertEqual(restored["action_id"], "legacy-action-synthetic")
+        self.assertIsNone(restored["assignment_id"])
+        self.assertIsNone(restored["attempt_id"])
+
+    def test_read_only_task_rows_supports_pre_factory_id_schema(self):
+        state = self.state / "legacy-task-rows"
+        state.mkdir()
+        database = state / "model-agent.sqlite3"
+        with sqlite3.connect(database) as db:
+            db.execute("CREATE TABLE identity(singleton INTEGER PRIMARY KEY, id TEXT NOT NULL, incarnation INTEGER NOT NULL)")
+            db.execute("INSERT INTO identity VALUES (1, 'identity-legacy-synthetic', 4)")
+            db.execute("""CREATE TABLE tasks(
+                task_id TEXT PRIMARY KEY, state TEXT NOT NULL, created_at REAL NOT NULL)""")
+            db.executemany("INSERT INTO tasks VALUES (?,?,?)", [
+                ("task-working-synthetic", "working", 1.0),
+                ("task-completed-synthetic", "completed", 2.0),
+            ])
+
+        ledger = model_agent.Ledger(state, read_only=True)
+        rows = ledger.task_rows()
+        self.assertEqual(rows, [
+            {"task_id": "task-working-synthetic", "state": "working", "factory_id": None},
+            {"task_id": "task-completed-synthetic", "state": "completed", "factory_id": None},
+        ])
+        self.assertEqual(sum(row["state"] == "working" for row in rows), 1)
+
+        with sqlite3.connect(database) as db:
+            columns = {row[1] for row in db.execute("PRAGMA table_info(tasks)")}
+            self.assertNotIn("factory_id", columns)
+            self.assertEqual(db.execute("SELECT incarnation FROM identity WHERE singleton=1").fetchone(), (4,))
 
     def test_unfinished_task_recovers_after_restart(self):
         async def stalled(self, messages, tool_specs=None, system_prompt=None, **kwargs):

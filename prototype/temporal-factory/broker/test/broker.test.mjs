@@ -6,6 +6,7 @@ import net from 'node:net';
 import http from 'node:http';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { zstdDecompressSync } from 'node:zlib';
 import { rewriteAuthorizeOriginator, withPidLock } from '../lib/store.mjs';
 
 const broker = fileURLToPath(new URL('../exo-model.mjs', import.meta.url));
@@ -147,7 +148,11 @@ function startMock(port) {
     req.on('data', (c) => chunks.push(c));
     req.on('end', () => {
       let body;
-      try { body = JSON.parse(Buffer.concat(chunks).toString()); } catch { body = {}; }
+      try {
+        const bytes = Buffer.concat(chunks);
+        body = JSON.parse((req.headers['content-encoding'] === 'zstd'
+          ? zstdDecompressSync(bytes) : bytes).toString());
+      } catch { body = {}; }
       const observed = { headers: req.headers, body, url: req.url, closed: false };
       requests.push(observed);
       res.on('close', () => { observed.closed = true; });
@@ -354,6 +359,26 @@ test('device start, poll, exchange and refresh carry broker identity', async () 
   } finally { await stop(service.child); }
 });
 
+test('Luna requests reach the provider with xhigh by default and preserve explicit effort', async () => {
+  const mock = await startMock(46111);
+  const home = mkhome('luna', true); seed(home);
+  const service = launch(home, { EXO_CODEX_BASE_URL: 'http://127.0.0.1:46111/backend-api' });
+  try {
+    await service.ready;
+    for (const [session, options, expected] of [
+      ['luna-default', undefined, 'xhigh'],
+      ['luna-explicit', { reasoningEffort: 'low' }, 'low'],
+    ]) {
+      const reply = await transact(home, { id: session, op: 'stream', model: 'gpt-6-luna',
+        session, context, options });
+      assert.ok(reply.at(-1).done, JSON.stringify(reply.at(-1)));
+      const request = mock.requests.find((row) => row.headers['session-id'] === session);
+      assert.equal(request.body.model, 'gpt-6-luna');
+      assert.equal(request.body.reasoning.effort, expected);
+    }
+  } finally { await stop(service.child); await new Promise((resolve) => mock.server.close(resolve)); }
+});
+
 test('JWT-shaped tool arguments survive while provider token errors stay fixed after rotation', async () => {
   const mock = await startMock(46107);
   const home = mkhome('redaction', true);
@@ -395,7 +420,13 @@ test('provider error replies and logs expose only fixed text, HTTP status and al
       assert.deepEqual(reply.error, { kind: 'provider', message: 'Codex provider request failed', status: 400, code });
       assert.ok(!JSON.stringify(reply).includes(planted));
     }
-    const events = fs.readFileSync(path.join(home, 'broker-events.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+    let events = [];
+    for (let i = 0; i < 50; i++) {
+      events = fs.readFileSync(path.join(home, 'broker-events.jsonl'), 'utf8')
+        .trim().split('\n').map(JSON.parse);
+      if (events.filter((event) => event.event === 'error').length === 2) break;
+      await pause(20);
+    }
     const errors = events.filter((event) => event.event === 'error');
     assert.equal(errors.length, 2);
     assert.deepEqual(errors.map(({ kind, status, code }) => ({ kind, status, code })), [

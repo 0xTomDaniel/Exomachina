@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import tempfile
 from unittest.mock import patch
 from pathlib import Path
 import sys
@@ -12,8 +13,10 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from strands.models import Model
 from authoring import (AuthoringSession, ScriptedAuthoringModel, StrandsGraphAuthor,
-                       authoring_vocabulary, materialize, model_from_environment)
+                       _authoring_usage_callback, authoring_vocabulary, materialize,
+                       model_from_environment)
 from definition import validate
+from model_broker import ModelBroker, normalize_provider_usage
 
 
 from report_fixture import packet, template, bindings
@@ -53,6 +56,30 @@ class SubmittingModel(Model):
             yield {"contentBlockDelta": {"delta": {"text": "Done"}}}
             yield {"contentBlockStop": {}}
             yield {"messageStop": {"stopReason": "end_turn"}}
+
+
+class UsageSubmittingModel(SubmittingModel):
+    """Synthetic provider boundary that reports only safe usage facts."""
+    def __init__(self, draft, usage_callback):
+        super().__init__(draft)
+        self.provider = "synthetic-loopback"
+        self.reasoning_effort = "xhigh"
+        self.usage_callback = usage_callback
+        self.usage_context = None
+
+    def set_usage_context(self, *, model_call_id, callback):
+        self.usage_context = (model_call_id, callback)
+
+    async def stream(self, messages, tool_specs=None, system_prompt=None, **kwargs):
+        model_call_id, callback = self.usage_context
+        callback({"model_call_id": model_call_id, "provider": self.provider,
+                  "model_id": "synthetic-author-model", "reasoning_effort": self.reasoning_effort,
+                  "usage": normalize_provider_usage({
+                      "input": 17, "output": 8, "cacheRead": 2,
+                      "cacheWrite": 0, "totalTokens": 27})})
+        async for event in super().stream(messages, tool_specs=tool_specs,
+                                          system_prompt=system_prompt, **kwargs):
+            yield event
 
 
 class AuthoringTests(unittest.TestCase):
@@ -125,6 +152,31 @@ class AuthoringTests(unittest.TestCase):
             model, reason = model_from_environment()
         self.assertIsNone(model)
         self.assertTrue(reason)
+
+    def test_authoring_call_persists_nullable_overhead_usage_via_broker_public_api(self):
+        with tempfile.TemporaryDirectory(prefix="exo-authoring-usage-") as folder:
+            broker = ModelBroker(home=Path(folder) / "model-home")
+            model = UsageSubmittingModel(self.v1, _authoring_usage_callback(broker))
+            outcome = AuthoringSession(StrandsGraphAuthor(model),
+                approved_bindings=self.bindings, evidence_packet=packet()).run(self.brief, self.v1)
+
+            self.assertEqual(outcome.status, "approved")
+            rows = broker.usage_journal().list_measurements(call_scope="authoring_overhead")
+            self.assertGreaterEqual(len(rows), 1)
+            self.assertEqual(len({row["model_call_id"] for row in rows}), len(rows))
+            for measurement in rows:
+                self.assertTrue(measurement["model_call_id"].startswith(
+                    "urn:exomachina:authoring-model-call:"))
+                self.assertEqual(measurement["call_scope"], "authoring_overhead")
+                self.assertIsNone(measurement["task_id"])
+                self.assertIsNone(measurement["run_id"])
+                self.assertIsNone(measurement["assignment_id"])
+                self.assertIsNone(measurement["attempt_id"])
+                self.assertEqual(measurement["usage"]["input_tokens"],
+                                 {"value": 17, "status": "reported"})
+                self.assertEqual(measurement["usage"]["cache_write_tokens"],
+                                 {"value": 0, "status": "reported"})
+                self.assertNotIn("cost", json.dumps(measurement, sort_keys=True))
 
 
 if __name__ == "__main__":

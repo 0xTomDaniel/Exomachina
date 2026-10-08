@@ -15,7 +15,8 @@ def project(status: dict | None, execution: str, result: dict | None = None) -> 
         return "completed"
     if status and status.get("phase") in {"accepted", "child-aborted", "child-expired"}:
         return "completed"
-    if status and status.get("phase") in {"awaiting-child", "awaiting-director"}:
+    if status and status.get("phase") in {
+            "awaiting-child", "awaiting-director", "awaiting-human"}:
         return "input-required"
     return "working"
 

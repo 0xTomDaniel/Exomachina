@@ -15,16 +15,23 @@ import subprocess
 import threading
 import time
 import uuid
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Callable
 
 from strands.models import Model
 from strands.types.exceptions import ModelThrottledException
+# Public source-boundary facade for services and other package consumers. Keep the
+# journal implementation in model_usage; consumers should depend on this module.
+from model_usage import (MeasurementConflict, ModelUsageJournal, normalize_provider_usage,
+                         unavailable_usage)
 
 
 SIG = "pi-reasoning/v1:"
 STOP = {"toolUse": "tool_use", "stop": "end_turn", "length": "max_tokens"}
 BROKER_PROGRAM = Path(__file__).resolve().parents[1] / "broker" / "exo-model.mjs"
 DEFAULT_HOME = Path.home() / ".exomachina" / "model-broker"
+MODEL_USAGE_DATABASE_NAME = "model-usage.sqlite3"
+DEFAULT_MODEL_ID = "gpt-6-luna"
+DEFAULT_REASONING_EFFORT = "xhigh"
 _SPAWNED: list[subprocess.Popen] = []  # keep detached child handles until they exit
 
 
@@ -85,6 +92,10 @@ class ModelBroker:
     def __init__(self, home: Path | None = None):
         self.home = Path(home if home is not None else os.environ.get("EXO_MODEL_HOME", DEFAULT_HOME)).expanduser().resolve()
         self.socket = self.home / "run" / "broker.sock"
+
+    def usage_journal(self) -> ModelUsageJournal:
+        """Return the durable public measurement journal for this model home."""
+        return ModelUsageJournal(self.home / MODEL_USAGE_DATABASE_NAME)
 
     def health(self) -> dict:
         request_id = str(uuid.uuid4())
@@ -174,8 +185,9 @@ class ModelBroker:
 
 
 class PiBrokerModel(Model):
-    def __init__(self, broker: ModelBroker, *, model_id: str, session_id: str,
-                 reasoning_effort: str = "low"):
+    def __init__(self, broker: ModelBroker, *, model_id: str = DEFAULT_MODEL_ID,
+                 session_id: str, reasoning_effort: str = DEFAULT_REASONING_EFFORT,
+                 usage_callback: Callable[[dict], None] | None = None):
         self.broker = broker
         self.session = session_id
         self.reasoning_effort = reasoning_effort
@@ -183,6 +195,16 @@ class PiBrokerModel(Model):
         self.provider = "codex-subscription"
         self.billing = "subscription"
         self.live = not bool(os.environ.get("EXO_CODEX_BASE_URL"))
+        self.usage_callback = usage_callback
+        self._next_usage_context: tuple[str, Callable[[dict], None] | None] | None = None
+        self.last_usage_record: dict | None = None
+
+    def set_usage_context(self, *, model_call_id: str,
+                          callback: Callable[[dict], None] | None) -> None:
+        """Set a one-stream call ID and safe usage observer from an outer ledger."""
+        if not isinstance(model_call_id, str) or not model_call_id:
+            raise ValueError("model_call_id must be non-empty text")
+        self._next_usage_context = (model_call_id, callback)
 
     def update_config(self, **cfg: Any) -> None:
         self.config.update(cfg)
@@ -284,8 +306,15 @@ class PiBrokerModel(Model):
         return out
 
     async def stream(self, messages, tool_specs=None, system_prompt=None, **kwargs) -> AsyncGenerator[dict, None]:
+        context = self._next_usage_context
+        self._next_usage_context = None
+        if context is None:
+            request_id = str(uuid.uuid4())
+            usage_callback = self.usage_callback
+        else:
+            request_id, usage_callback = context
+        self.last_usage_record = None
         await self._ensure_started()
-        request_id = str(uuid.uuid4())
         request = {"id": request_id, "op": "stream", "model": self.config["model_id"],
                    "session": self.session,
                    "context": {"systemPrompt": system_prompt or "", "messages": self.to_pi(messages),
@@ -339,10 +368,21 @@ class PiBrokerModel(Model):
                             yield {"contentBlockDelta": {"delta": {"reasoningContent": {"signature": SIG + json.dumps(envelope)}}}}
                             yield {"contentBlockStop": {}}
                     yield {"messageStop": {"stopReason": STOP.get(final["stopReason"], "end_turn")}}
-                    usage = final.get("usage", {})
-                    yield {"metadata": {"usage": {"inputTokens": usage.get("input", 0),
-                                                  "outputTokens": usage.get("output", 0),
-                                                  "totalTokens": usage.get("totalTokens", 0)},
+                    usage = normalize_provider_usage(final.get("usage"))
+                    usage_record = {"model_call_id": request_id,
+                                    "provider": self.provider,
+                                    "model_id": self.config["model_id"],
+                                    "reasoning_effort": self.reasoning_effort,
+                                    "usage": usage}
+                    self.last_usage_record = usage_record
+                    if usage_callback is not None:
+                        usage_callback(usage_record)
+                    usage_names = {"input_tokens": "inputTokens", "output_tokens": "outputTokens",
+                                   "cache_read_tokens": "cacheReadTokens",
+                                   "cache_write_tokens": "cacheWriteTokens", "total_tokens": "totalTokens"}
+                    reported_usage = {usage_names[name]: item["value"] for name, item in usage.items()
+                                      if item["status"] == "reported"}
+                    yield {"metadata": {"usage": reported_usage,
                                         "metrics": {"latencyMs": 0}}}
                     return
                 event = reply.get("ev")

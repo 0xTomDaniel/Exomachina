@@ -20,12 +20,34 @@ from strands.types.exceptions import ModelThrottledException
 
 from definition import ALLOWED, INPUT_SOURCES, INPUT_TYPES, RESULT_TYPES, ROUTE_VALUES
 from definition import digest, validate
-from model_broker import (BrokerLost, SubscriptionAuthRequired, SubscriptionQuotaExhausted,
-                          provider_error_record)
+from model_broker import (DEFAULT_MODEL_ID, BrokerLost, SubscriptionAuthRequired,
+                          SubscriptionQuotaExhausted,
+                          unavailable_usage, provider_error_record)
 
 
 def _json(value: object) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def _authoring_usage_callback(broker):
+    """Persist only safe provider usage as explicitly unbound authoring overhead."""
+    journal = None
+    journal_lock = threading.Lock()
+
+    def record(measurement: dict) -> None:
+        nonlocal journal
+        if journal is None:
+            with journal_lock:
+                if journal is None:
+                    journal = broker.usage_journal()
+        journal.record(
+            model_call_id=measurement["model_call_id"],
+            call_scope="authoring_overhead",
+            provider=measurement["provider"], model_id=measurement["model_id"],
+            reasoning_effort=measurement.get("reasoning_effort"),
+            usage=measurement["usage"])
+
+    return record
 
 
 def authoring_vocabulary(approved_bindings: dict) -> dict:
@@ -113,6 +135,17 @@ class _BudgetedModel(Model):
         if self.calls >= self.max_calls:
             raise AuthoringBudgetExhausted("model_call_limit")
         self.calls += 1
+        usage_observer = getattr(self.model, "usage_callback", None)
+        set_usage_context = getattr(self.model, "set_usage_context", None)
+        usage_recorded = False
+        model_call_id = f"urn:exomachina:authoring-model-call:{uuid.uuid4()}"
+        if callable(usage_observer) and callable(set_usage_context):
+            def record_provider_usage(record: dict) -> None:
+                nonlocal usage_recorded
+                usage_recorded = True
+                usage_observer(record)
+
+            set_usage_context(model_call_id=model_call_id, callback=record_provider_usage)
         try:
             async with asyncio.timeout(remaining):
                 async for event in self.model.stream(messages, tool_specs=tool_specs,
@@ -127,6 +160,15 @@ class _BudgetedModel(Model):
             if time.monotonic() >= self.deadline:
                 raise AuthoringBudgetExhausted("deadline") from error
             raise
+        finally:
+            if callable(usage_observer) and callable(set_usage_context) and not usage_recorded:
+                config = self.model.get_config()
+                model_id = (config.get("model_id") if isinstance(config, dict) else None)
+                usage_observer({"model_call_id": model_call_id,
+                                "provider": getattr(self.model, "provider", None),
+                                "model_id": model_id,
+                                "reasoning_effort": getattr(self.model, "reasoning_effort", None),
+                                "usage": unavailable_usage()})
 
 
 class GraphAuthor(Protocol):
@@ -441,8 +483,9 @@ def model_from_environment() -> tuple[Model | None, str]:
                 return None, f"codex-subscription: broker unavailable ({type(error).__name__})"
             if not health.get("signed_in"):
                 return None, "codex-subscription: not signed in; run node broker/exo-model.mjs login"
-        model = PiBrokerModel(broker, model_id=os.environ.get("EXO_AUTHOR_MODEL") or "gpt-6-sol",
-                              session_id=str(uuid.uuid4()))
+        model = PiBrokerModel(broker, model_id=os.environ.get("EXO_AUTHOR_MODEL") or DEFAULT_MODEL_ID,
+                              session_id=str(uuid.uuid4()),
+                              usage_callback=_authoring_usage_callback(broker))
         model.provider = provider
         model.billing = "subscription" if provider == "codex-subscription" else "none"
         model.live = provider == "codex-subscription" and not bool(base_url)

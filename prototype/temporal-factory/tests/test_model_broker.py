@@ -91,7 +91,7 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
         self.addAsyncCleanup(fake.close)
         broker = AttachedBroker(self.home)
         broker.socket = self.path
-        return fake, PiBrokerModel(broker, model_id="gpt-6-sol", session_id="test-session")
+        return fake, PiBrokerModel(broker, session_id="test-session")
 
     async def test_attach_is_lazy_idempotent_and_records_reason(self):
         fake = FakeSocketBroker(self.path, lambda *args: None)
@@ -155,7 +155,8 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([block["type"] for block in replay[0]["content"]],
                          ["thinking", "toolCall", "toolCall"])
         self.assertEqual(replay[0]["content"][0]["thinkingSignature"], "cipher")
-        self.assertEqual(fake.requests[0]["options"]["reasoningEffort"], "low")
+        self.assertEqual(fake.requests[0]["model"], "gpt-6-luna")
+        self.assertEqual(fake.requests[0]["options"]["reasoningEffort"], "xhigh")
 
     async def test_real_agent_tool_loop_replays_reasoning_and_results(self):
         async def script(request, reader, writer, fake):

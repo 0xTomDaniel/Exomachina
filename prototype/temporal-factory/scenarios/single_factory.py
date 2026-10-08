@@ -30,7 +30,7 @@ from live_authoring import (authoring_acceptance, candidate_files, positive_cont
                             export_histories)
 
 sys.path.insert(0, str(SRC))
-from model_broker import DEFAULT_HOME, ModelBroker  # noqa: E402
+from model_broker import DEFAULT_HOME, DEFAULT_MODEL_ID, DEFAULT_REASONING_EFFORT, ModelBroker  # noqa: E402
 
 FOLLOW_UP = "The factory is waiting for a Director decision on this request. Please review the run and decide."
 CHECK_IDS = ("SF-0", "SF-1", "SF-2", "SF-3", *(f"R1-{x}" for x in "abcde"),
@@ -194,7 +194,7 @@ def _quality_bound(e: dict, route_no: int, synthesis: dict, quality: dict,
         all(candidate.values()) and verdict_value.get("candidate") == candidate and
         source.get("author") != reviewer and verdict_value.get("decided_by") == "model" and
         bool(calls) and all(call.get("live") is live and
-            call.get("model_id") == "gpt-6-sol" and
+            call.get("model_id") == e.get("model_id", "gpt-6-sol") and
             call.get("task_id") == quality.get("task_id") for call in calls))
 
 
@@ -373,7 +373,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
         ("codex-subscription" if live else "synthetic-loopback") and
         author_model.get("kind") == "broker" and
         author_model.get("provider") == ("codex-subscription" if live else "synthetic-loopback") and
-        author_model.get("id") == "gpt-6-sol" and author_model.get("live") is live and
+        author_model.get("id") == e.get("model_id", "gpt-6-sol") and author_model.get("live") is live and
         isinstance(author.get("model_calls"), int) and author["model_calls"] > 0 and
         (not live or len(author_streams) == author["model_calls"]) and
         (author.get("live") or {}).get("live_model_available") is True and
@@ -473,7 +473,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
             isinstance(content, str) and _sha(content) == artifact.get("sha256") == a.get("artifact_id") and
             a.get("content_valid") is True and a.get("pin_verified") is True and
             bool(a.get("model_calls")) and all(x.get("live") is live and
-            x.get("model_id") == "gpt-6-sol" for x in a["model_calls"]))
+            x.get("model_id") == e.get("model_id", "gpt-6-sol") for x in a["model_calls"]))
     sessions = [x.get("session_id") for group in research for a in group for x in a.get("model_calls") or []]
     c["R1-b"] = verdict(all(len(group) == 1 for group in research) and
         all(bound(group[0], identity) for group, identity in zip(research, ids)) and
@@ -696,7 +696,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
         bool((e.get("broker_pids_during") or [None])[0]) and broker_stable and
         expected_task_ids == observed_task_ids and store_binding and bool(calls) and
         all(x.get("provider") == ("codex-subscription" if live else "scripted") and
-            x.get("model_id") == "gpt-6-sol" and x.get("live") is live for x in calls) and
+            x.get("model_id") == e.get("model_id", "gpt-6-sol") and x.get("live") is live for x in calls) and
         all(sessions) and len(set(sessions)) == len({(a.get("agent"), a.get("task_id")) for name in AGENTS
             for a in agents.get(name, {}).get("tasks") or [] if a.get("model_calls")}) and
         (not live or set(sessions) <= streams) and stream_reconciled and
@@ -910,12 +910,34 @@ def _import_audit() -> dict:
     service = [p for p in running if names(p) & src_names]
     launcher = ROOT / "services" / "testbed.py"
     launcher_imports = sorted(names(launcher) & (src_names | {"model_broker", "agent_roles"}))
+    launcher_tree = ast.parse(launcher.read_text())
+    broker_imports = [node for node in ast.walk(launcher_tree)
+                      if (isinstance(node, ast.Import) and any(
+                          alias.name.split(".")[0] == "model_broker" for alias in node.names)) or
+                      (isinstance(node, ast.ImportFrom) and
+                       (node.module or "").split(".")[0] == "model_broker")]
+    dynamic_imports = [node for node in ast.walk(launcher_tree) if isinstance(node, ast.Call) and
+                       ((isinstance(node.func, ast.Name) and node.func.id == "__import__") or
+                        (isinstance(node.func, ast.Attribute) and
+                         node.func.attr == "import_module"))]
+    broker_config_only = (len(broker_imports) == 1 and
+        isinstance(broker_imports[0], ast.ImportFrom) and
+        broker_imports[0].module == "model_broker" and broker_imports[0].level == 0 and
+        [(alias.name, alias.asname) for alias in broker_imports[0].names] ==
+            [("DEFAULT_MODEL_ID", None)] and
+        not dynamic_imports and
+        not any(isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and
+                node.func.id == "DEFAULT_MODEL_ID" for node in ast.walk(launcher_tree)))
     return {"product_clean": not product, "service_clean": not service,
             "product_violations": [_record_path(p) for p in product],
             "service_violations": [_record_path(p) for p in service],
             "running_service_modules": [_record_path(p) for p in running],
             "launcher_exception": {"path": _record_path(launcher), "imports": launcher_imports,
-                                   "allowed": launcher_imports == ["agent_binding", "agent_roles"]},
+                                   "model_broker_config_imports": ["DEFAULT_MODEL_ID"]
+                                       if broker_config_only else [],
+                                   "allowed": launcher_imports ==
+                                       ["agent_binding", "agent_roles", "model_broker"] and
+                                       broker_config_only},
             "legacy_not_running": ["quality_server.py", "delayed_agent.py"]}
 
 
@@ -1051,6 +1073,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--home", type=Path, required=True)
     parser.add_argument("--provider", choices=("scripted", "codex-subscription"), required=True)
+    parser.add_argument("--model", default=DEFAULT_MODEL_ID)
+    parser.add_argument("--evidence-dir", type=Path)
     parser.add_argument("--routes", default="1,2,3")
     parser.add_argument("--runner-port-base", type=int, default=44540)
     parser.add_argument("--runner-member-base", type=int, default=32520)
@@ -1071,7 +1095,8 @@ def main() -> int:
             name in os.environ for name in ("EXO_MODEL_HOME", "EXO_CODEX_BASE_URL")):
         parser.error("live provider requires default model home and endpoint")
     label = "observed-real" if args.provider == "codex-subscription" else "observed-synthetic"
-    evidence_dir = ROOT / "evidence" / "single-factory"
+    evidence_dir = (args.evidence_dir.resolve() if args.evidence_dir else
+                    ROOT / "evidence" / "single-factory")
     evidence_dir.mkdir(parents=True, exist_ok=True)
     evidence_path = evidence_dir / f"{args.provider}-{args.attempt}.json"
     if args.provider == "codex-subscription":
@@ -1084,6 +1109,7 @@ def main() -> int:
         synthetic_attestation = {}
     env_names = ("EXO_MODEL_HOME", "EXO_CODEX_BASE_URL", "OPENAI_API_KEY", "ANTHROPIC_API_KEY")
     evidence = {"evidence_schema": 2, "provider": args.provider, "label": label, "home": str(home),
+                "model_id": args.model, "reasoning_effort": DEFAULT_REASONING_EFFORT,
                 "status": "running", "routes": {}, "checks": {},
                 "synthetic_scenario": ({k: synthetic.get(k) for k in SYNTHETIC_BINDING_KEYS}
                     | {"evidence_path": _record_path(synthetic_path),
@@ -1161,9 +1187,10 @@ def main() -> int:
         os.environ["EXO_RUNNER_MEMBER_BASE"] = str(args.runner_member_base)
         os.environ["EXO_AUTHOR_PROVIDER"] = ("synthetic-loopback" if args.provider == "scripted"
                                               else "codex-subscription")
+        os.environ["EXO_AUTHOR_MODEL"] = args.model
         step = "testbed"
         testbed = json.loads(run_cli(str(ROOT / "services" / "testbed.py"), "up",
-            "--profile", "report", "--model-provider", args.provider,
+            "--profile", "report", "--model-provider", args.provider, "--model", args.model,
             "--home", str(home), "--port-base", str(args.services_port_base)))
         evidence["testbed"] = testbed
         evidence["binding_names"] = sorted((testbed.get("bindings") or {}).keys())
@@ -1177,7 +1204,7 @@ def main() -> int:
         config_path = instance / "instance.json"
         config = json.loads(config_path.read_text())
         config["director_model"] = {"provider": ("synthetic-loopback" if args.provider == "scripted"
-                                        else "codex-subscription"), "model": "gpt-6-sol"}
+                                        else "codex-subscription"), "model": args.model}
         config_path.write_text(json.dumps(config, indent=2, sort_keys=True) + "\n")
         evidence["setup"]["factory_count"] = sum(
             json.loads(p.read_text()).get("mode") == "factory"

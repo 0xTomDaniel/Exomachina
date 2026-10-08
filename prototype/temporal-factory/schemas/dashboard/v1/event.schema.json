@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:exomachina:dashboard:v1:cloudevent",
+  "title": "Exomachina dashboard CloudEvent v1",
+  "type": "object",
+  "required": ["specversion", "id", "source", "type", "time", "subject", "datacontenttype", "dataschema", "data"],
+  "properties": {
+    "specversion": {"const": "1.0"},
+    "id": {"type": "string", "pattern": "^obs-[0-9a-f]{64}$"},
+    "source": {"type": "string", "pattern": "^/factories/[A-Za-z0-9._%:/@+-]{1,768}$"},
+    "type": {"enum": [
+      "com.exomachina.factory.discovered.v1",
+      "com.exomachina.publication.activated.v1",
+      "com.exomachina.run.created.v1",
+      "com.exomachina.run.state_changed.v1",
+      "com.exomachina.assignment.state_changed.v1",
+      "com.exomachina.artifact.revised.v1",
+      "com.exomachina.quality.verdict.v1",
+      "com.exomachina.decision.outcome.v1",
+      "com.exomachina.command.outcome.v1",
+      "com.exomachina.delivery.receipt.v1",
+      "com.exomachina.incident.state_changed.v1",
+      "com.exomachina.admission.state_changed.v1",
+      "com.exomachina.capacity.state_changed.v1",
+      "com.exomachina.commercial.usage.v1",
+      "com.exomachina.commercial.obligation.v1",
+      "com.exomachina.commercial.payment.v1"
+    ]},
+    "time": {"type": "string", "format": "date-time"},
+    "subject": {"type": "string", "minLength": 1, "maxLength": 300},
+    "datacontenttype": {"const": "application/json"},
+    "dataschema": {"const": "urn:exomachina:dashboard:event:v1"},
+    "data": {"$ref": "urn:exomachina:dashboard:event:v1"}
+  },
+  "additionalProperties": false
+}

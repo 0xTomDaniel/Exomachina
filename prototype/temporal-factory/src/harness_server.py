@@ -67,10 +67,17 @@ class ToolCallingModelFixture(Model):
             yield {"contentBlockStop": {}}
             yield {"messageStop": {"stopReason": "tool_use"}}
         else:
-            block = last[0]["toolResult"]["content"][0]
-            value = block.get("text")
-            if value is None:
-                value = canonical(block["json"])
+            result = last[0]["toolResult"]
+            # Strands tool failures may contain plain exception text. Preserve an
+            # explicit failure envelope instead of turning it into a JSON parse
+            # error in the fixture caller. Internal exception details stay local.
+            if result.get("status") == "error":
+                value = canonical({"error": "fixture tool execution failed"})
+            else:
+                block = result["content"][0]
+                value = block.get("text")
+                if value is None:
+                    value = canonical(block["json"])
             yield {"contentBlockStart": {"start": {}}}
             yield {"contentBlockDelta": {"delta": {"text": value}}}
             yield {"contentBlockStop": {}}

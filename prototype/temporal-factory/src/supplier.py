@@ -1,0 +1,393 @@
+"""Pinned, bounded nested A2A fan-out over the shared outcome authority.
+
+This module owns no workflow, spending, or outcome database. Callers supply the
+existing ``OutcomeJournal``, immutable identity snapshot, parent assignment,
+and an explicit finite set of child assignments. A lost response is reconciled
+by caller action ID when the pinned service supports that lookup, then the
+original A2A Task is fetched by its persisted remote Task ID. This module never
+resends an uncertain request.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Mapping, Sequence
+
+import long_client as a2a
+from a2a_outcome import (OutcomeJournal, OutcomeRecord, Phase, ReceiverKind,
+                         send_ambiguous, send_completed, submitted,
+                         task_finished, task_incident, task_started)
+
+
+class SupplierBindingError(ValueError):
+    """A supplier assignment or remote result does not match its pinned IDs."""
+
+
+@dataclass(frozen=True)
+class ParentAssignment:
+    task_id: str
+    run_id: str
+    definition_digest: str
+    assignment_id: str
+    attempt_id: str
+
+
+@dataclass(frozen=True)
+class SupplierRequest:
+    identity: str
+    role: str
+    contract: Mapping[str, Any]
+    action_id: str
+    run_id: str
+    definition_digest: str
+    assignment_id: str
+    attempt_id: str
+    expected_revision: str
+    payload: Mapping[str, Any]
+
+
+_PARENT_KEYS = ("parent_task_id", "parent_run_id", "parent_definition_digest",
+                "parent_assignment_id", "parent_attempt_id")
+_CHILD_KEYS = ("action_id", "run_id", "definition_digest", "assignment_id", "attempt_id")
+_RECONCILIATION_PINS = {"fixture-lookup", "a2a-idempotent-resend", "opaque"}
+_SUPPLIER_ECHO_FIELDS = sorted((*_PARENT_KEYS, *_CHILD_KEYS))
+_SUPPLIER_ECHO_DECLARATION = {
+    "version": 1,
+    "fields": _SUPPLIER_ECHO_FIELDS,
+}
+
+
+def _text(value: Any, name: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{name} must be non-empty text")
+    return value
+
+
+def _json_copy(value: Any, name: str) -> Any:
+    try:
+        return json.loads(json.dumps(value, sort_keys=True, separators=(",", ":"),
+                                     ensure_ascii=False, allow_nan=False))
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"{name} must be JSON-compatible") from error
+
+
+def _canonical(value: Any) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"),
+                      ensure_ascii=False, allow_nan=False).encode("utf-8")
+
+
+class SupplierFanout:
+    """Dispatch/reconcile an explicitly configured finite set of A2A children.
+
+    The interface is intentionally dependency-injected: a Runtime or workflow
+    owner constructs the established ``OutcomeJournal`` and passes its pinned
+    snapshot path. No SQLite access is performed here beyond journal methods.
+    """
+
+    def __init__(self, journal: OutcomeJournal, snapshot_path: Path, *,
+                 max_fanout: int):
+        if type(max_fanout) is not int or max_fanout < 1:
+            raise ValueError("max_fanout must be an explicit positive integer")
+        if not isinstance(snapshot_path, Path):
+            raise TypeError("snapshot_path must be a Path")
+        self.journal = journal
+        self.snapshot_path = snapshot_path
+        self.max_fanout = max_fanout
+
+    def fan_out(self, parent: ParentAssignment,
+                children: Sequence[SupplierRequest]) -> list[dict[str, Any]]:
+        """Dispatch the declared children in order, never exceeding the cap."""
+        self._validate_parent(parent)
+        if not isinstance(children, Sequence) or isinstance(children, (str, bytes)):
+            raise TypeError("children must be a finite sequence")
+        if len(children) > self.max_fanout:
+            raise ValueError("supplier fan-out exceeds configured max_fanout")
+        action_ids: set[str] = set()
+        for child in children:
+            self._validate_child(child)
+            if child.action_id in action_ids:
+                raise ValueError("supplier fan-out action IDs must be unique")
+            action_ids.add(child.action_id)
+        return [self.dispatch_child(parent, child) for child in children]
+
+    def dispatch_child(self, parent: ParentAssignment,
+                       child: SupplierRequest) -> dict[str, Any]:
+        """Submit once, or resume a journaled child without resubmission."""
+        self._validate_parent(parent)
+        self._validate_child(child)
+        command = self._command(parent, child)
+        expected = self._expected(parent, child, command)
+
+        # Resolve before creating durable intent. Pin checks are read-only; a
+        # missing or changed pin cannot leave a false dispatch record behind.
+        url, _observed = self._resolve(child)
+        record, created = self.journal.begin(expected)
+        if record.phase == Phase.CONFIRMED:
+            return self._view(parent, child, record)
+        if record.phase == Phase.INCIDENT:
+            return self._view(parent, child, record)
+        if not created and record.phase == Phase.SUBMITTED:
+            # Another process may have stopped after committing intent and
+            # before recording the response. Treat that boundary as unknown.
+            record = self.journal.put(send_ambiguous(record))
+        if created:
+            return self._send(parent, child, command, record, url)
+        return self._resume(parent, child, command, record)
+
+    def reconcile_child(self, parent: ParentAssignment,
+                        child: SupplierRequest) -> dict[str, Any]:
+        """Reconcile only an existing child action; this method never sends."""
+        self._validate_parent(parent)
+        self._validate_child(child)
+        command = self._command(parent, child)
+        expected = self._expected(parent, child, command)
+        record = self.journal.get(child.action_id)
+        if record is None:
+            return self._view(parent, child, None, reason="no-dispatch-record")
+        record, created = self.journal.begin(expected)
+        if created:
+            # Defensive only: ``get`` found an existing row immediately above.
+            raise RuntimeError("outcome journal changed during reconciliation")
+        if record.phase == Phase.SUBMITTED:
+            record = self.journal.put(send_ambiguous(record))
+        if record.phase in {Phase.CONFIRMED, Phase.INCIDENT}:
+            return self._view(parent, child, record)
+        return self._resume(parent, child, command, record)
+
+    @staticmethod
+    def _validate_parent(parent: ParentAssignment) -> None:
+        if not isinstance(parent, ParentAssignment):
+            raise TypeError("parent must be a ParentAssignment")
+        for name in ("task_id", "run_id", "definition_digest", "assignment_id", "attempt_id"):
+            _text(getattr(parent, name), f"parent.{name}")
+
+    @staticmethod
+    def _validate_child(child: SupplierRequest) -> None:
+        if not isinstance(child, SupplierRequest):
+            raise TypeError("child must be a SupplierRequest")
+        for name in ("identity", "role", "action_id", "run_id", "definition_digest",
+                     "assignment_id", "attempt_id", "expected_revision"):
+            _text(getattr(child, name), f"child.{name}")
+        if not isinstance(child.contract, Mapping):
+            raise TypeError("child.contract must be a pinned mapping")
+        if not isinstance(child.payload, Mapping):
+            raise TypeError("child.payload must be a mapping")
+        if child.contract.get("reconcile") not in _RECONCILIATION_PINS:
+            raise ValueError("child contract has an unsupported reconciliation mode")
+        _json_copy(dict(child.contract), "child.contract")
+        _json_copy(dict(child.payload), "child.payload")
+
+    def _command(self, parent: ParentAssignment,
+                 child: SupplierRequest) -> dict[str, Any]:
+        return {
+            "op": "nested_factory",
+            "action_id": child.action_id,
+            "run_id": child.run_id,
+            "definition_digest": child.definition_digest,
+            "parent_task_id": parent.task_id,
+            "parent_run_id": parent.run_id,
+            "parent_definition_digest": parent.definition_digest,
+            "parent_assignment_id": parent.assignment_id,
+            "parent_attempt_id": parent.attempt_id,
+            "assignment_id": child.assignment_id,
+            "attempt_id": child.attempt_id,
+            "payload": _json_copy(dict(child.payload), "child.payload"),
+        }
+
+    def _expected(self, parent: ParentAssignment, child: SupplierRequest,
+                  command: Mapping[str, Any]) -> OutcomeRecord:
+        bound = {"command": command, "supplier_identity": child.identity,
+                 "supplier_role": child.role, "contract": dict(child.contract),
+                 "expected_revision": child.expected_revision}
+        payload_sha256 = hashlib.sha256(_canonical(bound)).hexdigest()
+        receiver = (ReceiverKind.OPAQUE if child.contract.get("reconcile") == "opaque"
+                    else ReceiverKind.PARTICIPATING)
+        return submitted(child.action_id, child.run_id, child.definition_digest,
+                         receiver, payload_sha256=payload_sha256,
+                         pinned_identity=child.identity)
+
+    def _resolve(self, child: SupplierRequest) -> tuple[str, dict[str, Any]]:
+        url, observed = a2a.resolve_pinned(
+            self.snapshot_path, child.identity, dict(child.contract))
+        document = observed.get("contract_document") or {}
+        if document.get("supplier_assignment_echo") != _SUPPLIER_ECHO_DECLARATION:
+            raise SupplierBindingError(
+                "pinned supplier contract does not declare parent/child assignment echo")
+        remote_mode = document.get("reconcile")
+        pinned_mode = child.contract.get("reconcile")
+        # agent_binding.pin conservatively collapses fixture-lookup to opaque;
+        # preserve the original distinction from the digest-bound document.
+        if remote_mode == "fixture-lookup":
+            if pinned_mode not in {"opaque", "fixture-lookup"}:
+                raise SupplierBindingError("fixture lookup conflicts with pinned mode")
+        elif remote_mode == "a2a-idempotent-resend":
+            if pinned_mode != "a2a-idempotent-resend":
+                raise SupplierBindingError("remote idempotency conflicts with pinned mode")
+        elif pinned_mode != "opaque":
+            raise SupplierBindingError("remote reconciliation mode conflicts with pin")
+        return url, observed
+
+    def _send(self, parent: ParentAssignment, child: SupplierRequest,
+              command: dict[str, Any], record: OutcomeRecord,
+              url: str) -> dict[str, Any]:
+        try:
+            task = a2a.send_async(url, command)
+        except Exception:
+            # The receiver might have committed before the connection failed.
+            uncertain = self.journal.put(send_ambiguous(record))
+            return self._view(parent, child, uncertain)
+        return self._accept_task(parent, child, command, record, task)
+
+    def _resume(self, parent: ParentAssignment, child: SupplierRequest,
+                command: dict[str, Any], record: OutcomeRecord) -> dict[str, Any]:
+        if record.phase == Phase.UNKNOWN:
+            try:
+                url, observed = self._resolve(child)
+                # The special action endpoint is a fixture capability only.
+                # Generic A2A has tasks/get, which requires a known Task ID.
+                if (observed.get("contract_document") or {}).get("reconcile") != "fixture-lookup":
+                    return self._view(parent, child, record)
+                prior = a2a.reconcile(url, child.action_id, child.run_id,
+                                      child.definition_digest)
+            except RuntimeError as error:
+                if str(error).startswith("HTTP 404:"):
+                    return self._view(parent, child, record)
+                return self._view(parent, child, record)
+            except Exception:
+                return self._view(parent, child, record)
+            if not self._lookup_matches(parent, child, command, prior):
+                incident = self.journal.put(task_incident(
+                    record, "supplier-reconcile-binding-inconsistent"))
+                return self._view(parent, child, incident)
+            task_id = prior.get("task_id")
+            if not isinstance(task_id, str) or not task_id:
+                return self._view(parent, child, record)
+            return self._poll(parent, child, command, record, task_id)
+        if record.phase == Phase.WORKING:
+            return self._poll(parent, child, command, record, record.task_id)
+        return self._view(parent, child, record)
+
+    @staticmethod
+    def _lookup_matches(parent: ParentAssignment, child: SupplierRequest,
+                        command: Mapping[str, Any], lookup: Mapping[str, Any]) -> bool:
+        if not isinstance(lookup, Mapping):
+            return False
+        keys = (*_PARENT_KEYS, *_CHILD_KEYS)
+        return all(lookup.get(key) == command.get(key) for key in keys) and \
+            lookup.get("harness_identity", child.identity) == child.identity and \
+            lookup.get("harness_role", child.role) == child.role
+
+    def _poll(self, parent: ParentAssignment, child: SupplierRequest,
+              command: dict[str, Any], record: OutcomeRecord,
+              task_id: str | None) -> dict[str, Any]:
+        if not isinstance(task_id, str) or not task_id:
+            return self._view(parent, child, record)
+        try:
+            url, _observed = self._resolve(child)
+            task = a2a.get_task(url, task_id)
+        except Exception:
+            # A failed read is not evidence that the original Task disappeared.
+            return self._view(parent, child, record)
+        try:
+            state = self._validate_task(parent, child, command, task)
+            if task["id"] != task_id:
+                raise SupplierBindingError("remote Task ID changed")
+        except Exception:
+            incident = self.journal.put(task_incident(
+                record, "supplier-task-binding-inconsistent"))
+            return self._view(parent, child, incident)
+
+        if record.phase in {Phase.SUBMITTED, Phase.UNKNOWN}:
+            try:
+                record = self.journal.put(task_started(record, task_id))
+            except Exception:
+                current = self.journal.get(child.action_id)
+                if current is None:
+                    raise
+                return self._view(parent, child, current)
+        elif record.task_id != task_id:
+            incident = self.journal.put(task_incident(record, "supplier-task-id-inconsistent"))
+            return self._view(parent, child, incident)
+
+        if state in {"failed", "canceled", "rejected"}:
+            incident = self.journal.put(task_incident(record, "supplier-task-not-completed"))
+            return self._view(parent, child, incident)
+        if state != "completed":
+            return self._view(parent, child, record)
+        return self._complete(parent, child, command, record, task)
+
+    def _accept_task(self, parent: ParentAssignment, child: SupplierRequest,
+                     command: dict[str, Any], record: OutcomeRecord,
+                     task: dict[str, Any]) -> dict[str, Any]:
+        try:
+            state = self._validate_task(parent, child, command, task)
+            record = self.journal.put(task_started(record, task["id"]))
+        except Exception:
+            incident = self.journal.put(task_incident(
+                record, "supplier-task-binding-inconsistent"))
+            return self._view(parent, child, incident)
+        if state in {"failed", "canceled", "rejected"}:
+            incident = self.journal.put(task_incident(record, "supplier-task-not-completed"))
+            return self._view(parent, child, incident)
+        if state == "completed":
+            return self._complete(parent, child, command, record, task)
+        return self._view(parent, child, record)
+
+    @staticmethod
+    def _validate_task(parent: ParentAssignment, child: SupplierRequest,
+                       command: Mapping[str, Any], task: Mapping[str, Any]) -> str:
+        state = a2a.validate_async_task(dict(task), dict(command), child.identity)
+        metadata = task.get("metadata") or {}
+        for key in _PARENT_KEYS:
+            if metadata.get(key) != command[key]:
+                raise SupplierBindingError("A2A Task parent binding mismatch: " + key)
+        for key in ("assignment_id", "attempt_id"):
+            if metadata.get(key) != command[key]:
+                raise SupplierBindingError("A2A Task child binding mismatch: " + key)
+        if metadata.get("parent_definition_digest") != parent.definition_digest:
+            raise SupplierBindingError("A2A Task parent definition mismatch")
+        return state
+
+    def _complete(self, parent: ParentAssignment, child: SupplierRequest,
+                  command: dict[str, Any], record: OutcomeRecord,
+                  task: Mapping[str, Any]) -> dict[str, Any]:
+        try:
+            receipt = a2a.async_receipt(dict(task), command, child.identity,
+                                        child.expected_revision, child.role)
+            artifact = receipt["artifact"]
+            for key in (*_PARENT_KEYS, "assignment_id", "attempt_id"):
+                if artifact.get(key) != command[key]:
+                    raise SupplierBindingError("A2A artifact assignment binding mismatch: " + key)
+            receipt.update({key: command[key] for key in (*_PARENT_KEYS, "assignment_id", "attempt_id")})
+            confirmed = self.journal.put(task_finished(record, receipt))
+        except Exception:
+            incident = self.journal.put(task_incident(
+                record, "supplier-artifact-binding-inconsistent"))
+            return self._view(parent, child, incident)
+        return self._view(parent, child, confirmed)
+
+    @staticmethod
+    def _view(parent: ParentAssignment, child: SupplierRequest,
+              record: OutcomeRecord | None, *, reason: str | None = None) -> dict[str, Any]:
+        value: dict[str, Any] = {
+            "parent_task_id": parent.task_id,
+            "parent_run_id": parent.run_id,
+            "parent_definition_digest": parent.definition_digest,
+            "parent_assignment_id": parent.assignment_id,
+            "parent_attempt_id": parent.attempt_id,
+            "supplier_identity": child.identity,
+            "action_id": child.action_id,
+            "run_id": child.run_id,
+            "definition_digest": child.definition_digest,
+            "assignment_id": child.assignment_id,
+            "attempt_id": child.attempt_id,
+            "task_id": record.task_id if record else None,
+            "phase": record.phase.value if record else "unknown",
+            "reason": reason if record is None else record.reason,
+            "artifact": None,
+        }
+        if record and record.phase == Phase.CONFIRMED and record.receipt:
+            value["artifact"] = record.receipt.get("artifact")
+        return value

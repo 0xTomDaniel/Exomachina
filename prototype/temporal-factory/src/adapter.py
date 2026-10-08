@@ -5,6 +5,7 @@ import asyncio
 import hashlib
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.request
@@ -26,6 +27,25 @@ import receiver_client
 
 class PendingTask(Exception):
     """Retry the Activity; its remote Task id is durable in the journal."""
+
+
+def _assignment_usage_bindings(input: dict) -> dict[str, str]:
+    """Forward only explicit workflow measurement bindings to the remote Task."""
+    bindings = {}
+    for name in ("assignment_id", "attempt_id"):
+        value = input.get(name)
+        if value is None:
+            continue
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{name} must be a non-empty explicit identifier")
+        bindings[name] = value
+    factory_id = input.get("factory_id")
+    if factory_id is not None:
+        if (not isinstance(factory_id, str)
+                or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,255}", factory_id) is None):
+            raise ValueError("factory_id must be a safe identifier")
+        bindings["factory_id"] = factory_id
+    return bindings
 
 
 def _async_unresolved(record) -> dict:
@@ -313,7 +333,7 @@ async def assign(input: dict) -> dict:
     brief = research_assignment(capability, input["question"], input["packet"])
     command = {"op": "assign", "action_id": f"{input['run']}:{input['instance']}",
                "run_id": input["run"], "definition_digest": input["digest"],
-               "brief": canonical(brief)}
+               "brief": canonical(brief), **_assignment_usage_bindings(input)}
     try:
         result = await _thread_with_heartbeat(_invoke_async, input["binding"],
             input["contract"], command, "r1", "research", capability)
@@ -345,7 +365,7 @@ async def synthesize(input: dict) -> dict:
         input["evidence"], prior=input.get("prior"), quality_findings=input.get("quality_findings"))
     command = {"op": "assign", "action_id": f"{input['run']}:synthesize:{input['revision']}",
                "run_id": input["run"], "definition_digest": input["digest"],
-               "brief": canonical(brief)}
+               "brief": canonical(brief), **_assignment_usage_bindings(input)}
     try:
         result = await _thread_with_heartbeat(_invoke_async, input["binding"],
             input["contract"], command, input["revision"], "synthesis", "report_synthesis@1")
@@ -372,7 +392,8 @@ async def review(input: dict) -> dict:
                                    input["policy_digest"])
     command = {"op": "assign", "action_id": quality_action_id(input["run"],
         input["assignment_id"], input["attempt"], candidate["revision"], candidate["sha256"]),
-        "run_id": input["run"], "definition_digest": input["digest"], "brief": canonical(brief)}
+        "run_id": input["run"], "definition_digest": input["digest"], "brief": canonical(brief),
+        **_assignment_usage_bindings(input)}
     try:
         result = await _thread_with_heartbeat(_invoke_async, input["binding"],
             input["contract"], command, candidate["revision"], "quality", "report_quality_review@1")

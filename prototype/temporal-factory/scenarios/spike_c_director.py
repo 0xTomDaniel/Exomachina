@@ -21,7 +21,7 @@ from live_authoring import (candidate_files, positive_control, scan_paths,
 sys.path.insert(0, str(SRC))
 from director_agent import DirectorTurn  # noqa: E402
 from harness import CURRENT_ACTOR, Director  # noqa: E402
-from model_broker import DEFAULT_HOME, ModelBroker  # noqa: E402
+from model_broker import DEFAULT_HOME, DEFAULT_MODEL_ID, DEFAULT_REASONING_EFFORT, ModelBroker  # noqa: E402
 from temporalio.client import Client  # noqa: E402
 from factory import FactoryRun  # noqa: E402
 
@@ -120,7 +120,8 @@ def main() -> None:
     evidence_path = evidence_dir / ("live.json" if live else "synthetic.json")
     model_kind = "live" if live else "synthetic"
     record = {"claim": "observed-real" if live else "observed-synthetic",
-              "director_model": model_kind, "provider": args.provider, "model_id": "gpt-6-sol",
+              "director_model": model_kind, "provider": args.provider, "model_id": DEFAULT_MODEL_ID,
+              "reasoning_effort": DEFAULT_REASONING_EFFORT,
               "account_hash": status["account"] if status else None,
               "home": str(home), "checks": {}, "status": "running",
               "limits": {"max_model_calls": 4, "max_tool_calls": 4, "deadline_seconds": 90},
@@ -161,7 +162,7 @@ def main() -> None:
                 "--testbed", str(home / "testbed"))
         config_path = instance / "instance.json"
         config = json.loads(config_path.read_text())
-        config["director_model"] = {"provider": args.provider, "model": "gpt-6-sol"}
+        config["director_model"] = {"provider": args.provider, "model": DEFAULT_MODEL_ID}
         config_path.write_text(json.dumps(config, indent=2, sort_keys=True) + "\n")
         record["publication"] = json.loads(run_cli(str(SRC / "admin.py"), "publish-template",
             "--instance-dir", str(instance), "--template", str(ROOT / "definitions" / "v1-template.json"),

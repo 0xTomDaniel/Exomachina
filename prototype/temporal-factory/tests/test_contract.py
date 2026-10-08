@@ -97,6 +97,7 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(project({"phase": "accepted"}, "COMPLETED",
                                  {"status": "accepted"}), "completed")
         self.assertEqual(project({"phase": "awaiting-director"}, "RUNNING"), "input-required")
+        self.assertEqual(project({"phase": "awaiting-human"}, "RUNNING"), "input-required")
 
     def test_failure_incident_requires_no_authoritative_effect(self):
         expected = {"run_id": "r", "child_id": "r:child:c", "package_digest": "d",

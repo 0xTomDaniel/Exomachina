@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:exomachina:dashboard:v1:server-message",
+  "title": "Exomachina dashboard WebSocket server message v1",
+  "oneOf": [
+    {"$ref": "#/$defs/snapshotFrame"},
+    {"$ref": "#/$defs/resumed"},
+    {"$ref": "#/$defs/eventFrame"},
+    {"$ref": "#/$defs/checkpoint"},
+    {"$ref": "#/$defs/resync"},
+    {"$ref": "#/$defs/commandAck"},
+    {"$ref": "#/$defs/error"}
+  ],
+  "$defs": {
+    "cursor": {"type": "string", "pattern": "^c1\\.[A-Za-z0-9_-]{16}\\.[A-Za-z0-9_-]{40,48}$"},
+    "snapshotFrame": {
+      "type": "object", "required": ["op", "snapshot"], "additionalProperties": false,
+      "properties": {"op": {"const": "snapshot"}, "snapshot": {"$ref": "urn:exomachina:dashboard:v1:snapshot"}}
+    },
+    "resumed": {
+      "type": "object", "required": ["op", "after_cursor", "continuation_cursor"], "additionalProperties": false,
+      "properties": {"op": {"const": "resumed"}, "after_cursor": {"$ref": "#/$defs/cursor"},
+                     "continuation_cursor": {"$ref": "#/$defs/cursor"}}
+    },
+    "eventFrame": {
+      "type": "object", "required": ["op", "cursor", "event"], "additionalProperties": false,
+      "properties": {"op": {"const": "event"}, "cursor": {"$ref": "#/$defs/cursor"},
+                     "event": {"$ref": "urn:exomachina:dashboard:v1:cloudevent"}}
+    },
+    "checkpoint": {
+      "type": "object", "required": ["op", "cursor"], "additionalProperties": false,
+      "properties": {"op": {"const": "checkpoint"}, "cursor": {"$ref": "#/$defs/cursor"}}
+    },
+    "resync": {
+      "type": "object", "required": ["op", "reason"], "additionalProperties": false,
+      "properties": {
+        "op": {"const": "resync_required"},
+        "reason": {"enum": ["retention_expired", "slow_consumer"]},
+        "minimum_cursor": {"$ref": "#/$defs/cursor"},
+        "latest_cursor": {"$ref": "#/$defs/cursor"},
+        "message": {"type": "string", "maxLength": 128}
+      }
+    },
+    "commandAck": {
+      "type": "object", "required": ["op", "command_id", "lifecycle"], "additionalProperties": false,
+      "properties": {"op": {"const": "command_ack"}, "command_id": {"$ref": "#/$defs/id"},
+                     "lifecycle": {"const": "received"}}
+    },
+    "error": {
+      "type": "object", "required": ["op", "code", "message"], "additionalProperties": false,
+      "properties": {"op": {"const": "error"},
+                     "code": {"enum": ["invalid_message", "unsupported_operation", "command_unavailable",
+                                         "invalid_command", "not_authorized", "invalid_request",
+                                         "observation_unavailable"]},
+                     "message": {"type": "string", "maxLength": 160}}
+    },
+    "id": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,255}$"}
+  }
+}

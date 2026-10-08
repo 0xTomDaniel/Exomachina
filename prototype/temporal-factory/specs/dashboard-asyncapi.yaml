@@ -1,0 +1,91 @@
+asyncapi: 3.0.0
+info:
+  title: Exomachina Factory Dashboard Observation Interface
+  version: 1.0.0
+  description: >-
+    Authenticated server-side observation and command transport. The runtime
+    supplies a principal resolver; deployment host and port are runtime configuration.
+    Credentials are not accepted in the URL, query string, subscription message,
+    command message, or event data.
+channels:
+  observationSocket:
+    address: /observations
+    messages:
+      clientMessage:
+        $ref: '#/components/messages/clientMessage'
+      serverMessage:
+        $ref: '#/components/messages/serverMessage'
+operations:
+  clientRequests:
+    action: receive
+    channel:
+      $ref: '#/channels/observationSocket'
+    messages:
+      - $ref: '#/components/messages/clientMessage'
+    summary: Subscribe to observations or submit an authorized command.
+  serverResponses:
+    action: send
+    channel:
+      $ref: '#/channels/observationSocket'
+    messages:
+      - $ref: '#/components/messages/serverMessage'
+    summary: Send an atomic snapshot, resumable CloudEvents, checkpoints, or outcomes.
+components:
+  messages:
+    clientMessage:
+      name: ClientMessage
+      title: Dashboard client message v1
+      contentType: application/json
+      payload:
+        $ref: '../schemas/dashboard/v1/client-message.schema.json'
+    serverMessage:
+      name: ServerMessage
+      title: Dashboard server message v1
+      contentType: application/json
+      payload:
+        $ref: '../schemas/dashboard/v1/server-message.schema.json'
+  schemas:
+    cloudEvent:
+      $ref: '../schemas/dashboard/v1/event.schema.json'
+    eventData:
+      $ref: '../schemas/dashboard/v1/event-data.schema.json'
+    snapshot:
+      $ref: '../schemas/dashboard/v1/snapshot.schema.json'
+x-exomachina-protocol:
+  snapshot:
+    initial: >-
+      A subscribe message without after_cursor returns one snapshot whose state
+      and opaque cursor are read from the same committed projection view.
+    resume: >-
+      A retained after_cursor returns resumed, then every event after that
+      cursor. Events may repeat; consumers deduplicate by CloudEvent source/id.
+    retention: >-
+      An expired cursor returns resync_required with opaque boundary cursors,
+      followed by a fresh snapshot. No authoritative transition is silently
+      skipped.
+    runFilter: >-
+      A run-filtered subscriber advances using checkpoint messages over
+      unrelated factory events; continuation cursors remain factory-scoped.
+    cursors: >-
+      Cursors are opaque strings. Their server-side mapping to numeric high-water
+      marks is durable and is never included in event data.
+    slowViewer: >-
+      The transport has bounded sends. A blocked viewer receives an explicit
+      resync_required frame when possible and is closed with WebSocket code 1013.
+  cloudEvents:
+    specversion: '1.0'
+    dataschema: urn:exomachina:dashboard:event:v1
+    id: >-
+      Stable across retransmission and derived from the durable source kind/id;
+      independent of the transport cursor.
+  commandAcknowledgement: >-
+    command_ack lifecycle=received means only that the runtime durably received
+    the command. Validation and applied/failed outcomes arrive later as
+    authoritative command outcome CloudEvents. When a repeated command returns
+    a durable prior terminal outcome, the transport sends the same received
+    acknowledgement and retransmits the original CloudEvent with its stable ID;
+    the outcome is never embedded in command_ack.
+  authentication: >-
+    The runtime calls authenticate(websocket), sync or async. A non-empty,
+    server-resolved principal is passed to source authorization. It is never
+    serialized. Missing/false principals are rejected.
