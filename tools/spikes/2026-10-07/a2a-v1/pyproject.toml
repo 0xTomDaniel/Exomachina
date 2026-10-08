@@ -1,0 +1,23 @@
+[project]
+name = "exomachina-a2a-v1"
+version = "0.0.0"
+requires-python = "==3.12.9"
+# A2A v1.0 only. strands-agents is installed WITHOUT its `a2a` extra: every
+# strands-agents release through 1.57.0 pins `a2a-sdk<0.4.0` in that extra,
+# and the prototype never imports strands' A2A layer (strands.multiagent.a2a);
+# it uses strands only for Agent/tool/Model. A2A comes from a2a-sdk 1.x.
+# Checked 2026-10-07: latest strands-agents 1.58.1 still pins a2a-sdk<0.4.0.
+dependencies = [
+    "a2a-sdk[fastapi]==1.2.2",
+    "strands-agents==1.57.0",
+    "temporalio==1.33.0",
+    "fastapi==0.141.1",
+    "uvicorn==0.53.0",
+    "httpx==0.28.1",
+    "jsonschema==4.26.0",
+    "referencing==0.37.0",
+    "pyyaml==6.0.3",
+]
+
+[tool.uv]
+package = false
