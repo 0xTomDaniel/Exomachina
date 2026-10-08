@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 from agent_binding import UnavailableBinding, card_observation, card_pin, pin
-from agent_roles import RUBRIC_DIGEST
+from report_contract import REPORT_ACCEPTANCE_CRITERIA, digest as report_digest
 from model_broker import DEFAULT_MODEL_ID
 SERVICE_NAMES = (
     "source_alpha", "source_beta", "counter_alpha", "counter_beta", "quality", "release"
@@ -43,8 +43,9 @@ REPORT_CAPABILITIES = {
     "quality": "report_quality_review@1",
     "release": "release@1",
 }
-REPORT_QUALITY_POLICY = {**QUALITY_POLICY, "rubric": "report-quality@1",
-                         "rubric_digest": RUBRIC_DIGEST}
+REPORT_QUALITY_POLICY = {**QUALITY_POLICY, "rubric": REPORT_ACCEPTANCE_CRITERIA["kind"],
+                         "rubric_digest": report_digest(REPORT_ACCEPTANCE_CRITERIA),
+                         "acceptance_criteria": REPORT_ACCEPTANCE_CRITERIA}
 _CHILDREN: dict[int, subprocess.Popen] = {}
 
 

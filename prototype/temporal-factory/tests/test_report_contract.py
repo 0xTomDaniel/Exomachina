@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from authoring import materialize
 from definition import validate
 from report_contract import (canonical, digest, packet_digest, research_assignment,
-    quality_review_request, synthesis_assignment, validate_research_result, validate_report,
+    REPORT_ACCEPTANCE_CRITERIA, quality_review_request, synthesis_assignment, validate_research_result, validate_report,
     validate_verdict)
 from report_fixture import bindings, packet, template
 
@@ -95,10 +95,22 @@ class ReportContractTests(unittest.TestCase):
                      "content": canonical(report)}
         draft = synthesis_assignment("r1", "Question?", self.packet)
         repair = synthesis_assignment("r2", "Question?", self.packet, quality_findings=[])
-        review = quality_review_request(candidate, "Question?", self.packet, "a" * 64)
+        review = quality_review_request(candidate, "Question?", self.packet,
+                                        REPORT_ACCEPTANCE_CRITERIA,
+                                        rubric_digest=digest(REPORT_ACCEPTANCE_CRITERIA))
         for brief in (draft, repair, review):
             self.assertFalse({"evidence", "prior", "candidate"} & set(brief), brief)
             self.assertNotIn(candidate["content"], canonical(brief))
+        # Acceptance criteria travel as content, never as a factory digest.
+        self.assertEqual(review["acceptance_criteria"], REPORT_ACCEPTANCE_CRITERIA)
+        self.assertNotIn("policy_digest", review)
+        self.assertNotIn(digest(REPORT_ACCEPTANCE_CRITERIA), canonical(review))
+        with self.assertRaises(ValueError):
+            quality_review_request(candidate, "Question?", self.packet,
+                                   {**REPORT_ACCEPTANCE_CRITERIA, "minor": []},
+                                   rubric_digest=digest(REPORT_ACCEPTANCE_CRITERIA))
+        with self.assertRaises(ValueError):
+            quality_review_request(candidate, "Question?", self.packet, None)
         self.assertEqual(repair["mode"], "repair")
         with self.assertRaises(ValueError):
             synthesis_assignment("r2", "Question?", self.packet)

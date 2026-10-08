@@ -12,9 +12,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "services"))
+sys.path.insert(0, str(ROOT / "src"))
 
-from agent_roles import (REPORT_SECTIONS, ROLES, RUBRIC, RUBRIC_DIGEST,  # noqa: E402
+from agent_roles import (REPORT_SECTIONS, ROLES,  # noqa: E402
                          RoleOutputError, usefulness_check, working_view)
+from report_contract import REPORT_ACCEPTANCE_CRITERIA as RUBRIC  # noqa: E402
 
 
 def canonical(value):
@@ -64,7 +66,7 @@ class AgentRoleTests(unittest.TestCase):
     def quality_request(self, report):
         return {"kind": "quality_review_request@1", "revision": report["revision"],
                 "question": self.question, "packet": self.packet, "packet_digest": self.packet_digest,
-                "policy_digest": "a" * 64}
+                "acceptance_criteria": RUBRIC}
 
     def quality_brief(self, report):
         """Quality's working view: the brief plus the draft received as a Part."""
@@ -96,7 +98,8 @@ class AgentRoleTests(unittest.TestCase):
         quality = ROLES["quality"].system_prompt("report_quality_review@1")
         self.assertIn("blocking", quality)
         self.assertIn("placeholder-only required report section is blocking", quality)
-        self.assertEqual(RUBRIC_DIGEST, digest(RUBRIC))
+        self.assertNotIn("factual contradiction of the packet", quality,
+                         "the acceptance criteria come from the client, not the agent")
 
     def test_research_scripted_parses_and_fence_is_tolerated(self):
         for capability in ("packet_findings@1", "packet_risks@1"):
@@ -208,7 +211,7 @@ class AgentRoleTests(unittest.TestCase):
                                   "candidate": {key: brief["candidate"][key] for key in ("revision", "sha256")},
                                   "accepted": True,
                                   "decided_by": "model", "findings": [],
-                                  "rubric": RUBRIC["kind"], "rubric_digest": RUBRIC_DIGEST})
+                                  "rubric": RUBRIC["kind"], "rubric_digest": digest(RUBRIC)})
         self.assertEqual(quality.parse(canonical(result), brief, "quality-id"), result)
 
     def test_quality_rejects_inconsistent_or_unbound_verdicts(self):

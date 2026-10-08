@@ -14,6 +14,27 @@ def digest(value: object) -> str:
     return hashlib.sha256(canonical(value).encode()).hexdigest()
 
 
+# The report factory's acceptance criteria for independent Quality review. The
+# factory owns them, sends their content in the Quality brief, and keeps only
+# their digest (``rubric_digest``) in its pinned quality policy as evidence.
+REPORT_ACCEPTANCE_CRITERIA = {
+    "kind": "report-quality@1",
+    "blocking": ["factual contradiction of the packet", "uncited or unsupported claim",
+                 "fixture described as live", "missing required section"],
+    "minor": ["style issues"],
+}
+
+
+def validate_acceptance_criteria(value: object) -> dict:
+    value = _keys(value, {"kind", "blocking", "minor"})
+    if (not _nonempty(value["kind"])
+            or not all(isinstance(value[k], list) and all(_nonempty(x) for x in value[k])
+                       for k in ("blocking", "minor"))
+            or not value["blocking"]):
+        raise ValueError("invalid acceptance criteria")
+    return value
+
+
 def _keys(value: object, required: set[str], optional: set[str] = frozenset()) -> dict:
     if not isinstance(value, dict) or not required <= set(value) or set(value) - required - optional:
         raise ValueError(f"expected fields {sorted(required)}")
@@ -130,17 +151,22 @@ def validate_report(value: object, revision: str, question: str, packet: dict) -
     return value
 
 
-def quality_review_request(candidate: dict, question: str, packet: dict, policy_digest: str) -> dict:
+def quality_review_request(candidate: dict, question: str, packet: dict,
+                           acceptance_criteria: dict, rubric_digest: str | None = None) -> dict:
     """The Quality brief. The candidate draft travels as its own Part; the
-    factory validates it here but never embeds it in the brief."""
+    factory validates it here but never embeds it in the brief. The acceptance
+    criteria travel as content; their digest stays factory-side evidence."""
     if not isinstance(candidate, dict) or not {"revision", "sha256", "author", "content"} <= set(candidate):
         raise ValueError("invalid candidate")
-    if not _nonempty(policy_digest) or candidate["sha256"] != hashlib.sha256(candidate["content"].encode()).hexdigest():
-        raise ValueError("invalid candidate or policy digest")
+    if candidate["sha256"] != hashlib.sha256(candidate["content"].encode()).hexdigest():
+        raise ValueError("invalid candidate")
+    criteria = validate_acceptance_criteria(acceptance_criteria)
+    if rubric_digest is not None and digest(criteria) != rubric_digest:
+        raise ValueError("acceptance criteria differ from the pinned quality policy digest")
     validate_report(json.loads(candidate["content"]), candidate["revision"], question, packet)
     return {"kind": "quality_review_request@1", "revision": candidate["revision"],
             "question": question, "packet": validate_packet(packet), "packet_digest": packet_digest(packet),
-            "policy_digest": policy_digest}
+            "acceptance_criteria": criteria}
 
 
 def validate_verdict(value: object, candidate: dict, reviewer: str, *,

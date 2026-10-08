@@ -341,6 +341,8 @@ class FactoryRun:
                     "packet": package["evidence_packet"],
                     "policy_digest": input["closure"]["manifest"]["quality_policy_digest"],
                     "rubric_digest": input["closure"]["quality_policy"].get("rubric_digest"),
+                    "acceptance_criteria":
+                        input["closure"]["quality_policy"].get("acceptance_criteria"),
                     "assignment_id": assignment_id, "attempt": attempt,
                     "upstream": upstream_inputs(self._draft_carrier),
                     **({"consumes": consumed_from(self._draft_carrier)}

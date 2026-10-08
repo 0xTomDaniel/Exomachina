@@ -13,8 +13,6 @@ class RoleOutputError(ValueError):
     """A role returned content outside its assignment contract."""
 
 
-RUBRIC = {"kind": "report-quality@1", "blocking": ["factual contradiction of the packet", "uncited or unsupported claim", "fixture described as live", "missing required section"], "minor": ["style issues"]}
-RUBRIC_DIGEST = hashlib.sha256(json.dumps(RUBRIC, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
 REPORT_SECTIONS = ("Live-proven", "Fixture-only", "Remaining gaps", "Next priority")
 _IDS = {"packet_findings@1": "F", "packet_risks@1": "R"}
 
@@ -199,13 +197,30 @@ def _candidate(brief: dict) -> dict:
     return content
 
 
+def _criteria(brief: dict) -> dict:
+    """The acceptance criteria the client sent with this review request."""
+    value = brief.get("acceptance_criteria")
+    _keys(value, {"kind", "blocking", "minor"}, "acceptance_criteria")
+    _string(value["kind"], "acceptance_criteria.kind")
+    for key in ("blocking", "minor"):
+        _require(isinstance(value[key], list) and all(isinstance(x, str) and x.strip()
+                                                      for x in value[key]),
+                 f"acceptance_criteria.{key}: list of strings required")
+    _require(bool(value["blocking"]), "acceptance_criteria.blocking: required")
+    return value
+
+
 def _verdict(brief: dict, accepted: bool, findings: list[dict], decided_by: str) -> dict:
-    """The verdict names its candidate only by the received draft's revision and digest."""
+    """The verdict names its candidate only by the received draft's revision and
+    digest, and the criteria it applied by their kind and digest."""
     candidate = brief.get("candidate") if isinstance(brief.get("candidate"), dict) else {}
+    criteria = brief.get("acceptance_criteria")
+    criteria = criteria if isinstance(criteria, dict) else {}
     return {"kind": "quality_verdict@1",
             "candidate": {key: candidate.get(key, "") for key in ("revision", "sha256")},
             "accepted": accepted, "decided_by": decided_by,
-            "findings": findings, "rubric": RUBRIC["kind"], "rubric_digest": RUBRIC_DIGEST}
+            "findings": findings, "rubric": str(criteria.get("kind", "")),
+            "rubric_digest": _digest(criteria)}
 
 
 @dataclass(frozen=True)
@@ -239,7 +254,8 @@ class Role:
                 "A factual contradiction, unsupported claim, fixture called live, or a missing or placeholder-only "
                 "required report section is blocking. "
                 "Style issues may be minor. Inspect every claim and the markdown. "
-                "accepted must be false exactly when any finding is blocking. Rubric: " + _json(RUBRIC))
+                "accepted must be false exactly when any finding is blocking. Apply the "
+                "assignment's acceptance_criteria: its blocking items are blocking findings.")
 
     def user_prompt(self, brief: dict) -> str:
         _require(isinstance(brief, dict), "brief: object required")
@@ -285,9 +301,7 @@ class Role:
                      "synthesis: invalid brief")
             return _report(value, brief)
         _require(self.name == "quality" and brief.get("kind") == "quality_review_request@1", "quality: invalid brief")
-        _require(isinstance(brief.get("policy_digest"), str) and
-                 re.fullmatch(r"[0-9a-f]{64}", brief["policy_digest"]) is not None,
-                 "quality: invalid policy digest")
+        _criteria(brief)
         content = _candidate(brief)
         if set(value) == {"accepted", "findings"}:
             pass
@@ -310,9 +324,7 @@ class Role:
             _string(identity, "identity")
             _require(brief.get("kind") == "quality_review_request@1", "quality: invalid brief")
             _packet_ids(brief)
-            _require(isinstance(brief.get("policy_digest"), str) and
-                     re.fullmatch(r"[0-9a-f]{64}", brief["policy_digest"]) is not None,
-                     "quality: invalid policy digest")
+            _criteria(brief)
             _candidate(brief)
         except (RoleOutputError, AttributeError, TypeError) as exc:
             finding = {"claim_id": None, "severity": "blocking", "problem": str(exc), "evidence": []}

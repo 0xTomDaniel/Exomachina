@@ -412,11 +412,18 @@ async def synthesize(input: dict) -> dict:
 async def review(input: dict) -> dict:
     from quality_authority import decide_quality_async
     candidate = input["candidate"]
-    # The draft under review travels as its consumed item Parts.
-    brief = quality_review_request(candidate, input["question"], input["packet"],
-                                   input["policy_digest"])
+    # The draft under review travels as its consumed item Parts; the factory's
+    # acceptance criteria travel as content in the brief. The policy digest
+    # stays on the factory side (Activity input, evidence).
     action_id = quality_action_id(input["run"], input["assignment_id"], input["attempt"],
                                   candidate["revision"], candidate["sha256"])
+    try:
+        brief = quality_review_request(candidate, input["question"], input["packet"],
+                                       input.get("acceptance_criteria"),
+                                       rubric_digest=input.get("rubric_digest"))
+    except ValueError as error:
+        return {"inconsistent": "quality-acceptance-criteria-invalid", "action_id": action_id,
+                "error_type": type(error).__name__}
     try:
         action = _action(action_id, input, brief, _compose(input, brief))
     except handoff.CompositionError as error:

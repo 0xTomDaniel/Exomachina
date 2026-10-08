@@ -18,7 +18,7 @@ import a2a_extensions
 import adapter
 import agent_binding
 import handoff
-from report_contract import canonical, digest, validate_verdict
+from report_contract import REPORT_ACCEPTANCE_CRITERIA, canonical, digest, validate_verdict
 from report_fixture import packet
 
 
@@ -105,7 +105,8 @@ class Agent(ThreadingHTTPServer):
                        "revision": json.loads(draft)["revision"],
                        "sha256": hashlib.sha256(draft.encode()).hexdigest()},
                    "accepted": True, "decided_by": "model", "findings": [],
-                   "rubric": "report-quality@1", "rubric_digest": "rubric-digest"}
+                   "rubric": brief["acceptance_criteria"]["kind"],
+                   "rubric_digest": digest(brief["acceptance_criteria"])}
         if self.tamper == "revision":
             verdict["candidate"]["revision"] = "r3"
         elif self.tamper == "sha":
@@ -201,8 +202,9 @@ class ReportAsyncTests(unittest.TestCase):
     def review(self, candidate):
         return self.call(adapter.review, {**self.args("quality"), "candidate": candidate,
             "question": self.question, "packet": self.packet, "policy_digest": "p" * 64,
+            "acceptance_criteria": REPORT_ACCEPTANCE_CRITERIA,
             "assignment_id": "run-1:quality", "attempt": 1,
-            "rubric_digest": "rubric-digest", "upstream": self.upstream(draft=candidate)})
+            "rubric_digest": digest(REPORT_ACCEPTANCE_CRITERIA), "upstream": self.upstream(draft=candidate)})
 
     def test_all_roles_async_and_repair_brief(self):
         results, evidence, candidate = self.candidate()
@@ -331,7 +333,8 @@ class ReportAsyncTests(unittest.TestCase):
         verdict = self.call_keyed(adapter.review, {**self.args("quality"),
             "candidate": {k: v for k, v in candidate.items() if k != "handoff"},
             "question": self.question, "packet": self.packet, "policy_digest": "p" * 64,
-            "assignment_id": "run-1:quality", "attempt": 1, "rubric_digest": "rubric-digest",
+            "acceptance_criteria": REPORT_ACCEPTANCE_CRITERIA,
+            "assignment_id": "run-1:quality", "attempt": 1, "rubric_digest": digest(REPORT_ACCEPTANCE_CRITERIA),
             "upstream": [{"handoff_id": "draft", "item_parts": candidate["item_parts"]}],
             "consumes": handoff.consumed_inputs([candidate["handoff"]])}, key_file)
         self.assertNotIn("inconsistent", verdict)
@@ -374,7 +377,8 @@ class ReportAsyncTests(unittest.TestCase):
         verdict = self.call_keyed(adapter.review, {**self.args("quality"),
             "candidate": {k: v for k, v in draft.items() if k != "handoff"},
             "question": self.question, "packet": self.packet, "policy_digest": "p" * 64,
-            "assignment_id": "run-1:quality", "attempt": 1, "rubric_digest": "rubric-digest",
+            "acceptance_criteria": REPORT_ACCEPTANCE_CRITERIA,
+            "assignment_id": "run-1:quality", "attempt": 1, "rubric_digest": digest(REPORT_ACCEPTANCE_CRITERIA),
             "upstream": upstream[:1], "consumes": handoff.consumed_inputs([draft["handoff"]])},
             key_file)
         self.assertEqual(verdict["inconsistent"], "input.composition-mismatch")
