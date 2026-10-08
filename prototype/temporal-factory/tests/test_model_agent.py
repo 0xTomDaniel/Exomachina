@@ -128,14 +128,16 @@ class ModelAgentTests(unittest.TestCase):
             card = client.get("/.well-known/agent-card.json").json()
             self.assertEqual([skill["id"] for skill in card["skills"]], ["report_synthesis@1"])
             uris = [item["uri"] for item in card["capabilities"]["extensions"]]
-            self.assertEqual(uris, [ext.AGENT_URI, ext.BUDGET_URI])
+            # Only the optional generic budget extension; the card is the identity.
+            self.assertEqual(uris, [ext.BUDGET_URI])
             self.assertTrue(all(item.get("required") is not True
                                 for item in card["capabilities"]["extensions"]))
-            identity = card["capabilities"]["extensions"][0]["params"]["identity"]
             with patch.object(agent_binding, "read_json", return_value=card):
                 pinned = agent_binding.pin("http://127.0.0.1:45748")
-            self.assertEqual(pinned["identity"], identity)
+            self.assertEqual(pinned["card_sha256"], model_agent.agent_card_digest(
+                model_agent.agent_card("synthesis", "report_synthesis@1", 45748)))
             self.assertEqual(pinned["reconcile"], "a2a-idempotent-resend")
+            private_identity = client.app.state.model_agent_service.ledger.identity
             message_id = str(uuid4())
             first = client.post("/", json=send(message_id=message_id), headers=AUTH).json()["result"]["task"]
             self.assertEqual(first["status"]["state"], "TASK_STATE_WORKING")
@@ -145,7 +147,7 @@ class ModelAgentTests(unittest.TestCase):
             self.assertEqual(client.post("/", json=changed, headers=AUTH).json()["error"]["code"], -32602)
             done = completed(client, first["id"])
             self.assertEqual(done["status"]["state"], "TASK_STATE_COMPLETED")
-            self.assertEqual(done["metadata"], {"agent_identity": identity})
+            self.assertNotIn("metadata", done)
             self.assertEqual(done["history"][0]["messageId"], message_id)
             self.assertEqual(done["history"][0]["parts"][0]["text"], brief())
             artifact = done["artifacts"][0]
@@ -153,7 +155,7 @@ class ModelAgentTests(unittest.TestCase):
             data = wire(artifact)
             self.assertEqual(artifact["artifactId"], data["sha256"])
             self.assertEqual(json.loads(data["content"])["revision"], "r1")
-            self.assertNotIn(identity, json.dumps(done["artifacts"]))
+            self.assertNotIn(private_identity, json.dumps(done))
 
     def test_rejects_non_message_shapes(self):
         with TestClient(self.app()) as client:
@@ -200,7 +202,7 @@ class ModelAgentTests(unittest.TestCase):
         with TestClient(self.app()) as client:
             task = client.post("/", json=send(), headers=AUTH).json()["result"]["task"]
             plain = completed(client, task["id"])
-            self.assertNotIn(ext.BUDGET_URI, plain["metadata"])
+            self.assertNotIn(ext.BUDGET_URI, plain.get("metadata") or {})
             reported = completed(client, task["id"], headers=BUDGET)
             incurred = ext.parse_incurred(reported["metadata"])
             # The scripted provider reports input/output only: no cache, total or cost.
@@ -262,12 +264,14 @@ class ModelAgentTests(unittest.TestCase):
     def test_restart_keeps_identity_task_and_distinct_sessions(self):
         message_id = str(uuid4())
         with TestClient(self.app()) as client:
-            identity = client.get("/.well-known/agent-card.json").json()[
-                "capabilities"]["extensions"][0]["params"]["identity"]
+            identity = client.app.state.model_agent_service.ledger.identity
+            card_sha256 = client.app.state.model_agent_service.card_sha256
             one = client.post("/", json=send(message_id=message_id), headers=AUTH).json()["result"]["task"]
             completed(client, one["id"])
         with TestClient(self.app(port=45749)) as client:
             self.assertEqual(client.app.state.model_agent_service.ledger.identity, identity)
+            # The card digest ignores the endpoint, so it survives the port move.
+            self.assertEqual(client.app.state.model_agent_service.card_sha256, card_sha256)
             self.assertEqual(client.app.state.model_agent_service.ledger.incarnation, 2)
             self.assertEqual(completed(client, one["id"])["id"], one["id"])
             self.assertEqual(client.post("/", json=send(message_id=message_id), headers=AUTH).json()["result"]["task"]["id"], one["id"])
@@ -276,7 +280,7 @@ class ModelAgentTests(unittest.TestCase):
         rows = calls(self.state)
         self.assertEqual(len(rows), 2)
         self.assertEqual({row["session_id"] for row in rows},
-                         {f"{identity}:{one['id']}", f"{identity}:{two['id']}"})
+                         {f"{card_sha256}:{one['id']}", f"{card_sha256}:{two['id']}"})
         self.assertTrue(all(row["live"] == 0 and row["model_id"] == model_agent.DEFAULT_MODEL_ID
                             for row in rows))
 

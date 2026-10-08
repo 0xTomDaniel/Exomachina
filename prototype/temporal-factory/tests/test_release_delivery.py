@@ -30,7 +30,7 @@ import adapter  # noqa: E402
 import handoff  # noqa: E402
 import release_delivery  # noqa: E402
 from a2a_outcome import OutcomeJournal, Phase, task_started  # noqa: E402
-from agent_binding import UnavailableBinding, card_pin  # noqa: E402
+from agent_binding import UnavailableBinding, pin  # noqa: E402
 from testbed import contract_records  # noqa: E402
 
 
@@ -83,7 +83,7 @@ class ReleaseDeliveryTests(unittest.TestCase):
         deadline = time.monotonic() + 30
         while True:
             try:
-                cls.pin = card_pin(cls.url)
+                cls.pin = pin(cls.url)
                 break
             except UnavailableBinding:
                 if time.monotonic() > deadline or cls.process.poll() is not None:
@@ -103,10 +103,8 @@ class ReleaseDeliveryTests(unittest.TestCase):
         self.identity = self.pin["identity"]
         self.snapshot.write_text(json.dumps({"snapshot_version": 1,
             "agents": {self.identity: {"url": self.url}}}))
-        tags = {tag for skill in self.pin["skills"] for tag in skill["tags"]}
-        self.contract = {**contract_records()["release"], "card_sha256": self.pin["card_sha256"],
-                         "reconcile": ("a2a-idempotent-resend" if "message-id-idempotent" in tags
-                                       else "opaque")}
+        # Pinned like every agent: by its Agent Card alone.
+        self.contract = {**contract_records()["release"], **self.pin}
         self.binding = {"role": "release", "url": self.url, "identity": self.identity,
                         "approved": True, "output": "artifacts"}
         self.logs = []

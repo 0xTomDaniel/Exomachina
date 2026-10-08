@@ -476,15 +476,13 @@ def _card_summary(port: int) -> dict:
 
 
 def _card_identity(card: dict) -> str | None:
-    """The declared agent identity, else the identity derived from the card pin."""
-    import a2a_extensions
+    """The binding identity derived from the card pin; the card is the identity."""
     import a2a_v1
     from agent_binding import card_identity, digest
-    for extension in (card.get("capabilities") or {}).get("extensions") or []:
-        if isinstance(extension, dict) and extension.get("uri") == a2a_extensions.AGENT_URI:
-            identity = (extension.get("params") or {}).get("identity")
-            return identity if isinstance(identity, str) and identity else None
-    return card_identity(digest(a2a_v1.card_without_endpoint(card)))
+    try:
+        return card_identity(digest(a2a_v1.card_without_endpoint(card)))
+    except (a2a_v1.ProtocolError, AttributeError, TypeError, ValueError):
+        return None
 
 
 def _broker_flags() -> dict:

@@ -75,8 +75,6 @@ from model_broker import (BROKER_PROGRAM, DEFAULT_HOME, DEFAULT_MODEL_ID,
 from model_usage import AGENT_USAGE_DATABASE, ModelUsageJournal  # noqa: E402
 from agent_binding import digest as agent_contract_digest  # noqa: E402
 from agent_binding import resolve as resolve_agent_binding  # noqa: E402
-from agent_binding import card_identity as agent_card_identity  # noqa: E402
-from agent_binding import resolve_card as resolve_card_binding  # noqa: E402
 from admission import AdmissionQueue  # noqa: E402
 from supplier_protocol import (  # noqa: E402
     SupplierEnvelopeError,
@@ -631,14 +629,10 @@ def _pinned_usage_owners(director: Director, scope: Mapping, *,
             if not resolve:
                 owners.append({"name": name, "identity": identity, "role": role})
                 continue
-            # A card-pinned agent (identity derived from its Agent Card digest,
-            # for example the A2A release agent) re-verifies through its card
-            # alone; other agents through their pinned card and identity.
-            resolver = (resolve_card_binding
-                        if identity == agent_card_identity(contract["card_sha256"])
-                        else resolve_agent_binding)
+            # Every agent, release included, is identified by its pinned Agent
+            # Card and re-verifies through that card alone.
             try:
-                url, observed = resolver(snapshot_path, identity, dict(contract))
+                url, observed = resolve_agent_binding(snapshot_path, identity, dict(contract))
             except Exception:
                 failures += 1
                 continue
@@ -2068,7 +2062,6 @@ class FactoryTaskStore(ProjectionTaskStore):
                         "run_inputs_digest": record["run_inputs_digest"]}
         if supplier_echo is not None:
             metadata.update(supplier_echo)
-            metadata["agent_identity"] = self.director.identity
         # A2A Adapter boundary: the version-neutral projection state becomes TASK_STATE_*.
         return Task(id=task_id, context_id=context_id,
                     status=TaskStatus(state=task_state(state), message=message),
@@ -2257,7 +2250,8 @@ def create_app(instance_dir: Path, *, commercial_reader=None, usage_broker=None)
     if config["mode"] == "agent":
         # Ordinary agent mode: the same harness serves one capability directly.
         return harness_server.create_app(instance_dir / "agent-state",
-                                         config.get("agent_role", "capability"), port)
+                                         config.get("agent_role", "capability"), port,
+                                         name=config.get("name"))
     director = Director(instance_dir, config)
     read_submission_readiness, submission_preflight = _submission_readiness_callbacks(
         director, config)
@@ -2285,8 +2279,7 @@ def create_app(instance_dir: Path, *, commercial_reader=None, usage_broker=None)
                             "parent_run_id", "parent_definition_digest", "parent_assignment_id",
                             "parent_attempt_id", "assignment_id", "attempt_id", "payload"))}},
             "response": {"result": "task", "metadata": sorted((
-                "action_id", "run_id", "definition_digest", "agent_identity",
-                "parent_task_id", "parent_run_id", "parent_definition_digest",
+                "action_id", "run_id", "definition_digest", "parent_task_id", "parent_run_id", "parent_definition_digest",
                 "parent_assignment_id", "parent_attempt_id", "assignment_id", "attempt_id"))},
             "completion": {"method": a2a_v1.GET_TASK, "state": a2a_v1.wire_state("completed"),
                            "artifact_count": 1, "data": sorted((

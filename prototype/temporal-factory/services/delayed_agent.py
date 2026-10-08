@@ -23,17 +23,16 @@ import sqlite3
 import sys
 import time
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import uvicorn
 from a2a.server.agent_execution import AgentExecutor
-from a2a.types import (AgentCapabilities, AgentCard, AgentExtension, AgentSkill,
+from a2a.types import (AgentCapabilities, AgentCard, AgentSkill,
                        Artifact, InvalidParamsError, Task, TaskStatus)
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-import a2a_extensions as ext  # noqa: E402
 import a2a_v1  # noqa: E402
 from google.protobuf.json_format import MessageToDict  # noqa: E402
 from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E402
@@ -42,7 +41,6 @@ from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E
 
 
 TOKEN = "Bearer fixture-token"
-EXTENSION_URI = ext.AGENT_URI
 
 
 def canonical(value: object) -> str:
@@ -70,7 +68,7 @@ def request_from_params(params) -> dict:
 
 
 class Ledger:
-    def __init__(self, state: Path, delay_seconds: float, identity_file: Path | None = None,
+    def __init__(self, state: Path, delay_seconds: float,
                  *, drop_first_response: bool = False, mismatch_artifact: bool = False):
         if delay_seconds < 0:
             raise ValueError("delay must be nonnegative")
@@ -108,19 +106,8 @@ class Ledger:
                 durable_identity = str(uuid4())
                 self.incarnation = 1
                 db.execute("INSERT INTO identity VALUES (1, ?, 1)", (durable_identity,))
-        self.identity = self._identity_override(identity_file) if identity_file else durable_identity
-
-    @staticmethod
-    def _identity_override(path: Path) -> str:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if path.exists():
-            return str(UUID(path.read_text().strip()))
-        identity = str(uuid4())
-        with path.open("x") as stream:
-            stream.write(identity + "\n")
-            stream.flush()
-            os.fsync(stream.fileno())
-        return identity
+        # A private identity; the wire identity is this agent's Agent Card.
+        self.identity = durable_identity
 
     def connect(self):
         db = sqlite3.connect(self.database, timeout=15)
@@ -158,16 +145,15 @@ class Ledger:
             row = db.execute("SELECT * FROM messages WHERE task_id=?", (task_id,)).fetchone()
         if row is None:
             return None
-        metadata = {"agent_identity": self.identity}
         if time.time() < row["complete_at"]:
             return Task(id=task_id, context_id=row["context_id"],
-                        status=TaskStatus(state=task_state("working")), metadata=metadata)
+                        status=TaskStatus(state=task_state("working")))
         content = "fixture-result:" + row["brief"]
         sha256 = hashlib.sha256(content.encode("utf-8")).hexdigest()
         part = (data_part({"content": content}) if self.mismatch_artifact
                 else text_part(content, "text/plain"))
         return Task(id=task_id, context_id=row["context_id"],
-                    status=TaskStatus(state=task_state("completed")), metadata=metadata,
+                    status=TaskStatus(state=task_state("completed")),
                     artifacts=[Artifact(artifact_id=sha256, parts=[part])])
 
 
@@ -212,21 +198,19 @@ class Handler(LegacyRequestHandler):
 
 
 def create_app(state: Path, port: int, *, delay_seconds: float = 15,
-               identity_file: Path | None = None, drop_first_response: bool = False,
+               drop_first_response: bool = False,
                mismatch_artifact: bool = False):
-    ledger = Ledger(state, delay_seconds, identity_file,
+    ledger = Ledger(state, delay_seconds,
                     drop_first_response=drop_first_response,
                     mismatch_artifact=mismatch_artifact)
     card = AgentCard(
         name="Delayed counter evidence", description="Independent delayed A2A fixture",
         supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="2.0.0",
         default_input_modes=["text/plain"], default_output_modes=["application/json"],
-        capabilities=AgentCapabilities(streaming=False, extensions=[
-            AgentExtension(uri=ext.AGENT_URI, required=False,
-                           params={"identity": ledger.identity, "resend": ext.RESEND_RULE})]),
+        capabilities=AgentCapabilities(streaming=False),
         skills=[AgentSkill(id="counter_evidence@1", name="Counter evidence",
                            description="Deterministic counter evidence from a brief",
-                           tags=["counter-evidence"])],
+                           tags=["counter-evidence", "message-id-idempotent", "get-task"])],
         **bearer_security(),
     )
     app = build_app(card, Handler(ledger, LedgerTaskStore(ledger), card))
@@ -248,14 +232,12 @@ def main() -> None:
     parser.add_argument("--state", required=True, type=Path)
     parser.add_argument("--port", required=True, type=int)
     parser.add_argument("--delay-seconds", type=float, default=15)
-    parser.add_argument("--identity-file", type=Path)
     parser.add_argument("--drop-first-response", action="store_true",
                         help="test fault: lose the first committed response")
     parser.add_argument("--mismatch-artifact", action="store_true",
                         help="test fault: serve artifacts with a mismatched revision")
     args = parser.parse_args()
     app = create_app(args.state, args.port, delay_seconds=args.delay_seconds,
-                     identity_file=args.identity_file,
                      drop_first_response=args.drop_first_response,
                      mismatch_artifact=args.mismatch_artifact)
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="warning")

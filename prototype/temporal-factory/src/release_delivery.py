@@ -41,7 +41,7 @@ from definition import binding_output
 from a2a_outcome import (EffectKind, OutcomeJournal, Phase, ReceiverKind, StaleOutcome,
                          send_ambiguous, submitted, task_finished, task_incident,
                          task_started)
-from agent_binding import UnavailableBinding, resolve_card
+from agent_binding import UnavailableBinding, resolve
 
 
 TOKEN = "Bearer fixture-token"
@@ -250,7 +250,7 @@ def _drive(journal, record, created, message, command, contract, binding, snapsh
     deadline = time.monotonic() + deadline_seconds
     while time.monotonic() < deadline:
         try:
-            url, observed = resolve_card(snapshot, identity, contract)
+            url, observed = resolve(snapshot, identity, contract)
         except UnavailableBinding:
             time.sleep(poll_seconds)
             continue

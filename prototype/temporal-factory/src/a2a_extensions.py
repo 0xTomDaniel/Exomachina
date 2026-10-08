@@ -3,11 +3,10 @@
 These are protocol definitions only, shared by agent services and their clients
 like ``a2a_v1``. Nothing here names a factory, run, assignment, attempt, action,
 definition, node or pin: an agent service offers the same extensions to every
-A2A client (A2A v1 mediation decisions 7 and 8).
+A2A client (A2A v1 mediation decisions 7 and 8). Every extension is optional:
+an agent's identity is its pinned Agent Card, and the factory needs no
+Exomachina extension from an agent (decision 9).
 
-- ``AGENT_URI`` (optional): the agent's own durable identity, which it also
-  writes as the ``author`` of its artifacts, and its resend rule: a SendMessage
-  that repeats a ``messageId`` returns the original Task.
 - ``BUDGET_URI`` (optional): #2121's budget/usage field shape under an
   Exomachina-owned URI. A client may put ``budget`` in the SendMessage request
   metadata; an activated agent reports ``incurred`` in the terminal Task's
@@ -24,10 +23,8 @@ from decimal import Decimal
 from typing import Any, Iterable, Mapping
 
 
-AGENT_URI = "urn:exomachina:a2a-agent:v1"
 BUDGET_URI = "https://github.com/0xTomDaniel/Exomachina/a2a/extensions/budget/v1"
 TEST_STIMULUS_URI = "urn:exomachina:a2a-test-stimulus:v1"
-RESEND_RULE = "messageId-returns-original-task"
 TOKEN_FIELDS = ("input", "output", "cache_read", "cache_write", "total")
 _CURRENCY = re.compile(r"[A-Z][A-Z0-9]{2,15}")
 _LABEL = re.compile(r"[a-z][a-z0-9_.-]{0,63}")
@@ -185,6 +182,6 @@ def parse_incurred(metadata: object) -> dict | None:
     return report
 
 
-__all__ = ["AGENT_URI", "BUDGET_URI", "TEST_STIMULUS_URI", "RESEND_RULE", "TOKEN_FIELDS",
+__all__ = ["BUDGET_URI", "TEST_STIMULUS_URI", "TOKEN_FIELDS",
            "BudgetError", "parse_budget", "check_budget", "deadline_epoch",
            "sum_reported_tokens", "incurred_metadata", "requested", "parse_incurred"]

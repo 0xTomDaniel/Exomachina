@@ -24,6 +24,7 @@ SRC = ROOT / "src"
 sys.path.insert(0, str(SRC))
 
 import harness  # noqa: E402
+from agent_binding import card_identity  # noqa: E402
 from artifact_delivery import accepted_markdown  # noqa: E402
 from factory import nested_workflow_input  # noqa: E402
 from observation import FactoryObservation  # noqa: E402
@@ -1460,12 +1461,12 @@ class RuntimeRoutesTests(unittest.TestCase):
         self.assertEqual(failures, 0)
         self.assertEqual(non_usage, 1)
 
-        # The A2A release agent is card-pinned: its identity derives from its
-        # Agent Card digest and it re-verifies through resolve_card alone.
+        # The A2A release agent is pinned like every agent: its identity derives
+        # from its Agent Card digest and it re-verifies through the one resolver.
         card_sha = "c" * 64
         release_contract = {"role": "release", "name": "release", "capability": "release@1",
                             "card_sha256": card_sha, "reconcile": "a2a-idempotent-resend"}
-        release_binding = {"approved": True, "identity": harness.agent_card_identity(card_sha),
+        release_binding = {"approved": True, "identity": card_identity(card_sha),
                            "role": "release", "url": "http://127.0.0.1:47104",
                            "output": "artifacts"}
         package["bindings"] = {"release": release_binding}
@@ -1475,13 +1476,13 @@ class RuntimeRoutesTests(unittest.TestCase):
                 "contract_digest": harness.agent_contract_digest(release_contract)}}},
             "contracts": {"release": release_contract},
         }
-        with patch.object(harness, "resolve_card_binding",
+        with patch.object(harness, "resolve_agent_binding",
                           return_value=(release_binding["url"], {"card_sha256": card_sha})
-                          ) as card_resolver, \
-                patch.object(harness, "resolve_agent_binding") as identity_resolver:
+                          ) as card_resolver:
             owners, failures, non_usage = harness._pinned_usage_owners(director, scope)
-        identity_resolver.assert_not_called()
-        card_resolver.assert_called_once()
+        card_resolver.assert_called_once_with(
+            module.home / "testbed" / "agent_snapshot.json", release_binding["identity"],
+            release_contract)
         self.assertEqual((failures, non_usage), (0, 0))
         self.assertEqual([(o["name"], o["role"]) for o in owners], [("release", "release")])
 

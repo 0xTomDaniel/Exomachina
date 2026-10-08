@@ -20,7 +20,6 @@ from fastapi.testclient import TestClient
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "services"))
 sys.path.insert(0, str(ROOT / "src"))
-import a2a_extensions  # noqa: E402
 import a2a_v1  # noqa: E402
 from delayed_agent import canonical, create_app, digest  # noqa: E402
 
@@ -68,17 +67,14 @@ class DelayedAgentTests(unittest.TestCase):
                 "protocolVersion": "1.0"}])
             self.assertEqual([skill["id"] for skill in card["skills"]],
                              ["counter_evidence@1"])
-            extensions = card["capabilities"]["extensions"]
-            self.assertEqual(len(extensions), 1)
-            self.assertEqual(extensions[0]["uri"], a2a_extensions.AGENT_URI)
-            self.assertFalse(extensions[0].get("required", False))
-            params = extensions[0]["params"]
-            self.assertEqual(params["resend"], a2a_extensions.RESEND_RULE)
+            # A plain A2A card: no extensions; resend dedupe is a skill tag.
+            self.assertNotIn("extensions", card.get("capabilities") or {})
+            self.assertIn("message-id-idempotent", card["skills"][0]["tags"])
             for path in ("/contract", "/health", "/_test/effects", "/_test/faults"):
                 self.assertEqual(client.get(path, headers=AUTH).status_code, 404, path)
             first = client.post("/", json=send_body(), headers=AUTH).json()["result"]["task"]
             self.assertEqual(first["status"]["state"], "TASK_STATE_WORKING")
-            self.assertEqual(first["metadata"], {"agent_identity": params["identity"]})
+            self.assertNotIn("metadata", first)
             self.assertEqual(first["contextId"], "context-1")
             task_id = first["id"]
             again = client.post("/", json=send_body(), headers=AUTH).json()["result"]["task"]
@@ -121,29 +117,19 @@ class DelayedAgentTests(unittest.TestCase):
                          digest(a2a_v1.card_without_endpoint(new_card)))
         done = http(new_base, "/", body=get_body(task["id"]))["result"]
         self.assertEqual(done["status"]["state"], "TASK_STATE_COMPLETED")
-        self.assertEqual(done["metadata"]["agent_identity"],
-                         task["metadata"]["agent_identity"])
+        self.assertNotIn("metadata", done)
         self.assertEqual(http(new_base, "/", body=send_body())["result"]["task"]["id"],
                          task["id"])
         self.assertEqual(self.rows(), 1)
 
-    def test_mismatch_fault_and_identity_file_override(self):
-        impostor_file = self.state / "impostor-identity"
+    def test_mismatch_fault(self):
         with TestClient(create_app(self.state, 46213, delay_seconds=0,
-                                   identity_file=impostor_file,
                                    mismatch_artifact=True)) as client:
-            card = client.get("/.well-known/agent-card.json").json()
-            identity = card["capabilities"]["extensions"][0]["params"]["identity"]
             result = client.post("/", json=send_body(), headers=AUTH).json()["result"]["task"]
             # The fault serves a data Part where a consumer expects text.
             part = result["artifacts"][0]["parts"][0]
             self.assertEqual(part["data"], {"content": "fixture-result:counter brief"})
             self.assertNotIn("text", part)
-        with TestClient(create_app(self.state, 46214, delay_seconds=0,
-                                   identity_file=impostor_file)) as client:
-            again = client.get("/.well-known/agent-card.json").json()
-            self.assertEqual(again["capabilities"]["extensions"][0]["params"]["identity"],
-                             identity)
 
     def test_drop_first_response_commits_before_process_exit(self):
         port = 46215

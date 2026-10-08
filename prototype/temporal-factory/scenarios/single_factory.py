@@ -779,8 +779,8 @@ def check_evidence(e: dict) -> dict[str, dict]:
         e.get("incidents") == [], {"inventory": inventory,
         "journal": run_journal, "incidents": e.get("incidents")}, label)
     # Agent model work is the factory-recorded budget-extension report; broker
-    # attribution uses the shared broker's session label <identity>:<taskId>,
-    # both factory-known. Agent stores are never read.
+    # attribution uses the shared broker's session label <card sha256>:<taskId>,
+    # both factory-known (the pinned Agent Card and the journaled Task). Agent stores are never read.
     worked = [a for name in AGENTS for a in agents.get(name, {}).get("tasks") or []]
     sessions = [_agent_session(a, agents) for a in worked]
     streams = {x.get("session") for x in stream_events}
@@ -827,7 +827,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
          "director_calls": director_count, "authoring_calls": author_count,
          "broker_owner_counts": broker_owner_counts,
          "reconciliation_method": "authoring/Director stream windows; agent Tasks by "
-             "factory-journaled identity:taskId broker sessions and agent-reported usage",
+             "pinned card sha256:journaled taskId broker sessions and agent-reported usage",
          "stream_counts": stream_counts, "call_counts": call_counts,
          "broker_starts": broker_starts, "broker_attach": broker_attach}, label)
     tasks = [a for name in AGENTS for a in agents.get(name, {}).get("tasks") or []]
@@ -1115,7 +1115,7 @@ def _import_audit() -> dict:
                                    "model_broker_config_imports": ["DEFAULT_MODEL_ID"]
                                        if broker_config_only else [],
                                    "allowed": launcher_imports ==
-                                       ["agent_binding", "agent_roles", "model_broker"] and
+                                       ["agent_binding", "model_broker", "report_contract"] and
                                        broker_config_only},
             "legacy_not_running": ["quality_server.py", "delayed_agent.py"]}
 
@@ -1143,9 +1143,9 @@ def _model_work(task: dict) -> bool:
 
 
 def _agent_session(task: dict, agents: dict) -> str | None:
-    """Broker session label of an agent Task, from factory-known identity and taskId."""
-    identity = (agents.get(task.get("agent")) or {}).get("identity")
-    return f"{identity}:{task['task_id']}" if identity and task.get("task_id") else None
+    """Broker session label of an agent Task: its pinned card digest and taskId."""
+    card_sha256 = (agents.get(task.get("agent")) or {}).get("card_sha256")
+    return f"{card_sha256}:{task['task_id']}" if card_sha256 and task.get("task_id") else None
 
 
 def _collect_agents(home: Path, testbed: dict, journal: list[dict],
@@ -1230,11 +1230,11 @@ def _collect_agents(home: Path, testbed: dict, journal: list[dict],
                                          if journaled and finished else None),
                     "exclusive_store": True}
             # Correlation is the factory's: the served Task carries the journaled
-            # contextId and its history the journaled messageId.
+            # contextId and its history the journaled messageId. The agent's
+            # identity is its pinned Agent Card, never Task metadata.
             task["correlated"] = (task["task_id"] == task["journal_task_id"] and
                 bool(task["context_id"]) and task["context_id"] == task["journal_context_id"] and
-                bool(task["message_id"]) and task["message_id"] == task["journal_message_id"] and
-                (remote.get("metadata") or {}).get("agent_identity") == identity)
+                bool(task["message_id"]) and task["message_id"] == task["journal_message_id"])
             pin_logs = [x for x in action_log if x.get("kind") == "agent-card-verified"]
             interactions = [x for x in action_log
                             if x.get("kind") in ("agent-task-journaled", "agent-task-polled")]

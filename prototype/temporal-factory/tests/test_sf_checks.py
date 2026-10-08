@@ -495,17 +495,24 @@ class ReviewTwoCheckerTests(unittest.TestCase):
 
         # Reconstruct the session field that the old installed broker omitted.
         # The 34 saved streams comprise 4 authoring, 18 agent and 12 Director calls.
-        # Agent sessions follow the shared broker label <identity>:<taskId>.
+        # The preserved agents labelled sessions <identity>:<taskId> with their
+        # former self-declared identity. Agents now label them with their own
+        # pinned card digest, <card sha256>:<taskId>; the preserved run kept no
+        # card digest, so a stand-in digest is adapted in memory.
         repaired_broker = copy.deepcopy(live)
         preserved = json.loads((ROOT / "evidence" / "single-factory" /
                                 "codex-subscription-1.json").read_text())
-        sessions = [call["session_id"] for name in AGENT_NAMES
-                    for task in preserved["agents"][name]["tasks"]
-                    for call in task["model_calls"]]
         self.assertTrue(all(session == f"{preserved['agents'][name]['identity']}:{task['task_id']}"
                             for name in AGENT_NAMES
                             for task in preserved["agents"][name]["tasks"]
                             for session in [c["session_id"] for c in task["model_calls"]]))
+        for name in AGENT_NAMES:
+            repaired_broker["agents"][name]["card_sha256"] = hashlib.sha256(
+                name.encode()).hexdigest()
+        sessions = [f"{repaired_broker['agents'][name]['card_sha256']}:{task['task_id']}"
+                    for name in AGENT_NAMES
+                    for task in preserved["agents"][name]["tasks"]
+                    for _call in task["model_calls"]]
         streams = [row for row in repaired_broker["broker_events"]
                    if row.get("event") == "stream"]
         self.assertEqual((len(streams), len(sessions)), (34, 18))

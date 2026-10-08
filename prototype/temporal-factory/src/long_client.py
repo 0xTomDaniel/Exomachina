@@ -99,9 +99,12 @@ def send_async(url: str, brief_text: str, *, message_id: str, context_id: str,
                               budget=budget)
 
 
-def validate_async_task(task: dict, *, context_id: str, identity: str,
-                        task_id: str | None = None) -> str:
-    """Return the version-neutral state of a Task bound by the factory journal."""
+def validate_async_task(task: dict, *, context_id: str, task_id: str | None = None) -> str:
+    """Return the version-neutral state of a Task bound by the factory journal.
+
+    Correlation is the journal's: the Task id and contextId it recorded. The
+    agent's identity is its pinned Agent Card; no Task metadata is required.
+    """
     if (not isinstance(task, dict) or "kind" in task or not isinstance(task.get("id"), str)
             or not task["id"]):
         raise ValueError("A2A response lacks Task id")
@@ -109,9 +112,6 @@ def validate_async_task(task: dict, *, context_id: str, identity: str,
         raise ValueError("A2A Task id differs from the journaled Task")
     if task.get("contextId") != context_id:
         raise ValueError("A2A Task contextId differs from the journaled context")
-    metadata = task.get("metadata") or {}
-    if metadata.get("agent_identity") != identity:
-        raise ValueError("A2A Task identity mismatch")
     try:
         state = a2a_v1.task_state(task)
     except a2a_v1.ProtocolError as error:
@@ -130,7 +130,7 @@ def async_receipt(task: dict, binding: dict, *, identity: str,
     the revision it assigned and the author from its own pin, never an agent
     echo. ``item_parts`` keeps the artifact's Parts verbatim for consumers.
     """
-    if validate_async_task(task, context_id=binding["context_id"], identity=identity,
+    if validate_async_task(task, context_id=binding["context_id"],
                            task_id=binding.get("task_id")) != "completed":
         raise ValueError("A2A Task is not complete")
     artifacts = task.get("artifacts") or []

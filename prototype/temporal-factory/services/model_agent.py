@@ -11,7 +11,8 @@ exposes exactly the JSON-RPC endpoint and the well-known Agent Card:
 - The result is one artifact whose single text Part is the work product
   itself (canonical JSON); there is no envelope.
 - A resend of the same ``messageId`` returns the original Task; a reused
-  ``messageId`` with a different payload is rejected.
+  ``messageId`` with a different payload is rejected. The card says so with
+  the standard skill tag ``message-id-idempotent``; its identity is the card.
 - With the budget extension activated, the terminal Task reports ``incurred``
   tokens exactly as the model provider reported them; unknown fields are
   omitted, never zero.
@@ -53,7 +54,6 @@ from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E
 
 
 TOKEN = "Bearer fixture-token"
-EXTENSION_URI = ext.AGENT_URI
 FAILURE_TEXT = "Agent work failed."
 MAX_CALLS = 3
 DEADLINE_SECONDS = 240
@@ -266,7 +266,7 @@ class Ledger:
         row = self.row(task_id)
         if row is None:
             return None
-        metadata = {"agent_identity": self.identity}
+        metadata = {}
         if row["state"] in {"completed", "failed"} and ext.requested(extensions, ext.BUDGET_URI):
             metadata.update(ext.incurred_metadata(self.incurred_tokens(task_id)))
         artifact = json.loads(row["artifact"]) if row["artifact"] else None
@@ -281,7 +281,7 @@ class Ledger:
         # The ledger keeps version-neutral state names; map them at the boundary.
         return Task(id=task_id, context_id=row["context_id"],
                     status=TaskStatus(state=task_state(row["state"]), message=status_message),
-                    metadata=metadata, history=[request],
+                    metadata=metadata or None, history=[request],
                     artifacts=[Artifact(artifact_id=artifact["sha256"],
                                         parts=[text_part(artifact["content"],
                                                          a2a_v1.JSON_MEDIA_TYPE)])]
@@ -553,6 +553,9 @@ class Service:
         self.role = (roles if roles is not None else ROLES)[role_name]
         self.test_controls = test_controls
         self.max_calls, self.deadline_seconds = MAX_CALLS, deadline_seconds
+        # Model broker sessions are labelled <card sha256>:<taskId>: the digest
+        # of this agent's own public Agent Card, which any client can compute.
+        self.card_sha256: str | None = None
         self.running: dict[str, asyncio.Task] = {}
 
     def schedule(self, task_id: str):
@@ -600,7 +603,7 @@ class Service:
                 if prechecked is not None:
                     content = prechecked
                 else:
-                    session_id = f"{self.ledger.identity}:{task_id}"
+                    session_id = f"{self.card_sha256}:{task_id}"
                     remaining = self.deadline_seconds - (time.time() - row["created_at"])
                     budget_deadline = ext.deadline_epoch(budget)
                     if budget_deadline is not None:
@@ -700,12 +703,9 @@ class Handler(LegacyRequestHandler):
             raise InvalidParamsError(message=str(error)) from error
 
 
-def agent_card(role: str, capability: str, port: int, identity: str, *,
+def agent_card(role: str, capability: str, port: int, *,
                test_controls: bool = False) -> AgentCard:
     extensions = [
-        AgentExtension(uri=ext.AGENT_URI, required=False,
-                       description="Stable agent identity and messageId resend rule",
-                       params={"identity": identity, "resend": ext.RESEND_RULE}),
         AgentExtension(uri=ext.BUDGET_URI, required=False,
                        description="Optional budget; reports incurred tokens as the provider reported them"),
     ]
@@ -718,7 +718,7 @@ def agent_card(role: str, capability: str, port: int, identity: str, *,
         default_output_modes=["application/json"],
         capabilities=AgentCapabilities(streaming=False, extensions=extensions),
         skills=[AgentSkill(id=capability, name=capability, description=f"{role} report work",
-                           tags=[role])],
+                           tags=[role, "message-id-idempotent", "get-task"])],
         **bearer_security())
 
 
@@ -733,8 +733,9 @@ def create_app(state: Path, port: int, *, role: str, capability: str,
                deadline_seconds: float = DEADLINE_SECONDS):
     service = Service(state, role, capability, model_provider, model, test_controls,
                       roles, deadline_seconds)
-    card = agent_card(role, capability, port, service.ledger.identity,
+    card = agent_card(role, capability, port,
                       test_controls=test_controls)
+    service.card_sha256 = agent_card_digest(card)
     app = build_app(card, Handler(service, card))
     app.state.model_agent_service = service
 

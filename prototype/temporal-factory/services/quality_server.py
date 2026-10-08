@@ -48,7 +48,7 @@ class QualityHarness(prior.Harness):
 def create_app(state: Path, port: int):
     harness = QualityHarness(state)
     card = prior.fixture_card("Arbitration Quality", "Deterministic independent Quality fixture",
-                              "quality", harness.identity, port, ["fixture", "quality"])
+                              "quality", port, ["fixture", "quality"])
     return prior.fixture_app(harness, card)
 
 

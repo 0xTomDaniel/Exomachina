@@ -13,7 +13,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-import a2a_extensions
+import a2a_v1
 import agent_binding
 from a2a_outcome import OutcomeJournal, Phase
 from supplier import (ParentAssignment, SupplierBindingError, SupplierFanout,
@@ -87,7 +87,6 @@ class SupplierServer(ThreadingHTTPServer):
 
     def __init__(self, address, *, resend=True):
         super().__init__(address, SupplierHandler)
-        self.identity = "supplier.synthetic.local"
         self.role = "supplier"
         self.resend = resend
         self.drop_next = False
@@ -102,17 +101,20 @@ class SupplierServer(ThreadingHTTPServer):
 
     def refresh_card(self):
         port = self.server_address[1]
-        params = {"identity": self.identity}
-        if self.resend:
-            params["resend"] = a2a_extensions.RESEND_RULE
+        # A plain A2A card; resend dedupe is promised by a standard skill tag.
         self.card = {
             "name": "synthetic supplier",
             "supportedInterfaces": [{"url": f"http://127.0.0.1:{port}",
                                      "protocolBinding": "JSONRPC", "protocolVersion": "1.0"}],
-            "skills": [{"id": "supplier@1"}],
-            "capabilities": {"extensions": [{"uri": agent_binding.EXTENSION_URI,
-                                             "required": False, "params": params}]},
+            "skills": [{"id": "supplier@1",
+                        "tags": ["message-id-idempotent"] if self.resend else []}],
         }
+
+    @property
+    def identity(self):
+        """The factory's identity for this supplier: derived from its card."""
+        return agent_binding.card_identity(
+            agent_binding.digest(a2a_v1.card_without_endpoint(self.card)))
 
     def make_task(self, message):
         content = _canonical({"result": "synthetic-public-artifact",
@@ -120,7 +122,6 @@ class SupplierServer(ThreadingHTTPServer):
                               "input": message["parts"][0]["text"]})
         # The work product itself; the factory normalizes revision and author.
         return {"id": f"remote-task-{self.effects}", "contextId": message["contextId"],
-                "metadata": {"agent_identity": self.identity},
                 "status": {"state": "TASK_STATE_COMPLETED"},
                 "artifacts": [{"artifactId": hashlib.sha256(content.encode()).hexdigest(),
                                "parts": [{"text": content, "mediaType": "application/json"}]}]}
@@ -217,9 +218,15 @@ class SupplierFanoutTests(unittest.TestCase):
             restarted_journal.close()
             self.journal = OutcomeJournal(self.database)
 
+    def write_snapshot(self):
+        url = self.server.card["supportedInterfaces"][0]["url"]
+        self.snapshot.write_text(json.dumps({"snapshot_version": 1,
+            "agents": {self.server.identity: {"url": url}}}))
+
     def test_opaque_mode_stays_unknown_without_resubmit(self):
         self.server.resend = False
         self.server.refresh_card()
+        self.write_snapshot()
         contract = agent_binding.pin(self.server.card["supportedInterfaces"][0]["url"],
                                      self.server.identity)
         self.assertEqual(contract["reconcile"], "opaque")
@@ -245,10 +252,10 @@ class SupplierFanoutTests(unittest.TestCase):
     def test_pinned_resend_requires_card_declaration_before_send(self):
         self.server.resend = False
         self.server.refresh_card()
-        contract = dict(self.contract)
-        contract["card_sha256"] = agent_binding.digest(
-            {key: value for key, value in self.server.card.items()
-             if key != "supportedInterfaces"})
+        self.write_snapshot()
+        # A pin claiming resend for a card that promises none is refused.
+        contract = {**agent_binding.pin(self.server.card["supportedInterfaces"][0]["url"]),
+                    "reconcile": "a2a-idempotent-resend"}
         with self.assertRaises((SupplierBindingError, ValueError)):
             self.fanout.dispatch_child(self.parent, self.child(contract=contract))
         self.assertEqual(self.server.sends, 0)

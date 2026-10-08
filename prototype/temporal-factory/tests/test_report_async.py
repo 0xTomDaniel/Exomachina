@@ -15,6 +15,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import a2a_extensions
+import a2a_v1
 import adapter
 import agent_binding
 import handoff
@@ -70,7 +71,6 @@ class Handler(BaseHTTPRequestHandler):
 class Agent(ThreadingHTTPServer):
     def __init__(self, port, role, capability):
         super().__init__(("127.0.0.1", port), Handler)
-        self.identity = f"unit-{role}-{capability}"
         self.role = role
         self.capability = capability
         self.tamper = None
@@ -80,9 +80,10 @@ class Agent(ThreadingHTTPServer):
         self.card = {"name": role, "supportedInterfaces": [{
                 "url": f"http://127.0.0.1:{port}", "protocolBinding": "JSONRPC",
                 "protocolVersion": "1.0"}],
-            "skills": [{"id": capability}], "capabilities": {"extensions": [{
-                "uri": agent_binding.EXTENSION_URI, "required": False, "params": {
-                    "identity": self.identity, "resend": a2a_extensions.RESEND_RULE}}]}}
+            "skills": [{"id": capability, "tags": ["message-id-idempotent"]}]}
+        # A plain A2A card: the factory derives this agent's identity from it.
+        self.identity = agent_binding.card_identity(
+            agent_binding.digest(a2a_v1.card_without_endpoint(self.card)))
 
     def result(self, brief, inputs):
         if self.role == "research":
@@ -120,7 +121,6 @@ class Agent(ThreadingHTTPServer):
         brief = json.loads(parts[0]["text"])
         completed = time.monotonic() - created > 0.03
         task = {"id": f"{self.identity}:{key}", "contextId": context_id,
-                "metadata": {"agent_identity": self.identity},
                 "status": {"state": "TASK_STATE_COMPLETED" if completed else "TASK_STATE_WORKING"}}
         if completed:
             content = canonical(self.result(brief, parts[1:]))

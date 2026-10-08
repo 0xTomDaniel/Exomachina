@@ -22,13 +22,12 @@ from uuid import uuid4
 import uvicorn
 from fastapi.responses import JSONResponse
 from a2a.server.agent_execution import AgentExecutor
-from a2a.types import (AgentCapabilities, AgentCard, AgentExtension, AgentSkill, Artifact,
+from a2a.types import (AgentCapabilities, AgentCard, AgentSkill, Artifact,
                        InvalidParamsError, Task, TaskStatus)
 from strands import Agent, tool
 from strands.models import Model
 from strands.plugins import Plugin
 
-import a2a_extensions
 from google.protobuf.json_format import MessageToDict
 import a2a_v1
 from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore, agent_message,
@@ -278,8 +277,7 @@ class LedgerTaskStore(ProjectionTaskStore):
                     status=TaskStatus(state=task_state("completed")),
                     artifacts=[Artifact(artifact_id=artifact["sha256"],
                                         parts=[text_part(artifact["content"], artifact.get(
-                                            "media_type", "application/json"))])],
-                    metadata={"agent_identity": self.harness.identity})
+                                            "media_type", "application/json"))])])
 
     async def save(self, task, context=None):
         if self.harness.task(task.id) is None:
@@ -362,17 +360,20 @@ class FixtureHandler(LegacyRequestHandler):
             raise InvalidParamsError(message=str(error)) from error
 
 
-def fixture_card(name: str, description: str, skill: str, identity: str, port: int,
+# The skill tag that publicly promises a resent messageId returns the original Task.
+IDEMPOTENT_RESEND_TAG = "message-id-idempotent"
+
+
+def fixture_card(name: str, description: str, skill: str, port: int,
                  tags: list[str]) -> AgentCard:
+    """A plain A2A v1 card: no extensions; the card itself is the agent's identity."""
     return AgentCard(
         name=name, description=description,
         supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="2.0.0",
         default_input_modes=["text/plain"], default_output_modes=["application/json"],
-        capabilities=AgentCapabilities(streaming=False, extensions=[
-            AgentExtension(uri=a2a_extensions.AGENT_URI, required=False,
-                           params={"identity": identity,
-                                   "resend": a2a_extensions.RESEND_RULE})]),
-        skills=[AgentSkill(id=skill, name=skill, description=description, tags=tags)],
+        capabilities=AgentCapabilities(streaming=False),
+        skills=[AgentSkill(id=skill, name=skill, description=description,
+                           tags=[*tags, IDEMPOTENT_RESEND_TAG, "get-task"])],
         **bearer_security(),
     )
 
@@ -393,10 +394,13 @@ def fixture_app(harness, card):
     return app
 
 
-def create_app(state: Path, role: str, port: int, *, drop_first_response: bool = False):
+def create_app(state: Path, role: str, port: int, *, name: str | None = None,
+               drop_first_response: bool = False):
     harness = Harness(state, role, drop_first_response=drop_first_response)
-    card = fixture_card("Decision round " + role, "Deterministic Strands harness fixture",
-                        role, harness.identity, port, ["fixture", role])
+    # Distinct services carry distinct card names, so their card-derived
+    # identities differ.
+    card = fixture_card("Decision round " + (name or role), "Deterministic Strands harness fixture",
+                        role, port, ["fixture", role])
     return fixture_app(harness, card)
 
 
@@ -405,9 +409,10 @@ if __name__ == "__main__":
     parser.add_argument("--state", type=Path, required=True)
     parser.add_argument("--role", choices=["capability", "quality"], required=True)
     parser.add_argument("--port", type=int, required=True)
+    parser.add_argument("--name", help="service name shown on the Agent Card")
     parser.add_argument("--drop-first-response", action="store_true",
                         help="test fault: lose the first committed response")
     args = parser.parse_args()
-    uvicorn.run(create_app(args.state, args.role, args.port,
+    uvicorn.run(create_app(args.state, args.role, args.port, name=args.name,
                            drop_first_response=args.drop_first_response),
                 host="127.0.0.1", port=args.port, log_level="warning")

@@ -29,6 +29,7 @@ from single_factory import CHECK_IDS, FOLLOW_UP, check_evidence  # noqa: E402
 from authoring import approve, materialize  # noqa: E402
 from binding import build_id_for, source_digest  # noqa: E402
 from fixture import assignment  # noqa: E402
+import agent_binding  # noqa: E402
 import long_client  # noqa: E402
 import sqlite3  # noqa: E402
 from testbed import (REPORT_CAPABILITIES, REPORT_NAMES, REPORT_QUALITY_POLICY,  # noqa: E402
@@ -615,7 +616,9 @@ class AgentModeTests(unittest.TestCase):
                         self.fail(f"agent server exited during startup; see {state / 'agent.log'}")
                     try:
                         card = get_json("/.well-known/agent-card.json")
-                        return process, card["capabilities"]["extensions"][0]["params"]
+                        # The agent's identity is its pinned Agent Card.
+                        return process, {"identity": agent_binding.card_observation(
+                            base)["identity"], "card": card}
                     except (urllib.error.URLError, TimeoutError, ValueError):
                         time.sleep(0.1)
                 self.fail(f"agent server did not serve its card; see {state / 'agent.log'}")
@@ -645,7 +648,8 @@ class AgentModeTests(unittest.TestCase):
             # The work product itself: one text Part, no envelope or author echo.
             self.assertEqual(task["artifacts"][0]["parts"],
                              [{"text": "fixture-result:" + brief, "mediaType": "text/plain"}])
-            self.assertEqual(task["metadata"], {"agent_identity": first["identity"]})
+            # The agent's identity is its card; its Tasks carry no metadata.
+            self.assertNotIn("metadata", task)
             again = long_client.send_async(base, brief, message_id="agent-mode-message",
                                            context_id="agent-mode-context")
             self.assertEqual(again["id"], task["id"])
@@ -661,6 +665,7 @@ class AgentModeTests(unittest.TestCase):
             process = None
             process, second = launch()
             self.assertEqual(second["identity"], first["identity"])
+            self.assertNotIn("extensions", first["card"].get("capabilities") or {})
             self.assertEqual(incarnation(), before + 1)
             self.assertEqual(long_client.get_task(base, task["id"])["id"], task["id"])
             self.assertFalse((home / "runner").exists())

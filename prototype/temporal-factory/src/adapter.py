@@ -170,8 +170,7 @@ def _invoke_async(binding: dict, contract: dict, action: dict,
                 try:
                     task = a2a.send_message_async(url, a2a_v1.user_message(
                         parts, message_id=record.message_id, context_id=record.context_id))
-                    state = a2a.validate_async_task(task, context_id=record.context_id,
-                                                    identity=binding["identity"])
+                    state = a2a.validate_async_task(task, context_id=record.context_id)
                     record = task_started(record, task["id"])
                     journal.put(record)
                     _log("agent-task-journaled", action_id=record.action_id,
@@ -202,7 +201,6 @@ def _invoke_async(binding: dict, contract: dict, action: dict,
                 # Re-attach by the journaled Task id only; never ask about a run.
                 task = a2a.get_task(url, record.task_id)
                 state = a2a.validate_async_task(task, context_id=record.context_id,
-                                                identity=binding["identity"],
                                                 task_id=record.task_id)
             except a2a.UncertainSubmission:
                 time.sleep(0.5)

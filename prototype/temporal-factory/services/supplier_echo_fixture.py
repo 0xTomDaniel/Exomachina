@@ -27,7 +27,7 @@ from uuid import uuid4
 
 import uvicorn
 from a2a.server.agent_execution import AgentExecutor
-from a2a.types import (AgentCapabilities, AgentCard, AgentExtension, AgentSkill,
+from a2a.types import (AgentCapabilities, AgentCard, AgentSkill,
                        Artifact, InvalidParamsError, Task, TaskStatus)
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -35,7 +35,6 @@ from fastapi.responses import JSONResponse
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-import a2a_extensions as ext  # noqa: E402
 from a2a_v1_server import (LegacyRequestHandler, ProjectionTaskStore,  # noqa: E402
                            bearer_security, build_app, data_part, interfaces, part_content,
                            text_part,
@@ -144,12 +143,10 @@ class Ledger:
         if row is None:
             return None
         content = canonical({"kind": "supplier_echo_artifact@fixture",
-                             "supplier_identity": self.identity,
                              "input_sha256": row["input_sha256"]})
         sha256 = hashlib.sha256(content.encode("utf-8")).hexdigest()
         return Task(id=row["task_id"], context_id=row["context_id"],
                     status=TaskStatus(state=task_state("completed")),
-                    metadata={"agent_identity": self.identity},
                     artifacts=[Artifact(artifact_id=sha256,
                                         parts=[text_part(content, "application/json")])])
 
@@ -200,12 +197,10 @@ def create_app(state: Path, port: int, *, drop_first_response: bool = False):
         name="Supplier echo fixture", description="Local deterministic A2A supplier fixture",
         supported_interfaces=interfaces(f"http://127.0.0.1:{port}/"), version="2.0.0",
         default_input_modes=["text/plain"], default_output_modes=["application/json"],
-        capabilities=AgentCapabilities(streaming=False, extensions=[
-            AgentExtension(uri=ext.AGENT_URI, required=False,
-                           params={"identity": ledger.identity, "resend": ext.RESEND_RULE})]),
+        capabilities=AgentCapabilities(streaming=False),
         skills=[AgentSkill(id="supplier_echo@1", name="Supplier echo fixture",
                            description="Returns a synthetic public artifact",
-                           tags=["supplier-fixture"])],
+                           tags=["supplier-fixture", "message-id-idempotent", "get-task"])],
         **bearer_security(),
     )
     app = build_app(card, Handler(ledger, store, card))

@@ -8,8 +8,8 @@ Suppliers are ordinary A2A agent services (A2A decision 7): each child is sent
 as a plain Message whose text Part is the canonical child payload. Parent and
 child factory bindings never cross the wire; the journal maps them to the
 A2A ``messageId``/``contextId``/``taskId``. A lost response is reconciled by
-resending the same journaled Message only when the supplier's Agent Card
-declares the ``messageId`` resend rule; otherwise it stays unknown.
+resending the same journaled Message only when the supplier's pinned Agent
+Card tags a skill ``message-id-idempotent``; otherwise it stays unknown.
 """
 from __future__ import annotations
 
@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-import a2a_extensions
 import long_client as a2a
 from uuid import uuid4
 from a2a_outcome import (OutcomeJournal, OutcomeRecord, Phase, ReceiverKind,
@@ -199,8 +198,8 @@ class SupplierFanout:
     def _resolve(self, child: SupplierRequest) -> tuple[str, dict[str, Any]]:
         url, observed = a2a.resolve_pinned(
             self.snapshot_path, child.identity, dict(child.contract))
-        resend = observed.get("resend") == a2a_extensions.RESEND_RULE
-        if child.contract.get("reconcile") == "a2a-idempotent-resend" and not resend:
+        if (child.contract.get("reconcile") == "a2a-idempotent-resend"
+                and observed.get("reconcile") != "a2a-idempotent-resend"):
             raise SupplierBindingError("pinned resend mode is not declared by the Agent Card")
         return url, observed
 
@@ -279,7 +278,6 @@ class SupplierFanout:
     def _validate_task(child: SupplierRequest, record: OutcomeRecord,
                        task: Mapping[str, Any], *, task_id: str | None = None) -> str:
         return a2a.validate_async_task(dict(task), context_id=record.context_id,
-                                       identity=child.identity,
                                        task_id=task_id or record.task_id)
 
     def _complete(self, parent: ParentAssignment, child: SupplierRequest,

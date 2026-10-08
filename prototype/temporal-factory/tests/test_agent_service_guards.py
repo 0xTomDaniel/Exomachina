@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "services"))
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scenarios"))
+import a2a_extensions  # noqa: E402
 import a2a_v1  # noqa: E402
 import delayed_agent  # noqa: E402
 import harness  # noqa: E402
@@ -83,6 +84,24 @@ class AgentServiceGuardTests(unittest.TestCase):
                                  "/openapi.json", "/docs"):
                         self.assertEqual(client.get(path, headers=AUTH).status_code, 404, path)
 
+    def test_agent_cards_offer_only_the_generic_budget_extension(self):
+        # Decision 9: an agent's identity is its pinned card; the only
+        # Exomachina URI an agent may offer is the optional budget extension,
+        # plus the test-only stimulus control when started with test controls.
+        apps = {**self.apps(), "model_agent test controls": model_agent.create_app(
+            self.state / "model-test", 46268, role="synthesis",
+            capability="report_synthesis@1", model_provider="scripted", test_controls=True)}
+        for name, app in apps.items():
+            with self.subTest(service=name), TestClient(app) as client:
+                card = client.get("/.well-known/agent-card.json").json()
+                extensions = (card.get("capabilities") or {}).get("extensions") or []
+                allowed = {a2a_extensions.BUDGET_URI}
+                if name == "model_agent test controls":
+                    allowed.add(a2a_extensions.TEST_STIMULUS_URI)
+                self.assertLessEqual({item["uri"] for item in extensions}, allowed)
+                self.assertFalse(any(item.get("required") for item in extensions))
+                self.assertNotIn("identity", json.dumps(extensions))
+
     def test_agent_service_sources_declare_no_routes_of_their_own(self):
         decorators = {"get", "post", "put", "patch", "delete", "route", "api_route",
                       "add_api_route", "add_route", "mount", "websocket"}
@@ -117,6 +136,8 @@ class AgentServiceGuardTests(unittest.TestCase):
                 for key, value in secret.items():
                     self.assertNotIn(value, wire)
                     self.assertNotIn(f'"{key}"', wire)
+                # The agent's identity is its card; no Task carries it.
+                self.assertNotIn('"agent_identity"', wire)
 
     def test_factory_name_audit_is_clean_and_detects_a_violation(self):
         audit = single_factory._factory_name_audit()

@@ -28,7 +28,7 @@ import a2a_v1  # noqa: E402
 import a2a_extensions  # noqa: E402
 
 AUTH = {"Authorization": "Bearer fixture-token",
-        **a2a_v1.headers([model_agent.EXTENSION_URI])}
+        **a2a_v1.headers([a2a_extensions.BUDGET_URI])}
 
 
 def canonical(value: object) -> str:

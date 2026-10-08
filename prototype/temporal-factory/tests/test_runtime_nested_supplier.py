@@ -209,7 +209,7 @@ class RuntimeNestedSupplierTests(unittest.TestCase):
             {"state": "completed", "status": {}, "result": result, "incident": None})
         self.assertEqual(task.id, "received-child-task")
         self.assertEqual(task.context_id, "received-child-context")
-        self.assertEqual(task.metadata["agent_identity"], self.director.identity)
+        self.assertNotIn("agent_identity", task.metadata)
         for field in SUPPLIER_ECHO_FIELDS:
             self.assertEqual(task.metadata[field], command[field])
         self.assertEqual(len(task.artifacts), 1)

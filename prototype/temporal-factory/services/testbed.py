@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
-from agent_binding import UnavailableBinding, card_observation, card_pin, pin
+from agent_binding import UnavailableBinding, card_observation, pin
 from report_contract import REPORT_ACCEPTANCE_CRITERIA, digest as report_digest
 from model_broker import DEFAULT_MODEL_ID
 SERVICE_NAMES = (
@@ -69,17 +69,11 @@ def report_bindings(health: dict[str, dict], port_base: int) -> dict[str, dict]:
 
 def release_contract(binding: dict) -> dict:
     """The release receiver's pinned contract: its public Agent Card, nothing else."""
-    observed = card_pin(binding["url"])
-    if observed["identity"] != binding["identity"]:
-        raise ValueError("release receiver Agent Card differs from its binding identity")
-    tags = {tag for skill in observed["skills"] if skill["id"] == CAPABILITIES["release"]
-            for tag in skill["tags"]}
-    return {**contract_records()["release"], "card_sha256": observed["card_sha256"],
-            "reconcile": ("a2a-idempotent-resend" if "message-id-idempotent" in tags
-                          else "opaque")}
+    return {**contract_records()["release"], **pin(binding["url"], binding["identity"])}
 
 
 def report_contracts(bindings: dict[str, dict]) -> dict[str, dict]:
+    """Every agent, release included, is pinned by its Agent Card alone."""
     contracts = {}
     for name in REPORT_NAMES:
         if name == "release":
@@ -169,31 +163,29 @@ def read_pids(home: Path) -> dict[str, dict]:
     return json.loads(path.read_text()) if path.exists() else {}
 
 
-def release_card_at(port: int) -> dict | None:
-    """The release receiver serves only A2A: observe it through its Agent Card."""
-    try:
-        observed = card_pin(f"http://127.0.0.1:{port}")
-    except (UnavailableBinding, ValueError, OSError):
-        return None
-    tags = {tag for skill in observed["skills"] for tag in skill["tags"]}
-    return {"identity": observed["identity"], "card_sha256": observed["card_sha256"],
-            "role": "release", "a2a_protocol": "1.0",
-            "mode": "participating" if "message-id-idempotent" in tags else "opaque"}
-
-
-def observe(name: str, port: int) -> dict | None:
-    return release_card_at(port) if name == "release" else health_at(port)
-
-
 def health_at(port: int) -> dict | None:
+    """Observe one agent through its Agent Card; the card is its identity."""
     try:
         observed = card_observation(f"http://127.0.0.1:{port}")
     except (OSError, ValueError, UnavailableBinding, urllib.error.URLError):
         return None
-    if not isinstance(observed.get("identity"), str) or not observed["identity"]:
-        return None
     return {"identity": observed["identity"], "skills": observed["skills"],
-            "card_sha256": observed["card_sha256"]}
+            "card_sha256": observed["card_sha256"], "reconcile": observed["reconcile"]}
+
+
+def observe(name: str, port: int) -> dict | None:
+    """Every service, release included, is observed the same way."""
+    return health_at(port)
+
+
+def require_distinct_identities(health: dict[str, dict]) -> None:
+    """Two services whose cards derive the same identity would merge in the snapshot."""
+    seen: dict[str, str] = {}
+    for name, observed in health.items():
+        other = seen.setdefault(observed["identity"], name)
+        if other != name:
+            raise RuntimeError(f"{other} and {name}: identical Agent Cards derive the same "
+                               "identity; refusing to merge them")
 
 
 def alive(pid: int) -> bool:
@@ -221,7 +213,7 @@ def command_for(name: str, state: Path, port: int, *, delayed_agent: bool = Fals
                 "--delay-seconds", str(delay_seconds)]
     if role_for(name) == "capability":
         script = ROOT / "src" / "harness_server.py"
-        extra = ["--role", "capability"]
+        extra = ["--role", "capability", "--name", name]
     elif name == "quality":
         script = ROOT / "services" / "quality_server.py"
         extra = []
@@ -279,18 +271,18 @@ def up(home: Path, port_base: int, *, delayed_agent: bool = False,
             directory = home / "testbed"
             directory.mkdir(parents=True, exist_ok=True)
             (directory / "pids.json").write_text(json.dumps(pids, indent=2, sort_keys=True) + "\n")
-        if name == "release" and observed.get("mode") != "participating":
+        if name == "release" and observed.get("reconcile") != "a2a-idempotent-resend":
             raise RuntimeError("release: Agent Card does not offer messageId idempotency")
-            raise RuntimeError(f"{name}: health role mismatch")
         if (profile == "report" and name != "release"
                 and REPORT_CAPABILITIES[name] not in observed.get("skills", [])):
             raise RuntimeError(f"{name}: Agent Card skill mismatch")
         health[name] = observed
+    require_distinct_identities(health)
     bindings = report_bindings(health, port_base) if profile == "report" else binding_records(health, port_base)
     contracts = report_contracts(bindings) if profile == "report" else contract_records()
     if profile == "legacy":
         # Every A2A agent is pinned by its Agent Card; reconciliation follows
-        # the card's declared messageId resend rule.
+        # the card's message-id-idempotent skill tag.
         for name, value in contracts.items():
             if value["role"] == "release":
                 continue

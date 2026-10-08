@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import a2a_extensions
+import a2a_v1
 import adapter
 import agent_binding
 from model_usage import ModelUsageJournal
@@ -82,17 +83,17 @@ class StubHandler(BaseHTTPRequestHandler):
 class StubServer(ThreadingHTTPServer):
     def __init__(self, address):
         super().__init__(address, StubHandler)
-        self.identity = "stub-agent-identity"
         self.card = {"name": "counter evidence",
                      "supportedInterfaces": [{"url": f"http://127.0.0.1:{address[1]}",
                                               "protocolBinding": "JSONRPC",
                                               "protocolVersion": "1.0"}],
-                     "skills": [{"id": "counter_evidence@1"}],
+                     "skills": [{"id": "counter_evidence@1",
+                                 "tags": ["message-id-idempotent"]}],
                      "capabilities": {"extensions": [
-                         {"uri": agent_binding.EXTENSION_URI, "required": False,
-                          "params": {"identity": self.identity,
-                                     "resend": a2a_extensions.RESEND_RULE}},
                          {"uri": a2a_extensions.BUDGET_URI, "required": False}]}}
+        # The factory's identity for this agent is derived from its card.
+        self.identity = agent_binding.card_identity(
+            agent_binding.digest(a2a_v1.card_without_endpoint(self.card)))
         self.tasks = {}
         self.effects = 0
         self.drop_once = False
@@ -107,12 +108,11 @@ class StubServer(ThreadingHTTPServer):
         import hashlib
         value = self.tasks[message_id]
         completed = time.monotonic() - value["accepted"] >= 0.15
-        metadata = {"agent_identity": self.identity}
-        if completed and self.report is not None:
-            metadata[a2a_extensions.BUDGET_URI] = self.report
-        task = {"id": value["id"], "contextId": value["context_id"], "metadata": metadata,
+        task = {"id": value["id"], "contextId": value["context_id"],
                 "status": {"state": "TASK_STATE_COMPLETED" if completed
                            else "TASK_STATE_WORKING"}}
+        if completed and self.report is not None:
+            task["metadata"] = {a2a_extensions.BUDGET_URI: self.report}
         if completed:
             content = "fixture-result:" + value["brief"]
             # The work product itself; a mismatch serves it as a data Part.
