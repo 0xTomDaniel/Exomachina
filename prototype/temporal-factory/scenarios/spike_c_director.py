@@ -13,12 +13,13 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from uuid import uuid4
 
-from common import (PY, ROOT, SRC, a2a_get, poll_task, run_cli, sqlite_rows,
+from common import (task_state, PY, ROOT, SRC, a2a_get, poll_task, run_cli, sqlite_rows,
                     start_harness, stop_process, wait_http)
 from live_authoring import (candidate_files, positive_control, scan_paths,
                             subscription_status)
 
 sys.path.insert(0, str(SRC))
+import a2a_v1  # noqa: E402
 from director_agent import DirectorTurn  # noqa: E402
 from harness import CURRENT_ACTOR, Director  # noqa: E402
 from model_broker import DEFAULT_HOME, DEFAULT_MODEL_ID, DEFAULT_REASONING_EFFORT, ModelBroker  # noqa: E402
@@ -33,35 +34,31 @@ MOCK = 46300
 def send_text(brief: str, *, task_id: str | None = None, context_id: str | None = None,
               observer: bool = False) -> dict:
     import urllib.request
-    message = {"role": "user", "messageId": str(uuid4()), "kind": "message",
-               "parts": [{"kind": "text", "text": brief}]}
-    if task_id:
-        message["taskId"] = task_id
-    if context_id:
-        message["contextId"] = context_id
-    payload = {"jsonrpc": "2.0", "id": str(uuid4()), "method": "message/send",
-               "params": {"message": message}}
+    message = a2a_v1.user_message([a2a_v1.text_part(brief)], task_id=task_id,
+                                  context_id=context_id)
+    payload = a2a_v1.rpc(a2a_v1.SEND_MESSAGE, a2a_v1.send_params(message))
     request = urllib.request.Request(f"http://127.0.0.1:{PORT}/",
         data=json.dumps(payload).encode(), headers={"Content-Type": "application/json",
+        **a2a_v1.headers(),
         "Authorization": "Bearer fixture-observer" if observer else "Bearer fixture-token"})
     with urllib.request.urlopen(request, timeout=150) as response:
         reply = json.loads(response.read())
     if "error" in reply:
         raise RuntimeError(json.dumps(reply["error"]))
-    return {"message_id": message["messageId"], "result": reply["result"]}
+    return {"message_id": message["messageId"],
+            "result": a2a_v1.unwrap_send_result(reply["result"])[1]}
 
 
 def send_data(command: dict, task_id: str, context_id: str, *, observer: bool) -> dict:
     import urllib.request
-    payload = {"jsonrpc": "2.0", "id": str(uuid4()), "method": "message/send",
-               "params": {"message": {"role": "user", "messageId": str(uuid4()),
-               "kind": "message", "taskId": task_id, "contextId": context_id,
-               "parts": [{"kind": "data", "data": command}]}}}
+    payload = a2a_v1.rpc(a2a_v1.SEND_MESSAGE, a2a_v1.send_params(a2a_v1.user_message(
+        [a2a_v1.data_part(command)], task_id=task_id, context_id=context_id)))
     request = urllib.request.Request(f"http://127.0.0.1:{PORT}/",
         data=json.dumps(payload).encode(), headers={"Content-Type": "application/json",
+        **a2a_v1.headers(),
         "Authorization": "Bearer fixture-observer" if observer else "Bearer fixture-token"})
     with urllib.request.urlopen(request, timeout=150) as response:
-        return json.loads(response.read())["result"]
+        return a2a_v1.unwrap_send_result(json.loads(response.read())["result"])[1]
 
 
 async def child_status(address: str, run_id: str) -> dict:
@@ -82,7 +79,7 @@ def rows(instance: Path, task_id: str | None = None) -> list[dict]:
 
 def task_summary(task: dict) -> dict:
     return {"id": task.get("id"), "context_id": task.get("contextId"),
-            "state": task.get("status", {}).get("state"),
+            "state": a2a_v1.observed_state(task.get("status", {}).get("state")),
             "observed_states": task.get("_observed_states"),
             "metadata": task.get("metadata"),
             "artifact_data": [part.get("data") for artifact in task.get("artifacts") or []
@@ -182,7 +179,7 @@ def main() -> None:
                                       "SELECT task_id FROM aliases")
                 if aliases:
                     try:
-                        state = a2a_get(f"http://127.0.0.1:{PORT}", aliases[0]["task_id"])["status"]["state"]
+                        state = task_state(a2a_get(f"http://127.0.0.1:{PORT}", aliases[0]["task_id"]))
                         if not early_states or early_states[-1] != state:
                             early_states.append(state)
                     except Exception:
@@ -198,13 +195,13 @@ def main() -> None:
         current = asyncio.run(child_status(address, run_id))
         transcript = rows(instance, task_id)
         c1 = {"brief": brief, "message_id": started["message_id"],
-              "send_state": original["status"]["state"], "early_task_states": early_states,
+              "send_state": task_state(original), "early_task_states": early_states,
               "task": task_summary(waiting),
               "run_id": run_id, "child_wait": {k: current.get(k) for k in
                    ("phase", "repair_count", "current_revision", "current_sha256")},
               "model_calls": transcript, "pinned_build": waiting["metadata"]["interpreter_build"]}
         c1["pass"] = ((c1["send_state"] == "working" or "working" in early_states)
-            and waiting["status"]["state"] == "input-required"
+            and task_state(waiting) == "input-required"
             and current["phase"] == "awaiting-director" and current["repair_count"] >= 1
             and len([r for r in transcript if r["tool"] == "start_research" and r["accepted"]]) == 1)
         record["checks"]["C-1"] = c1

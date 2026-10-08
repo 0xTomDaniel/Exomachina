@@ -21,6 +21,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from live_authoring import positive_control, scan_paths
+import a2a_v1  # noqa: E402  (src is on sys.path via live_authoring -> common)
+from agent_binding import EXTENSION_URI  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,29 +60,30 @@ def http(port: int, path: str, body: dict | None = None, *, authenticated: bool 
     request = urllib.request.Request(
         f"http://127.0.0.1:{port}{path}",
         data=None if body is None else json.dumps(body).encode(),
-        headers={"Content-Type": "application/json", **({"Authorization": AUTH} if authenticated else {})},
+        headers={"Content-Type": "application/json", **a2a_v1.headers([EXTENSION_URI]),
+                 **({"Authorization": AUTH} if authenticated else {})},
         method="GET" if body is None else "POST")
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.loads(response.read())
 
 
 def rpc(port: int, method: str, params: dict) -> dict:
-    response = http(port, "/", {"jsonrpc": "2.0", "id": str(uuid4()),
-                                "method": method, "params": params})
+    response = http(port, "/", a2a_v1.rpc(method, params))
     if "error" in response:
         raise RuntimeError(f"{method} error: {response['error']}")
-    return response["result"]
+    if method in a2a_v1.SEND_METHODS:
+        return a2a_v1.require_task(response["result"])
+    return a2a_v1.normalize_numbers(response["result"])
 
 
 def send(name: str, run_id: str, revision: str, brief: dict, definition_digest: str) -> dict:
     command = {"op": "assign", "action_id": f"{run_id}:{name}:{revision}",
                "run_id": run_id, "definition_digest": definition_digest,
                "brief": canonical(brief)}
-    message = {"kind": "message", "role": "user", "messageId": str(uuid4()),
-               "parts": [{"kind": "data", "data": command}]}
-    task = rpc(PORTS[name], "message/send", {"message": message,
-                                               "configuration": {"blocking": False}})
-    if task["status"]["state"] not in ("submitted", "working"):
+    message = a2a_v1.user_message([a2a_v1.data_part(command)])
+    task = rpc(PORTS[name], a2a_v1.SEND_MESSAGE,
+               a2a_v1.send_params(message, return_immediately=True))
+    if a2a_v1.task_state(task) not in ("submitted", "working"):
         raise AssertionError(f"{name} did not return a non-blocking Task")
     if task.get("metadata", {}).get("action_id") != command["action_id"]:
         raise AssertionError(f"{name} action binding mismatch")
@@ -91,8 +94,8 @@ def poll(name: str, task_id: str, *, seconds: float = 255) -> tuple[dict, list[s
     deadline = time.monotonic() + seconds
     states = []
     while time.monotonic() < deadline:
-        task = rpc(PORTS[name], "tasks/get", {"id": task_id})
-        state = task["status"]["state"]
+        task = rpc(PORTS[name], a2a_v1.GET_TASK, {"id": task_id})
+        state = a2a_v1.task_state(task)
         if not states or states[-1] != state:
             states.append(state)
         if state in ("completed", "failed"):
@@ -117,16 +120,16 @@ def completed_record(name: str, initial: dict, state: Path, identity: str) -> tu
     task, states = poll(name, initial["id"])
     calls = call_audit(state, task["id"])
     record = {"role": ROLES[name], "service": name, "capability": CAPABILITIES[name],
-              "identity": identity, "task_id": task["id"], "state": task["status"]["state"],
-              "observed_states": [initial["status"]["state"], *states],
+              "identity": identity, "task_id": task["id"], "state": a2a_v1.task_state(task),
+              "observed_states": [a2a_v1.task_state(initial), *states],
               "metadata": task.get("metadata"), "model_call_count": len(calls), "model_calls": calls}
-    if task["status"]["state"] != "completed":
+    if a2a_v1.task_state(task) != "completed":
         record["failure_status"] = task["status"].get("message")
         return record, {}
     artifacts = task.get("artifacts") or []
     if len(artifacts) != 1 or len(artifacts[0].get("parts", [])) != 1:
         raise AssertionError(f"{name} artifact count or parts mismatch")
-    data = artifacts[0]["parts"][0]["data"]
+    data = a2a_v1.part_data(artifacts[0]["parts"][0])
     if (artifacts[0]["artifactId"] != data["sha256"] or
             hashlib.sha256(data["content"].encode()).hexdigest() != data["sha256"] or
             data["author"] != identity or data["action_id"] != task["metadata"]["action_id"] or

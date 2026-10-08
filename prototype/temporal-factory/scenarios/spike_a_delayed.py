@@ -13,7 +13,7 @@ import sys
 import time
 from pathlib import Path
 
-from common import (PY, ROOT, SRC, a2a_get, a2a_send, http, jsonl, poll_task,
+from common import (task_state, PY, ROOT, SRC, a2a_get, a2a_send, http, jsonl, poll_task,
                     run_cli, sqlite_rows, start_harness, stop_process, wait_http)
 from definition import digest as definition_digest
 
@@ -193,7 +193,7 @@ def started(base: str, label: str) -> dict:
 def verdict(name: str, record: dict, *, accepted: bool, identity: str,
             original_task: str | None = None, impostor: dict | None = None) -> dict:
     task = record["caller_task"]
-    state = task["status"]["state"]
+    state = task_state(task)
     journal_row = record["journal"] or {}
     remote_effect = record["effects_after"]["effects"].get(record["action_id"], 0)
     pin_logs = [x for x in record["activity_events"] if x["kind"] == "agent-card-verified"]

@@ -23,7 +23,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from uuid import uuid4
 
-from common import (ROOT, SRC, a2a_get, http, jsonl, run_cli, start_harness,
+from common import (task_state, ROOT, SRC, a2a_get, http, jsonl, run_cli, start_harness,
                     stop_process)
 from live_authoring import (authoring_acceptance, candidate_files, positive_control,
                             scan_paths, subscription_status, synthetic_credential,
@@ -31,6 +31,7 @@ from live_authoring import (authoring_acceptance, candidate_files, positive_cont
 
 sys.path.insert(0, str(SRC))
 from model_broker import DEFAULT_HOME, DEFAULT_MODEL_ID, DEFAULT_REASONING_EFFORT, ModelBroker  # noqa: E402
+import a2a_v1  # noqa: E402
 
 FOLLOW_UP = "The factory is waiting for a Director decision on this request. Please review the run and decide."
 CHECK_IDS = ("SF-0", "SF-1", "SF-2", "SF-3", *(f"R1-{x}" for x in "abcde"),
@@ -51,10 +52,26 @@ def verdict(ok: bool, evidence: dict, label: str, *, behavior: str | None = None
             "decisive_evidence": evidence}
 
 
+def _part_is(part: object, content: str) -> bool:
+    """A v1 Part carrying ``content``; 0.3 ``kind`` Parts never match."""
+    try:
+        return a2a_v1.part_content(part) == content
+    except a2a_v1.ProtocolError:
+        return False
+
+
+def _recorded_state(task: dict) -> str | None:
+    """Version-neutral state of a recorded v1 Task, or None if not v1."""
+    try:
+        return a2a_v1.task_state(task)
+    except a2a_v1.ProtocolError:
+        return None
+
+
 def _data(task: dict) -> dict:
     for artifact in task.get("artifacts") or []:
         for part in artifact.get("parts") or []:
-            if part.get("kind") == "data":
+            if _part_is(part, "data"):
                 return part.get("data") or {}
     return {}
 
@@ -62,7 +79,7 @@ def _data(task: dict) -> dict:
 def _text(task: dict) -> str | None:
     for artifact in task.get("artifacts") or []:
         for part in artifact.get("parts") or []:
-            if part.get("kind") == "text":
+            if _part_is(part, "text"):
                 return part.get("text")
     return None
 
@@ -445,7 +462,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
             for w in workflows) and
         all(w.get("versioning_behavior") == "PINNED" for w in workflows) and
         bool(caller_messages) and all(len(m.get("parts") or []) == 1 and
-        m["parts"][0].get("kind") == "text" and
+        _part_is(m["parts"][0], "text") and
         not _has_any_key(m, {"graph", "version", "package", "quality"})
         for m in caller_messages), {"versions": list(versions), "workflows": workflows,
                                "route_workflows": route_workflows,
@@ -458,8 +475,8 @@ def check_evidence(e: dict) -> dict[str, dict]:
     c["R1-a"] = verdict(len(starts) == 1 and r1.get("director_turn_count") == 1 and
         (r1.get("director_turns") or [{}])[0].get("model_kind") == ("live" if live else "synthetic") and
         "working" in (r1.get("observed_states") or []) and
-        t1.get("status", {}).get("state") == "completed", {"calls": d1,
-        "states": r1.get("observed_states"), "task_state": t1.get("status", {}).get("state")}, label,
+        _recorded_state(t1) == "completed", {"calls": d1,
+        "states": r1.get("observed_states"), "task_state": _recorded_state(t1)}, label,
         behavior=model_behavior)
     research = [_run_actions(e, 1, name) for name in AGENTS[:2]]
     ids = [agents.get(name, {}).get("identity") for name in AGENTS[:2]]
@@ -634,7 +651,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
         inspected[0] < aborted[0] and calls3[aborted[0]].get("arguments", {}).get("action") == "abort" and
         calls3[aborted[0]].get("arguments", {}).get("revision") == child3.get("current_revision") and
         calls3[aborted[0]].get("arguments", {}).get("sha256") == child3.get("current_sha256") and
-        t3.get("status", {}).get("state") == "completed" and
+        _recorded_state(t3) == "completed" and
         r3.get("result_status") == "aborted" and not (t3.get("artifacts") or []) and
         len(_release_rows(e, 3)) == 0,
         {"calls": calls3, "task": t3, "release": _release_rows(e, 3)}, label,
@@ -839,17 +856,13 @@ def _pid(broker: ModelBroker) -> int | None:
 
 def _send_text(base: str, brief: str, task_id: str | None = None,
                context_id: str | None = None) -> dict:
-    message = {"kind": "message", "role": "user", "messageId": str(uuid4()),
-               "parts": [{"kind": "text", "text": brief}]}
-    if task_id:
-        message["taskId"] = task_id
-    if context_id:
-        message["contextId"] = context_id
-    reply = http(base + "/", {"jsonrpc": "2.0", "id": str(uuid4()),
-        "method": "message/send", "params": {"message": message}}, timeout=150)
+    message = a2a_v1.user_message([a2a_v1.text_part(brief)], task_id=task_id,
+                                  context_id=context_id)
+    reply = http(base + "/", a2a_v1.rpc(a2a_v1.SEND_MESSAGE, a2a_v1.send_params(message)),
+                 timeout=150)
     if "error" in reply:
         raise RuntimeError("A2A send failed: " + json.dumps(reply["error"]))
-    return {"message": message, "task": reply["result"]}
+    return {"message": message, "task": a2a_v1.require_task(reply["result"])}
 
 
 def _route(base: str, instance: Path, question: str, number: int,
@@ -867,7 +880,7 @@ def _route(base: str, instance: Path, question: str, number: int,
                 task_id = new[0] if new else None
             if task_id:
                 try:
-                    state = a2a_get(base, task_id)["status"]["state"]
+                    state = task_state(a2a_get(base, task_id))
                     if not seen or seen[-1] != state:
                         seen.append(state)
                 except (OSError, RuntimeError, KeyError):
@@ -878,22 +891,22 @@ def _route(base: str, instance: Path, question: str, number: int,
         sent = pending.result(timeout=150)
     task = sent["task"]
     task_id = task.get("id") or task_id
-    if not seen or seen[-1] != task["status"]["state"]:
-        seen.append(task["status"]["state"])
+    if not seen or seen[-1] != task_state(task):
+        seen.append(task_state(task))
     deadline = time.monotonic() + seconds
     target = "input-required" if number == 3 else "completed"
-    while time.monotonic() < deadline and task["status"]["state"] not in {target, "failed"}:
+    while time.monotonic() < deadline and task_state(task) not in {target, "failed"}:
         task = a2a_get(base, task_id)
-        state = task["status"]["state"]
+        state = task_state(task)
         if seen[-1] != state:
             seen.append(state)
         time.sleep(.25)
-    if task["status"]["state"] != target:
+    if task_state(task) != target:
         raise TimeoutError(f"route {number} ended at {task['status']['state']}")
     return {"caller_messages": [sent["message"]], "task": task,
             "task_id": task_id, "context_id": task["contextId"],
             "run_id": task.get("metadata", {}).get("run_id"), "observed_states": seen,
-            "sent_state": sent["task"]["status"]["state"]}
+            "sent_state": task_state(sent["task"])}
 
 
 def _import_audit() -> dict:
@@ -968,7 +981,7 @@ def _collect_agents(home: Path, testbed: dict, journal: list[dict],
             remote_artifacts = remote.get("artifacts") or []
             task["artifact_id"] = remote_artifacts[0].get("artifactId") if len(remote_artifacts) == 1 else None
             parts = remote_artifacts[0].get("parts") or [] if remote_artifacts else []
-            if len(parts) == 1 and parts[0].get("kind") == "data":
+            if len(parts) == 1 and _part_is(parts[0], "data"):
                 task["artifact"] = parts[0].get("data") or {}
             artifact = task.get("artifact") or {}
             match = next((x for x in journal if x.get("action_id") == task.get("action_id")), {})
@@ -1303,13 +1316,13 @@ def main() -> int:
                 deadline = time.monotonic() + 180
                 while time.monotonic() < deadline:
                     route["task"] = a2a_get(base, route["task_id"])
-                    state = route["task"]["status"]["state"]
+                    state = task_state(route["task"])
                     if route["observed_states"][-1] != state:
                         route["observed_states"].append(state)
                     if state in ("completed", "failed"):
                         break
                     time.sleep(.25)
-                if route["task"]["status"]["state"] != "completed":
+                if task_state(route["task"]) != "completed":
                     evidence["routes"][str(number)] = route
                     raise TimeoutError("route 3 Director follow-up did not complete the original Task")
             address = json.loads((home / "runner" / "runner-ready.json").read_text())["address"]

@@ -684,7 +684,7 @@ class SingleFactoryCheckerTests(unittest.TestCase):
         wait = {"run_id": "run-3", "follow_up_text": FOLLOW_UP,
                 "follow_up_original_task": True,
                 "child_status": {"current_revision": "r3", "current_sha256": "a" * 64},
-                "task": {"status": {"state": "completed"}}, "result_status": "aborted",
+                "task": {"status": {"state": "TASK_STATE_COMPLETED"}}, "result_status": "aborted",
                 "director_calls": [
                     {"tool": "inspect_run", "accepted": 1},
                     {"tool": "decide_wait", "accepted": 1, "model_kind": "synthetic", "arguments":
@@ -701,8 +701,8 @@ class SingleFactoryCheckerTests(unittest.TestCase):
                 "release_receipt": {"revision": "r1", "sha256": sha}}
         report = {"run_id": "parent", "child_run_id": "child",
                   "task": {"artifacts": [{"artifactId": sha,
-                      "parts": [{"kind": "text", "text": "# Report"},
-                      {"kind": "data", "data": data}]}]},
+                      "parts": [{"text": "# Report"},
+                      {"data": data}]}]},
                   "usefulness": {"ok": True, "reasons": [], "sections_present": True},
                   "report_path": "/tmp/report.md"}
         content = {"claims": [{"evidence": ["E1"]}, {"evidence": ["E2"]},
@@ -723,7 +723,7 @@ class SingleFactoryCheckerTests(unittest.TestCase):
         version = {"manifest_digest": "m", "package_digest": "p", "build_id": "b",
                    "versioning_behavior": "PINNED"}
         evidence["routes"] = {str(n): {"workflows": [dict(version), dict(version)],
-            "caller_messages": [{"parts": [{"kind": "text", "text": "question"}]}]}
+            "caller_messages": [{"parts": [{"text": "question"}]}]}
             for n in (1, 2, 3)}
         self.assertFalse(check_evidence(evidence)["SF-3"]["pass"])
         evidence["routes"]["3"]["workflows"][1]["build_id"] = "different"

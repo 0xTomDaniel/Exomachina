@@ -20,7 +20,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from common import (PY, ROOT, SRC, a2a_send, file_sha256, http, jsonl, poll_task, run_cli,
+from common import (task_state, PY, ROOT, SRC, a2a_send, file_sha256, http, jsonl, poll_task, run_cli,
                     sqlite_rows, start_harness, stop_process, write_evidence)
 
 PORT = 44830
@@ -666,11 +666,11 @@ def main() -> None:
                                "inputs": {"question": "Is the documented capability usable now?"}})
         final = poll_task(base, sent["id"], {"completed", "failed"}, seconds=300)
         evidence["wall_times"]["value"]["v2_a2a_terminal_s"] = round(time.monotonic() - tick, 3)
-        evidence["claims"]["a2a_task"] = claim({"send_state": sent["status"]["state"],
+        evidence["claims"]["a2a_task"] = claim({"send_state": task_state(sent),
             "task": final}, "real")
         evidence["claims"]["director_model"] = claim({"director_model": "fixture",
             "implementation": "ToolCallingModelFixture", "broker_scope": "authoring only"}, "synthetic")
-        checked(final["status"]["state"] == "completed", "v2 task failed")
+        checked(task_state(final) == "completed", "v2 task failed")
         run_id = final["metadata"]["run_id"]
         rows = sqlite_rows(instance / "director.sqlite3",
                            "SELECT run_id, task_id, label, manifest_digest, package_digest, build_id, closed FROM runs")

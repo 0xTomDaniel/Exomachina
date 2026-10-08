@@ -14,7 +14,7 @@ import threading
 import time
 import urllib.error
 
-from common import (PY, ROOT, SRC, a2a_get, a2a_send, http, jsonl, poll_task,
+from common import (task_state, PY, ROOT, SRC, a2a_get, a2a_send, http, jsonl, poll_task,
                     run_cli, sqlite_rows, start_harness, stop_process)
 
 
@@ -154,7 +154,7 @@ def main() -> None:
             for name in base:
                 task = row["tasks"][name]
                 identity = pre["health_before"][name]["identity"]
-                check(task["status"]["state"] == "completed", f"{name} did not complete")
+                check(task_state(task) == "completed", f"{name} did not complete")
                 check(task["metadata"]["run_id"].startswith(identity + "."), f"{name} run identity")
                 artifact = task["artifacts"][0]["parts"][0]["data"]
                 check(artifact["report"] and artifact["release_receipt"], f"{name} missing artifact/receipt")
@@ -181,7 +181,7 @@ def main() -> None:
             for own, other in (("alpha", "beta"), ("beta", "alpha")):
                 check(isinstance(row["cross_get"][own], str) and "not found" in row["cross_get"][own].lower(),
                       f"{own} Task visible to {other}")
-                check(row["cards"][own]["name"] == own and str(44850 if own == "alpha" else 44851) in row["cards"][own]["url"],
+                check(row["cards"][own]["name"] == own and str(44850 if own == "alpha" else 44851) in row["cards"][own]["supportedInterfaces"][0]["url"],
                       "Agent Card mismatch")
                 check(all(r["run_id"].startswith(identities[own] + ".") for r in row["director_runs"][own]),
                       "director run contamination")
@@ -200,12 +200,12 @@ def main() -> None:
             waiting = a2a_send(base["alpha"], {"op": "start", "action_id": "B3:alpha:wait",
                                                      "inputs": {"question": "B3 wait", "outcome_mode": "never"}})
             row["alpha_waiting"] = poll_task(base["alpha"], waiting["id"], {"input-required", "failed"}, seconds=300)
-            check(row["alpha_waiting"]["status"]["state"] == "input-required", "alpha did not park")
+            check(task_state(row["alpha_waiting"]) == "input-required", "alpha did not park")
             row["alpha_sent"] = waiting
             row["beta_sent"] = a2a_send(base["beta"], {"op": "start", "action_id": "B3:beta",
                                                                  "inputs": {"question": "B3 beta",
                                                                             "outcome_mode": "after_first_repair"}})
-            row["beta_at_stop"] = a2a_get(base["beta"], row["beta_sent"]["id"])["status"]["state"]
+            row["beta_at_stop"] = task_state(a2a_get(base["beta"], row["beta_sent"]["id"]))
             row["runner_before"] = json.loads(run_cli(str(SRC / "runner.py"), "status", "--home", str(home)))
             row["events_before"] = len(events(home))
             row["alpha_exit"] = stop_process(processes["alpha"])
@@ -213,7 +213,7 @@ def main() -> None:
             row["runner_after"] = json.loads(run_cli(str(SRC / "runner.py"), "status", "--home", str(home)))
             row["new_events"] = events(home)[row["events_before"]:]
             check(row["beta_at_stop"] == "working", "beta was not in flight at alpha shutdown")
-            check(row["beta_final"]["status"]["state"] == "completed", "beta failed")
+            check(task_state(row["beta_final"]) == "completed", "beta failed")
             check(row["runner_before"]["pid"] == row["runner_after"]["pid"], "runner PID changed")
             check(not any(e["kind"] in {"serve-stop", "serve-ready", "stop"} for e in row["new_events"]),
                   "runner restarted/stopped")
@@ -245,8 +245,8 @@ def main() -> None:
                       for e in row["new_events"]) and
                   not any(e["kind"] == "serve-ready" for e in row["new_events"]),
                   "recovery did not attach")
-            check(row["task_before_abort"]["status"]["state"] == "input-required", "parked Task lost")
-            check(row["final"]["status"]["state"] == "completed" and
+            check(task_state(row["task_before_abort"]) == "input-required", "parked Task lost")
+            check(task_state(row["final"]) == "completed" and
                   row["final"]["artifacts"][0]["parts"][0]["data"]["status"] == "aborted", "abort failed")
             check(not row["releases_for_run"], "aborted run released")
 
@@ -257,7 +257,7 @@ def main() -> None:
                                                          "inputs": {"question": "B5 active",
                                                                     "outcome_mode": "after_first_repair"}})
             row["task_at_kill"] = a2a_get(base["alpha"], row["sent"]["id"])
-            check(row["task_at_kill"]["status"]["state"] == "working", "run not active at kill")
+            check(task_state(row["task_at_kill"]) == "working", "run not active at kill")
             row["run_id"] = row["task_at_kill"]["metadata"]["run_id"]
             previous = health(44850)
             os.kill(processes["alpha"].pid, signal.SIGKILL)
@@ -274,7 +274,7 @@ def main() -> None:
             check(row["health_after_restart"]["identity"] == previous["identity"] and
                   row["health_after_restart"]["incarnation"] == previous["incarnation"] + 1,
                   "hard-kill restart identity/incarnation")
-            check(row["final"]["status"]["state"] == "completed" and len(row["runs"]) == 1 and len(row["releases"]) == 1,
+            check(task_state(row["final"]) == "completed" and len(row["runs"]) == 1 and len(row["releases"]) == 1,
                   "lost or duplicated result")
             check(row["final"]["metadata"]["run_id"] == row["run_id"], "different projected run")
 

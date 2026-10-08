@@ -19,7 +19,7 @@ import json
 import time
 from pathlib import Path
 
-from common import (PY, ROOT, SRC, a2a_get, a2a_send, http, jsonl, poll_task, run_cli,
+from common import (task_state, PY, ROOT, SRC, a2a_get, a2a_send, http, jsonl, poll_task, run_cli,
                     sqlite_rows, start_harness, stop_process, wait_http, write_evidence)
 
 PORT = 44800
@@ -146,7 +146,7 @@ def main() -> None:
                                "inputs": {"question": "Can the customer use the documented capability?",
                                           "outcome_mode": "after_first_repair"}})
         task_id, context_id = sent["id"], sent["contextId"]
-        p1["send_reply_state"] = sent["status"]["state"]
+        p1["send_reply_state"] = task_state(sent)
         final = poll_task(base, task_id, {"completed", "failed"})
         p1["task"] = final
         run_id = final["metadata"]["run_id"]
@@ -184,7 +184,7 @@ def main() -> None:
         waiting = a2a_send(base, {"op": "start", "action_id": "caller-2:needs-director",
                                   "inputs": {"question": "What limits the same customer use?",
                                              "outcome_mode": "never"}})
-        p2["v1_send_reply_state"] = waiting["status"]["state"]
+        p2["v1_send_reply_state"] = task_state(waiting)
         v1_task = poll_task(base, waiting["id"], {"input-required", "failed", "completed"})
         p2["v1_waiting_task_before"] = v1_task
         v1_run = v1_task["metadata"]["run_id"]

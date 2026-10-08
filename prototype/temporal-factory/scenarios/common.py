@@ -20,11 +20,12 @@ PY = sys.executable
 TOKEN = "Bearer fixture-token"
 sys.path.insert(0, str(SRC))
 sys.path.insert(0, str(ROOT / "services"))
+import a2a_v1  # noqa: E402
 
 
 def http(url: str, payload: dict | None = None, *, token: bool = True, timeout: float = 300) -> dict:
     data = None if payload is None else json.dumps(payload).encode()
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json", **a2a_v1.headers()}
     if token:
         headers["Authorization"] = TOKEN
     request = urllib.request.Request(url, data=data, headers=headers,
@@ -35,33 +36,35 @@ def http(url: str, payload: dict | None = None, *, token: bool = True, timeout: 
 
 def a2a_send(base: str, data: dict, *, task_id: str | None = None,
              context_id: str | None = None) -> dict:
-    message = {"role": "user", "messageId": str(uuid4()), "kind": "message",
-               "parts": [{"kind": "data", "data": data}]}
-    if task_id:
-        message["taskId"] = task_id
-    if context_id:
-        message["contextId"] = context_id
-    reply = http(base.rstrip("/") + "/", {"jsonrpc": "2.0", "id": str(uuid4()),
-                                          "method": "message/send", "params": {"message": message}})
+    """A2A v1 SendMessage of one data Part; returns the unwrapped Task or Message."""
+    message = a2a_v1.user_message([a2a_v1.data_part(data)], task_id=task_id,
+                                  context_id=context_id)
+    reply = http(base.rstrip("/") + "/", a2a_v1.rpc(a2a_v1.SEND_MESSAGE,
+                                                    a2a_v1.send_params(message)))
     if "error" in reply:
         raise RuntimeError("A2A error: " + json.dumps(reply["error"]))
-    return reply["result"]
+    return a2a_v1.unwrap_send_result(reply["result"])[1]
 
 
 def a2a_get(base: str, task_id: str) -> dict:
-    reply = http(base.rstrip("/") + "/", {"jsonrpc": "2.0", "id": str(uuid4()),
-                                          "method": "tasks/get", "params": {"id": task_id}})
+    reply = http(base.rstrip("/") + "/", a2a_v1.rpc(a2a_v1.GET_TASK, {"id": task_id}))
     if "error" in reply:
         raise RuntimeError("A2A error: " + json.dumps(reply["error"]))
-    return reply["result"]
+    return a2a_v1.normalize_numbers(reply["result"])
+
+
+def task_state(task: dict) -> str:
+    """Version-neutral state of a v1 Task (``TASK_STATE_WORKING`` -> ``working``)."""
+    return a2a_v1.task_state(task)
 
 
 def poll_task(base: str, task_id: str, states: set[str], *, seconds: float = 240) -> dict:
+    """Poll GetTask until a version-neutral state in ``states`` is reached."""
     deadline = time.monotonic() + seconds
     seen = []
     while time.monotonic() < deadline:
         task = a2a_get(base, task_id)
-        state = task["status"]["state"]
+        state = task_state(task)
         if not seen or seen[-1] != state:
             seen.append(state)
         if state in states:
