@@ -65,7 +65,8 @@ The credential stays in the Node process and an owner-only install-wide store, s
 | `broker/` | Node CLI and persistent pi-ai model broker; pinned package and offline tests |
 | `broker/testing/` | Loopback Codex SSE and OAuth fixtures |
 | `services/` | Pinned test A2A services (the stand-in for the directory) |
-| `scenarios/integrated.py`, `scenarios/replay_check.py`, `scenarios/live_authoring.py` | Original happy paths, replay, synthetic and live-provider authoring scenario |
+| `scenarios/integrated.py`, `scenarios/replay_check.py`, `scenarios/live_authoring.py` | Original happy paths (historical record, not runnable), replay, synthetic and live-provider authoring scenario |
+| `scenarios/spike_a_delayed.py`, `spike_b_two_instances.py`, `spike_c_director.py` | Qualification spikes: historical records of the results in `QUALIFICATION.md`, not runnable |
 | `evidence/broker-phase/`, `evidence/live-refresh-codex-subscription.json`, `evidence/live-authoring-codex-subscription*.json`, `evidence/live-authoring-synthetic-loopback*.json` | Broker test transcripts, live refresh, live authoring attempts and scans, synthetic repair-loop run |
 | `briefs/`, `handoff/` | Parallel worker assignments and their reports |
 | `src/runtime.py`, `src/supervisor.py` | Unmodified lane baselines kept for diff reference; not imported |
@@ -78,10 +79,6 @@ cd prototype/temporal-factory
 npm --prefix broker ci --offline --cache /tmp/exomachina-pi-strands-debate/npm-cache
 node --test broker/test/*.test.mjs                # 18 passed in evidence/broker-phase/
 $PY -B -m unittest discover -s tests              # 90 total: 80 in final regression plus 10 provider-specific acceptance tests
-$PY -B scenarios/integrated.py --home /tmp/exo-proto-int-<fresh>
-$PY -B src/runner.py start --home /tmp/exo-proto-int-<fresh> --reason replay
-$PY -B "$PWD/scenarios/replay_check.py" --home /tmp/exo-proto-int-<fresh> --address 127.0.0.1:44002 --out "$PWD/evidence/histories-<run>"
-$PY -B src/runner.py stop --home /tmp/exo-proto-int-<fresh>
 $PY -B scenarios/live_authoring.py --home /tmp/exo-proto-live-syn-<fresh> --provider synthetic-loopback
 
 # For a new own-store subscription sign-in, use device flow; do not set EXO_MODEL_HOME or EXO_CODEX_BASE_URL.
@@ -89,7 +86,7 @@ node broker/exo-model.mjs login --device
 $PY -B scenarios/live_authoring.py --home /tmp/exo-proto-live-codex-<fresh> --provider codex-subscription
 ```
 
-The integrated scenario uses ports 44000–44012, 32400–32404, 44800 and 45200–45205; live authoring uses runner ports 44100 onward, 32420 onward, harness 44830, testbed 45300–45305 and mock 46100–46149. Both require the pinned local binaries named in `INTERFACES.md`. Use a fresh `/tmp/exo-proto-live-*` home for each authoring run. The live-provider command passed once on attempt 2 at `/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e`; attempt 1 stopped before A2A on the scenario assumption described above. All trial state is preserved: r1 `/tmp/exo-proto-int-r1`, r2 `/tmp/exo-proto-int-r2` (including earlier replay attempts under `replay-attempts/`), and the worker smokes under `/tmp/exo-proto-*`.
+`scenarios/integrated.py` and the three qualification spikes (`spike_a_delayed.py`, `spike_b_two_instances.py`, `spike_c_director.py`) are historical records since 8 Oct 2026, not runnable: they read the retired HTTP release receiver and agent envelope. Their results stand as recorded; `scenarios/single_factory.py` is the maintained end-to-end check. The integrated scenario used ports 44000–44012, 32400–32404, 44800 and 45200–45205; live authoring uses runner ports 44100 onward, 32420 onward, harness 44830, testbed 45300–45305 and mock 46100–46149. Both require the pinned local binaries named in `INTERFACES.md`. Use a fresh `/tmp/exo-proto-live-*` home for each authoring run. The live-provider command passed once on attempt 2 at `/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e`; attempt 1 stopped before A2A on the scenario assumption described above. All trial state is preserved: r1 `/tmp/exo-proto-int-r1`, r2 `/tmp/exo-proto-int-r2` (including earlier replay attempts under `replay-attempts/`), and the worker smokes under `/tmp/exo-proto-*`.
 
 ## Operator stack
 
@@ -112,7 +109,7 @@ $PY -B scenarios/operator_stack.py down     # graceful stop: harness, agents, ru
 
 ## Qualification spikes
 
-Three follow-up spikes tested the delayed external A2A agent, two instances in one home and the broker-backed Director. Their checks were fixed before any code change. Results, preserved failures and remaining limits are in [`QUALIFICATION.md`](QUALIFICATION.md). That file supersedes the Director, second-instance and fixture-only-A2A gaps below.
+Three follow-up spikes tested the delayed external A2A agent, two instances in one home and the broker-backed Director. Their scenario modules are now historical records and no longer run (see Reproduce). Their checks were fixed before any code change. Results, preserved failures and remaining limits are in [`QUALIFICATION.md`](QUALIFICATION.md). That file supersedes the Director, second-instance and fixture-only-A2A gaps below.
 
 ## Single factory, real agent work
 

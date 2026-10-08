@@ -9,6 +9,13 @@ Path 2: a Strands authoring agent produces and revises a new graph from
 validation feedback; it is approved, published as v2 and run through the same
 factory instance, while a waiting v1 run keeps its original pinned bindings
 (including across a graceful harness + runner restart that recovers it).
+
+HISTORICAL RECORD, NOT RUNNABLE (8 Oct 2026). This scenario predates the A2A
+release agent and agent decoupling: it reads the retired plain-HTTP release
+receiver's ``releases`` table (factory run ids in agent state) and the old
+agent envelope. It is kept only as the record of the results cited in
+QUALIFICATION.md/README.md. No gate imports it, and running it exits with this
+notice. ``scenarios/single_factory.py`` is the maintained end-to-end check.
 """
 from __future__ import annotations
 
@@ -299,4 +306,5 @@ async def _child_status(address: str, run_id: str) -> dict:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit("historical record, not runnable: " + __doc__.split("HISTORICAL RECORD")[0].strip().splitlines()[0]
+                     + "; see the module docstring")
