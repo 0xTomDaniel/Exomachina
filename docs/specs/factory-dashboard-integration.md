@@ -235,7 +235,7 @@ stream event.
 
 | Layer | Decision | Responsibility |
 | --- | --- | --- |
-| Agent assignments | A2A | Task lifecycle and artifact exchange; preserve the prototype's qualified protocol binding until an explicit migration |
+| Agent assignments | A2A v1.0 only | Task lifecycle and artifact exchange through the mediating factory; no 0.3 interface ([decision, 7 Oct 2026](../a2a-v1-mediation-decision-2026-10-07.md)) |
 | Dashboard transport | WebSockets | Persistent bidirectional observation and command transport |
 | Observation envelope | CloudEvents | Event identity, source, type, time, subject, and schema reference |
 | Factory event data | Versioned Exomachina schemas | Graph binding, assignments, revisions, decisions, operating state, and commercial facts |
@@ -913,7 +913,7 @@ and recorded before the dependent smoke or payment profile runs:
 Protocol observations were checked on 2 October 2026. The layer assignments and
 milestones are Exomachina design decisions, not guarantees supplied by the sources.
 
-- [A2A specification](https://a2a-protocol.org/latest/specification/): assignment/Task updates and artifact exchange.
+- [A2A v1.0.0 specification](https://a2a-protocol.org/v1.0.0/specification/): assignment/Task updates and artifact exchange; the only supported version from 7 Oct 2026.
 - [CloudEvents 1.0.2 specification](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md): event envelope and identity.
 - [AsyncAPI WebSocket binding](https://www.asyncapi.com/docs/reference/bindings/websockets): documenting transport-specific Interface details.
 - [AG-UI events](https://docs.ag-ui.com/concepts/events) and [transport description](https://github.com/ag-ui-protocol/ag-ui/blob/main/README.md): evaluated optional Director-conversation Adapter.
@@ -1011,3 +1011,54 @@ A2A protocol version:
   followed. The run picker still narrows to one run. Finished jobs stay listed
   in a Live/Recorded rail. Submission safety rules (no resubmission, no binding
   to an unrelated older run, exact pending identity) are unchanged.
+
+Superseded in part on 7 Oct 2026 by "Hand-off carriers, gems, and material and
+control edges" below: once hand-off records exist for a run, its items are
+recorded carriers, not inferred "Task output · artifact not recorded" items.
+
+#### Hand-off carriers, gems, and material and control edges (operator decision, 7 Oct 2026)
+
+The [A2A v1 baseline and factory mediation decision](../a2a-v1-mediation-decision-2026-10-07.md)
+is authoritative; this section states its dashboard consequences.
+
+- **The belt item is the factory's hand-off (the carrier).** It is derived from
+  the factory's content-free hand-off Observation facts (produced, consumed,
+  and item ready), never from A2A wire shapes or agent-supplied content. A
+  carrier never travels empty: strict nodes fail their contract at the station
+  when no artifact is returned, `message`-mode nodes carry one message item,
+  and side-effect nodes produce no carrier.
+- **Shape and gems.** Carrier shape is the producing node's declared output kind
+  from the pinned definition, in Live as in Demo. Its items are gems set in rim
+  sockets:
+  - sapphire, round cut: text;
+  - emerald, square cut: data;
+  - amethyst, marquise cut: binary;
+  - topaz, triangle cut: link;
+  - clear diamond: message output.
+
+  Cut carries the meaning without colour. More than four items shows four gems
+  and "+N"; at low zoom the gems collapse to the badge.
+- **Evidence is gem quality.** A flawless gem means a recorded hand-off whose
+  digests match from producer to consumer. A chipped, cloudy gem means it was
+  inferred from graph order; this applies only to runs without records.
+  Existing rings keep their meanings: rejected, exhausted, exit, progress, and
+  selection.
+- **Timing.** A carrier fills in its station: empty sockets fill at each item's
+  observed ready time. It leaves when the hand-off is produced and rides the
+  belt until its observed consumption, with the 0.8 s minimum visible hop as
+  the only adjustment. Carriers merge at joins. A gate verdict (Quality) is a
+  seal on the forwarded carrier, not a new carrier. Revision labels (R1, R2, …)
+  remain.
+- **Material and control edges.**
+  - Only material edges are belts with items.
+  - Control edges, including route-node transitions to repair, Director waits,
+    release, and terminals, are thin lines with no items. They replace the
+    "undeclared" hop label.
+  - Side-effect nodes (`output: none`) have no outgoing belt. Material that
+    bypasses one is drawn on its own belt from the producer.
+- **Inspection** lists each item's source, part kinds, `mediaType`, size, short
+  keyed digest, and ready time, never content.
+- **Qualification.** The hand-off facts widen the Observation allowlist, so S33
+  is requalified when they land. Live-submission B-rows are requalified on A2A
+  v1. Demo keeps its illustrative movement and gains illustrative gems labelled
+  as such.

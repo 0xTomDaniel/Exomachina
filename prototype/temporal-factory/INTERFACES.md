@@ -646,3 +646,74 @@ The dashboard follows an accepted A2A Task using the returned explicit `metadata
 Both reducers carry only `started_at`, `provider_identity` and `node` across updates of the same assignment/attempt when omitted by the newer fact. They do not carry queue positions or transfer fields to another attempt. Nonterminal/unknown updates without `ended_at` remove the previously projected end. Raw source facts remain unchanged.
 
 Runtime may append a deterministic `projection-correction:assignment-node-link-v1:` fact using only an explicit activity-input `node` that is present in that workflow's pinned definition. The correction retains the original event time, state, capability, provider and assignment/attempt bindings. An opaque Temporal activity ID is not node evidence. The shared Floor presents its selected observed state and Quality independently from delivery and exposes Board/Outputs without triggering submissions.
+
+## A2A v1 baseline and hand-off records (operator decision, 7 Oct 2026)
+
+Authoritative direction: [A2A v1 baseline, factory mediation, and hand-off records](../../docs/a2a-v1-mediation-decision-2026-10-07.md).
+This section supersedes the `a2a-sdk 0.3.26` pin in Conventions once the
+migration lands, and supersedes every `message/send`, `kind`-discriminated part,
+and lowercase Task-state reference in this file and its lanes.
+
+**Wire protocol.** Every A2A server (harness in factory and agent mode,
+capability services, model agents, Quality, supplier fixtures) and every A2A
+client (`src/adapter.py`, `src/long_client.py`, supplier client, dashboard Live
+Adapter, floor composer) uses A2A v1.0 only.
+
+- Methods are `SendMessage` and `SendStreamingMessage`; responses are
+  `{task}` or `{message}`.
+- Task states are `TASK_STATE_*`.
+- Parts are unified (`text` | `raw` | `url` | `data`, plus `mediaType` and
+  `filename`), with no `kind` field.
+- Agent Cards list `supportedInterfaces` with protocol version 1.0.
+- There is no 0.3 interface or fallback.
+- The JSON-RPC binding is kept.
+- The factory's extensions are declared on the Agent Card; a missing required
+  extension fails with `ExtensionSupportRequiredError`.
+
+The migration runs in a new pinned Python environment with `a2a-sdk` 1.x,
+recorded here when created. The shared 2026-09-22 spike environment is not
+modified, and the operator's running stack is restarted onto v1 only with
+operator approval.
+
+**Observation stays version-neutral.** The A2A Adapter maps `TASK_STATE_*` to the
+existing Observation state vocabulary (`working`, `input-required`, …). No
+existing Observation event type, field, or recording changes because of the wire
+migration.
+
+**Definition additions** (validated at publication):
+
+- `output`, on each node binding: `"artifacts"` (default, strict),
+  `"message"` (labelled exception), or `"none"` (side-effect). A completed
+  Task with no artifact on an `artifacts` node fails the attempt with
+  `output.missing`.
+- `kind`, on each edge: `"material"` (default) or `"control"`. A node with
+  `output: "none"` may not have an outgoing material edge. Route-node targets
+  (repair, Director wait, release, terminal) are declared as control edges.
+- The release receiver binding (`transport: "http-post"`) is `output: "none"`.
+
+**New Observation facts** (allowlist additions; S33 requalification required).
+All are content-free. They never carry text, data, bytes, artifact names,
+descriptions, `artifactId`s, filenames, URLs, or metadata.
+
+- `com.exomachina.handoff.produced.v1`, emitted on complete:
+  - `run_id`, `assignment_id`, `attempt_id`, `node`;
+  - `handoff_id` and `handoff_revision`;
+  - `produced_at`;
+  - `items[]`, each with `item_index`, `source` (`artifact` | `message`),
+    `part_kinds[]`, `media_type`, `byte_length` (null for `url`),
+    `ready_at`, and `digest` (keyed);
+  - optional `artifact_revision` and `artifact_sha256`, when the item is the
+    report artifact.
+- `com.exomachina.handoff.consumed.v1`, emitted before dispatch:
+  - `run_id`, `assignment_id`, `attempt_id`, `node`;
+  - `consumed_at`;
+  - `inputs[]`, each with `handoff_id` and `item_digests[]`.
+- `com.exomachina.handoff.item_ready.v1`, emitted only when the agent streams,
+  when an artifact's `lastChunk` arrives: `run_id`, `assignment_id`,
+  `attempt_id`, `node`, `handoff_id`, `item_index`, `part_kinds[]`,
+  `media_type`, and `ready_at`.
+
+Digests are HMAC-SHA256 under a per-factory-instance key stored in the instance
+home. The key is never logged, observed, or exported. Report artifacts keep the
+existing plain sha256 chain. Run snapshots retain hand-off records with their
+times so retained runs replay their full path.

@@ -36,9 +36,15 @@ contract change and any resulting consumer changes.
 - Define nodes around capability assignments and their contracts, rather than
   coupling the process to a particular model, harness, terminal, or internal
   worker layout. Multiple assignments may use the same service.
-- Use A2A at agent-service boundaries to exchange assignments, task state and
-  artifacts. Keep process rules and acceptance semantics explicit above that
-  protocol. A remote completion report does not itself establish acceptance.
+- Use A2A v1.0 at agent-service boundaries to exchange assignments, task state
+  and artifacts; no earlier version is supported. Keep process rules and
+  acceptance semantics explicit above that protocol. A remote completion report
+  does not itself establish acceptance.
+- The factory mediates every exchange between agent services; agents never
+  address each other. It composes each assignment from recorded hand-offs and
+  records what each attempt produced and consumed, so any v1-compliant agent
+  service can take part without exposing its content or implementation. See the
+  [A2A v1 baseline and factory mediation decision](a2a-v1-mediation-decision-2026-10-07.md).
 - Preserve the normal agent-service interface when a provider uses a factory
   internally. Consumers need contract-relevant guarantees; they need not adopt
   that provider's internal graph or number of workers.

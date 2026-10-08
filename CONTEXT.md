@@ -58,6 +58,22 @@ _Avoid_: Assignment, factory run
 A specific version of a work product and the evidence associated with it.
 _Avoid_: Latest output, conversation summary
 
+**Hand-off**:
+The factory's content-free record of a work product passing from one assignment to the next: which items an attempt produced, and which of them a later assignment consumed. The factory records it at its own boundary; agent services never address each other.
+_Avoid_: Agent-to-agent message, artifact content, carrier (its floor depiction)
+
+**Side-effect node**:
+A factory node whose assignment changes something outside the factory, such as releasing a result, and produces no work product for later nodes. It completes with evidence such as a receipt, and is followed only by control edges.
+_Avoid_: Output-less agent, optional step
+
+**Material edge**:
+A dependency along which a hand-off travels from a producing node to a consuming node.
+_Avoid_: Control edge, sequence
+
+**Control edge**:
+A dependency that only orders work, such as a route to repair or release, and carries no hand-off.
+_Avoid_: Material edge, belt
+
 **Acceptance**:
 A recorded decision that a particular artifact revision meets its required criteria.
 _Avoid_: Task completion, delivery acknowledgement
