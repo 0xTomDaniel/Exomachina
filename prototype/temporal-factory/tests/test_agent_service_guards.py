@@ -1,11 +1,17 @@
 """Guards for the 8 Oct 2026 rule: A2A only between the factory and agent services.
 
 Agent services expose only A2A JSON-RPC and the well-known Agent Card, never
-echo a factory identifier, and reference none in their source.
+echo a factory identifier, and reference none in their source. No agent card,
+and no factory-service card (a factory acting as an agent service), declares a
+required Exomachina extension, and no dispatch brief the factory composes
+carries another node's output text: upstream outputs travel only as their own
+verbatim Parts (decisions 5, 7 and 9).
 """
 from __future__ import annotations
 
 import ast
+import asyncio
+import hashlib
 import json
 import sys
 import tempfile
@@ -24,6 +30,13 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scenarios"))
 import a2a_extensions  # noqa: E402
 import a2a_v1  # noqa: E402
+import adapter  # noqa: E402
+import agent_binding  # noqa: E402
+from agent_roles import ROLES, working_view  # noqa: E402
+from report_contract import (REPORT_ACCEPTANCE_CRITERIA, canonical,  # noqa: E402
+                             digest as report_digest, research_assignment,
+                             synthesis_assignment)
+PACKET = ROOT / "packets" / "exo-qualification-2026-09-23" / "packet.json"
 import delayed_agent  # noqa: E402
 import harness  # noqa: E402
 import harness_server  # noqa: E402
@@ -101,6 +114,145 @@ class AgentServiceGuardTests(unittest.TestCase):
                 self.assertLessEqual({item["uri"] for item in extensions}, allowed)
                 self.assertFalse(any(item.get("required") for item in extensions))
                 self.assertNotIn("identity", json.dumps(extensions))
+
+    def factory_service_cards(self) -> dict[str, dict]:
+        """Agent Cards of a factory acting as an agent service (nested supplier on/off)."""
+        class StubRunner:
+            def __init__(self, home, **_kwargs):
+                self.address = "127.0.0.1:1"
+
+            def is_running(self):
+                return False
+
+        class EmptyUsageBroker:
+            def usage_journal(self):
+                return self
+
+            def list_measurements(self, **_filters):
+                return []
+
+        cards = {}
+        with patch.object(harness, "Runner", StubRunner):
+            for name, enabled in (("factory", False), ("factory nested supplier", True)):
+                instance = self.state / "home" / "instances" / name.replace(" ", "-")
+                harness.init_instance(instance, name=name.replace(" ", "-"), mode="factory",
+                                      port=46270 + int(enabled), home=self.state / "home",
+                                      **({"nested_supplier_enabled": True} if enabled else {}))
+                app = harness.create_app(instance, usage_broker=EmptyUsageBroker())
+                with TestClient(app) as client:
+                    cards[name] = client.get("/.well-known/agent-card.json").json()
+        return cards
+
+    def test_no_agent_or_factory_service_card_requires_an_exomachina_extension(self):
+        """Decisions 7 and 9: a caller needs nothing Exomachina-specific."""
+        cards = {}
+        for name, app in self.apps().items():
+            with TestClient(app) as client:
+                cards[name] = client.get("/.well-known/agent-card.json").json()
+        cards.update(self.factory_service_cards())
+        self.assertIn("factory nested supplier", cards)
+        for name, card in cards.items():
+            with self.subTest(card=name):
+                extensions = (card.get("capabilities") or {}).get("extensions") or []
+                self.assertEqual(agent_binding.describe(card)["required_extensions"], [])
+                self.assertFalse(any(item.get("required") for item in extensions))
+                exomachina = {item["uri"] for item in extensions
+                              if "exomachina" in item["uri"].lower()}
+                self.assertLessEqual(exomachina, {a2a_extensions.BUDGET_URI})
+        # The retired factory-to-factory extension is gone from every source.
+        for path in [*(ROOT / "src").glob("*.py"), *(ROOT / "services").glob("*.py")]:
+            self.assertNotIn("a2a-action-contract", path.read_text(), path.name)
+
+    def test_no_dispatch_brief_carries_another_nodes_output(self):
+        """Every brief the factory composes holds only the node's own assignment;
+        upstream outputs (research, the judged draft, Quality's findings) follow
+        it as verbatim Parts and never appear inside it."""
+        packet, question = json.loads(PACKET.read_text()), "What qualified?"
+        def produce(role, brief, inputs=()):
+            view = working_view(brief, list(inputs))
+            return canonical(ROLES[role].parse(ROLES[role].scripted_reply(view, "id"), view, "id"))
+        research = {capability: produce("research", research_assignment(capability, question, packet))
+                    for capability in ("packet_findings@1", "packet_risks@1")}
+        research_parts = {f"gather.{c}": [[{"text": t, "mediaType": "application/json"}]]
+                          for c, t in research.items()}
+        draft = produce("synthesis", synthesis_assignment("r1", question, packet),
+                        [part for item in research_parts.values() for part in item[0]])
+        verdict = canonical({"kind": "quality_verdict@1",
+            "candidate": {"revision": "r1", "sha256": hashlib.sha256(draft.encode()).hexdigest()},
+            "accepted": False, "decided_by": "model", "rubric": "report-quality@1",
+            "rubric_digest": report_digest(REPORT_ACCEPTANCE_CRITERIA),
+            "findings": [{"claim_id": "C1", "severity": "blocking",
+                          "problem": "DISTINCT-FINDING-PROBLEM-TEXT contradicts E7",
+                          "evidence": ["E7"]}]})
+        draft_parts = [[{"text": draft, "mediaType": "application/json"}]]
+        verdict_parts = [[{"text": verdict, "mediaType": "application/json"}]]
+        upstream = lambda **items: [{"handoff_id": k, "item_parts": v} for k, v in items.items()]
+        candidate = {"revision": "r1", "sha256": hashlib.sha256(draft.encode()).hexdigest(),
+                     "author": "synth", "content": draft}
+        base = {"run": "run-guard", "digest": "d" * 64, "question": question, "packet": packet,
+                "binding": {"role": "capability", "identity": "agent"}, "contract": {}}
+        calls = {
+            "research": (adapter.assign, {**base, "instance": "research_findings",
+                                          "capability": "packet_findings@1"}),
+            "draft": (adapter.synthesize, {**base, "revision": "r1",
+                                           "upstream": upstream(**research_parts)}),
+            "repair": (adapter.synthesize, {**base, "revision": "r2",
+                "quality_findings": json.loads(verdict)["findings"],  # pre-patch input: ignored
+                "upstream": upstream(**research_parts, draft=draft_parts,
+                                     independent_quality=verdict_parts)}),
+            "quality": (adapter.review, {**base, "binding": {"role": "quality", "identity": "q"},
+                "candidate": candidate, "acceptance_criteria": REPORT_ACCEPTANCE_CRITERIA,
+                "rubric_digest": report_digest(REPORT_ACCEPTANCE_CRITERIA),
+                "policy_digest": "p" * 64, "assignment_id": "a", "attempt": 1,
+                "upstream": upstream(draft=draft_parts)}),
+        }
+        # The node's own assignment content (packet, its digest, the question,
+        # the criteria) may appear in an output; it is not upstream content.
+        own = canonical(synthesis_assignment("r1", question, packet)) + canonical(
+            REPORT_ACCEPTANCE_CRITERIA)
+        outputs = [*research.values(), draft, verdict]
+        def leaves(value):
+            if isinstance(value, str):
+                yield value
+            elif isinstance(value, dict):
+                for child in value.values():
+                    yield from leaves(child)
+            elif isinstance(value, list):
+                for child in value:
+                    yield from leaves(child)
+        distinctive = sorted({text for output in outputs for text in leaves(json.loads(output))
+                              if len(text) >= 24 and text not in own})
+        self.assertIn("DISTINCT-FINDING-PROBLEM-TEXT contradicts E7", distinctive)
+        def dispatched(activity, value):
+            captured = []
+
+            async def capture(fn, *args):
+                captured.append(args[2])
+                raise RuntimeError("captured before any send")
+            with patch.object(adapter, "_thread_with_heartbeat", capture):
+                result = asyncio.run(activity(value))
+            self.assertTrue({"unresolved", "inconsistent"} & set(result), result)
+            [action] = captured
+            return action
+        # The guard detects the retired coupling: findings pasted into a brief.
+        pasted = lambda *args: {**synthesis_assignment(*args),
+                                "quality_findings": json.loads(verdict)["findings"]}
+        with patch.object(adapter, "synthesis_assignment", pasted):
+            leaked = dispatched(*calls["repair"])["brief"]
+        self.assertTrue([text for text in distinctive if text in leaked])
+        for node, (activity, value) in calls.items():
+            with self.subTest(node=node):
+                action = dispatched(activity, value)
+                parts = action["parts"]
+                brief = action["brief"]
+                self.assertEqual(parts[0], {"text": brief, "mediaType": "application/json"})
+                self.assertEqual(parts[1:], [part for entry in value.get("upstream", [])
+                                             for item in entry["item_parts"] for part in item],
+                                 "upstream items follow the brief verbatim")
+                embedded = [text for text in [*outputs, *distinctive] if text in brief]
+                self.assertEqual(embedded, [], f"{node} brief embeds upstream output")
+                self.assertFalse({"quality_findings", "findings", "prior", "candidate",
+                                  "evidence", "verdict", "report"} & set(json.loads(brief)))
 
     def test_agent_service_sources_declare_no_routes_of_their_own(self):
         decorators = {"get", "post", "put", "patch", "delete", "route", "api_route",
