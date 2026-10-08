@@ -220,7 +220,7 @@ function validateData(data, eventType, p) {
     } else if (k === "graph_nodes") {
       if (!Array.isArray(v) || v.length > 500) throw new DashboardContractError("expected graph node array", `${p}.${k}`);
       const ids = new Set();
-      v.forEach((n, i) => { const q = `${p}.${k}[${i}]`; record(n, q); if (Object.keys(n).some(x => !["id", "type", "next", "capability"].includes(x))) throw new DashboardContractError("unexpected graph field", q); string(n.id, `${q}.id`); string(n.type, `${q}.type`); if (!ID.test(n.id) || !ID.test(n.type) || ids.has(n.id)) throw new DashboardContractError("invalid or duplicate graph node", q); ids.add(n.id); if (n.next != null && (!Array.isArray(n.next) || n.next.some(x => typeof x !== "string"))) throw new DashboardContractError("invalid next list", `${q}.next`); if (n.capability != null && !CAPABILITY.test(n.capability)) throw new DashboardContractError("invalid capability", `${q}.capability`); });
+      v.forEach((n, i) => { const q = `${p}.${k}[${i}]`; record(n, q); if (Object.keys(n).some(x => !["id", "type", "next", "capability", "output"].includes(x))) throw new DashboardContractError("unexpected graph field", q); if (n.output != null && !NODE_OUTPUTS.has(n.output)) throw new DashboardContractError("invalid node output mode", `${q}.output`); string(n.id, `${q}.id`); string(n.type, `${q}.type`); if (!ID.test(n.id) || !ID.test(n.type) || ids.has(n.id)) throw new DashboardContractError("invalid or duplicate graph node", q); ids.add(n.id); if (n.next != null && (!Array.isArray(n.next) || n.next.some(x => typeof x !== "string"))) throw new DashboardContractError("invalid next list", `${q}.next`); if (n.capability != null && !CAPABILITY.test(n.capability)) throw new DashboardContractError("invalid capability", `${q}.capability`); });
       for (const n of v) for (const to of n.next ?? []) if (!ids.has(to)) throw new DashboardContractError("graph edge target missing", `${p}.${k}`);
     } else if (k === "service_bindings") {
       if (!Array.isArray(v) || v.length > 100) throw new DashboardContractError("expected service binding array", `${p}.${k}`);
@@ -242,6 +242,87 @@ function validateData(data, eventType, p) {
   return data;
 }
 
+/*
+ * Content-free hand-off Observation facts (A2A v1 mediation decision 4; INTERFACES.md
+ * "A2A v1 baseline and hand-off records"). Each type has an exact field set, validated
+ * separately from the generic allowlist so no other event type or snapshot row is
+ * widened. Content-bearing fields (text, data, bytes, names, descriptions, artifactId,
+ * filenames, URLs, metadata) are not allowlisted at any depth and are rejected.
+ */
+export const HANDOFF_EVENT_TYPES = Object.freeze(["com.exomachina.handoff.produced.v1", "com.exomachina.handoff.consumed.v1", "com.exomachina.handoff.item_ready.v1"]);
+export const HANDOFF_PART_KINDS = Object.freeze(["text", "data", "raw", "url"]);
+const HANDOFF_SOURCES = new Set(["artifact", "message"]);
+const HANDOFF_BASE = ["schema_version", "factory_id", "run_id", "assignment_id", "attempt_id", "node"];
+const HANDOFF_FIELDS = {
+  "com.exomachina.handoff.produced.v1": [...HANDOFF_BASE, "handoff_id", "handoff_revision", "produced_at", "items"],
+  "com.exomachina.handoff.consumed.v1": [...HANDOFF_BASE, "consumed_at", "inputs"],
+  "com.exomachina.handoff.item_ready.v1": [...HANDOFF_BASE, "handoff_id", "item_index", "part_kinds", "media_type", "ready_at"],
+};
+const HANDOFF_ITEM_KEYS = new Set(["item_index", "source", "part_kinds", "media_type", "byte_length", "ready_at", "digest", "artifact_revision", "artifact_sha256"]);
+const HANDOFF_ITEM_REQUIRED = ["item_index", "source", "part_kinds", "media_type", "byte_length", "ready_at", "digest"];
+const HANDOFF_INPUT_KEYS = new Set(["handoff_id", "item_digests"]);
+const MEDIA_TYPE = /^[a-z0-9.+-]+\/[a-z0-9.+-]+$/;
+const handoffId = (v, p) => { string(v, p); if (!ID.test(v)) throw new DashboardContractError("invalid identifier", p); };
+const handoffIndex = (v, p) => { if (!Number.isSafeInteger(v) || v < 0 || v > 255) throw new DashboardContractError("expected bounded item index", p); };
+const handoffDigest = (v, p) => { string(v, p); if (!DIGEST.test(v)) throw new DashboardContractError("invalid digest", p); };
+function handoffPartKinds(v, p) {
+  if (!Array.isArray(v) || !v.length || v.length > 64 || v.some(kind => !HANDOFF_PART_KINDS.includes(kind))) throw new DashboardContractError("invalid part kinds", p);
+}
+// A2A v1 mediaType is optional on a part; null records "not declared".
+function handoffMediaType(v, p) { if (v === null) return; string(v, p); if (v.length > 127 || !MEDIA_TYPE.test(v)) throw new DashboardContractError("invalid media type", p); }
+function validateHandoffItem(item, p) {
+  record(item, p); exactKeys(item, HANDOFF_ITEM_KEYS, p);
+  for (const k of HANDOFF_ITEM_REQUIRED) if (!(k in item)) throw new DashboardContractError("required hand-off item fact missing", `${p}.${k}`);
+  handoffIndex(item.item_index, `${p}.item_index`);
+  if (!HANDOFF_SOURCES.has(item.source)) throw new DashboardContractError("invalid hand-off item source", `${p}.source`);
+  handoffPartKinds(item.part_kinds, `${p}.part_kinds`);
+  handoffMediaType(item.media_type, `${p}.media_type`);
+  if (item.byte_length === null) { if (!item.part_kinds.includes("url")) throw new DashboardContractError("byte_length may be null only for url parts", `${p}.byte_length`); }
+  else if (!Number.isSafeInteger(item.byte_length) || item.byte_length < 0) throw new DashboardContractError("expected non-negative integer", `${p}.byte_length`);
+  time(item.ready_at, `${p}.ready_at`);
+  handoffDigest(item.digest, `${p}.digest`);
+  const report = ["artifact_revision", "artifact_sha256"].filter(k => k in item);
+  if (report.length) {
+    if (report.length !== 2 || item.source !== "artifact") throw new DashboardContractError("report artifact reference requires an artifact item with revision and sha256", p);
+    handoffId(item.artifact_revision, `${p}.artifact_revision`); handoffDigest(item.artifact_sha256, `${p}.artifact_sha256`);
+  }
+}
+function validateHandoffData(data, eventType, p) {
+  record(data, p);
+  const allowed = new Set(HANDOFF_FIELDS[eventType]);
+  exactKeys(data, allowed, p);
+  for (const k of allowed) if (!(k in data)) throw new DashboardContractError("required event fact missing", `${p}.${k}`);
+  if (data.schema_version !== 1) throw new DashboardContractError("schema_version must be 1", `${p}.schema_version`);
+  for (const k of ["factory_id", "run_id", "assignment_id", "attempt_id", "node"]) handoffId(data[k], `${p}.${k}`);
+  if (eventType === "com.exomachina.handoff.produced.v1") {
+    handoffId(data.handoff_id, `${p}.handoff_id`);
+    if (!Number.isSafeInteger(data.handoff_revision) || data.handoff_revision < 1) throw new DashboardContractError("handoff_revision must be a positive integer", `${p}.handoff_revision`);
+    time(data.produced_at, `${p}.produced_at`);
+    // A hand-off never travels empty; a message output is exactly one message item.
+    if (!Array.isArray(data.items) || !data.items.length || data.items.length > 256) throw new DashboardContractError("hand-off requires a bounded non-empty item array", `${p}.items`);
+    data.items.forEach((item, i) => validateHandoffItem(item, `${p}.items[${i}]`));
+    if (new Set(data.items.map(item => item.item_index)).size !== data.items.length) throw new DashboardContractError("duplicate hand-off item index", `${p}.items`);
+    if (data.items.some(item => item.source === "message") && data.items.length !== 1) throw new DashboardContractError("a message hand-off holds exactly one item", `${p}.items`);
+  } else if (eventType === "com.exomachina.handoff.consumed.v1") {
+    time(data.consumed_at, `${p}.consumed_at`);
+    if (!Array.isArray(data.inputs) || !data.inputs.length || data.inputs.length > 64) throw new DashboardContractError("consumption requires a bounded non-empty input array", `${p}.inputs`);
+    data.inputs.forEach((input, i) => {
+      const q = `${p}.inputs[${i}]`; record(input, q); exactKeys(input, HANDOFF_INPUT_KEYS, q);
+      handoffId(input.handoff_id, `${q}.handoff_id`);
+      if (!Array.isArray(input.item_digests) || !input.item_digests.length || input.item_digests.length > 256) throw new DashboardContractError("input requires a bounded non-empty digest array", `${q}.item_digests`);
+      input.item_digests.forEach((digest, j) => handoffDigest(digest, `${q}.item_digests[${j}]`));
+    });
+    if (new Set(data.inputs.map(input => input.handoff_id)).size !== data.inputs.length) throw new DashboardContractError("duplicate consumed hand-off", `${p}.inputs`);
+  } else {
+    handoffId(data.handoff_id, `${p}.handoff_id`);
+    handoffIndex(data.item_index, `${p}.item_index`);
+    handoffPartKinds(data.part_kinds, `${p}.part_kinds`);
+    handoffMediaType(data.media_type, `${p}.media_type`);
+    time(data.ready_at, `${p}.ready_at`);
+  }
+  return data;
+}
+
 export function validateCloudEvent(event, options = {}) {
   record(event, "$event");
   const required = ["specversion", "id", "source", "type", "time", "subject", "datacontenttype", "dataschema", "data"];
@@ -250,10 +331,11 @@ export function validateCloudEvent(event, options = {}) {
   if (!/^obs-[0-9a-f]{64}$/.test(event.id)) throw new DashboardContractError("invalid stable event id", "$event.id");
   string(event.source, "$event.source"); if (!/^\/factories\/[A-Za-z0-9._%:/@+-]{1,768}$/.test(event.source)) throw new DashboardContractError("invalid event source", "$event.source");
   const illustrative = event.type === DEMO_ILLUSTRATION_EVENT_TYPE;
-  if (!illustrative && !EVENT_TYPES.includes(event.type)) throw new DashboardContractError("unsupported CloudEvent type", "$event.type");
+  const handoff = HANDOFF_EVENT_TYPES.includes(event.type);
+  if (!illustrative && !handoff && !EVENT_TYPES.includes(event.type)) throw new DashboardContractError("unsupported CloudEvent type", "$event.type");
   time(event.time, "$event.time"); string(event.subject, "$event.subject");
   if (event.datacontenttype !== "application/json" || event.dataschema !== DASHBOARD_EVENT_SCHEMA) throw new DashboardContractError("unsupported CloudEvent data schema", "$event");
-  if (illustrative) validateDemoEvent(event, options); else validateData(event.data, event.type, "$event.data");
+  if (illustrative) validateDemoEvent(event, options); else if (handoff) validateHandoffData(event.data, event.type, "$event.data"); else validateData(event.data, event.type, "$event.data");
   sensitiveScan(event);
   return event;
 }
@@ -263,12 +345,16 @@ const STATE_KEYS = new Set(["factory", "runs", "active_publication", "capacity",
 const exactKeys = (value, allowed, path) => { for (const key of Object.keys(value)) if (!allowed.has(key)) throw new DashboardContractError("field is not allowlisted", `${path}.${key}`); };
 const checkText = (value,path,max=128) => { string(value,path); if(value.length>max||/[\u0000-\u001f]/.test(value))throw new DashboardContractError("invalid safe label",path); };
 function validateSnapshotDataRecord(value, path) { if (value == null) return; validateData(value, null, path); }
+const NODE_OUTPUTS=new Set(["artifacts","message","none"]),EDGE_KINDS=new Set(["material","control"]);
 function validatePublicGraph(graph,path){
   record(graph,path);exactKeys(graph,new Set(["nodes","edges"]),path);
   if(!Array.isArray(graph.nodes)||!Array.isArray(graph.edges))throw new DashboardContractError("graph requires nodes and edges",path);
-  const nodeIds=new Set();const nodeKeys=new Set(["id","type","kind","name","short","sub","capability","agent","dept","next","loop","responder","allowed","allowed_actions","role"]);
-  graph.nodes.forEach((node,i)=>{const p=`${path}.nodes[${i}]`;record(node,p);exactKeys(node,nodeKeys,p);if(typeof node.id!=="string"||!ID.test(node.id))throw new DashboardContractError("invalid graph node identifier",`${p}.id`);const nodeKind=node.kind??node.type;if(typeof nodeKind!=="string"||!ID.test(nodeKind))throw new DashboardContractError("graph node requires a kind",`${p}.kind`);if(nodeIds.has(node.id))throw new DashboardContractError("duplicate graph node",`${p}.id`);nodeIds.add(node.id);for(const key of ["name","short","sub","role"])if(node[key]!=null)checkText(node[key],`${p}.${key}`);for(const key of ["kind","type","capability","agent","dept","responder"])if(node[key]!=null){string(node[key],`${p}.${key}`);if(!ID.test(node[key]))throw new DashboardContractError("invalid graph label",`${p}.${key}`);}for(const key of ["next","allowed","allowed_actions"])if(node[key]!=null&&(!Array.isArray(node[key])||node[key].some(x=>typeof x!=="string"||!ID.test(x))))throw new DashboardContractError("invalid graph reference list",`${p}.${key}`);});
-  graph.edges.forEach((edge,i)=>{const p=`${path}.edges[${i}]`;record(edge,p);exactKeys(edge,new Set(["from","to","label","loop","kind"]),p);if(!nodeIds.has(edge.from)||!nodeIds.has(edge.to))throw new DashboardContractError("edge endpoint is not in graph",p);if(edge.label!=null)checkText(edge.label,`${p}.label`);if(edge.loop!=null&&typeof edge.loop!=="boolean")throw new DashboardContractError("loop must be boolean",`${p}.loop`);});
+  const nodeIds=new Set();const nodeKeys=new Set(["id","type","kind","name","short","sub","capability","agent","dept","next","loop","responder","allowed","allowed_actions","role","output"]);
+  graph.nodes.forEach((node,i)=>{const p=`${path}.nodes[${i}]`;record(node,p);exactKeys(node,nodeKeys,p);if(typeof node.id!=="string"||!ID.test(node.id))throw new DashboardContractError("invalid graph node identifier",`${p}.id`);const nodeKind=node.kind??node.type;if(typeof nodeKind!=="string"||!ID.test(nodeKind))throw new DashboardContractError("graph node requires a kind",`${p}.kind`);if(nodeIds.has(node.id))throw new DashboardContractError("duplicate graph node",`${p}.id`);nodeIds.add(node.id);for(const key of ["name","short","sub","role"])if(node[key]!=null)checkText(node[key],`${p}.${key}`);for(const key of ["kind","type","capability","agent","dept","responder"])if(node[key]!=null){string(node[key],`${p}.${key}`);if(!ID.test(node[key]))throw new DashboardContractError("invalid graph label",`${p}.${key}`);}for(const key of ["next","allowed","allowed_actions"])if(node[key]!=null&&(!Array.isArray(node[key])||node[key].some(x=>typeof x!=="string"||!ID.test(x))))throw new DashboardContractError("invalid graph reference list",`${p}.${key}`);if(node.output!=null&&!NODE_OUTPUTS.has(node.output))throw new DashboardContractError("invalid node output mode",`${p}.output`);});
+  graph.edges.forEach((edge,i)=>{const p=`${path}.edges[${i}]`;record(edge,p);exactKeys(edge,new Set(["from","to","label","loop","kind"]),p);if(!nodeIds.has(edge.from)||!nodeIds.has(edge.to))throw new DashboardContractError("edge endpoint is not in graph",p);if(edge.label!=null)checkText(edge.label,`${p}.label`);if(edge.loop!=null&&typeof edge.loop!=="boolean")throw new DashboardContractError("loop must be boolean",`${p}.loop`);if(edge.kind!=null&&!EDGE_KINDS.has(edge.kind))throw new DashboardContractError("invalid edge kind",`${p}.kind`);});
+  // A side-effect node (output "none") has no outgoing material edge (decision 5).
+  const sideEffects=new Set(graph.nodes.filter(node=>node.output==="none").map(node=>node.id));
+  graph.edges.forEach((edge,i)=>{if(sideEffects.has(edge.from)&&(edge.kind??"material")==="material")throw new DashboardContractError("side-effect node may not have an outgoing material edge",`${path}.edges[${i}]`);});
 }
 const RECORD_KEYS=new Set([...new Set(["id","attempts","task","context_id","status","pinned","assignments","artifacts","quality","decisions","commands","delivery","incidents","admissions","run_id","factory_id","limit","capacity_limit","active_count","queued_count","byte_length","version","publication_version","label","digest","manifest_digest","package_digest","definition_digest","interpreter_build","contract_digest","graph","nodes","edges","from","to","loop","source_label","model_label","fixture_label","role",...COMMON,...Object.values(FIELDS).flat()])]);
 function validatePublicRecord(row,path){
