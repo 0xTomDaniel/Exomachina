@@ -88,6 +88,16 @@ test('Floor summary uses actual scoped facts and keeps Quality separate from del
  const summary=summarize(vm,'current');assert.equal(summary.state,'completed');assert.equal(summary.phase,'accepted');assert.equal(summary.activeAssignments,0);assert.equal(summary.completedAssignments,1);assert.equal(summary.quality,'accepted');assert.equal(Object.hasOwn(summary,'delivered'),false);assert.equal(summarize(vm,'missing'),null);
 });
 
+test('Floor summary counts recorded hand-offs across the original Task scope',async()=>{
+ const html=await readFile(new URL('../../../../docs/design/exomachina-floor.html',import.meta.url),'utf8');
+ const start=html.indexOf('function observedJobSummary('),end=html.indexOf('function renderObservedJobSummary(',start);
+ const summarize=runInNewContext('('+html.slice(start,end).trim()+')');
+ const task={id:'task',context_id:'ctx'};
+ const vm={runs:[{run_id:'root',task,recordedHandoffs:0,state:{state:'completed'}},{run_id:'child',task,recordedHandoffs:5,state:{state:'completed'}},{run_id:'other',task:{id:'x',context_id:'y'},recordedHandoffs:9}],assignments:[],quality:[]};
+ assert.equal(summarize(vm,'root').recordedHandoffs,5);
+ assert.equal(summarize({runs:[{run_id:'old',state:{state:'completed'}}]},'old').recordedHandoffs,0);
+});
+
 test('waiting for a new run snapshot clears the previous job before awaiting transport',async()=>{
  const html=await readFile(new URL('../../../../docs/design/exomachina-floor.html',import.meta.url),'utf8');
  const start=html.indexOf('async function selectRun('),end=html.indexOf('async function selectFactory(',start);
@@ -177,7 +187,8 @@ test('observed current activity lights only pinned stations and stops on termina
  vm.runs[0].state={state:'working',node:'5'};vm.assignments=[];assert.deepEqual([...activity(vm,'new',steps)],[]);
  vm.runs[0].state={state:'working',node:'gather'};vm.assignments=[{run_id:'new',active:true,node:'gather',capability:'packet_risks@1'},{run_id:'new',active:true,node:'gather',capability:'unpodded@1'}];
  assert.deepEqual([...activity(vm,'new',[{id:'gather'},{id:'pod:gather:packet_risks@1'}])],['gather','pod:gather:packet_risks@1']);
- assert.match(html,/Task outputs are not recorded as artifacts, so their hand-off follows pinned graph order\. Branch agent pods are derived from observed assignments\./);
+ assert.match(html,/'Task outputs are not recorded as artifacts, so their hand-off follows pinned graph order\.'"><\/span> Branch agent pods are derived from observed assignments\./);
+ assert.match(html,/summary\.recordedHandoffs \? 'The factory recorded '/);
  assert.doesNotMatch(html,/Moving belt chevrons are a visual route cue/);
  assert.match(html,/observedNodes.has\(e.def.to\)&&!e.loop/);
 });

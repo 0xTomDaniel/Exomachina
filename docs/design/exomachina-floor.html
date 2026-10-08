@@ -927,7 +927,7 @@ body:not(.playing) .crt::after,body:not(.playing) .crt .cur,body:not(.playing) .
                 <template x-if="$store.floor.observedJobSummary">
                   <section data-observed-job-summary aria-label="Observed job progress" x-data="{ get summary(){ return $store.floor.observedJobSummary } }">
                     <h3>Observed progress</h3>
-                    <p class="prov">Lit stations show observed current activity. Tasks sit at stations for their observed start→end; artifacts ride belts from the producing station's completion to the next observed start (hops under 0.8 s are shown at 0.8 s). Task outputs are not recorded as artifacts, so their hand-off follows pinned graph order. Branch agent pods are derived from observed assignments.</p>
+                    <p class="prov">Lit stations show observed current activity. Tasks sit at stations for their observed start→end; artifacts ride belts from the producing station's completion to the next observed start (hops under 0.8 s are shown at 0.8 s). <span x-text="summary.recordedHandoffs ? 'The factory recorded ' + summary.recordedHandoffs + ' hand-offs for this job; their gems show each item\'s kind, size, and short digest, never its content.' : 'Task outputs are not recorded as artifacts, so their hand-off follows pinned graph order.'"></span> Branch agent pods are derived from observed assignments.</p>
                     <p class="note" x-text="summary.state + (summary.phase ? ' · ' + summary.phase : '') + ' · ' + summary.activeAssignments + ' active assignment facts · ' + summary.completedAssignments + ' completed' + (summary.unknownAssignments ? ' · ' + summary.unknownAssignments + ' outcomes unreported' : '') + '. Quality: ' + summary.quality + (summary.qualityScope === 'original Task scope' ? ' (original Task scope)' : '') + '.'"></p>
                     <p class="prov" :title="summary.taskId || ''" x-text="summary.taskId ? 'Task ' + summary.taskId.slice(0,8) : 'Original Task unreported'"></p>
                     <div class="btnrow">
@@ -4073,7 +4073,8 @@ function observedJobSummary(vm,runId){
   const relatedIds=new Set([runId,...(run.task?.id&&run.task?.context_id?(vm.runs||[]).filter(row=>row.task?.id===run.task.id&&row.task?.context_id===run.task.context_id).map(row=>row.run_id):[])]);
   const assignments=(vm.assignments||[]).filter(row=>relatedIds.has(row.run_id));
   const quality=(vm.quality||[]).filter(row=>relatedIds.has(row.run_id)).at(-1);
-  return {taskId:run.task?.id||null,state:run.state?.state||'unknown',phase:run.state?.phase||null,
+  const recordedHandoffs=(vm.runs||[]).filter(row=>relatedIds.has(row.run_id)).reduce((n,row)=>n+(row.recordedHandoffs||0),0);
+  return {taskId:run.task?.id||null,recordedHandoffs,state:run.state?.state||'unknown',phase:run.state?.phase||null,
     startedAt:run.state?.started_at||null,endedAt:run.state?.ended_at||null,
     activeAssignments:assignments.filter(row=>row.active).length,
     completedAssignments:assignments.filter(row=>row.state==='completed').length,

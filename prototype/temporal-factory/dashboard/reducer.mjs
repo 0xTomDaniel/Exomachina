@@ -258,7 +258,7 @@ export function dashboardViewModels(state) {
     incidents:runs.flatMap(run=>allRunRows(run,"incidents").map(row=>({...row,run_id:run.run_id}))),
     admissions:runs.flatMap(run=>allRunRows(run,"admissions").map(row=>({...row,run_id:run.run_id}))),
     definition:{ graph:clone(state.factory?.graph ?? {nodes:[],edges:[]}), graph_nodes:clone(state.factory?.graph?.nodes ?? state.publication?.graph_nodes ?? []), service_bindings:clone(state.factory?.agent_bindings ?? state.publication?.service_bindings ?? []), publication:clone(state.publication), factory:clone(state.factory) },
-    agents:clone(state.factory?.agent_bindings ?? state.publication?.service_bindings ?? state.factory?.agents ?? []), runs:runs.map(run=>({run_id:run.run_id,task:clone(run.task),state:clone(run.state),pinned:clone(run.pinned)})),
+    agents:clone(state.factory?.agent_bindings ?? state.publication?.service_bindings ?? state.factory?.agents ?? []), runs:runs.map(run=>({run_id:run.run_id,task:clone(run.task),state:clone(run.state),pinned:clone(run.pinned),recordedHandoffs:run.handoffs?.produced?.length ?? 0})),
     events:state.events.map(row=>({cursor:row.cursor,id:row.event.id,type:row.event.type,time:row.event.time,subject:row.event.subject,data:clone(row.event.data)})),
     commercial:{ ...clone(state.commercial), usage, obligations, obligationsByComponent:Object.fromEntries([...new Set(obligations.map(row=>row.component))].map(component=>[component,obligations.filter(row=>row.component===component)])) },
   };
