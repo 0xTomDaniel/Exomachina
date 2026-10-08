@@ -717,3 +717,15 @@ Digests are HMAC-SHA256 under a per-factory-instance key stored in the instance
 home. The key is never logged, observed, or exported. Report artifacts keep the
 existing plain sha256 chain. Run snapshots retain hand-off records with their
 times so retained runs replay their full path.
+
+Dashboard validator details (7 Oct 2026, ahead of runtime emission): each
+hand-off fact allows exactly `schema_version`, `factory_id` and the fields
+above, at every depth; `media_type` may be null (A2A `mediaType` is
+optional); `byte_length` may be null only when `part_kinds` includes `url`;
+`handoff_revision` is a positive integer; `digest`, `item_digests[]` and
+`artifact_sha256` are 64 lowercase hex; a `message` hand-off has exactly one
+item; `artifact_revision` and `artifact_sha256` appear together, only on an
+`artifact` item. Pinned public graphs accept edge `kind` and node `output`; a
+node with `output: "none"` and an outgoing material edge is rejected. The
+event-stream `graph_nodes` form accepts `output` but has no way to declare an
+edge kind yet.
