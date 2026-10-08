@@ -36,13 +36,15 @@ class DefinitionOutputAndEdgeKindTests(unittest.TestCase):
 
     def test_shipped_template_and_testbed_declare_side_effect_release_and_control_routes(self):
         approved = shipped_bindings()
-        self.assertEqual(approved["release"]["output"], "none")
+        # Release is bound strict: its receipt is the A2A Task's result artifact.
+        # It stays a side-effect node through its control-only outgoing edge.
+        self.assertEqual(approved["release"]["output"], "artifacts")
         self.assertTrue(all("output" not in approved[name] for name in approved if name != "release"))
         package = self.package(approved=approved)
         self.assertEqual(validate(package, approved), digest(package))
         child = child_of(package)
         nodes = child["nodes"]
-        self.assertEqual(node_output(nodes["publish"], package["bindings"]), "none")
+        self.assertEqual(node_output(nodes["publish"], package["bindings"]), "artifacts")
         self.assertEqual(node_output(nodes["draft"], package["bindings"]), "artifacts")
         self.assertEqual(node_output(nodes["gather"], package["bindings"]), "artifacts")
         self.assertIsNone(node_output(nodes["route_verdict"], package["bindings"]))
@@ -82,11 +84,20 @@ class DefinitionOutputAndEdgeKindTests(unittest.TestCase):
         for tpl, message in cases:
             with self.subTest(message=message), self.assertRaisesRegex(ValueError, message):
                 validate(self.package(tpl, approved), approved)
-        for name, output in (("release", "artifacts"), ("synthesizer", "none"), ("quality", "stream")):
+        for name, output, error in (
+                ("release", "none", "release node binding output must be strict artifacts"),
+                ("release", "message", "release node binding output must be strict artifacts"),
+                ("quality", "stream", "binding output"),
+                # A result-less agent on a node with an outgoing material edge.
+                ("synthesizer", "none", "draft: side-effect node")):
             changed = copy.deepcopy(approved)
             changed[name]["output"] = output
-            with self.subTest(binding=name), self.assertRaisesRegex(ValueError, "binding output"):
+            with self.subTest(binding=name, output=output), self.assertRaisesRegex(ValueError, error):
                 validate(self.package(approved=changed), changed)
+        unbound = copy.deepcopy(approved)
+        unbound["release"]["role"] = "capability"
+        with self.assertRaisesRegex(ValueError, "release node must bind an approved release agent"):
+            validate(self.package(approved=unbound), unbound)
         message = copy.deepcopy(approved)
         message["research_risks"]["output"] = "message"
         self.assertEqual(validate(self.package(approved=message), message),
@@ -113,7 +124,7 @@ class DefinitionOutputAndEdgeKindTests(unittest.TestCase):
         package = self.package()
         projected = _graph_nodes(child_of(package), package["bindings"])
         by_id = {node["id"]: node for node in projected}
-        self.assertEqual(by_id["publish"]["output"], "none")
+        self.assertEqual(by_id["publish"]["output"], "artifacts")
         self.assertEqual(by_id["publish"]["control"], ["done"])
         self.assertEqual(by_id["route_verdict"]["next"], ["publish", "repair"])
         self.assertEqual(by_id["independent_quality"]["control"], ["route_verdict"])
@@ -124,9 +135,10 @@ class DefinitionOutputAndEdgeKindTests(unittest.TestCase):
         self.assertEqual(kinds[("draft", "independent_quality")], "material")
         self.assertEqual(kinds[("route_verdict", "repair")], "control")
         self.assertEqual(kinds[("publish", "done")], "control")
-        self.assertEqual({n["id"]: n.get("output") for n in graph["nodes"]}["publish"], "none")
+        self.assertEqual({n["id"]: n.get("output") for n in graph["nodes"]}["publish"], "artifacts")
         broken = [dict(node) for node in projected]
-        next(node for node in broken if node["id"] == "publish")["control"] = []
+        # The generic rule: a result-less (output none) node may not feed material.
+        next(node for node in broken if node["id"] == "publish").update(output="none", control=[])
         with self.assertRaises(SourceContractError):
             _snapshot_graph(_safe_nodes(broken))
         with self.assertRaises(SourceContractError):
@@ -134,7 +146,7 @@ class DefinitionOutputAndEdgeKindTests(unittest.TestCase):
 
     def test_authoring_vocabulary_describes_outputs_and_edge_kinds(self):
         vocabulary = authoring_vocabulary(shipped_bindings())
-        self.assertEqual(vocabulary["bindings"]["release"]["output"], "none")
+        self.assertEqual(vocabulary["bindings"]["release"]["output"], "artifacts")
         self.assertEqual(vocabulary["node_outputs"], ["artifacts", "message", "none"])
         self.assertEqual(vocabulary["edge_kinds"], ["material", "control"])
 

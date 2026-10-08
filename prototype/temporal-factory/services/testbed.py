@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
-from agent_binding import UnavailableBinding, card_observation, pin
+from agent_binding import UnavailableBinding, card_observation, card_pin, pin
 from agent_roles import RUBRIC_DIGEST
 from model_broker import DEFAULT_MODEL_ID
 SERVICE_NAMES = (
@@ -52,20 +52,37 @@ def report_role(name: str) -> str:
     return "quality" if name == "quality" else "release" if name == "release" else "capability"
 
 
+RELEASE_RECEIPT = ["receipt_id", "sha256", "byte_length", "media_type", "accepted_at",
+                   "outcome"]
+
+
 def report_bindings(health: dict[str, dict], port_base: int) -> dict[str, dict]:
-    # The HTTP release receiver is a side-effect node: output "none" (A2A v1
-    # mediation decision 3); A2A agents keep the strict artifacts default.
+    # The release receiver is an A2A agent bound with strict artifacts output:
+    # its receipt is its result artifact. Release stays a side-effect node
+    # through its control-only outgoing edge in the definition.
     return {name: {"role": report_role(name), "url": f"http://127.0.0.1:{port_base + index}",
                    "identity": health[name]["identity"], "approved": True,
-                   **({"output": "none"} if name == "release" else {})}
+                   **({"output": "artifacts"} if name == "release" else {})}
             for index, name in enumerate(REPORT_NAMES)}
+
+
+def release_contract(binding: dict) -> dict:
+    """The release receiver's pinned contract: its public Agent Card, nothing else."""
+    observed = card_pin(binding["url"])
+    if observed["identity"] != binding["identity"]:
+        raise ValueError("release receiver Agent Card differs from its binding identity")
+    tags = {tag for skill in observed["skills"] if skill["id"] == CAPABILITIES["release"]
+            for tag in skill["tags"]}
+    return {**contract_records()["release"], "card_sha256": observed["card_sha256"],
+            "reconcile": ("a2a-idempotent-resend" if "message-id-idempotent" in tags
+                          else "opaque")}
 
 
 def report_contracts(bindings: dict[str, dict]) -> dict[str, dict]:
     contracts = {}
     for name in REPORT_NAMES:
         if name == "release":
-            contracts[name] = contract_records()["release"]
+            contracts[name] = release_contract(bindings[name])
         else:
             binding = bindings[name]
             contracts[name] = {"name": name, "role": report_role(name),
@@ -105,13 +122,19 @@ def contract_records() -> dict[str, dict]:
                                             "reason"]})
             operations = {"idempotent_message_id": True, "task_lookup": "GetTask"}
         else:
-            input_contract = {"transport": "http-post", "path": "/release",
-                              "fields": ["release_id", "run_id", "definition_digest",
-                                         "revision", "sha256", "content"]}
-            output_contract = {"receipt": ["release_id", "run_id", "definition_digest",
-                                           "revision", "sha256", "attempts",
-                                           "accepted_effect_count"]}
-            operations = {"idempotent_action_id": True, "lookup": "/receipts/{id}"}
+            # An ordinary A2A agent: one Part carrying the accepted document
+            # and its mediaType; the receipt is the Task's (strict) data-part
+            # result artifact; messageId is the idempotency key.
+            contracts[name] = {
+                "name": name, "role": role, "capability": CAPABILITIES[name],
+                "a2a_protocol": "1.0",
+                "input": {"transport": "a2a-SendMessage", "parts": 1,
+                          "media_type": "application/json"},
+                "output": {"mode": "artifacts", "receipt": RELEASE_RECEIPT},
+                "operations": {"idempotency": "messageId", "task_lookup": "GetTask"},
+                "attested": False,
+            }
+            continue
         contracts[name] = {
             "name": name, "role": role, "capability": CAPABILITIES[name],
             "a2a_protocol": "1.0", "input": input_contract, "output": output_contract,
@@ -145,19 +168,23 @@ def read_pids(home: Path) -> dict[str, dict]:
     return json.loads(path.read_text()) if path.exists() else {}
 
 
-def health_at(port: int, name: str | None = None) -> dict | None:
-    """Identity of the service on ``port``.
+def release_card_at(port: int) -> dict | None:
+    """The release receiver serves only A2A: observe it through its Agent Card."""
+    try:
+        observed = card_pin(f"http://127.0.0.1:{port}")
+    except (UnavailableBinding, ValueError, OSError):
+        return None
+    tags = {tag for skill in observed["skills"] for tag in skill["tags"]}
+    return {"identity": observed["identity"], "card_sha256": observed["card_sha256"],
+            "role": "release", "a2a_protocol": "1.0",
+            "mode": "participating" if "message-id-idempotent" in tags else "opaque"}
 
-    A2A agent services are observed only through their public Agent Card. The
-    HTTP release receiver is not an A2A agent and keeps its own health route.
-    """
-    if name == "release":
-        try:
-            with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=1) as response:
-                value = json.load(response)
-            return value if isinstance(value, dict) and isinstance(value.get("identity"), str) else None
-        except (OSError, ValueError, urllib.error.URLError):
-            return None
+
+def observe(name: str, port: int) -> dict | None:
+    return release_card_at(port) if name == "release" else health_at(port)
+
+
+def health_at(port: int) -> dict | None:
     try:
         observed = card_observation(f"http://127.0.0.1:{port}")
     except (OSError, ValueError, UnavailableBinding, urllib.error.URLError):
@@ -217,7 +244,7 @@ def up(home: Path, port_base: int, *, delayed_agent: bool = False,
     for index, name in enumerate(names):
         port = port_base + index
         prior = pids.get(name)
-        observed = health_at(port, name)
+        observed = observe(name, port)
         if observed is not None:
             if (not prior or prior.get("port") != port or not alive(prior["pid"])
                     or prior.get("identity") != observed.get("identity")):
@@ -236,7 +263,7 @@ def up(home: Path, port_base: int, *, delayed_agent: bool = False,
                 _CHILDREN[process.pid] = process
             deadline = time.monotonic() + 30
             while time.monotonic() < deadline:
-                observed = health_at(port, name)
+                observed = observe(name, port)
                 if observed is not None:
                     break
                 if process.poll() is not None:
@@ -252,6 +279,7 @@ def up(home: Path, port_base: int, *, delayed_agent: bool = False,
             directory.mkdir(parents=True, exist_ok=True)
             (directory / "pids.json").write_text(json.dumps(pids, indent=2, sort_keys=True) + "\n")
         if name == "release" and observed.get("mode") != "participating":
+            raise RuntimeError("release: Agent Card does not offer messageId idempotency")
             raise RuntimeError(f"{name}: health role mismatch")
         if (profile == "report" and name != "release"
                 and REPORT_CAPABILITIES[name] not in observed.get("skills", [])):
@@ -270,6 +298,7 @@ def up(home: Path, port_base: int, *, delayed_agent: bool = False,
             value["operations"]["idempotent_message_id"] = (
                 agent_pin["reconcile"] == "a2a-idempotent-resend")
             value["attested"] = True
+        contracts["release"] = release_contract(bindings["release"])
         if delayed_agent:
             contracts["counter_beta"]["input"]["returnImmediately"] = True
     write_metadata(home, bindings, pids, contracts, snapshot=True,
@@ -286,7 +315,7 @@ def down(home: Path) -> dict:
             result[name] = "unrecorded"
             continue
         pid = record["pid"]
-        observed = health_at(record["port"], name)
+        observed = observe(name, record["port"])
         if observed is not None and observed.get("identity") != record["identity"]:
             result[name] = "identity-mismatch"
             continue
@@ -295,12 +324,12 @@ def down(home: Path) -> dict:
             continue
         os.kill(pid, signal.SIGTERM)
         deadline = time.monotonic() + 15
-        while time.monotonic() < deadline and health_at(record["port"], name) is not None:
+        while time.monotonic() < deadline and observe(name, record["port"]) is not None:
             time.sleep(0.2)
         child = _CHILDREN.pop(pid, None)
         if child is not None:
             child.wait(timeout=5)
-        result[name] = "stopped" if health_at(record["port"], name) is None else "timeout"
+        result[name] = "stopped" if observe(name, record["port"]) is None else "timeout"
     return result
 
 
@@ -309,7 +338,7 @@ def status(home: Path, port_base: int, *, profile: str = "report") -> dict:
     services = {}
     for index, name in enumerate(REPORT_NAMES if profile == "report" else SERVICE_NAMES):
         port = port_base + index
-        observed = health_at(port, name)
+        observed = observe(name, port)
         record = pids.get(name)
         services[name] = {
             "port": port, "pid": record.get("pid") if record else None,

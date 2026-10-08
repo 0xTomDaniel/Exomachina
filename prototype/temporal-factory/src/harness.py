@@ -75,6 +75,8 @@ from model_broker import (BROKER_PROGRAM, DEFAULT_HOME, DEFAULT_MODEL_ID,
 from model_usage import AGENT_USAGE_DATABASE, ModelUsageJournal  # noqa: E402
 from agent_binding import digest as agent_contract_digest  # noqa: E402
 from agent_binding import resolve as resolve_agent_binding  # noqa: E402
+from agent_binding import card_identity as agent_card_identity  # noqa: E402
+from agent_binding import resolve_card as resolve_card_binding  # noqa: E402
 from admission import AdmissionQueue  # noqa: E402
 from supplier_protocol import (  # noqa: E402
     SupplierEnvelopeError,
@@ -625,11 +627,18 @@ def _pinned_usage_owners(director: Director, scope: Mapping, *,
             if not isinstance(contract.get("card_sha256"), str):
                 failures += 1
                 continue
+            role = binding.get("role")
             if not resolve:
-                owners.append({"name": name, "identity": identity})
+                owners.append({"name": name, "identity": identity, "role": role})
                 continue
+            # A card-pinned agent (identity derived from its Agent Card digest,
+            # for example the A2A release agent) re-verifies through its card
+            # alone; other agents through their pinned card and identity.
+            resolver = (resolve_card_binding
+                        if identity == agent_card_identity(contract["card_sha256"])
+                        else resolve_agent_binding)
             try:
-                url, observed = resolve_agent_binding(snapshot_path, identity, dict(contract))
+                url, observed = resolver(snapshot_path, identity, dict(contract))
             except Exception:
                 failures += 1
                 continue
@@ -637,7 +646,7 @@ def _pinned_usage_owners(director: Director, scope: Mapping, *,
             if parsed.scheme != "http" or parsed.hostname != "127.0.0.1" or not parsed.port:
                 failures += 1
                 continue
-            owners.append({"name": name, "identity": identity, "url": url,
+            owners.append({"name": name, "identity": identity, "role": role, "url": url,
                            "skills": list(observed.get("skills") or [])})
         if set(manifest_services) != set(package_bindings):
             failures += 1
@@ -870,18 +879,26 @@ def _pinned_service_measurements(director: Director, scopes: list[dict],
     for scope in scopes:
         owners, owner_failures, skipped_services = _pinned_usage_owners(
             director, scope, resolve=False)
-        owners_total += len(owners) + owner_failures
         owner_resolution_failures += owner_failures
         non_usage_services += skipped_services
-        identities = {owner["identity"] for owner in owners}
-        if not database.is_file():
-            continue
-        try:
-            journal = journal or ModelUsageJournal(database)
-            values = journal.list_measurements(run_id=scope["run_id"],
-                                               call_scope="assignment_call")
-        except Exception:
-            queries_failed += 1
+        values, queried = [], False
+        if database.is_file():
+            try:
+                journal = journal or ModelUsageJournal(database)
+                values = journal.list_measurements(run_id=scope["run_id"],
+                                                   call_scope="assignment_call")
+                queried = True
+            except Exception:
+                queries_failed += 1
+        # A release agent makes no model calls: it is a usage owner only when
+        # it actually reported usage for this run, otherwise a non-usage service.
+        reporting = {raw.get("service_identity") for raw in values if isinstance(raw, Mapping)}
+        usage_owners = [owner for owner in owners
+                        if owner.get("role") != "release" or owner["identity"] in reporting]
+        non_usage_services += len(owners) - len(usage_owners)
+        owners_total += len(usage_owners) + owner_failures
+        identities = {owner["identity"] for owner in usage_owners}
+        if not queried:
             continue
         for raw in values:
             identity = raw.get("service_identity") if isinstance(raw, Mapping) else None

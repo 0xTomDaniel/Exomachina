@@ -15,7 +15,7 @@ from definition import digest, validate  # noqa: E402
 from testbed import (QUALITY_POLICY, SERVICE_NAMES, REPORT_CAPABILITIES, REPORT_NAMES,
                      REPORT_QUALITY_POLICY, binding_records, contract_records, down,
                      report_bindings, report_contracts, up, write_metadata)  # noqa: E402
-from agent_binding import resolve  # noqa: E402
+from agent_binding import card_identity, resolve, resolve_card  # noqa: E402
 
 
 class TestbedTests(unittest.TestCase):
@@ -52,8 +52,12 @@ class TestbedTests(unittest.TestCase):
             self.assertEqual(contract["a2a_protocol"], "1.0")
             self.assertIs(contract["attested"], False)
             if name == "release":
+                # An ordinary A2A agent whose receipt is its result artifact.
+                self.assertEqual(contract["input"]["transport"], "a2a-SendMessage")
+                self.assertEqual(contract["output"]["mode"], "artifacts")
                 self.assertEqual(contract["operations"],
-                                 {"idempotent_action_id": True, "lookup": "/receipts/{id}"})
+                                 {"idempotency": "messageId", "task_lookup": "GetTask"})
+                self.assertNotIn("/", json.dumps(contract).replace("application/json", ""))
             else:
                 # Agent services: plain Message, messageId idempotency, GetTask.
                 self.assertEqual(contract["input"], {"transport": "a2a-SendMessage",
@@ -107,6 +111,15 @@ class TestbedTests(unittest.TestCase):
             self.assertIn(REPORT_CAPABILITIES[name], observation["skills"])
             self.assertEqual(set(contract), {"name", "role", "capability", "card_sha256",
                                              "identity", "reconcile"})
+        release, contract = bindings["release"], contracts["release"]
+        self.assertEqual(release["output"], "artifacts")
+        self.assertEqual(release["identity"], card_identity(contract["card_sha256"]))
+        self.assertEqual(contract["reconcile"], "a2a-idempotent-resend")
+        resolved_url, observation = resolve_card(directory / "agent_snapshot.json",
+                                                 release["identity"], contract)
+        self.assertEqual((resolved_url, observation["card_sha256"]),
+                         (release["url"], contract["card_sha256"]))
+        self.assertEqual(result["health"]["release"]["mode"], "participating")
 
 
 if __name__ == "__main__":

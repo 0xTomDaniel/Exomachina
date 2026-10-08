@@ -99,3 +99,52 @@ def resolve(snapshot_path: Path, identity: str, pinned: dict) -> tuple[str, dict
             or pinned.get("identity") not in (None, identity)):
         raise ValueError("pinned Agent Card or identity mismatch")
     return url, observed
+
+
+# Card-only binding for agents that offer nothing beyond A2A (for example the
+# release receiver, an ``output: none`` side-effect agent). The pin is the
+# digest of the endpoint-free public Agent Card; the binding identity is derived
+# from that pin, so no private route or factory-specific extension is needed.
+CARD_IDENTITY_PREFIX = "a2a-card-"
+
+
+def card_identity(card_sha256: str) -> str:
+    return CARD_IDENTITY_PREFIX + card_sha256[:24]
+
+
+def read_card(url: str) -> dict:
+    card = read_json(url.rstrip("/") + "/.well-known/agent-card.json")
+    try:
+        endpoint = a2a_v1.card_url(card)
+    except a2a_v1.ProtocolError as error:
+        raise ValueError("Agent Card is not A2A v1.0 only: " + str(error)) from error
+    if endpoint.rstrip("/") != url.rstrip("/"):
+        raise ValueError("Agent Card endpoint differs from snapshot")
+    return card
+
+
+def card_pin(url: str) -> dict:
+    """Pin an agent by its public Agent Card alone."""
+    card = read_card(url)
+    sha = digest(a2a_v1.card_without_endpoint(card))
+    return {"card_sha256": sha, "identity": card_identity(sha),
+            "skills": [{"id": skill.get("id"), "tags": list(skill.get("tags") or [])}
+                       for skill in card.get("skills") or []]}
+
+
+def resolve_card(snapshot_path: Path, identity: str, pinned: dict) -> tuple[str, dict]:
+    """Resolve a card-pinned identity through the static snapshot and re-verify its card."""
+    snapshot = json.loads(snapshot_path.read_text())
+    if snapshot.get("snapshot_version") != 1 or not isinstance(snapshot.get("agents"), dict):
+        raise ValueError("invalid agent snapshot")
+    entry = snapshot["agents"].get(identity)
+    if not isinstance(entry, dict) or set(entry) != {"url"}:
+        raise ValueError("pinned identity absent from snapshot")
+    url = entry["url"]
+    if not isinstance(url, str) or not url.startswith("http://127.0.0.1:"):
+        raise ValueError("invalid snapshot endpoint")
+    observed = card_pin(url)
+    if (observed["card_sha256"] != pinned.get("card_sha256")
+            or observed["identity"] != identity):
+        raise ValueError("pinned Agent Card or identity mismatch")
+    return url, {"url": url, "card_sha256": observed["card_sha256"]}

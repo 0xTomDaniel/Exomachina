@@ -28,6 +28,7 @@ import harness  # noqa: E402
 import harness_server  # noqa: E402
 import model_agent  # noqa: E402
 import quality_server  # noqa: E402
+import release_server  # noqa: E402
 import supplier_echo_fixture  # noqa: E402
 import single_factory  # noqa: E402
 
@@ -68,6 +69,8 @@ class AgentServiceGuardTests(unittest.TestCase):
             "harness_server capability": harness_server.create_app(
                 self.state / "capability", "capability", 46266),
             "harness agent mode": harness.create_app(instance),
+            "release_server": release_server.create_app(self.state / "release", 46267,
+                                                        "participating"),
         }
 
     def test_agent_services_register_only_a2a_routes(self):

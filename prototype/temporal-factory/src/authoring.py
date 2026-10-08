@@ -74,7 +74,10 @@ def authoring_vocabulary(approved_bindings: dict) -> dict:
                   "Quality must review a candidate before release.",
                   "Repair must have a bounded exhausted edge to Director wait and abort.",
                   "The root may only invoke its digest-pinned child and complete.",
-                  "A side-effect node (output none) may have only control outgoing edges.",
+                  "A side-effect node (a release node, or any output none node) may have "
+                  "only control outgoing edges.",
+                  "A release node binds an A2A agent with strict artifacts output: its "
+                  "receipt is the Task's result artifact.",
                   "Route transitions to repair, Director wait, release and terminal are control edges."],
     }
 

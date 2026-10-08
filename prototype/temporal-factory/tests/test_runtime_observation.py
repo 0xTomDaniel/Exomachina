@@ -872,7 +872,9 @@ class RuntimeObservationTests(unittest.TestCase):
         self.assertEqual(run["quality"][0]["reviewer_identity"], "quality-reviewer")
         self.assertEqual(run["quality"][0]["artifact_revision"], "r1")
         self.assertEqual(run["quality"][0]["artifact_sha256"], accepted["sha256"])
-        self.assertTrue(any(event["outcome"] == "fixture-received" for event in run["delivery"]))
+        # The completed run's result repeats a receipt, but a receipt fact comes
+        # only from a release node's own completion (one fact per delivery).
+        self.assertEqual(run["delivery"], [])
         self.assertEqual(run["task"], {"id": "task-1", "context_id": "context-1"})
         self.assertEqual(child_run["task"], {"id": "task-1", "context_id": "context-1"})
         self.assertEqual(child_run["pinned"]["definition_digest"], "f" * 64)
@@ -1422,7 +1424,8 @@ class RuntimeRoutesTests(unittest.TestCase):
         self.assertEqual(failures, 0)
         self.assertEqual(non_usage, 0)
         self.assertEqual(owners, [{"name": "research_findings", "identity": identity,
-                                   "url": binding["url"], "skills": ["packet_findings@1"]}])
+                                   "role": "capability", "url": binding["url"],
+                                   "skills": ["packet_findings@1"]}])
         resolver.assert_called_once_with(
             module.home / "testbed" / "agent_snapshot.json", identity, descriptor)
 
@@ -1456,6 +1459,31 @@ class RuntimeRoutesTests(unittest.TestCase):
         self.assertEqual(owners, [])
         self.assertEqual(failures, 0)
         self.assertEqual(non_usage, 1)
+
+        # The A2A release agent is card-pinned: its identity derives from its
+        # Agent Card digest and it re-verifies through resolve_card alone.
+        card_sha = "c" * 64
+        release_contract = {"role": "release", "name": "release", "capability": "release@1",
+                            "card_sha256": card_sha, "reconcile": "a2a-idempotent-resend"}
+        release_binding = {"approved": True, "identity": harness.agent_card_identity(card_sha),
+                           "role": "release", "url": "http://127.0.0.1:47104",
+                           "output": "artifacts"}
+        package["bindings"] = {"release": release_binding}
+        publication["closure"] = {
+            "manifest": {"services": {"release": {
+                "binding_digest": harness.agent_contract_digest(release_binding),
+                "contract_digest": harness.agent_contract_digest(release_contract)}}},
+            "contracts": {"release": release_contract},
+        }
+        with patch.object(harness, "resolve_card_binding",
+                          return_value=(release_binding["url"], {"card_sha256": card_sha})
+                          ) as card_resolver, \
+                patch.object(harness, "resolve_agent_binding") as identity_resolver:
+            owners, failures, non_usage = harness._pinned_usage_owners(director, scope)
+        identity_resolver.assert_not_called()
+        card_resolver.assert_called_once()
+        self.assertEqual((failures, non_usage), (0, 0))
+        self.assertEqual([(o["name"], o["role"]) for o in owners], [("release", "release")])
 
         module.publications.get = lambda _digest: {
             **publication, "manifest_digest": "wrong-manifest"}
@@ -1527,6 +1555,26 @@ class RuntimeRoutesTests(unittest.TestCase):
         self.assertEqual(report["queries_failed"], 0)
         unknown = [row for row in unfiltered if row["task_id"] == "remote-other-task"]
         self.assertEqual([row["evidence_status"] for row in unknown], ["unknown"])
+        self.assertEqual((report["pinned_owner_count"], report["non_usage_service_count"]),
+                         (1, 0))
+
+        # A release agent reports no usage: it is a non-usage service, not an
+        # owner, until it actually reports usage for the run.
+        release_owner = {"name": "release", "identity": "release-agent", "role": "release"}
+        research_owner = {"name": "research", "identity": "research-worker",
+                          "role": "capability"}
+        with patch.object(harness, "_pinned_usage_owners",
+                          return_value=([research_owner, release_owner], 0, 0)):
+            _rows, quiet = harness._pinned_service_measurements(
+                DirectorScope(), scopes, {**filters, "task_id": None})
+            self.assertEqual((quiet["pinned_owner_count"], quiet["non_usage_service_count"]),
+                             (1, 1))
+            record("release-task-1", "release-agent", definition_digest, {"input": 1})
+            reported, loud = harness._pinned_service_measurements(
+                DirectorScope(), scopes, {**filters, "task_id": None})
+        self.assertEqual((loud["pinned_owner_count"], loud["non_usage_service_count"]),
+                         (2, 0))
+        self.assertIn("release-task-1", {row["task_id"] for row in reported})
         usage = {name: {"value": 1 if name == "input_tokens" else None,
                         "status": "reported" if name == "input_tokens" else "unavailable"}
                  for name in harness.USAGE_CATEGORIES}

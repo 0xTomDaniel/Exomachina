@@ -33,7 +33,7 @@ class BindingTests(unittest.TestCase):
                         "synthesizer": "report_synthesis@1",
                         "quality": "report_quality_review@1"}
         self.contracts = {name: {"revision": 1, "service": name,
-                                 "capability": capabilities.get(name, "http-release@1")}
+                                 "capability": capabilities.get(name, "release@1")}
                           for name in bindings}
         self.policy = {"revision": 1, "authority": "quality"}
         self.build = build_id_for("a" * 64)

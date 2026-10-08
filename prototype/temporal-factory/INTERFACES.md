@@ -7,7 +7,7 @@ Branch `feat/temporal-factory-prototype`. Root: `prototype/temporal-factory/`. T
 - One **customized Strands harness instance** (`src/harness.py`, orchestrator-owned) is configured as `mode: agent` or `mode: factory`. In factory mode, its Director agent and Factory Module run **inside** the instance and expose only that instance's normal A2A identity, Agent Card, and capability contract (`verified-research@1`). There is no separate factory endpoint. Callers never supply a package digest, graph, or version.
 - A new graph definition/version or run **does not** spawn a harness service. New runs use the instance's active publication. Waiting runs keep their pinned closure.
 - The bundled **local runner** (PostgreSQL + Temporal + interpreter workers, `src/runner.py`) starts **lazily**: on the first factory work, or at harness startup only when the instance has unfinished runs to recover. Routine harness startup must not start it. It is a detached process shared by harness instances on the install. It is not owned by one harness process.
-- External agent nodes are **independent black-box services**. Capabilities and Quality are called over A2A. **Exception:** the release receiver is a plain HTTP fixture, not A2A. Its binding advertises `transport: "http-post"`, and `src/receiver_client.py` calls `POST /release` and `GET /receipts/<id>`. Release evidence therefore proves an idempotent HTTP side effect with a receipt, not A2A release delivery. Pinned test services (`services/testbed.py`) stand in for the future directory. No directory discovery.
+- External agent nodes are **independent black-box services**. Capabilities, Quality and the release receiver are all called over A2A v1, with no side channel (see "A2A release agent" below). Pinned test services (`services/testbed.py`) stand in for the future directory. No directory discovery.
 - The bounded declarative graph interpreter (`src/factory.py` + `src/definition.py`) stays. Every run pins its definition, service bindings and contracts, Quality policy, and interpreter/worker build (`src/binding.py` closure).
 
 ## Conventions (all lanes)
@@ -133,7 +133,7 @@ The real-store scan is separate. It runs against the default home, and its scann
 - `PiBrokerModel(strands.models.Model)`: `PiBrokerModel(broker, *, model_id, session_id, reasoning_effort="low")`, the interleaved spike adapter (per-`contentIndex` routing, reasoning emitted at `done` with its original index, lossless replay, `BrokerLost` on a connection lost before a terminal event, `ModelThrottledException` for `rate_limit`/`quota`, `SubscriptionAuthRequired` for `reauth_required`). It lazily calls `broker.ensure_started(reason="model-call")`.
 - `authoring.model_from_environment()` selects by `EXO_AUTHOR_PROVIDER`: unset or `codex-subscription` → the broker only (default model `EXO_AUTHOR_MODEL`, else `gpt-6-sol`); if not signed in it returns `(None, "codex-subscription: not signed in; run node broker/exo-model.mjs login")` and **does not look at any API key**. `anthropic`, `bedrock`, `openai-api` are used only when named explicitly. `synthetic-loopback` selects the broker against a loopback `EXO_CODEX_BASE_URL` for tests, and requires an explicit, non-default, fixture-marked `EXO_MODEL_HOME`. `codex-subscription` returns `(None, reason)` without contacting or starting the broker if `EXO_CODEX_BASE_URL` is set at all. The outcome's `model` record is `{kind, id, provider, billing, live}`, where `live: true` only for `codex-subscription` against the real backend.
 
-**Live authoring scenario** (owner tw_director): `scenarios/live_authoring.py --home H --provider {synthetic-loopback,codex-subscription}`. It brings up the testbed, provisions a factory-mode instance, publishes v1, runs `admin.py author` with the selected broker model (no `--allow-scripted`), auto-approves and publishes v2, runs v2 through the harness's normal A2A `message/send` (lazy runner, Temporal, pinned build) to a terminal state, exports the Temporal histories, and runs `leak-scan` over `H`, the evidence files, the model home's logs, and the **actual commit-candidate file set**, with the positive control. The candidate set is every file under `prototype/temporal-factory/` from `git ls-files --cached --others --exclude-standard`, which covers tracked, staged and untracked non-ignored files; the scan records the file count. A `git diff` excerpt alone is not a leak claim. The positive control is defined under `leak-scan`. In `codex-subscription` mode, the scenario exits with an error before sign-in checks, broker start or any request if `EXO_CODEX_BASE_URL` is inherited from the environment, and it never sets one. In `synthetic-loopback` mode, the fixture model home is `H/model` with the `FIXTURE_STORE` marker. The release step is the HTTP fixture exception above; evidence labels it `http-release (fixture)`, not A2A. Evidence: `evidence/live-authoring-<provider>.json` with every claim labelled `real` or `synthetic`.
+**Live authoring scenario** (owner tw_director): `scenarios/live_authoring.py --home H --provider {synthetic-loopback,codex-subscription}`. It brings up the testbed, provisions a factory-mode instance, publishes v1, runs `admin.py author` with the selected broker model (no `--allow-scripted`), auto-approves and publishes v2, runs v2 through the harness's normal A2A `message/send` (lazy runner, Temporal, pinned build) to a terminal state, exports the Temporal histories, and runs `leak-scan` over `H`, the evidence files, the model home's logs, and the **actual commit-candidate file set**, with the positive control. The candidate set is every file under `prototype/temporal-factory/` from `git ls-files --cached --others --exclude-standard`, which covers tracked, staged and untracked non-ignored files; the scan records the file count. A `git diff` excerpt alone is not a leak claim. The positive control is defined under `leak-scan`. In `codex-subscription` mode, the scenario exits with an error before sign-in checks, broker start or any request if `EXO_CODEX_BASE_URL` is inherited from the environment, and it never sets one. In `synthetic-loopback` mode, the fixture model home is `H/model` with the `FIXTURE_STORE` marker. The release step is the A2A release agent (a fixture agent, not a real external destination); evidence labels it `a2a-release (fixture agent)`. Evidence recorded before 8 Oct 2026 carries the earlier `http-release (fixture)` label. Evidence: `evidence/live-authoring-<provider>.json` with every claim labelled `real` or `synthetic`.
 
 **Live qualification status (23 Sep 2026, one account, `sha256:188b022d6e97`).** Observed against the real ChatGPT/Codex backend:
 - device-code sign-in into the default store;
@@ -157,8 +157,9 @@ Not live-tested:
 
 ## Testbed lane (`services/`, `definitions/`)
 
-- `services/testbed.py {up,down,status} --home H [--port-base 45200]`. It starts independent pinned test services, each with durable identity under `$H/services/<name>` (five A2A; `release` is the HTTP exception): `source_alpha`, `source_beta`, `counter_alpha`, and `counter_beta` (capability, via `src/harness_server.py --role capability`), `quality` (`services/quality_server.py`), and `release` (`services/release_server.py --mode participating`). Ports are `port_base + i` in that order.
+- `services/testbed.py {up,down,status} --home H [--port-base 45200]`. It starts independent pinned test services, each with durable identity under `$H/services/<name>` (all six are A2A v1 agents): `source_alpha`, `source_beta`, `counter_alpha`, and `counter_beta` (capability, via `src/harness_server.py --role capability`), `quality` (`services/quality_server.py`), and `release` (`services/release_server.py --mode participating`). Ports are `port_base + i` in that order.
 - `up` writes `$H/testbed/approved_bindings.json` (`{name: {role, url, identity, approved: true}}`, the exact shape `definition.validate` requires), `contracts.json` (one fixture-authored capability contract per binding name), and `quality_policy.json`. It is idempotent. On restart, identities are unchanged.
+- The release agent serves only A2A, so the testbed observes it through its Agent Card: its binding identity is `a2a-card-` plus the first 24 hex of its card pin (`agent_binding.card_identity`), and its contract carries that `card_sha256` (8 Oct 2026).
 - `definitions/v1-template.json`: the lane-1 mixed v4 template, plus a caller input `question` (string, not required, `allowed_actors: ["fixture-operator"]`, `may_affect_acceptance: false`).
 
 ## Qualification amendments (23 Sep 2026, `QUALIFICATION.md`)
@@ -458,8 +459,8 @@ The safe receipt has `receipt_id`, `factory_id`, `run_id`, `task_id`, `context_i
 `state: delivered`, `delivery_kind: local_file`, `byte_length`, and writer UTC
 `recorded_at`; the POST result also reports `duplicate`. This is a distinct local
 delivery receipt. It does not establish a remote customer's receipt or payment.
-The original workflow's HTTP fixture receipt remains separately identified.
-The direct HTTP receipt fields are not silently added to Observation CloudEvents.
+The release node's A2A receipt (see "A2A release agent") remains separately identified.
+Local delivery receipt fields are not silently added to the release receipt fact.
 
 ### Approved local delivery Observation projection
 
@@ -729,7 +730,9 @@ migration.
 - `kind`, on each edge: `"material"` (default) or `"control"`. A node with
   `output: "none"` may not have an outgoing material edge. Route-node targets
   (repair, Director wait, release, terminal) are declared as control edges.
-- The release receiver binding (`transport: "http-post"`) is `output: "none"`.
+- The release agent binding is `output: "artifacts"` (strict): its receipt is the
+  release Task's result artifact. Release is a side-effect node because its
+  outgoing edges are control only (amended 8 Oct 2026; see "A2A release agent").
 
 **New Observation facts** (allowlist additions; S33 requalification required).
 All are content-free. They never carry text, data, bytes, artifact names,
@@ -774,8 +777,8 @@ edge kind yet.
 
 - `output` is an optional field of a package binding record
   (`{"role", "url", "identity", "approved", "output"?}`); absent means
-  `artifacts`. A `release` binding may declare only `none`; a capability or
-  Quality binding may declare `artifacts` or `message`. A node's output is its
+  `artifacts`. Any binding may declare `artifacts`, `message` or `none`; a
+  release node's binding must be strict `artifacts` (amended 8 Oct 2026). A node's output is its
   binding's (`synthesize`/`release` by `service`, `quality` by the Quality
   binding, `parallel` when every branch binding agrees); route, repair, join,
   Director wait, abort, complete and nested-factory nodes have none.
@@ -783,14 +786,16 @@ edge kind yet.
   `control`. Execution targets (`next`, `exhausted`, route `cases`) default to
   `material`; an `edges` key that is not an execution target declares a
   material bypass edge (it never transfers control). A node whose output is
-  `none` may not have an outgoing material edge.
+  `none`, and a release node in a definition that declares either field, may
+  not have an outgoing material edge.
 - Both fields are optional, so publications made before this phase keep their
   exact documents, digests and pins; their graph projection is unchanged (no
   route-case edges, no kinds). New publications that declare either field get
   new digests in the ordinary way. The shipped `definitions/report-template.json`
   declares control route/repair/Director/release/terminal edges and the
   `independent_quality → publish` material bypass; `services/testbed.py`
-  pins the release receiver binding with `output: "none"`.
+  pins the release agent binding with `output: "artifacts"` (8 Oct 2026; it
+  was `none` for the earlier HTTP receiver).
 - Projection: for such definitions every `graph_nodes` entry lists all edges
   in `next`, adds `control` (the control subset of `next`) and the node's
   `output`; the snapshot graph carries `edges[].kind` and `nodes[].output`.
@@ -806,7 +811,8 @@ edge kind yet.
   content-free item records in the journaled receipt. A `data` Part's byte
   length is its canonical JSON encoding; a `raw` Part's is its decoded bytes.
   The item digest is HMAC-SHA256 over the canonical JSON `[[kind, value], …]`
-  of its Parts. Quality (a gate) and release (`output: none`) produce none.
+  of its Parts. Quality (a gate) produces none. Release produces its receipt
+  hand-off, which has no consumer and retires at the station (8 Oct 2026).
 - The Workflow (patch `exo-handoff-records-v1`) names hand-offs
   (`<parallel node>.<branch>`, revision 1; `<synthesize node>`, revision
   `repair_count + 1`) and passes `consumes` (upstream ids and item digests) to
@@ -835,7 +841,8 @@ Implements decisions 7 and 8 of `docs/a2a-v1-mediation-decision-2026-10-07.md`.
 Agent services are `services/model_agent.py`, `services/quality_server.py`,
 `services/delayed_agent.py`, `services/supplier_echo_fixture.py`, the
 `src/harness_server.py` fixture roles and harness agent mode
-(`harness.py`, `mode: "agent"`). The release receiver is converted separately.
+(`harness.py`, `mode: "agent"`) and the release agent
+(`services/release_server.py`, next section), which is under the same guards.
 
 **Wire contract.** The factory sends an ordinary A2A v1 `SendMessage`:
 
@@ -919,3 +926,63 @@ factory service and keeps its structured parent/child protocol and `/contract`.
 `quality_authority.decide_quality` (synchronous, unused by the runtime) still
 describes the retired agent echo.
 
+## A2A release agent (operator rule, 8 Oct 2026)
+
+A2A is the only channel between the factory and agent services. The release
+receiver is an ordinary A2A v1 agent; the earlier plain-HTTP release exception
+(`POST /release`, `GET /receipts/<id>`, `src/receiver_client.py`) is removed.
+Decision record: `docs/a2a-v1-mediation-decision-2026-10-07.md` (decisions 3,
+5 and 7).
+
+**Agent** (`services/release_server.py --state S --port P --mode {participating,opaque}`):
+
+- Routes: the A2A JSON-RPC endpoint (`POST /`) and the v1 Agent Card only. The
+  card has one `supportedInterfaces` entry (`JSONRPC`, `1.0`), skill `release@1`,
+  bearer security and no extension.
+- Input: one ordinary Message with exactly one Part (`text`, `raw` or `data`)
+  carrying a `mediaType`. Nothing factory-specific: no run, assignment, attempt,
+  action, definition or factory identifier.
+- Idempotency: A2A `messageId`. A repeated identical `SendMessage` returns the
+  original Task and receipt; reuse of a `messageId` with different content
+  answers `InvalidParams` (-32602) without an effect.
+- Result: the Task completes with one data-part artifact (`artifactId` = receipt
+  id) holding `receipt_id`, `sha256` and `byte_length` of the exact delivered
+  bytes, `media_type`, `accepted_at` (UTC) and `outcome: "delivered"`.
+- Rejections are A2A outcomes: a Message the agent will not deliver (several
+  Parts, no `mediaType`, a URL Part, oversize) yields a `TASK_STATE_REJECTED`
+  Task with a descriptive status message. `opaque` mode is a non-participating
+  receiver: every send is a new effect, no Task is retained (`GetTask` answers
+  `TaskNotFound`), and the completed Task carries no receipt. Its card omits
+  the `message-id-idempotent` skill tag.
+- State: its own SQLite store (`release.sqlite3`, table `deliveries`) keyed by
+  its own Task, message and receipt ids.
+
+**Factory side** (`src/release_delivery.py`, called by the `release` Activity):
+
+- Binding: role `release`, strict `output: "artifacts"`, pinned by Agent Card
+  digest (`agent_binding.card_pin` / `resolve_card`, re-verified before every
+  send and poll). The contract's `reconcile` is `a2a-idempotent-resend` only
+  when the card's release skill carries the `message-id-idempotent` tag.
+- The outcome journal records the release attempt with its deterministic, opaque
+  `messageId` (a UUIDv5 of the factory release id) before any I/O, then the
+  returned `taskId`. Recovery is an identical resend (same `messageId`) when the
+  card promises idempotency, otherwise `opaque-effect-unknown`; a journaled
+  `taskId` is re-read only through `GetTask`.
+- On completion the strict output contract applies first (no receipt artifact:
+  `output.missing`), then the receipt must cover the exact accepted bytes
+  (`release-receipt-inconsistent` otherwise). Rejected/failed/canceled Tasks are
+  incidents `release-task-<state>` carrying the agent's status message.
+- The confirmed receipt is the node's evidence and the Workflow's
+  `release_receipt`. Its content-free hand-off is produced (`handoff_id` = the
+  release node) and has no consumer.
+
+**Observation:** one delivery yields exactly one
+`com.exomachina.delivery.receipt.v1` fact, emitted only at the release
+Activity's completion, with source identity `delivery-receipt:<receipt_id>` and
+the existing fields (`receipt_id`, `artifact_revision`, `artifact_sha256`,
+`destination_id` = the agent's binding identity, `delivered_at` = the receipt's
+`accepted_at`, `outcome: "delivered"`). A run's completion result, which repeats
+the receipt (and a parent's, which repeats its child's), emits no second fact.
+Before this fix the source emitted the receipt at both points with different
+`destination_id`/`delivered_at`, so the dashboard reducer correctly flagged the
+pair as conflicting and the floor showed "Delivery unverified".

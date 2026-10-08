@@ -121,13 +121,15 @@ def _matching(record: OutcomeRecord, receipt: Mapping[str, Any]) -> bool:
             or receipt.get("definition_digest") != record.definition_digest):
         return False
     if record.effect_kind == EffectKind.RELEASE:
+        # An A2A receipt for the exact accepted bytes, bound to the journaled
+        # release attempt (messageId) and the receiver's own Task and receipt ids.
         return (receipt.get("release_id") == record.action_id
                 and receipt.get("revision") == record.revision
                 and receipt.get("sha256") == record.sha256
-                and type(receipt.get("accepted_effect_count")) is int
-                and receipt["accepted_effect_count"] == 1
-                and type(receipt.get("attempts")) is int
-                and receipt["attempts"] >= 1)
+                and receipt.get("message_id") == record.message_id
+                and isinstance(receipt.get("task_id"), str) and bool(receipt["task_id"])
+                and isinstance(receipt.get("receipt_id"), str) and bool(receipt["receipt_id"])
+                and type(receipt.get("byte_length")) is int and receipt["byte_length"] >= 0)
     return (receipt.get("action_id") == record.action_id
             and isinstance(receipt.get("task_id"), str) and bool(receipt["task_id"]))
 
@@ -233,11 +235,17 @@ class OutcomeJournal:
             created = cursor.rowcount == 1
         prior = self.get(record.action_id)
         assert prior is not None
+        # A release attempt's messageId is derived from its release id and is
+        # part of its binding; an agent assignment's messageId is minted at its
+        # first begin and a later begin keeps the journaled one.
+        bound_message = record.effect_kind == EffectKind.RELEASE
         if (prior.run_id, prior.definition_digest, prior.receiver,
                 prior.effect_kind, prior.revision, prior.sha256,
-                prior.payload_sha256, prior.pinned_identity) != (
+                prior.payload_sha256, prior.pinned_identity,
+                prior.message_id if bound_message else None) != (
                 record.run_id, record.definition_digest, record.receiver,
                 record.effect_kind, record.revision, record.sha256,
-                record.payload_sha256, record.pinned_identity):
+                record.payload_sha256, record.pinned_identity,
+                record.message_id if bound_message else None):
             raise ValueError("action ID reused with different receiver or binding")
         return prior, created

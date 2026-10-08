@@ -393,6 +393,8 @@ class FactoryRun:
                         or self.acceptance["sha256"] != self.current["sha256"]):
                     raise ValueError("release lacks authoritative exact acceptance")
                 receiver = bindings[node["service"]]
+                # Factory-side correlation only: the A2A release agent receives
+                # an ordinary Message carrying the accepted bytes.
                 command = {
                     "release_id": f"{self.run_id}:release:{self.current['revision']}",
                     "run_id": self.run_id, "definition_digest": self.definition_digest,
@@ -401,18 +403,21 @@ class FactoryRun:
                     "content": self.current["content"],
                 }
                 release_input = {
-                    "url": receiver["url"], "identity": receiver["identity"],
-                    "mode": "participating",
+                    "identity": receiver["identity"], "binding": receiver,
+                    "contract": input["closure"]["contracts"][node["service"]],
                     "command": command,
                 }
                 if self._handoff_records:
-                    # The side-effect release consumes the accepted draft carrier
-                    # and produces no hand-off (output none).
+                    # The side-effect release consumes the accepted draft carrier.
+                    # Its receipt hand-off has no consumer (control edges only)
+                    # and retires at the station.
                     release_input = self._assignment_input(at, {
-                        **release_input, "consumes": consumed_inputs(self._draft_handoff)})
+                        **release_input, "consumes": consumed_inputs(self._draft_handoff),
+                        "handoff_id": at, "handoff_revision": 1})
                 receipt = await _activity(release, release_input)
                 if "unresolved" in receipt:
                     return await self._hold_unresolved("unresolved-release", receipt)
+                receipt.pop("handoff", None)
                 self.release_receipt = receipt
                 self.completed.append(at)
                 at = node["next"]
