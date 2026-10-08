@@ -1,5 +1,15 @@
 """Bounded pre-integration probe (not counted) of the four report agents.
 
+HISTORICAL RECORD, NOT RUNNABLE (8 Oct 2026). This direct A2A driver predates
+the decision-9 agent wire contract: it embeds upstream evidence and the
+candidate inside the brief, sends a ``policy_digest`` instead of the acceptance
+criteria, expects an artifact envelope with an author echo, and checks the
+retired ``agent_identity`` Task metadata. It is kept only as the record of the
+agent-probe evidence in ``evidence/single-factory/agent-probe-*``, which a run
+would overwrite. No gate imports it, and running it exits with this notice.
+``scenarios/single_factory.py`` and ``tests/test_third_party_agent.py`` are the
+maintained end-to-end checks.
+
 This is a direct A2A driver, not a factory or a pre-registered scenario.
 Trial state is preserved. The default broker is never stopped or configured here.
 """
@@ -11,7 +21,6 @@ import json
 import os
 import signal
 import socket
-import sqlite3
 import subprocess
 import sys
 import time
@@ -22,7 +31,9 @@ from uuid import uuid4
 
 from live_authoring import positive_control, scan_paths
 import a2a_v1  # noqa: E402  (src is on sys.path via live_authoring -> common)
-from agent_binding import EXTENSION_URI  # noqa: E402
+import a2a_extensions  # noqa: E402
+import stimulus_client  # noqa: E402
+from agent_binding import card_observation  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -40,6 +51,8 @@ CAPABILITIES = {"research_findings": "packet_findings@1",
 ROLES = {"research_findings": "research", "research_risks": "research",
          "synthesizer": "synthesis", "quality": "quality"}
 AUTH = "Bearer fixture-token"
+CONTEXTS: dict[tuple[str, str], str] = {}  # (probe run, service) -> contextId
+RUNS: dict[str, str] = {}  # agent taskId -> probe run (probe-side journal)
 
 
 def canonical(value: object) -> str:
@@ -60,7 +73,8 @@ def http(port: int, path: str, body: dict | None = None, *, authenticated: bool 
     request = urllib.request.Request(
         f"http://127.0.0.1:{port}{path}",
         data=None if body is None else json.dumps(body).encode(),
-        headers={"Content-Type": "application/json", **a2a_v1.headers([EXTENSION_URI]),
+        headers={"Content-Type": "application/json",
+                 **a2a_v1.headers([a2a_extensions.BUDGET_URI]),
                  **({"Authorization": AUTH} if authenticated else {})},
         method="GET" if body is None else "POST")
     with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -77,16 +91,17 @@ def rpc(port: int, method: str, params: dict) -> dict:
 
 
 def send(name: str, run_id: str, revision: str, brief: dict, definition_digest: str) -> dict:
-    command = {"op": "assign", "action_id": f"{run_id}:{name}:{revision}",
-               "run_id": run_id, "definition_digest": definition_digest,
-               "brief": canonical(brief)}
-    message = a2a_v1.user_message([a2a_v1.data_part(command)])
+    """A plain A2A Message: the brief is its only content; one context per run."""
+    context_id = CONTEXTS.setdefault((run_id, name), str(uuid4()))
+    message = a2a_v1.user_message([a2a_v1.text_part(canonical(brief), a2a_v1.JSON_MEDIA_TYPE)],
+                                  context_id=context_id)
     task = rpc(PORTS[name], a2a_v1.SEND_MESSAGE,
                a2a_v1.send_params(message, return_immediately=True))
     if a2a_v1.task_state(task) not in ("submitted", "working"):
         raise AssertionError(f"{name} did not return a non-blocking Task")
-    if task.get("metadata", {}).get("action_id") != command["action_id"]:
-        raise AssertionError(f"{name} action binding mismatch")
+    if task.get("contextId") != context_id:
+        raise AssertionError(f"{name} context binding mismatch")
+    RUNS[task["id"]] = run_id
     return task
 
 
@@ -104,25 +119,15 @@ def poll(name: str, task_id: str, *, seconds: float = 255) -> tuple[dict, list[s
     raise TimeoutError(f"{name} Task {task_id} timed out after states {states}")
 
 
-def call_audit(state: Path, task_id: str) -> list[dict]:
-    with sqlite3.connect(f"file:{state / 'model-agent.sqlite3'}?mode=ro", uri=True) as db:
-        db.row_factory = sqlite3.Row
-        rows = db.execute("SELECT session_id,provider,model_id,live,call_no,started_at,"
-                          "ended_at,outcome_kind FROM model_calls WHERE task_id=? ORDER BY call_no",
-                          (task_id,)).fetchall()
-    return [{**dict(row), "live": bool(row["live"]),
-             "duration_s": (round(row["ended_at"] - row["started_at"], 3)
-                            if row["ended_at"] is not None else None),
-             "tokens": None} for row in rows]
-
-
 def completed_record(name: str, initial: dict, state: Path, identity: str) -> tuple[dict, dict]:
     task, states = poll(name, initial["id"])
-    calls = call_audit(state, task["id"])
+    # Usage is only what the agent reports through the budget extension.
+    incurred = a2a_extensions.parse_incurred(task.get("metadata"))
     record = {"role": ROLES[name], "service": name, "capability": CAPABILITIES[name],
               "identity": identity, "task_id": task["id"], "state": a2a_v1.task_state(task),
+              "run_id": RUNS.get(task["id"]), "context_id": task.get("contextId"),
               "observed_states": [a2a_v1.task_state(initial), *states],
-              "metadata": task.get("metadata"), "model_call_count": len(calls), "model_calls": calls}
+              "metadata": task.get("metadata"), "agent_reported_usage": incurred}
     if a2a_v1.task_state(task) != "completed":
         record["failure_status"] = task["status"].get("message")
         return record, {}
@@ -132,9 +137,8 @@ def completed_record(name: str, initial: dict, state: Path, identity: str) -> tu
     data = a2a_v1.part_data(artifacts[0]["parts"][0])
     if (artifacts[0]["artifactId"] != data["sha256"] or
             hashlib.sha256(data["content"].encode()).hexdigest() != data["sha256"] or
-            data["author"] != identity or data["action_id"] != task["metadata"]["action_id"] or
-            data["run_id"] != task["metadata"]["run_id"] or
-            data["definition_digest"] != task["metadata"]["definition_digest"]):
+            data["author"] != identity or
+            task.get("metadata", {}).get("agent_identity") != identity):
         raise AssertionError(f"{name} artifact binding mismatch")
     content = json.loads(data["content"])
     record["artifact"] = {"revision": data["revision"], "sha256": data["sha256"],
@@ -170,7 +174,7 @@ def start_services(home: Path, provider: str) -> tuple[dict, dict]:
                        "--state", str(state), "--port", str(port),
                        "--model-provider", provider, "--model", "gpt-6-sol"]
             if name == "synthesizer":
-                command.append("--test-controls")
+                command.append("--test-controls")  # test-only A2A extension
             log = (home / f"{name}.log").open("a")
             try:
                 process = subprocess.Popen(command, cwd=ROOT, stdout=log, stderr=log,
@@ -183,13 +187,12 @@ def start_services(home: Path, provider: str) -> tuple[dict, dict]:
                 if process.poll() is not None:
                     raise RuntimeError(f"{name} exited during startup with {process.returncode}")
                 try:
-                    health = http(port, "/health", authenticated=False, timeout=2)
-                    identities[name] = health["identity"]
+                    identities[name] = card_observation(f"http://127.0.0.1:{port}")["identity"]
                     break
-                except (urllib.error.URLError, TimeoutError, ConnectionError):
+                except (urllib.error.URLError, TimeoutError, ConnectionError, OSError, ValueError):
                     time.sleep(0.2)
             else:
-                raise TimeoutError(f"{name} health did not respond")
+                raise TimeoutError(f"{name} Agent Card did not respond")
         if len(set(identities.values())) != 4:
             raise AssertionError("agent identities are not distinct")
     except Exception:
@@ -290,7 +293,9 @@ def run_probe(home: Path, provider: str, evidence: dict) -> None:
                                     "findings": clean_verdict["findings"]}
 
         stimulus = json.loads(STIMULI_PATH.read_text())["route2"]
-        evidence["stimulus_arm"] = http(PORTS["synthesizer"], "/_test/stimulus", stimulus)
+        # Binds to the next new contextId the synthesizer sees (the planted run).
+        evidence["stimulus_arm"] = stimulus_client.arm(
+            f"http://127.0.0.1:{PORTS['synthesizer']}", stimulus)
         planted_run = f"probe-{provider}-planted-{uuid4().hex[:8]}"
         planted = assign("synthesizer", planted_run, synthesis_brief("r1", "draft"),
                          definition_digest, home, identities, evidence)
@@ -302,7 +307,11 @@ def run_probe(home: Path, provider: str, evidence: dict) -> None:
             raise AssertionError("exactly one planted claim was not found")
         planted_id = planted_claims[0]["id"]
         evidence["planted_claim_id"] = planted_id
-        evidence["stimulus_log"] = http(PORTS["synthesizer"], "/_test/stimulus-log")
+        evidence["stimulus_log"] = [
+            {**row, "run_id": next((run for (run, service), context in CONTEXTS.items()
+                                    if service == "synthesizer" and context == row.get("context_id")),
+                                   None)}
+            for row in stimulus_client.log(f"http://127.0.0.1:{PORTS['synthesizer']}")]
         planted_verdict = review(planted_run, planted, packet, packet_digest, question,
                                  policy_digest, definition_digest, home, identities, evidence)
         blocking_match = any(f["severity"] == "blocking" and
@@ -405,4 +414,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit("historical record, not runnable: " + __doc__.split("HISTORICAL RECORD")[0].strip().splitlines()[0]
+                     + "; see the module docstring")

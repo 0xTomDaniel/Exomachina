@@ -43,6 +43,36 @@ def consumed_inputs(*records) -> list[dict]:
     return [{"handoff_id": key, "item_digests": value} for key, value in inputs.items()]
 
 
+def carrier(result: dict, content: str) -> dict:
+    """One producing node's output as its consumers see it.
+
+    ``handoff`` is the content-free produced record (absent without hand-off
+    records); ``item_parts`` are the producing artifact's Parts verbatim.
+    Results recorded before receipts carried ``item_parts`` fall back to the
+    recorded content as one JSON text Part.
+    """
+    record = result.get("handoff")
+    parts = result.get("item_parts")
+    if not isinstance(parts, list) or not parts:
+        parts = [[{"text": content, "mediaType": "application/json"}]]
+    return {"handoff": record if isinstance(record, dict) else None, "item_parts": parts}
+
+
+def upstream_inputs(*carriers) -> list[dict]:
+    """The consumed items, in hand-off order, for before-dispatch composition.
+
+    Built from the same carriers as ``consumes`` so the Message carries exactly
+    the hand-offs the consumed record names.
+    """
+    return [{"handoff_id": (value["handoff"] or {}).get("handoff_id"),
+             "item_parts": value["item_parts"]}
+            for value in carriers if isinstance(value, dict)]
+
+
+def consumed_from(*carriers) -> list[dict]:
+    return consumed_inputs(*((value or {}).get("handoff") for value in carriers))
+
+
 def nested_workflow_input(parent: dict, child_run: str, definition_digest: str,
                           document: dict) -> dict:
     """Build child input from the parent's non-secret pinned authority record."""
@@ -112,6 +142,8 @@ class FactoryRun:
         self._handoff_records = False
         self._research_handoffs: list[dict] = []
         self._draft_handoff: dict | None = None
+        self._research_carriers: list[dict] = []
+        self._draft_carrier: dict | None = None
 
     @workflow.query
     def status(self) -> dict:
@@ -248,6 +280,9 @@ class FactoryRun:
                 receipts = await asyncio.gather(*jobs)
                 self._research_handoffs = [receipt["handoff"] for receipt in receipts
                                            if isinstance(receipt.get("handoff"), dict)]
+                self._research_carriers = [
+                    carrier(receipt, (receipt.get("artifact") or {}).get("content", ""))
+                    for receipt in receipts if "unresolved" not in receipt]
                 branches = dict(zip(node["branches"], receipts, strict=True))
                 unknown = next((value for value in receipts if "unresolved" in value), None)
                 if unknown:
@@ -262,28 +297,32 @@ class FactoryRun:
                 self.completed.append(at)
                 at = node["next"]
             elif kind == "synthesize":
-                prior = ({key: self.current[key] for key in ("revision", "sha256", "content")}
-                         if self.repair_count else None)
                 findings = self.verdict["findings"] if self.repair_count else None
                 service = bindings[node["service"]]
+                # Before dispatch: the Task is composed from the research
+                # hand-offs and, on repair, the rejected draft. ``joined`` is
+                # the factory's own validation and is not sent.
+                sources = [*self._research_carriers,
+                           *([self._draft_carrier] if self.repair_count else [])]
                 handoff_fields = {}
                 if self._handoff_records:
-                    # Before dispatch: the Task is composed from the research
-                    # hand-offs and, on repair, the rejected draft.
                     handoff_fields = {"handoff_id": at, "handoff_revision": self.repair_count + 1,
-                                      "consumes": consumed_inputs(*self._research_handoffs,
-                                          self._draft_handoff if self.repair_count else None)}
+                                      "consumes": consumed_from(*sources)}
                 self.current = await _activity(synthesize, self._assignment_input(at, {
                     "run": self.run_id, "digest": self.definition_digest,
                     "revision": f"r{self.repair_count + 1}", "question": self.run_inputs["question"],
-                    "packet": package["evidence_packet"], "evidence": joined,
-                    "prior": prior, "quality_findings": findings,
+                    "packet": package["evidence_packet"], "quality_findings": findings,
+                    "upstream": upstream_inputs(*sources),
                     "binding": service, "contract": input["closure"]["contracts"][node["service"]],
                     **handoff_fields,
                 }))
                 produced = self.current.pop("handoff", None)
                 if isinstance(produced, dict):
                     self._draft_handoff = produced
+                parts = self.current.pop("item_parts", None)
+                if "unresolved" not in self.current:
+                    self._draft_carrier = carrier(
+                        {"handoff": produced, "item_parts": parts}, self.current["content"])
                 if "unresolved" in self.current:
                     return await self._hold_unresolved("synthesis-incident", self.current)
                 self.verdict = None
@@ -302,8 +341,11 @@ class FactoryRun:
                     "packet": package["evidence_packet"],
                     "policy_digest": input["closure"]["manifest"]["quality_policy_digest"],
                     "rubric_digest": input["closure"]["quality_policy"].get("rubric_digest"),
+                    "acceptance_criteria":
+                        input["closure"]["quality_policy"].get("acceptance_criteria"),
                     "assignment_id": assignment_id, "attempt": attempt,
-                    **({"consumes": consumed_inputs(self._draft_handoff)}
+                    "upstream": upstream_inputs(self._draft_carrier),
+                    **({"consumes": consumed_from(self._draft_carrier)}
                        if self._handoff_records else {}),
                 }))
                 if "inconsistent" in outcome:
@@ -319,7 +361,8 @@ class FactoryRun:
                         "revision": self.current["revision"],
                         "sha256": self.current["sha256"],
                         "attempt": self.repair_count + 1,
-                        "reviewer": artifact["reviewer"],
+                        # The pinned Quality binding, never an agent echo.
+                        "reviewer": quality["identity"],
                         "quality_task_id": outcome["task_id"],
                     }
                 self.completed.append(at + ":" + self.current["revision"])
@@ -393,6 +436,8 @@ class FactoryRun:
                         or self.acceptance["sha256"] != self.current["sha256"]):
                     raise ValueError("release lacks authoritative exact acceptance")
                 receiver = bindings[node["service"]]
+                # Factory-side correlation only: the A2A release agent receives
+                # an ordinary Message carrying the accepted bytes.
                 command = {
                     "release_id": f"{self.run_id}:release:{self.current['revision']}",
                     "run_id": self.run_id, "definition_digest": self.definition_digest,
@@ -400,19 +445,23 @@ class FactoryRun:
                     "sha256": self.current["sha256"],
                     "content": self.current["content"],
                 }
+                # Release receives the accepted report artifact's own Parts.
                 release_input = {
-                    "url": receiver["url"], "identity": receiver["identity"],
-                    "mode": "participating",
-                    "command": command,
+                    "identity": receiver["identity"], "binding": receiver,
+                    "contract": input["closure"]["contracts"][node["service"]],
+                    "command": command, "upstream": upstream_inputs(self._draft_carrier),
                 }
                 if self._handoff_records:
-                    # The side-effect release consumes the accepted draft carrier
-                    # and produces no hand-off (output none).
+                    # The side-effect release consumes the accepted draft carrier.
+                    # Its receipt hand-off has no consumer (control edges only)
+                    # and retires at the station.
                     release_input = self._assignment_input(at, {
-                        **release_input, "consumes": consumed_inputs(self._draft_handoff)})
+                        **release_input, "consumes": consumed_from(self._draft_carrier),
+                        "handoff_id": at, "handoff_revision": 1})
                 receipt = await _activity(release, release_input)
                 if "unresolved" in receipt:
                     return await self._hold_unresolved("unresolved-release", receipt)
+                receipt.pop("handoff", None)
                 self.release_receipt = receipt
                 self.completed.append(at)
                 at = node["next"]

@@ -161,7 +161,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--pg-bin", type=Path, default=DEFAULT_PG_BIN)
     parser.add_argument("--harness-port", type=int, default=DEFAULT_HARNESS_PORT)
     parser.add_argument("--agent-port-base", type=int, default=DEFAULT_AGENT_PORT_BASE,
-                        help="four model agents then the release receiver")
+                        help="four model agents then the A2A release agent")
     parser.add_argument("--runner-port-base", type=int, default=DEFAULT_RUNNER_PORT_BASE)
     parser.add_argument("--runner-member-base", type=int, default=DEFAULT_RUNNER_MEMBER_BASE,
                         help="PostgreSQL and Temporal membership ports; base+4 must be <= 32767")
@@ -471,7 +471,18 @@ def _card_summary(port: int) -> dict:
                                       "protocolVersion": i.get("protocolVersion")}
                                      for i in interfaces if isinstance(i, dict)],
             "skills": [skill.get("id") for skill in card.get("skills") or []
-                       if isinstance(skill, dict)]}
+                       if isinstance(skill, dict)],
+            "identity": _card_identity(card)}
+
+
+def _card_identity(card: dict) -> str | None:
+    """The binding identity derived from the card pin; the card is the identity."""
+    import a2a_v1
+    from agent_binding import card_identity, digest
+    try:
+        return card_identity(digest(a2a_v1.card_without_endpoint(card)))
+    except (a2a_v1.ProtocolError, AttributeError, TypeError, ValueError):
+        return None
 
 
 def _broker_flags() -> dict:
@@ -514,15 +525,12 @@ def status(args: argparse.Namespace) -> dict:
         port = plan[name]
         entry = {"pid": record.get("pid"), "alive": _alive(record.get("pid")), "port": port,
                  "listening": port in listening}
-        service_code, service_health = _http_json(f"http://127.0.0.1:{port}/health")
-        entry["health"] = service_code
-        if isinstance(service_health, dict):
-            entry["identity_matches"] = service_health.get("identity") == record.get("identity")
-            entry["model"] = {key: service_health.get(key) for key in
-                              ("provider", "model_id", "reasoning_effort", "inference_enabled")
-                              if key in service_health} or None
-        if name in MODEL_AGENTS:
-            entry["card"] = _card_summary(port)
+        # Every service, the release agent included, is an A2A agent observed
+        # only through its public Agent Card plus process/port checks; its
+        # model configuration (if any) is private.
+        entry["card"] = _card_summary(port)
+        entry["identity_matches"] = (entry["card"].get("identity") is not None and
+                                     entry["card"].get("identity") == record.get("identity"))
         services[name] = entry
     report["services"] = services
     report["runner"] = _runner_status(args)

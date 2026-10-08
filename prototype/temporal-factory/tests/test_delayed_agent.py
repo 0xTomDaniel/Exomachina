@@ -21,25 +21,17 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "services"))
 sys.path.insert(0, str(ROOT / "src"))
 import a2a_v1  # noqa: E402
-from delayed_agent import (CONTRACT_DIGEST, CONTRACT_NAME, EXTENSION_URI,  # noqa: E402
-                           canonical, create_app, digest)
+from delayed_agent import canonical, create_app, digest  # noqa: E402
 
 
-AUTH = {"Authorization": "Bearer fixture-token", **a2a_v1.headers([EXTENSION_URI])}
+AUTH = {"Authorization": "Bearer fixture-token", **a2a_v1.headers()}
 
 
-def command(action_id="action-1", **changes):
-    value = {"op": "assign", "action_id": action_id, "run_id": "run-1",
-             "definition_digest": "definition-1", "brief": "counter brief"}
-    value.update(changes)
-    return value
-
-
-def send_body(value, request_id=None):
-    return {"jsonrpc": "2.0", "id": request_id or str(uuid4()),
-            "method": "SendMessage",
-            "params": {"message": {"role": "ROLE_USER", "messageId": str(uuid4()),
-                                   "parts": [{"data": value}]},
+def send_body(brief="counter brief", *, message_id=None, context_id="context-1"):
+    return {"jsonrpc": "2.0", "id": str(uuid4()), "method": "SendMessage",
+            "params": {"message": {"role": "ROLE_USER", "messageId": message_id or "message-1",
+                                   "contextId": context_id,
+                                   "parts": [{"text": brief, "mediaType": "text/plain"}]},
                        "configuration": {"returnImmediately": True}}}
 
 
@@ -63,56 +55,43 @@ class DelayedAgentTests(unittest.TestCase):
     def setUp(self):
         self.state = Path(tempfile.mkdtemp(prefix="exo-qual-a-unit-", dir="/tmp"))
 
-    def test_card_contract_working_completion_and_idempotency(self):
+    def rows(self):
+        with sqlite3.connect(self.state / "delayed-agent.sqlite3") as db:
+            return db.execute("SELECT COUNT(*) FROM messages").fetchone()[0]
+
+    def test_card_working_completion_and_message_id_idempotency(self):
         with TestClient(create_app(self.state, 46210, delay_seconds=0.15)) as client:
             card = client.get("/.well-known/agent-card.json").json()
             self.assertEqual(card["supportedInterfaces"], [{
                 "url": "http://127.0.0.1:46210/", "protocolBinding": "JSONRPC",
                 "protocolVersion": "1.0"}])
-            self.assertNotIn("protocolVersion", card)
-            self.assertNotIn("url", card)
             self.assertEqual([skill["id"] for skill in card["skills"]],
                              ["counter_evidence@1"])
-            extensions = card["capabilities"]["extensions"]
-            self.assertEqual(len(extensions), 1)
-            self.assertEqual(extensions[0]["uri"], EXTENSION_URI)
-            self.assertIs(extensions[0]["required"], True)
-            params = extensions[0]["params"]
-            self.assertEqual(set(params), {"identity", "contract", "contract_digest"})
-            self.assertEqual(params["contract"], CONTRACT_NAME)
-            self.assertEqual(params["contract_digest"], CONTRACT_DIGEST)
-            self.assertEqual(digest(client.get("/contract", headers=AUTH).json()),
-                             CONTRACT_DIGEST)
-            self.assertEqual(client.get("/contract").status_code, 401)
-            first = client.post("/", json=send_body(command()), headers=AUTH).json()["result"]["task"]
+            # A plain A2A card: no extensions; resend dedupe is a skill tag.
+            self.assertNotIn("extensions", card.get("capabilities") or {})
+            self.assertIn("message-id-idempotent", card["skills"][0]["tags"])
+            for path in ("/contract", "/health", "/_test/effects", "/_test/faults"):
+                self.assertEqual(client.get(path, headers=AUTH).status_code, 404, path)
+            first = client.post("/", json=send_body(), headers=AUTH).json()["result"]["task"]
             self.assertEqual(first["status"]["state"], "TASK_STATE_WORKING")
-            self.assertEqual(first["metadata"], {
-                "action_id": "action-1", "run_id": "run-1",
-                "definition_digest": "definition-1", "agent_identity": params["identity"]})
+            self.assertNotIn("metadata", first)
+            self.assertEqual(first["contextId"], "context-1")
             task_id = first["id"]
-            again = client.post("/", json=send_body(command()), headers=AUTH).json()["result"]["task"]
+            again = client.post("/", json=send_body(), headers=AUTH).json()["result"]["task"]
             self.assertEqual(again["id"], task_id)
-            self.assertEqual(client.get("/_test/effects", headers=AUTH).json(), {
-                "identity": params["identity"], "effects": {"action-1": 1}, "total": 1})
-            conflict = client.post("/", json=send_body(command(brief="changed")),
-                                   headers=AUTH).json()
+            self.assertEqual(self.rows(), 1)
+            conflict = client.post("/", json=send_body("changed"), headers=AUTH).json()
             self.assertEqual(conflict["error"]["code"], -32602)
-            self.assertEqual(client.get("/_test/effects", headers=AUTH).json()["total"], 1)
+            self.assertEqual(self.rows(), 1)
             time.sleep(0.18)
             done = client.post("/", json=get_body(task_id), headers=AUTH).json()["result"]
             self.assertEqual(done["status"]["state"], "TASK_STATE_COMPLETED")
-            self.assertEqual(len(done["artifacts"]), 1)
             artifact = done["artifacts"][0]
-            data = artifact["parts"][0]["data"]
-            self.assertEqual(data, {
-                "revision": "r2", "sha256": hashlib.sha256(
-                    b"fixture-result:counter brief").hexdigest(),
-                "author": params["identity"], "content": "fixture-result:counter brief",
-                "action_id": "action-1", "run_id": "run-1",
-                "definition_digest": "definition-1"})
-            self.assertEqual(artifact["artifactId"], data["sha256"])
-            self.assertEqual(client.post("/", json=get_body(task_id),
-                                         headers=AUTH).json()["result"]["id"], task_id)
+            # The work product itself: one text Part, no envelope or author echo.
+            self.assertEqual(artifact["parts"], [{"text": "fixture-result:counter brief",
+                                                  "mediaType": "text/plain"}])
+            self.assertEqual(artifact["artifactId"],
+                             hashlib.sha256(b"fixture-result:counter brief").hexdigest())
 
     def test_restart_port_change_keeps_identity_task_and_elapsed_delay(self):
         script = str(ROOT / "services" / "delayed_agent.py")
@@ -123,7 +102,7 @@ class DelayedAgentTests(unittest.TestCase):
         self.addCleanup(self._stop, first)
         self._ready(old_base, first)
         old_card = http(old_base, "/.well-known/agent-card.json", authenticated=False)
-        task = http(old_base, "/", body=send_body(command()))["result"]["task"]
+        task = http(old_base, "/", body=send_body())["result"]["task"]
         self.assertEqual(task["status"]["state"], "TASK_STATE_WORKING")
         self._stop(first)
         time.sleep(0.15)
@@ -138,68 +117,64 @@ class DelayedAgentTests(unittest.TestCase):
                          digest(a2a_v1.card_without_endpoint(new_card)))
         done = http(new_base, "/", body=get_body(task["id"]))["result"]
         self.assertEqual(done["status"]["state"], "TASK_STATE_COMPLETED")
-        self.assertEqual(done["id"], task["id"])
-        self.assertEqual(done["metadata"]["agent_identity"],
-                         task["metadata"]["agent_identity"])
-        self.assertEqual(http(new_base, "/", body=send_body(command()))
-                         ["result"]["task"]["id"], task["id"])
-        self.assertEqual(http(new_base, "/_test/effects")["total"], 1)
+        self.assertNotIn("metadata", done)
+        self.assertEqual(http(new_base, "/", body=send_body())["result"]["task"]["id"],
+                         task["id"])
+        self.assertEqual(self.rows(), 1)
 
-    def test_mismatch_fault_and_identity_file_override(self):
-        impostor_file = self.state / "impostor-identity"
+    def test_mismatch_fault(self):
         with TestClient(create_app(self.state, 46213, delay_seconds=0,
-                                   identity_file=impostor_file,
-                                   mismatch_artifact_for="action-1")) as client:
-            card = client.get("/.well-known/agent-card.json").json()
-            result = client.post("/", json=send_body(command()), headers=AUTH).json()["result"]["task"]
-            self.assertEqual(result["status"]["state"], "TASK_STATE_WORKING")
-            completed = client.post("/", json=get_body(result["id"]),
-                                    headers=AUTH).json()["result"]
-            data = completed["artifacts"][0]["parts"][0]["data"]
-            self.assertEqual(data["run_id"], "run-1-mismatch")
-            self.assertEqual(data["author"], card["capabilities"]["extensions"][0]
-                             ["params"]["identity"])
-            self.assertEqual(client.get("/_test/effects", headers=AUTH).json()["total"], 1)
-        with TestClient(create_app(self.state, 46214, delay_seconds=0,
-                                   identity_file=impostor_file)) as client:
-            self.assertEqual(client.get("/health").json()["identity"],
-                             card["capabilities"]["extensions"][0]["params"]["identity"])
+                                   mismatch_artifact=True)) as client:
+            result = client.post("/", json=send_body(), headers=AUTH).json()["result"]["task"]
+            # The fault serves a data Part where a consumer expects text.
+            part = result["artifacts"][0]["parts"][0]
+            self.assertEqual(part["data"], {"content": "fixture-result:counter brief"})
+            self.assertNotIn("text", part)
 
-    def test_drop_response_once_commits_before_process_exit(self):
+    def test_drop_first_response_commits_before_process_exit(self):
         port = 46215
         base = f"http://127.0.0.1:{port}"
         args = [sys.executable, "-B", str(ROOT / "services" / "delayed_agent.py"),
-                "--state", str(self.state), "--port", str(port),
-                "--delay-seconds", "0.4"]
-        process = subprocess.Popen(args + ["--drop-response-once-for", "action-1"],
+                "--state", str(self.state), "--port", str(port), "--delay-seconds", "0.4"]
+        process = subprocess.Popen(args + ["--drop-first-response"],
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         self.addCleanup(self._stop, process)
         self._ready(base, process)
         with self.assertRaises((OSError, urllib.error.URLError)):
-            http(base, "/", body=send_body(command()))
+            http(base, "/", body=send_body())
         self.assertEqual(process.wait(timeout=5), 23)
         with sqlite3.connect(self.state / "delayed-agent.sqlite3") as db:
             original_task_id = db.execute(
-                "SELECT task_id FROM actions WHERE action_id='action-1'").fetchone()[0]
-        restarted = subprocess.Popen(args, stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL)
+                "SELECT task_id FROM messages WHERE message_id='message-1'").fetchone()[0]
+        restarted = subprocess.Popen(args + ["--drop-first-response"],
+                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         self.addCleanup(self._stop, restarted)
         self._ready(base, restarted)
-        effects = http(base, "/_test/effects")
-        self.assertEqual(effects["effects"], {"action-1": 1})
-        task = http(base, "/", body=send_body(command()))["result"]["task"]
+        # The fault fires once per state directory; the resend recovers the Task.
+        task = http(base, "/", body=send_body())["result"]["task"]
         self.assertEqual(task["id"], original_task_id)
-        self.assertEqual(task["metadata"]["agent_identity"], effects["identity"])
-        self.assertEqual(http(base, "/", body=get_body(task["id"]))["result"]["id"],
-                         task["id"])
-        self.assertEqual(http(base, "/_test/effects")["total"], 1)
+        self.assertEqual(http(base, "/", body=get_body(task["id"]))["result"]["id"], task["id"])
+        self.assertEqual(self.rows(), 1)
+
+    def test_storage_never_holds_caller_factory_identifiers(self):
+        brief = canonical({"question": "q", "revision": "r1"})
+        with TestClient(create_app(self.state, 46216, delay_seconds=0)) as client:
+            body = send_body(brief)
+            body["params"]["metadata"] = {"run_id": "run-secret", "action_id": "action-secret"}
+            reply = client.post("/", json=body, headers=AUTH).json()["result"]["task"]
+            self.assertNotIn("run-secret", json.dumps(reply))
+        with sqlite3.connect(self.state / "delayed-agent.sqlite3") as db:
+            dump = "\n".join(db.iterdump())
+        for value in ("run-secret", "action-secret", "run_id", "action_id",
+                      "definition_digest"):
+            self.assertNotIn(value, dump)
 
     @staticmethod
     def _ready(base, process):
         deadline = time.monotonic() + 8
         while time.monotonic() < deadline:
             try:
-                http(base, "/health", authenticated=False)
+                http(base, "/.well-known/agent-card.json", authenticated=False)
                 return
             except (OSError, urllib.error.URLError):
                 if process.poll() is not None:

@@ -228,8 +228,10 @@ export function dashboardViewModels(state) {
       candidate_refs:clone(candidate),context:null,recommendation:null,
     }];
   });
+  // Agent-reported usage never names the agent's model or model calls.
+  const agentUsage=row=>{if(row.measurement_source!=="agent_reported")return clone(row);const{model_id,model_call_id,reasoning_effort,...rest}=clone(row);return{...rest,usage_label:"agent-reported"};};
   const usage=state.commercial.usage.map(row=>({
-    ...clone(row), quantity_known:Object.hasOwn(row,"quantity"),
+    ...agentUsage(row), quantity_known:Object.hasOwn(row,"quantity"),
     quantity_display:Object.hasOwn(row,"quantity")?`${row.quantity} ${row.unit}`:(row.completeness==="undisclosed"?"Undisclosed":"Unknown"),
   }));
   const obligations=state.commercial.obligations.map(row=>({
@@ -445,6 +447,7 @@ function liveFlow(state, run, nodes, edges, pods) {
   const timedFacts = suffix => facts.filter(row => row.event.type === eventType(suffix)).map(row => ({ ...row.event.data, t:T(row.event.time), iso:row.event.time })).filter(e => e.t != null).sort((a, b) => a.t - b.t);
   const revised = timedFacts("artifact.revised"), verdicts = timedFacts("quality.verdict");
   const receipts = (run.delivery ?? []).filter(row => row.delivered_at && row.artifact_sha256).map(row => ({ ...row, t:T(row.delivered_at), iso:row.delivered_at })).filter(e => e.t != null).sort((a, b) => a.t - b.t);
+  const delivery = deliveryEvidence(run), deliveryFault = delivery.status === "fault";
   const completions = [...revised, ...verdicts, ...receipts].map(e => e.t).sort((a, b) => a - b);
   const visits = [];
   for (const e of nodeEvents) {
@@ -611,7 +614,7 @@ function liveFlow(state, run, nodes, edges, pods) {
         continue;
       }
       // A side-effect release with a verified receipt for this carrier's report exits the factory there.
-      const receipt = receipts.find(r => c.shas.has(r.artifact_sha256) && !r.receipt_conflict && r.t >= k.t - EPS);
+      const receipt = !deliveryFault && receipts.find(r => c.shas.has(r.artifact_sha256) && !r.receipt_conflict && r.t >= k.t - EPS);
       if (receipt && (output.get(k.node) === "none" || type.get(k.node) === "release")) out.push({ t:at(Math.max(receipt.t, k.t, arrived)), type:"release", item, at:k.node, job });
       else out.push({ t:at(Math.max(k.t, arrived)), type:"consume", item, at:k.node, job });
       if (item === c.id) { alive = false; here = k.node; }
@@ -685,13 +688,13 @@ function liveFlow(state, run, nodes, edges, pods) {
     if (recordedShas.has(a.sha)) return; // carried by a recorded hand-off
     const next = ordered[index + 1];
     const verdict = verdicts.find(v => v.artifact_sha256 === a.sha) ?? (run.quality ?? []).find(v => v.artifact_sha256 === a.sha);
-    const myReceipts = receipts.filter(r => r.artifact_sha256 === a.sha), verified = myReceipts.some(r => !r.receipt_conflict);
+    const myReceipts = receipts.filter(r => r.artifact_sha256 === a.sha), verified = !deliveryFault && myReceipts.some(r => !r.receipt_conflict);
     const item = `artifact:${a.rev}:${a.sha.slice(0, 12)}`, label = String(a.rev ?? "R").toUpperCase();
     const start = a.timed === "revised" ? locate(a.t, "synthesize") : locate(a.t, "release");
     if (!start) return;
     const evidence = [`Report artifact ${a.rev} · sha256 ${a.sha}`,
       verdict ? `Quality ${verdict.accepted === true ? "accepted" : verdict.accepted === false ? "rejected" : "verdict"} (same sha256${verdict.t == null ? "; verdict time not recorded" : ""})` : "No quality verdict observed",
-      myReceipts.length ? (verified ? "delivery receipt (same sha256)" : "delivery unverified (conflicting receipts)") : "No delivery receipt observed",
+      myReceipts.length ? (deliveryFault ? `delivery fault (${delivery.reason})` : verified ? "delivery receipt (same sha256)" : "delivery unverified (conflicting receipts)") : "No delivery receipt observed",
       `located at ${start.node} by ${start.basis}`].join(" · ");
     out.push({ t:at(a.t), type:"spawn", item, art:"report", at:start.node, label, rev:a.rev, sha:a.sha, job, evidence, observed:`${a.timed === "revised" ? "artifact revised" : "first delivered"} ${a.iso}`, carrier:INFERRED_CARRIER() });
     let here = start.node, ready = a.t;
@@ -734,7 +737,25 @@ function floorEvents(state, run, nodes, edges, pods) {
 
 // A renderer grouping is presentation only; authoritative run/Task identities stay
 // in state.runs and on every grouped event.
+// A delivered job shows exactly one receipt per delivery (a fixture receipt and an
+// actual delivery stay separate deliveries). Delivery is verified only when the
+// receipt's sha256 equals the accepted revision's artifact_sha256; more than one
+// receipt for one delivery, or a digest that differs from the accepted revision,
+// is a delivery fault.
+export function deliveryEvidence(run) {
+  const rows = run?.delivery ?? [];
+  if (!rows.length) return { status:"none", receipts:0 };
+  if (rows.some(row => row.receipt_conflict)) return { status:"unverified", receipts:rows.length, reason:"conflicting receipt facts" };
+  const perDelivery = new Map();
+  for (const row of rows) { const key = row.delivery_kind ?? (row.outcome === "fixture-received" ? "fixture" : "release"); perDelivery.set(key, (perDelivery.get(key) ?? 0) + 1); }
+  if ([...perDelivery.values()].some(count => count > 1)) return { status:"fault", receipts:rows.length, reason:"more than one receipt for one delivery" };
+  const accepted = (run.quality ?? []).filter(row => row.accepted === true && row.artifact_sha256);
+  if (!accepted.length) return { status:"unverified", receipts:rows.length, reason:"no accepted revision observed" };
+  const sealed = receipt => accepted.some(row => row.artifact_sha256 === receipt.artifact_sha256 && (row.artifact_revision == null || receipt.artifact_revision == null || row.artifact_revision === receipt.artifact_revision));
+  return rows.every(sealed) ? { status:"verified", receipts:rows.length } : { status:"fault", receipts:rows.length, reason:"receipt sha256 differs from the accepted revision" };
+}
 function deliveryOutcome(run) {
+  if (deliveryEvidence(run).status === "fault") return "delivery-fault";
   const receipts = (run.delivery ?? []).filter(row => !row.receipt_conflict);
   if (receipts.some(row => row.delivery_kind === "local_file" && row.outcome === "local-file-delivered")) return "local-file-delivered";
   if (receipts.some(row => row.outcome === "fixture-received")) return "fixture-received";
@@ -915,7 +936,7 @@ export function toFloorModel(state, {runId=null, graphOf=null} = {}) {
     const endedState=terminal.has(stateValue);
     const timeline=floorEvents(state,run,wireNodes,edges,pods);
     if (ended && started) timeline.push({t:secondsBetween(ended,started) ?? elapsed,type:"end",outcome:deliveryOutcome(run),job:run.run_id});
-    return {id:run.run_id,name:run.run_id,brief:"",outcomeLabel:stateValue,tone:"normal",start:started ?? state.captured_at,startKnown:!!started,startAt:0,snapshotAt:elapsed,now:elapsed,live:state.source==="live"&&!endedState,multi:false,pinned:clone(run.pinned),model_label:run.model_label,fixture_label:run.fixture_label,timeline,events:timeline,task:clone(run.task),status:clone(run.state ?? {}),artifacts:clone(run.artifacts),assignments:allRunRows(run,"assignments"),delivery:clone(run.delivery),decisions:clone(run.decisions)};
+    return {id:run.run_id,name:run.run_id,brief:"",outcomeLabel:stateValue,tone:"normal",start:started ?? state.captured_at,startKnown:!!started,startAt:0,snapshotAt:elapsed,now:elapsed,live:state.source==="live"&&!endedState,multi:false,pinned:clone(run.pinned),model_label:run.model_label,fixture_label:run.fixture_label,timeline,events:timeline,task:clone(run.task),status:clone(run.state ?? {}),artifacts:clone(run.artifacts),assignments:allRunRows(run,"assignments"),delivery:clone(run.delivery),deliveryEvidence:deliveryEvidence(run),decisions:clone(run.decisions)};
   };
   const runs=demo?null:[...state.runs.values()].map(baseRun);
   const floorRuns=demo?demoRuns(state,demo,baseRun):aggregateFloorRuns(state,runs);

@@ -13,9 +13,12 @@ sys.path.insert(0, str(ROOT / "services"))
 from authoring import materialize  # noqa: E402
 from definition import digest, validate  # noqa: E402
 from testbed import (QUALITY_POLICY, SERVICE_NAMES, REPORT_CAPABILITIES, REPORT_NAMES,
-                     REPORT_QUALITY_POLICY, binding_records, contract_records, down,
-                     report_bindings, report_contracts, up, write_metadata)  # noqa: E402
-from agent_binding import resolve  # noqa: E402
+                     REPORT_QUALITY_POLICY, binding_records, command_for, contract_records,
+                     down, report_bindings, report_contracts, require_distinct_identities,
+                     role_for, up, write_metadata)  # noqa: E402
+from agent_binding import card_identity, digest as card_digest, resolve  # noqa: E402
+from a2a_v1_server import card_pin_projection  # noqa: E402
+import harness_server  # noqa: E402
 
 
 class TestbedTests(unittest.TestCase):
@@ -51,9 +54,20 @@ class TestbedTests(unittest.TestCase):
             self.assertEqual(contract["role"], binding["role"])
             self.assertEqual(contract["a2a_protocol"], "1.0")
             self.assertIs(contract["attested"], False)
-            self.assertIs(contract["operations"]["idempotent_action_id"], True)
-            self.assertEqual(contract["operations"]["lookup"],
-                             "/receipts/{id}" if name == "release" else "/fixture/actions/{id}")
+            if name == "release":
+                # An ordinary A2A agent whose receipt is its result artifact.
+                self.assertEqual(contract["input"]["transport"], "a2a-SendMessage")
+                self.assertEqual(contract["output"]["mode"], "artifacts")
+                self.assertEqual(contract["operations"],
+                                 {"idempotency": "messageId", "task_lookup": "GetTask"})
+                self.assertNotIn("/", json.dumps(contract).replace("application/json", ""))
+            else:
+                # Agent services: plain Message, messageId idempotency, GetTask.
+                self.assertEqual(contract["input"], {"transport": "a2a-SendMessage",
+                                                     "message": "text-brief"})
+                self.assertEqual(contract["operations"],
+                                 {"idempotent_message_id": True, "task_lookup": "GetTask"})
+                self.assertNotIn("/fixture/", json.dumps(contract))
 
     def test_template_materializes_and_validates_with_generated_bindings(self):
         template = json.loads((ROOT / "definitions" / "report-template.json").read_text())
@@ -89,16 +103,49 @@ class TestbedTests(unittest.TestCase):
         self.assertEqual(policy, REPORT_QUALITY_POLICY)
         self.assertEqual(snapshot["snapshot_version"], 1)
         self.assertEqual(len(snapshot["agents"]), 5)
-        for name in REPORT_NAMES[:-1]:
+        # Every agent, release included, is identified by its pinned Agent Card.
+        self.assertEqual(len({binding["identity"] for binding in bindings.values()}), 5)
+        for name in REPORT_NAMES:
             binding = bindings[name]
             contract = contracts[name]
-            self.assertEqual(contract["capability"], REPORT_CAPABILITIES[name])
+            self.assertEqual(binding["identity"], card_identity(contract["card_sha256"]))
+            self.assertEqual(contract["identity"], binding["identity"])
+            self.assertEqual(result["pids"][name]["identity"], binding["identity"])
             self.assertEqual(contract["reconcile"], "a2a-idempotent-resend")
             resolved_url, observation = resolve(directory / "agent_snapshot.json",
                                                  binding["identity"], contract)
             self.assertEqual(resolved_url, binding["url"])
-            self.assertEqual(observation["contract_document"]["capability"],
-                             REPORT_CAPABILITIES[name])
+            self.assertEqual(observation["card_sha256"], contract["card_sha256"])
+            if name == "release":
+                continue
+            self.assertEqual(contract["capability"], REPORT_CAPABILITIES[name])
+            self.assertIn(REPORT_CAPABILITIES[name], observation["skills"])
+            self.assertEqual(set(contract), {"name", "role", "capability", "card_sha256",
+                                             "identity", "reconcile"})
+        self.assertEqual(bindings["release"]["output"], "artifacts")
+        self.assertEqual(result["health"]["release"]["reconcile"], "a2a-idempotent-resend")
+
+    def test_identical_cards_are_refused_rather_than_merged(self):
+        health = {"source_alpha": {"identity": "a2a-card-same"},
+                  "source_beta": {"identity": "a2a-card-same"}}
+        with self.assertRaisesRegex(RuntimeError, "source_alpha and source_beta"):
+            require_distinct_identities(health)
+        require_distinct_identities({"a": {"identity": "a2a-card-1"},
+                                     "b": {"identity": "a2a-card-2"}})
+
+    def test_legacy_capability_fixtures_publish_distinct_cards(self):
+        # Several legacy services run the same fixture program; each card names
+        # its service so the card-derived identities never collide.
+        identities = set()
+        for name in SERVICE_NAMES:
+            if role_for(name) != "capability":
+                continue
+            command = command_for(name, Path("/tmp/unused"), 45100)
+            self.assertEqual(command[command.index("--name") + 1], name)
+            card = harness_server.fixture_card("Decision round " + name, "fixture",
+                                               "capability", 45100, ["fixture", "capability"])
+            identities.add(card_identity(card_digest(card_pin_projection(card))))
+        self.assertEqual(len(identities), 4)
 
 
 if __name__ == "__main__":

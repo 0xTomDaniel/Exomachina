@@ -219,8 +219,10 @@ healthy Director. Do not fabricate a universal incident-to-Director relationship
 when the current public contract has none.
 
 Preserve the original illustrative factory profiles, including their artifact
-registries and profile-specific main result kind, agent contracts/capacity/shared
-occupancy, program indicators, and simulated economic displays. These are Demo
+registries and profile-specific main result kind, agent contracts, factory WIP
+limits and factory queue occupancy (agents have no capacity of their own:
+A2A decision 7, 8 Oct 2026), illustrative agent prices as quoted through the A2A
+payment extension, program indicators, and simulated economic displays. These are Demo
 fidelity requirements, not authorization to implement or qualify deferred Live
 commerce, programs, or human workflows. Where a Demo command is unsupported,
 state that limitation rather than showing a fabricated successful outcome.
@@ -752,7 +754,7 @@ policy in a test double. Broader architectural ownership remains unchanged.
 | F02 | Every preserved Demo profile retains ordered start/progress/end timing, including a fixture without a job-created event; Supplier and Translation no longer collapse to a two-second replay; completed work is not active |
 | F03 | Declared Demo artifact kinds, revisions, movements, Quality outcomes, and release readouts survive full projection; Live unlocated artifacts stay unlocated and completion alone never implies acceptance/delivery |
 | F04 | Original Demo Director activity, alarms, recommendations, waits, and notes remain visible at their appropriate scenario times; declared wires remain distinct from observed or illustrative communication activity |
-| F05 | Demo agent bindings, capacity/shared occupancy, simulated pricing/budget, program indicators, and profile-specific result kind survive; unknown Live values remain unknown and Demo labels cannot leak into Live facts |
+| F05 | Demo agent bindings, factory WIP limits/queue occupancy, illustrative agent prices quoted through the A2A payment extension, simulated budget, program indicators, and profile-specific result kind survive; unknown Live values remain unknown and Demo labels cannot leak into Live facts |
 | F06 | Always-visible human inbox and independent incident navigation show truthful empty/stale/unavailable states; supported items retain exact Task/run/origin/action bindings; absence of policy cannot enable an action |
 | F07 | Physical click, keyboard typing and paste edit Live/Demo drafts even when Submit is disabled; view/source/factory switches and reopening retain the appropriate isolated draft; Recorded is read-only; no input event submits work |
 | F08 | Ordinary shipped Recorded selection works without test-time bundle injection: authentic pinned graph is rendered or useful evidence-only views remain accessible with explicit graph-unavailable provenance; alternate/injected recordings are tested separately |
@@ -897,6 +899,13 @@ a caller-prompted Director abort. It demonstrates first-pass acceptance,
 rejection/repair/acceptance, and exhaustion/abort. Defects on repair/exhaustion
 routes were induced, and delivery was an HTTP fixture. It does not qualify Luna,
 extra repair, human escalation, the current mock capacity/prices, or payments.
+
+Amendment (8 Oct 2026): the release receiver is no longer an HTTP fixture. It is
+an ordinary A2A v1 agent reached only through `SendMessage` and `GetTask`, whose
+Task completes with a receipt artifact over the exact delivered bytes; one
+delivery yields exactly one `delivery.receipt` fact. It remains a local fixture
+destination, not a real external release target. The qualification above was
+observed before this change.
 
 The [existing prototype Interface description](../../prototype/temporal-factory/INTERFACES.md)
 and [prototype overview](../../prototype/temporal-factory/README.md) describe the

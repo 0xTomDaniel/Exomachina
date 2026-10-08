@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import copy
 import hashlib
 import hmac
 import json
@@ -30,6 +31,11 @@ KEY_FILE_NAME = "handoff-digest.key"
 KEY_BYTES = 32
 OUTPUT_MODES = ("artifacts", "message", "none")
 MAX_ITEMS = 256
+# Declared input size bound (decision 9): the JSON-encoded A2A Message the
+# factory dispatches. An input that does not fit fails loudly at the node.
+MAX_MESSAGE_BYTES = 4_000_000
+COMPOSITION_MISMATCH = "input.composition-mismatch"
+OVERSIZE = "input.oversize"
 _MEDIA = re.compile(r"^[a-z0-9.+-]+/[a-z0-9.+-]+$")
 
 
@@ -37,6 +43,14 @@ class OutputMissing(ValueError):
     """A completed Task did not satisfy its node's output contract."""
 
     reason = "output.missing"
+
+
+class CompositionError(ValueError):
+    """The node's input cannot be composed as recorded; nothing is sent."""
+
+    def __init__(self, reason: str, message: str):
+        super().__init__(message)
+        self.reason = reason
 
 
 def now_iso() -> str:
@@ -215,3 +229,80 @@ def stream_ready_items(events, *, clock=now_iso) -> tuple[dict[int, str], list[d
             records.append({"item_index": index, "part_kinds": list(kinds),
                             "media_type": media.get(index), "ready_at": ready[index]})
     return ready, records
+
+
+def fallback_item_parts(content: str) -> list[list[dict]]:
+    """Item parts for a result recorded before receipts carried ``item_parts``."""
+    return [[{"text": content, "mediaType": a2a_v1.JSON_MEDIA_TYPE}]]
+
+
+def _upstream(upstream: object) -> list[dict]:
+    if not isinstance(upstream, list):
+        raise CompositionError(COMPOSITION_MISMATCH, "upstream must be a list")
+    for entry in upstream:
+        items = entry.get("item_parts") if isinstance(entry, dict) else None
+        if (not isinstance(items, list) or not items or
+                not all(isinstance(item, list) and item for item in items)):
+            raise CompositionError(COMPOSITION_MISMATCH, "upstream item without Parts")
+        for item in items:
+            for part in item:
+                try:
+                    a2a_v1.part_content(part)
+                except a2a_v1.ProtocolError as error:
+                    raise CompositionError(COMPOSITION_MISMATCH, str(error)) from error
+    return upstream
+
+
+def verify_consumed(consumes: list, upstream: list, *, key: bytes) -> None:
+    """``consumes`` must name exactly the hand-offs whose items are included.
+
+    Same hand-off ids in the same order, and each included item's keyed digest
+    equals the produced record's item digest.
+    """
+    try:
+        included = [(entry.get("handoff_id"),
+                     [describe_item(item, index=index, source="artifact", ready_at="",
+                                    key=key)["digest"]
+                      for index, item in enumerate(entry["item_parts"])])
+                    for entry in _upstream(upstream)]
+    except (ValueError, TypeError) as error:
+        if isinstance(error, CompositionError):
+            raise
+        raise CompositionError(COMPOSITION_MISMATCH, str(error)) from error
+    recorded = [(entry.get("handoff_id"), list(entry.get("item_digests") or []))
+                for entry in consumes if isinstance(entry, dict)]
+    if len(recorded) != len(consumes) or included != recorded:
+        raise CompositionError(COMPOSITION_MISMATCH,
+                               "consumed hand-offs differ from the composed items")
+
+
+def compose_parts(lead: list[dict], upstream: list, *, consumes: list | None = None,
+                  key: bytes | None = None) -> list[dict]:
+    """Before-dispatch composition of one A2A Message's Parts (decision 9).
+
+    ``lead`` is the node's own Parts (its brief, or nothing for release),
+    followed by every consumed hand-off item's Parts copied verbatim from the
+    producing artifact: same part kind, value, ``mediaType`` and ``filename``,
+    in hand-off order and item order. Nothing is re-encoded or embedded. With
+    an instance key and a recorded ``consumes``, the composition must match it.
+    """
+    upstream = _upstream(upstream)
+    if key is not None and consumes is not None:
+        verify_consumed(consumes, upstream, key=key)
+    return [copy.deepcopy(part) for part in lead] + [
+        copy.deepcopy(part) for entry in upstream for item in entry["item_parts"]
+        for part in item]
+
+
+def message_size(message: dict) -> int:
+    return len(json.dumps(message, sort_keys=True, separators=(",", ":"),
+                          ensure_ascii=False).encode("utf-8"))
+
+
+def require_within_bound(message: dict) -> dict:
+    """Fail loudly when the composed Message exceeds the declared bound."""
+    size = message_size(message)
+    if size > MAX_MESSAGE_BYTES:
+        raise CompositionError(OVERSIZE, f"composed Message is {size} bytes; "
+                               f"the bound is {MAX_MESSAGE_BYTES}")
+    return message

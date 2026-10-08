@@ -62,7 +62,7 @@ class WorkflowAssignmentBindingsTest(unittest.IsolatedAsyncioTestCase):
         run=factory.FactoryRun();run.run_id='run';run.definition_digest='definition'
         run.run_inputs={'question':'synthetic only'};run._explicit_assignment_bindings=True
         bindings={'research':{'role':'capability','url':'http://127.0.0.1:1','identity':'research'},
-                  'synthesis':{'role':'capability'},'quality':{'role':'quality'},
+                  'synthesis':{'role':'capability','identity':'synthesis'},'quality':{'role':'quality','identity':'quality'},
                   'release':{'role':'capability','url':'http://127.0.0.1:1','identity':'release'}}
         package={'bindings':bindings,'evidence_packet':{}}
         branch=lambda name: dict(service='research',result_type=name,capability=name)
@@ -79,7 +79,7 @@ class WorkflowAssignmentBindingsTest(unittest.IsolatedAsyncioTestCase):
             if fn is factory.assign:return {}
             if fn is factory.typed_join:return {}
             if fn is factory.synthesize:return dict(revision='r1',sha256='candidate',content='{}')
-            if fn is factory.review:return dict(task_id='quality-task',artifact=dict(accepted=True,reviewer='quality'))
+            if fn is factory.review:return dict(task_id='quality-task',artifact=dict(accepted=True))
             if fn is factory.release:return dict(receipt_id='synthetic')
             raise AssertionError('unexpected activity')
         with patch.object(factory,'verify_closure'),patch.object(factory,'_activity',side_effect=execute), \

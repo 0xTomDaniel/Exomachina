@@ -1,24 +1,37 @@
-"""Small A2A v1.0 JSON-RPC client for the decision-round fixture and async agents.
+"""Small A2A v1.0 JSON-RPC client for factory-side calls to agent services.
 
 This is the client side of the A2A Adapter boundary: requests carry the
 ``A2A-Version: 1.0`` header, Tasks arrive wrapped as ``{"task": ...}``, and
 ``TASK_STATE_*`` values are mapped to version-neutral state names here.
+
+An agent receives an ordinary Message: the node's brief as a text Part,
+followed by the consumed hand-off items' Parts copied verbatim from their
+producing artifacts (``handoff.compose_parts``), the factory-journaled
+``messageId`` and ``contextId``, and optionally a budget in the budget
+extension's request metadata. No factory identifier crosses the wire; the
+factory's own journal maps its assignment to the A2A identities.
+
+An agent returns its work product itself: one artifact whose single text Part
+is the content. The factory normalizes it on complete (``async_receipt``).
 """
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import sys
 import urllib.error
-import urllib.parse
 import urllib.request
 
+import a2a_extensions
 import a2a_v1
-from agent_binding import EXTENSION_URI, UnavailableBinding, resolve as resolve_pinned
+import handoff
+from agent_binding import UnavailableBinding, resolve as resolve_pinned  # noqa: F401
 
 
 TOKEN = "Bearer fixture-token"
+EXTENSIONS = (a2a_extensions.BUDGET_URI,)
 
 
 class UncertainSubmission(Exception):
@@ -40,46 +53,36 @@ def _request(url, method, data=None, extensions=()):
         raise UncertainSubmission(str(error)) from error
 
 
-def send(url, command):
-    """Submit a data Part over actual A2A v1 SendMessage and extract its artifact."""
-    rpc = a2a_v1.rpc(a2a_v1.SEND_MESSAGE, a2a_v1.send_params(
-        a2a_v1.user_message([a2a_v1.data_part(command)])))
-    response = _request(url.rstrip("/") + "/", "POST", rpc)
-    if "error" in response:
-        raise RuntimeError("A2A error: " + json.dumps(response["error"]))
-    try:
-        shape, result = a2a_v1.unwrap_send_result(response["result"])
-        completed = shape == "task" and a2a_v1.task_state(result) == "completed"
-    except a2a_v1.ProtocolError as error:
-        raise RuntimeError("A2A v1 response invalid: " + str(error)) from error
-    if not completed:
-        raise RuntimeError("A2A did not return a completed Task: " + json.dumps(result))
-    metadata = result.get("metadata") or {}
-    for field in ("action_id", "run_id", "definition_digest"):
-        if metadata.get(field) != command[field]:
-            raise RuntimeError("A2A result binding mismatch: " + field)
-    artifacts = result.get("artifacts") or []
-    if len(artifacts) != 1:
-        raise RuntimeError("expected one structured artifact")
-    artifact = a2a_v1.part_data(artifacts[0]["parts"][0])
-    if artifacts[0]["artifactId"] != artifact["sha256"]:
-        raise RuntimeError("artifact digest mismatch")
-    return {"action_id": command["action_id"], "run_id": command["run_id"],
-            "definition_digest": command["definition_digest"], "task_id": result["id"],
-            "artifact": artifact, "harness_identity": metadata.get("harness_identity"),
-            "harness_role": metadata.get("harness_role"),
-            "a2a_protocol": a2a_v1.PROTOCOL_VERSION}
+def message(brief_text: str, *, message_id: str, context_id: str,
+            upstream: list | None = None, consumes: list | None = None,
+            key: bytes | None = None) -> dict:
+    """The plain A2A Message the factory composes for one assignment attempt.
 
-
-def send_async(url: str, command: dict) -> dict:
-    """Submit the pinned async contract; retain the Task, including its id.
-
-    The send activates the required action-contract extension and asks the
-    agent to return immediately; the v1 ``{"task": ...}`` wrapper is removed.
+    The brief Part comes first, then each consumed hand-off item's Parts
+    verbatim. Raises ``handoff.CompositionError`` on a mismatch with
+    ``consumes`` or when the Message exceeds ``handoff.MAX_MESSAGE_BYTES``.
     """
-    rpc = a2a_v1.rpc(a2a_v1.SEND_MESSAGE, a2a_v1.send_params(
-        a2a_v1.user_message([a2a_v1.data_part(command)]), return_immediately=True))
-    response = _request(url.rstrip("/") + "/", "POST", rpc, extensions=[EXTENSION_URI])
+    parts = handoff.compose_parts([a2a_v1.text_part(brief_text, a2a_v1.JSON_MEDIA_TYPE)],
+                                  upstream or [], consumes=consumes, key=key)
+    return handoff.require_within_bound(
+        a2a_v1.user_message(parts, context_id=context_id, message_id=message_id))
+
+
+def payload_sha256(message: dict) -> str:
+    """Digest of the whole composed Message content; its ids are journal-bound."""
+    content = {key: value for key, value in message.items()
+               if key not in {"messageId", "contextId", "taskId"}}
+    return hashlib.sha256(json.dumps(content, sort_keys=True, separators=(",", ":"),
+                                     ensure_ascii=False).encode()).hexdigest()
+
+
+def send_message_async(url: str, message: dict, *, budget: dict | None = None) -> dict:
+    """SendMessage with returnImmediately; a resend reuses the journaled Message."""
+    params = a2a_v1.send_params(message, return_immediately=True)
+    if budget is not None:
+        params["metadata"] = {a2a_extensions.BUDGET_URI: {"budget": budget}}
+    rpc = a2a_v1.rpc(a2a_v1.SEND_MESSAGE, params)
+    response = _request(url.rstrip("/") + "/", "POST", rpc, extensions=EXTENSIONS)
     if "error" in response:
         raise RuntimeError("A2A error: " + json.dumps(response["error"]))
     try:
@@ -88,17 +91,27 @@ def send_async(url: str, command: dict) -> dict:
         raise ValueError("A2A v1 response invalid: " + str(error)) from error
 
 
-def validate_async_task(task: dict, command: dict, identity: str) -> str:
-    """Return the version-neutral state of a bound v1 Task."""
+def send_async(url: str, brief_text: str, *, message_id: str, context_id: str,
+               budget: dict | None = None, upstream: list | None = None) -> dict:
+    """SendMessage with returnImmediately; a resend reuses the journaled messageId."""
+    return send_message_async(url, message(brief_text, message_id=message_id,
+                                           context_id=context_id, upstream=upstream),
+                              budget=budget)
+
+
+def validate_async_task(task: dict, *, context_id: str, task_id: str | None = None) -> str:
+    """Return the version-neutral state of a Task bound by the factory journal.
+
+    Correlation is the journal's: the Task id and contextId it recorded. The
+    agent's identity is its pinned Agent Card; no Task metadata is required.
+    """
     if (not isinstance(task, dict) or "kind" in task or not isinstance(task.get("id"), str)
             or not task["id"]):
         raise ValueError("A2A response lacks Task id")
-    metadata = task.get("metadata") or {}
-    for key in ("action_id", "run_id", "definition_digest"):
-        if metadata.get(key) != command[key]:
-            raise ValueError("A2A Task binding mismatch: " + key)
-    if metadata.get("agent_identity") != identity:
-        raise ValueError("A2A Task identity mismatch")
+    if task_id is not None and task["id"] != task_id:
+        raise ValueError("A2A Task id differs from the journaled Task")
+    if task.get("contextId") != context_id:
+        raise ValueError("A2A Task contextId differs from the journaled context")
     try:
         state = a2a_v1.task_state(task)
     except a2a_v1.ProtocolError as error:
@@ -108,50 +121,43 @@ def validate_async_task(task: dict, command: dict, identity: str) -> str:
     return state
 
 
-def async_receipt(task: dict, command: dict, identity: str,
+def async_receipt(task: dict, binding: dict, *, identity: str,
                   expected_revision: str, role: str) -> dict:
-    if validate_async_task(task, command, identity) != "completed":
+    """On-complete normalization. ``binding`` is the factory's own journal binding.
+
+    The agent returns its work product as one artifact with one text Part. The
+    factory computes the content digest and builds its own normalized record:
+    the revision it assigned and the author from its own pin, never an agent
+    echo. ``item_parts`` keeps the artifact's Parts verbatim for consumers.
+    """
+    if validate_async_task(task, context_id=binding["context_id"],
+                           task_id=binding.get("task_id")) != "completed":
         raise ValueError("A2A Task is not complete")
     artifacts = task.get("artifacts") or []
-    if len(artifacts) != 1 or len(artifacts[0].get("parts") or []) != 1:
-        raise ValueError("expected one structured artifact")
+    parts = artifacts[0].get("parts") if len(artifacts) == 1 and isinstance(artifacts[0], dict) else None
+    if not isinstance(parts, list) or len(parts) != 1:
+        raise ValueError("expected one artifact with one Part")
     try:
-        artifact = a2a_v1.part_data(artifacts[0]["parts"][0])
+        content = a2a_v1.part_text(parts[0])
     except a2a_v1.ProtocolError as error:
-        raise ValueError("expected artifact data Part") from error
-    if not isinstance(artifact, dict):
-        raise ValueError("expected artifact data Part")
-    for key in ("action_id", "run_id", "definition_digest"):
-        if artifact.get(key) != command[key]:
-            raise ValueError("artifact binding mismatch: " + key)
-    if artifact.get("author") != identity or artifact.get("revision") != expected_revision:
-        raise ValueError("artifact author or revision mismatch")
-    content = artifact.get("content")
-    if not isinstance(content, str) or artifact.get("sha256") != hashlib.sha256(content.encode()).hexdigest():
-        raise ValueError("artifact content digest mismatch")
-    if artifacts[0].get("artifactId") != artifact["sha256"]:
-        raise ValueError("A2A Artifact id differs from content digest")
-    return {"action_id": command["action_id"], "run_id": command["run_id"],
-            "definition_digest": command["definition_digest"], "task_id": task["id"],
-            "artifact": artifact, "harness_identity": identity,
-            "harness_role": role, "a2a_protocol": a2a_v1.PROTOCOL_VERSION}
+        raise ValueError("expected an artifact text Part") from error
+    artifact = {"revision": expected_revision,
+                "sha256": hashlib.sha256(content.encode("utf-8")).hexdigest(),
+                "author": identity, "content": content}
+    return {"action_id": binding["action_id"], "run_id": binding["run_id"],
+               "definition_digest": binding["definition_digest"], "task_id": task["id"],
+               "context_id": binding["context_id"], "message_id": binding["message_id"],
+               "artifact": artifact, "item_parts": [copy.deepcopy(parts)],
+               "harness_identity": identity,
+               "harness_role": role, "a2a_protocol": a2a_v1.PROTOCOL_VERSION}
 
 
-def reconcile(url, action_id, run_id=None, definition_digest=None):
-    route = "/fixture/actions/" + urllib.parse.quote(action_id, safe="")
-    record = _request(url.rstrip("/") + route, "GET")
-    if record["action_id"] != action_id:
-        raise RuntimeError("action lookup mismatch")
-    if run_id is not None and record["run_id"] != run_id:
-        raise RuntimeError("run lookup mismatch")
-    if definition_digest is not None and record["definition_digest"] != definition_digest:
-        raise RuntimeError("definition lookup mismatch")
-    return record
-
-
-def get_task(url, task_id):
-    rpc = a2a_v1.rpc(a2a_v1.GET_TASK, {"id": task_id})
-    response = _request(url.rstrip("/") + "/", "POST", rpc, extensions=[EXTENSION_URI])
+def get_task(url, task_id, *, history_length: int | None = 0):
+    params = {"id": task_id}
+    if history_length is not None:
+        params["historyLength"] = history_length
+    rpc = a2a_v1.rpc(a2a_v1.GET_TASK, params)
+    response = _request(url.rstrip("/") + "/", "POST", rpc, extensions=EXTENSIONS)
     if "error" in response:
         raise RuntimeError("A2A task lookup error: " + json.dumps(response["error"]))
     return a2a_v1.normalize_numbers(response["result"])
@@ -160,46 +166,14 @@ def get_task(url, task_id):
 def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
-    assign = sub.add_parser("assign")
-    assign.add_argument("--url", required=True)
-    assign.add_argument("--action-id", required=True)
-    assign.add_argument("--run-id", required=True)
-    assign.add_argument("--definition-digest", required=True)
-    assign.add_argument("--brief", required=True)
-    review = sub.add_parser("review")
-    review.add_argument("--url", required=True)
-    review.add_argument("--action-id", required=True)
-    review.add_argument("--run-id", required=True)
-    review.add_argument("--definition-digest", required=True)
-    artifact = review.add_mutually_exclusive_group(required=True)
-    artifact.add_argument("--artifact-file")
-    artifact.add_argument("--artifact-json")
-    lookup = sub.add_parser("reconcile")
-    lookup.add_argument("--url", required=True)
-    lookup.add_argument("--action-id", required=True)
-    lookup.add_argument("--run-id")
-    lookup.add_argument("--definition-digest")
     task = sub.add_parser("task-get")
     task.add_argument("--url", required=True)
     task.add_argument("--task-id", required=True)
     args = parser.parse_args()
     try:
-        if args.command == "assign":
-            result = send(args.url, {"op": "assign", "action_id": args.action_id,
-                "run_id": args.run_id, "definition_digest": args.definition_digest,
-                "brief": args.brief})
-        elif args.command == "review":
-            source = open(args.artifact_file).read() if args.artifact_file else args.artifact_json
-            result = send(args.url, {"op": "review", "action_id": args.action_id,
-                "run_id": args.run_id, "definition_digest": args.definition_digest,
-                "artifact": json.loads(source)})
-        elif args.command == "reconcile":
-            result = reconcile(args.url, args.action_id, args.run_id, args.definition_digest)
-        else:
-            result = get_task(args.url, args.task_id)
-        print(json.dumps(result, sort_keys=True))
+        print(json.dumps(get_task(args.url, args.task_id, history_length=None), sort_keys=True))
     except UncertainSubmission as error:
-        print("submission outcome unknown; reconcile by action ID: " + str(error), file=sys.stderr)
+        print("lookup outcome unknown: " + str(error), file=sys.stderr)
         raise SystemExit(75)
 
 

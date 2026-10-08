@@ -1,8 +1,15 @@
-"""A2A and release Activities. Remote receipts never become product acceptance here."""
+"""A2A and release Activities. Remote receipts never become product acceptance here.
+
+Agent services receive ordinary A2A Messages (decision 7). Before dispatch the
+factory composes each Message from the node's brief and the consumed hand-off
+items' Parts copied verbatim (decision 9), journals its own action, run, assignment and attempt against the
+A2A ``messageId``/``contextId``/``taskId`` in the outcome journal, re-attaches
+with ``GetTask`` after a restart, and records agent-reported usage from the
+budget extension (decision 8) in its own usage journal.
+"""
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import json
 import os
 import re
@@ -10,6 +17,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+from uuid import uuid4
 
 from temporalio import activity
 
@@ -20,11 +28,14 @@ from quality_authority import QualityKind, quality_action_id
 from report_contract import (canonical, packet_evidence_join, research_assignment,
     synthesis_assignment, quality_review_request, validate_research_result,
     validate_report, validate_verdict)
+import a2a_extensions
+import a2a_v1
 import long_client as a2a
 import fixture
 import handoff
-import receiver_client
+import release_delivery
 from definition import binding_output
+from model_usage import AGENT_USAGE_DATABASE, ModelUsageJournal, normalize_agent_tokens
 
 
 class PendingTask(Exception):
@@ -32,7 +43,7 @@ class PendingTask(Exception):
 
 
 def _assignment_usage_bindings(input: dict) -> dict[str, str]:
-    """Forward only explicit workflow measurement bindings to the remote Task."""
+    """Factory-side measurement bindings; they stay in the factory's journals."""
     bindings = {}
     for name in ("assignment_id", "attempt_id"):
         value = input.get(name)
@@ -55,7 +66,48 @@ def _async_unresolved(record) -> dict:
             "task_id": record.task_id}
 
 
-def _invoke_async(binding: dict, contract: dict, command: dict,
+def _wire_binding(record) -> dict:
+    """The factory's journal binding for one A2A exchange."""
+    return {"action_id": record.action_id, "run_id": record.run_id,
+            "definition_digest": record.definition_digest, "task_id": record.task_id,
+            "context_id": record.context_id, "message_id": record.message_id}
+
+
+def agent_usage_journal(outcome_db: Path | str) -> ModelUsageJournal:
+    return ModelUsageJournal(Path(outcome_db).parent / AGENT_USAGE_DATABASE)
+
+
+def _record_agent_usage(task: dict, action: dict, identity: str) -> None:
+    """On-complete hook: record the agent's own report as agent-reported usage.
+
+    An absent or malformed report is recorded as unavailable, never zero.
+    Recording never changes the Task outcome.
+    """
+    journal_path = os.environ.get("EXO_OUTCOME_DB")
+    if not journal_path:
+        return
+    try:
+        report = a2a_extensions.parse_incurred(task.get("metadata"))
+        status = "reported" if report is not None else "absent"
+    except ValueError:
+        report, status = None, "malformed"
+    try:
+        agent_usage_journal(journal_path).record(
+            model_call_id=f"urn:exomachina:agent-task:{identity}:{task['id']}",
+            service_identity=identity, task_id=task["id"], call_scope="assignment_call",
+            assignment_id=action.get("assignment_id"), attempt_id=action.get("attempt_id"),
+            action_id=action["action_id"], run_id=action["run_id"],
+            definition_digest=action["definition_digest"],
+            provider="a2a-agent", model_id="unreported", reasoning_effort=None,
+            usage=normalize_agent_tokens((report or {}).get("tokens")), source="agent")
+        _log("agent-usage-recorded", action_id=action["action_id"], task_id=task["id"],
+             report=status)
+    except Exception as error:
+        _log("agent-usage-unrecorded", action_id=action["action_id"], task_id=task["id"],
+             report=status, error_type=type(error).__name__)
+
+
+def _invoke_async(binding: dict, contract: dict, action: dict,
                   expected_revision: str, role: str,
                   expected_capability: str | None = None) -> dict:
     journal_path = os.environ.get("EXO_OUTCOME_DB")
@@ -66,18 +118,26 @@ def _invoke_async(binding: dict, contract: dict, command: dict,
         raise ValueError("async receiver reconciliation mode is undeclared")
     path = Path(journal_path)
     snapshot = path.parent.parent / "testbed" / "agent_snapshot.json"
-    payload_sha256 = hashlib.sha256(json.dumps(command, sort_keys=True,
-        separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
-    expected = submitted(command["action_id"], command["run_id"],
-        command["definition_digest"],
-        ReceiverKind.PARTICIPATING if mode == "a2a-idempotent-resend" else ReceiverKind.OPAQUE,
-        payload_sha256=payload_sha256, pinned_identity=binding["identity"])
+    parts = action["parts"]
+    # The journal binds the whole composed Message content (brief and every
+    # consumed item Part); its ids are the journal's own.
+    payload_sha256 = a2a.payload_sha256(a2a_v1.user_message(parts))
     journal = OutcomeJournal(path)
     try:
+        context_id = journal.context_for(action["run_id"], binding["identity"])
+        expected = submitted(action["action_id"], action["run_id"],
+            action["definition_digest"],
+            ReceiverKind.PARTICIPATING if mode == "a2a-idempotent-resend" else ReceiverKind.OPAQUE,
+            payload_sha256=payload_sha256, pinned_identity=binding["identity"],
+            message_id=str(uuid4()), context_id=context_id)
         record, created = journal.begin(expected)
         if record.phase == Phase.CONFIRMED:
             return record.receipt
         if record.phase == Phase.INCIDENT:
+            return _async_unresolved(record)
+        if record.message_id is None or record.context_id is None:
+            record = task_incident(record, "a2a-correlation-missing")
+            journal.put(record)
             return _async_unresolved(record)
         if record.task_id is None and not created and mode != "a2a-idempotent-resend":
             record = task_incident(record, "opaque-effect-unknown")
@@ -97,24 +157,25 @@ def _invoke_async(binding: dict, contract: dict, command: dict,
                      pinned_identity=binding["identity"], error_type=type(error).__name__)
                 return _async_unresolved(record)
             if (expected_capability is not None
-                    and observed["contract_document"].get("capability") != expected_capability):
+                    and expected_capability not in observed["skills"]):
                 record = task_incident(record, "pinned-agent-capability-mismatch")
                 journal.put(record)
                 return _async_unresolved(record)
             _log("agent-card-verified", action_id=record.action_id,
                  pinned_identity=binding["identity"], pinned_card_sha256=contract["card_sha256"],
-                 pinned_contract_digest=contract["a2a_extension"]["contract_digest"],
-                 observed={key: value for key, value in observed.items()
-                           if key != "contract_document"})
+                 observed=observed)
             if record.task_id is None:
-                # Both first dispatch and replay use the exact journal-bound payload.
+                # First dispatch and replay send the same journal-bound Message:
+                # same messageId, contextId and composed Parts.
                 try:
-                    task = a2a.send_async(url, command)
-                    state = a2a.validate_async_task(task, command, binding["identity"])
+                    task = a2a.send_message_async(url, a2a_v1.user_message(
+                        parts, message_id=record.message_id, context_id=record.context_id))
+                    state = a2a.validate_async_task(task, context_id=record.context_id)
                     record = task_started(record, task["id"])
                     journal.put(record)
                     _log("agent-task-journaled", action_id=record.action_id,
-                         task_id=record.task_id, state=state, url=url,
+                         task_id=record.task_id, context_id=record.context_id,
+                         message_id=record.message_id, state=state, url=url,
                          resend=not created)
                 except a2a.UncertainSubmission:
                     if record.phase == Phase.SUBMITTED:
@@ -134,22 +195,13 @@ def _invoke_async(binding: dict, contract: dict, command: dict,
                          error_type=type(error).__name__)
                     return _async_unresolved(record)
                 if state == "completed":
-                    try:
-                        receipt = _completed_receipt(task, command, binding,
-                                                     expected_revision, role)
-                    except handoff.OutputMissing:
-                        record = task_incident(record, handoff.OutputMissing.reason)
-                    except Exception:
-                        record = task_incident(record, "async-artifact-inconsistent")
-                    else:
-                        record = task_finished(record, receipt)
-                    journal.put(record)
-                    return record.receipt if record.phase == Phase.CONFIRMED else _async_unresolved(record)
+                    return _finish(journal, record, task, action, binding,
+                                   expected_revision, role)
             try:
+                # Re-attach by the journaled Task id only; never ask about a run.
                 task = a2a.get_task(url, record.task_id)
-                state = a2a.validate_async_task(task, command, binding["identity"])
-                if task["id"] != record.task_id:
-                    raise ValueError("remote Task id changed")
+                state = a2a.validate_async_task(task, context_id=record.context_id,
+                                                task_id=record.task_id)
             except a2a.UncertainSubmission:
                 time.sleep(0.5)
                 continue
@@ -162,29 +214,16 @@ def _invoke_async(binding: dict, contract: dict, command: dict,
             _log("agent-task-polled", action_id=record.action_id,
                  task_id=record.task_id, state=state, url=url)
             if state == "completed":
-                try:
-                    receipt = _completed_receipt(task, command, binding,
-                                                 expected_revision, role)
-                except handoff.OutputMissing:
-                    record = task_incident(record, handoff.OutputMissing.reason)
-                    _log("agent-output-missing", action_id=record.action_id,
-                         task_id=record.task_id)
-                except Exception as error:
-                    record = task_incident(record, "async-artifact-inconsistent")
-                    _log("agent-artifact-incident", action_id=record.action_id,
-                         task_id=record.task_id, error_type=type(error).__name__)
-                else:
-                    record = task_finished(record, receipt)
-                journal.put(record)
-                return record.receipt if record.phase == Phase.CONFIRMED else _async_unresolved(record)
+                return _finish(journal, record, task, action, binding, expected_revision, role)
             if state not in {"submitted", "working"}:
+                _record_agent_usage(task, action, binding["identity"])
                 record = task_incident(record, "async-task-terminal-without-artifact")
                 journal.put(record)
                 return _async_unresolved(record)
             time.sleep(0.5)
         raise PendingTask("remote Task still working; retry from durable Task id")
     except StaleOutcome:
-        current = journal.get(command["action_id"])
+        current = journal.get(action["action_id"])
         if current.phase == Phase.CONFIRMED:
             return current.receipt
         if current.phase == Phase.INCIDENT:
@@ -194,7 +233,25 @@ def _invoke_async(binding: dict, contract: dict, command: dict,
         journal.close()
 
 
-def _completed_receipt(task: dict, command: dict, binding: dict,
+def _finish(journal: OutcomeJournal, record, task: dict, action: dict, binding: dict,
+            expected_revision: str, role: str) -> dict:
+    _record_agent_usage(task, action, binding["identity"])
+    try:
+        receipt = _completed_receipt(task, record, binding, expected_revision, role)
+    except handoff.OutputMissing:
+        record = task_incident(record, handoff.OutputMissing.reason)
+        _log("agent-output-missing", action_id=record.action_id, task_id=record.task_id)
+    except Exception as error:
+        record = task_incident(record, "async-artifact-inconsistent")
+        _log("agent-artifact-incident", action_id=record.action_id,
+             task_id=record.task_id, error_type=type(error).__name__)
+    else:
+        record = task_finished(record, receipt)
+    journal.put(record)
+    return record.receipt if record.phase == Phase.CONFIRMED else _async_unresolved(record)
+
+
+def _completed_receipt(task: dict, record, binding: dict,
                        expected_revision: str, role: str) -> dict:
     """On-complete hook: enforce the node's output contract, then normalize.
 
@@ -206,7 +263,8 @@ def _completed_receipt(task: dict, command: dict, binding: dict,
     at = handoff.now_iso()
     items = handoff.produced_items(task, binding_output(binding),
                                    key=handoff.instance_key(), ready_at=at)
-    receipt = a2a.async_receipt(task, command, binding["identity"], expected_revision, role)
+    receipt = a2a.async_receipt(task, _wire_binding(record), identity=binding["identity"],
+                                expected_revision=expected_revision, role=role)
     if items:
         receipt["handoff"] = {"produced_at": at, "items": items}
     return receipt
@@ -255,132 +313,46 @@ def _log(kind: str, **fields) -> None:
                                     sort_keys=True) + "\n")
 
 
-def _identity(url: str, role: str, pinned: str) -> None:
-    health = _get_json(url.rstrip("/") + "/health")
-    if health.get("role") != role or health.get("identity") != pinned:
-        raise ValueError("remote service identity/role changed")
+def _compose(input: dict, brief: dict) -> list[dict]:
+    """Before dispatch: the brief Part, then the consumed items' Parts verbatim.
+
+    With an instance digest key configured and a recorded ``consumes``, the
+    included items must be exactly the consumed hand-offs (ids, order, keyed
+    item digests). An input over the declared bound fails; it is never cut.
+    """
+    consumes = input.get("consumes")
+    key = handoff.instance_key() if consumes is not None else None
+    parts = handoff.compose_parts(
+        [a2a_v1.text_part(canonical(brief), a2a_v1.JSON_MEDIA_TYPE)],
+        input.get("upstream") or [], consumes=consumes, key=key)
+    handoff.require_within_bound(a2a_v1.user_message(parts))
+    return parts
 
 
-def _existing(url: str, action_id: str, run: str, digest: str) -> dict | None:
-    try:
-        return a2a.reconcile(url, action_id, run, digest)
-    except RuntimeError as error:
-        if str(error).startswith("HTTP 404:"):
-            return None
-        raise
+def _action(action_id: str, input: dict, brief: dict, parts: list[dict]) -> dict:
+    """The factory's own record of one agent action; only ``parts`` are sent."""
+    return {"action_id": action_id, "run_id": input["run"],
+            "definition_digest": input["digest"], "brief": canonical(brief),
+            "parts": parts, **_assignment_usage_bindings(input)}
 
 
-def _receipt(record: dict, command: dict, identity: str, role: str) -> dict:
-    for key in ("action_id", "run_id", "definition_digest"):
-        if record.get(key) != command[key]:
-            raise ValueError("remote receipt binding mismatch: " + key)
-    if record.get("harness_identity") not in (None, identity):
-        raise ValueError("A2A metadata identity mismatch")
-    if record.get("harness_role") not in (None, role):
-        raise ValueError("A2A metadata role mismatch")
-    if record.get("role") not in (None, role):
-        raise ValueError("lookup role mismatch")
-    artifact = record.get("artifact")
-    if not isinstance(artifact, dict):
-        raise ValueError("remote receipt lacks artifact")
-    return {"action_id": command["action_id"], "run_id": command["run_id"],
-            "definition_digest": command["definition_digest"],
-            "task_id": record["task_id"], "artifact": artifact,
-            "harness_identity": identity, "harness_role": role,
-            "receiver_attempts": record.get("attempts"),
-            "receiver_effect_count": record.get("accepted_count")}
-
-
-def _invoke(url: str, identity: str, role: str, command: dict,
-            lookup_supported: bool) -> dict:
-    """Record intent before send; reconcile uncertainty without resubmission."""
-    _identity(url, role, identity)
-    journal_path = os.environ.get("EXO_OUTCOME_DB")
-    if not journal_path:
-        raise RuntimeError("durable A2A outcome journal is not configured")
-    journal = OutcomeJournal(Path(journal_path))
-    receiver = ReceiverKind.PARTICIPATING if lookup_supported else ReceiverKind.OPAQUE
-    expected = submitted(command["action_id"], command["run_id"],
-                         command["definition_digest"], receiver)
-    try:
-        return _invoke_journaled(journal, expected, url, identity, role, command,
-                                 lookup_supported)
-    finally:
-        journal.close()
-
-
-def _invoke_journaled(journal: OutcomeJournal, expected, url: str, identity: str,
-                      role: str, command: dict, lookup_supported: bool) -> dict:
-    record, created = journal.begin(expected)
-    if record.phase == Phase.CONFIRMED:
-        return record.receipt
-    if record.phase == Phase.INCIDENT:
-        return {"unresolved": record.reason, "action_id": record.action_id}
-    if not created:
-        # A prior dispatch intent may have been sent before the Activity stopped.
-        if record.phase == Phase.SUBMITTED:
-            record = send_ambiguous(record)
-            journal.put(record)
-        return _bounded_lookup(journal, record, url, identity, role, command)
-    if lookup_supported:
-        try:
-            prior = _existing(url, command["action_id"], command["run_id"],
-                              command["definition_digest"])
-        except Exception:
-            record = send_ambiguous(record)
-            journal.put(record)
-            return _bounded_lookup(journal, record, url, identity, role, command)
-        if prior is not None:
-            receipt = _receipt(prior, command, identity, role)
-            record = send_completed(record, receipt)
-            journal.put(record)
-            return receipt
-    try:
-        result = a2a.send(url, command)
-    except Exception as error:
-        record = send_ambiguous(record)
-        journal.put(record)
-        return _bounded_lookup(journal, record, url, identity, role, command)
-    receipt = _receipt(result, command, identity, role)
-    record = send_completed(record, receipt)
-    journal.put(record)
-    if record.phase == Phase.INCIDENT:
-        return {"unresolved": record.reason, "action_id": record.action_id}
-    return receipt
-
-
-def _bounded_lookup(journal: OutcomeJournal, record, url: str, identity: str,
-                    role: str, command: dict) -> dict:
-    if record.receiver == ReceiverKind.OPAQUE:
-        record = lookup_result(record, None)
-        journal.put(record)
-        return {"unresolved": record.reason, "action_id": record.action_id}
-    while record.phase == Phase.UNKNOWN:
-        try:
-            prior = _existing(url, command["action_id"], command["run_id"],
-                              command["definition_digest"])
-            receipt = _receipt(prior, command, identity, role) if prior else None
-            record = lookup_result(record, receipt)
-        except Exception:
-            record = lookup_result(record, None, available=False)
-        journal.put(record)
-        if record.phase == Phase.UNKNOWN:
-            time.sleep(0.2)
-    if record.phase == Phase.CONFIRMED:
-        return record.receipt
-    return {"unresolved": record.reason, "action_id": record.action_id}
+def _composition_failure(action_id: str, error: handoff.CompositionError) -> dict:
+    _log("agent-input-incident", action_id=action_id, reason=error.reason)
+    return {"unresolved": error.reason, "action_id": action_id}
 
 
 @activity.defn
 async def assign(input: dict) -> dict:
     capability = input["capability"]
     brief = research_assignment(capability, input["question"], input["packet"])
-    command = {"op": "assign", "action_id": f"{input['run']}:{input['instance']}",
-               "run_id": input["run"], "definition_digest": input["digest"],
-               "brief": canonical(brief), **_assignment_usage_bindings(input)}
+    action_id = f"{input['run']}:{input['instance']}"
+    try:
+        action = _action(action_id, input, brief, _compose(input, brief))
+    except handoff.CompositionError as error:
+        return _composition_failure(action_id, error)
     try:
         result = await _thread_with_heartbeat(_invoke_async, input["binding"],
-            input["contract"], command, "r1", "research", capability)
+            input["contract"], action, "r1", "research", capability)
         if "unresolved" in result:
             return result
         artifact = result["artifact"]
@@ -392,7 +364,7 @@ async def assign(input: dict) -> dict:
     except PendingTask:
         raise
     except Exception as error:
-        return {"unresolved": "research-evidence-inconsistent", "action_id": command["action_id"],
+        return {"unresolved": "research-evidence-inconsistent", "action_id": action["action_id"],
                 "error_type": type(error).__name__}
 
 
@@ -405,14 +377,17 @@ async def typed_join(input: dict) -> dict:
 
 @activity.defn
 async def synthesize(input: dict) -> dict:
+    # Research results and the rejected draft travel as consumed item Parts.
     brief = synthesis_assignment(input["revision"], input["question"], input["packet"],
-        input["evidence"], prior=input.get("prior"), quality_findings=input.get("quality_findings"))
-    command = {"op": "assign", "action_id": f"{input['run']}:synthesize:{input['revision']}",
-               "run_id": input["run"], "definition_digest": input["digest"],
-               "brief": canonical(brief), **_assignment_usage_bindings(input)}
+                                 quality_findings=input.get("quality_findings"))
+    action_id = f"{input['run']}:synthesize:{input['revision']}"
+    try:
+        action = _action(action_id, input, brief, _compose(input, brief))
+    except handoff.CompositionError as error:
+        return _composition_failure(action_id, error)
     try:
         result = await _thread_with_heartbeat(_invoke_async, input["binding"],
-            input["contract"], command, input["revision"], "synthesis", "report_synthesis@1")
+            input["contract"], action, input["revision"], "synthesis", "report_synthesis@1")
         if "unresolved" in result:
             return result
         artifact = result["artifact"]
@@ -420,13 +395,14 @@ async def synthesize(input: dict) -> dict:
         if canonical(content) != artifact["content"]:
             raise ValueError("noncanonical report content")
         validate_report(content, input["revision"], input["question"], input["packet"])
+        produced = {**artifact, "item_parts": result["item_parts"]}
         if "handoff" not in result:
-            return artifact
-        return _with_handoff({**artifact, "handoff": result["handoff"]}, input, report=artifact)
+            return produced
+        return _with_handoff({**produced, "handoff": result["handoff"]}, input, report=artifact)
     except PendingTask:
         raise
     except Exception as error:
-        return {"unresolved": "synthesis-evidence-inconsistent", "action_id": command["action_id"],
+        return {"unresolved": "synthesis-evidence-inconsistent", "action_id": action["action_id"],
                 "error_type": type(error).__name__}
 
 
@@ -434,15 +410,25 @@ async def synthesize(input: dict) -> dict:
 async def review(input: dict) -> dict:
     from quality_authority import decide_quality_async
     candidate = input["candidate"]
-    brief = quality_review_request(candidate, input["question"], input["packet"],
-                                   input["policy_digest"])
-    command = {"op": "assign", "action_id": quality_action_id(input["run"],
-        input["assignment_id"], input["attempt"], candidate["revision"], candidate["sha256"]),
-        "run_id": input["run"], "definition_digest": input["digest"], "brief": canonical(brief),
-        **_assignment_usage_bindings(input)}
+    # The draft under review travels as its consumed item Parts; the factory's
+    # acceptance criteria travel as content in the brief. The policy digest
+    # stays on the factory side (Activity input, evidence).
+    action_id = quality_action_id(input["run"], input["assignment_id"], input["attempt"],
+                                  candidate["revision"], candidate["sha256"])
+    try:
+        brief = quality_review_request(candidate, input["question"], input["packet"],
+                                       input.get("acceptance_criteria"),
+                                       rubric_digest=input.get("rubric_digest"))
+    except ValueError as error:
+        return {"inconsistent": "quality-acceptance-criteria-invalid", "action_id": action_id,
+                "error_type": type(error).__name__}
+    try:
+        action = _action(action_id, input, brief, _compose(input, brief))
+    except handoff.CompositionError as error:
+        return {"inconsistent": error.reason, "detail": _composition_failure(action_id, error)}
     try:
         result = await _thread_with_heartbeat(_invoke_async, input["binding"],
-            input["contract"], command, candidate["revision"], "quality", "report_quality_review@1")
+            input["contract"], action, candidate["revision"], "quality", "report_quality_review@1")
         if "unresolved" in result:
             return {"inconsistent": "quality-action-outcome-unknown", "detail": result}
         artifact = result["artifact"]
@@ -451,121 +437,47 @@ async def review(input: dict) -> dict:
             raise ValueError("noncanonical verdict content")
         validate_verdict(content, candidate, input["binding"]["identity"],
                          packet=input["packet"], rubric_digest=input.get("rubric_digest"))
-        decision = decide_quality_async(binding=input["binding"], command=command,
+        decision = decide_quality_async(binding=input["binding"], command=action,
             candidate=candidate, receipt=result, verdict=content,
             expected_task_id=result["task_id"])
         if decision.kind == QualityKind.INCONSISTENT:
             return {"inconsistent": decision.incident, "reasons": list(decision.reasons)}
         # A gate seals the carrier it consumed; it never mints a new hand-off.
-        return {key: value for key, value in result.items() if key != "handoff"} | {
-            "artifact": content}
+        return {key: value for key, value in result.items()
+                if key not in {"handoff", "item_parts"}} | {"artifact": content}
     except PendingTask:
         raise
     except Exception as error:
-        return {"inconsistent": "quality-evidence-inconsistent", "action_id": command["action_id"],
+        return {"inconsistent": "quality-evidence-inconsistent", "action_id": action["action_id"],
                 "error_type": type(error).__name__}
 
 
+
 def _release(input: dict) -> dict:
-    url = input["url"]
-    health = _get_json(url.rstrip("/") + "/health")
-    if health.get("identity") != input["identity"] or health.get("mode") != input["mode"]:
-        raise ValueError("release receiver identity/mode changed")
-    command = input["command"]
+    """Deliver the accepted artifact to the pinned A2A release agent."""
     journal_path = os.environ.get("EXO_OUTCOME_DB")
     if not journal_path:
         raise RuntimeError("durable release outcome journal is not configured")
-    kind = ReceiverKind.PARTICIPATING if input["mode"] == "participating" else ReceiverKind.OPAQUE
-    expected = submitted(command["release_id"], command["run_id"],
-        command["definition_digest"], kind, effect_kind=EffectKind.RELEASE,
-        revision=command["revision"], sha256=command["sha256"])
-    journal = OutcomeJournal(Path(journal_path))
-    try:
-        return _release_journaled(journal, expected, url, command)
-    finally:
-        journal.close()
-
-
-def _release_lookup(url: str, release_id: str) -> dict | None:
-    try:
-        return receiver_client.receipt(url, release_id)
-    except RuntimeError as error:
-        if str(error).startswith("HTTP 404:"):
-            return None
-        raise
-
-
-def _release_unresolved(record) -> dict:
-    return {"unresolved": record.reason, "release_id": record.action_id}
-
-
-def _release_bounded_lookup(journal: OutcomeJournal, record, url: str) -> dict:
-    if record.receiver == ReceiverKind.OPAQUE:
-        record = lookup_result(record, None)
-        journal.put(record)
-        return _release_unresolved(record)
-    while record.phase == Phase.UNKNOWN:
-        try:
-            receipt = _release_lookup(url, record.action_id)
-            record = lookup_result(record, receipt)
-        except Exception:
-            record = lookup_result(record, None, available=False)
-        journal.put(record)
-        if record.phase == Phase.UNKNOWN:
-            time.sleep(0.2)
-    return record.receipt if record.phase == Phase.CONFIRMED else _release_unresolved(record)
-
-
-def _release_journaled(journal: OutcomeJournal, expected, url: str, command: dict) -> dict:
-    record, created = journal.begin(expected)
-    if record.phase == Phase.CONFIRMED:
-        return record.receipt
-    if record.phase == Phase.INCIDENT:
-        return _release_unresolved(record)
-    if not created:
-        # A persisted intent may have been sent before the Activity stopped.
-        if record.phase == Phase.SUBMITTED:
-            record = send_ambiguous(record)
-            journal.put(record)
-        return _release_bounded_lookup(journal, record, url)
-    if record.receiver == ReceiverKind.PARTICIPATING:
-        try:
-            prior = _release_lookup(url, record.action_id)
-        except Exception:
-            record = send_ambiguous(record)
-            journal.put(record)
-            return _release_bounded_lookup(journal, record, url)
-        if prior is not None:
-            record = send_completed(record, prior)
-            journal.put(record)
-            return prior if record.phase == Phase.CONFIRMED else _release_unresolved(record)
-        try:
-            reply = receiver_client.release(url, command)
-        except Exception:
-            record = send_ambiguous(record)
-            journal.put(record)
-            return _release_bounded_lookup(journal, record, url)
-        record = send_completed(record, reply)
-        journal.put(record)
-        return reply if record.phase == Phase.CONFIRMED else _release_unresolved(record)
-    try:
-        receiver_client.opaque_submit(url, command)
-    except Exception:
-        pass
-    # Opaque acknowledgement cannot prove an exact effect or furnish a receipt.
-    record = send_ambiguous(record)
-    journal.put(record)
-    return _release_bounded_lookup(journal, record, url)
+    path = Path(journal_path)
+    return release_delivery.deliver(input, journal_path=path,
+                                    snapshot=path.parent.parent / "testbed" / "agent_snapshot.json",
+                                    log=_log)
 
 
 @activity.defn
 async def release(input: dict) -> dict:
     try:
-        result = await asyncio.to_thread(_release, input)
+        result = await _thread_with_heartbeat(_release, input)
+    except release_delivery.PendingRelease:
+        raise
+    except handoff.CompositionError as error:
+        # The accepted draft's Parts cannot be composed as consumed: never send.
+        result = {"unresolved": error.reason, "release_id": input["command"]["release_id"]}
     except Exception as error:
         result = {"unresolved": "release-adapter-incident",
                   "release_id": input["command"]["release_id"],
                   "error_type": type(error).__name__}
     _log("release-observed", run=input["command"]["run_id"],
-         receipt=result.get("release_id"), unresolved=result.get("unresolved"))
-    return result
+         receipt=result.get("receipt_id"), release_id=result.get("release_id"),
+         task_id=result.get("task_id"), unresolved=result.get("unresolved"))
+    return _with_handoff(result, input) if "unresolved" not in result else result

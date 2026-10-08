@@ -13,8 +13,6 @@ class RoleOutputError(ValueError):
     """A role returned content outside its assignment contract."""
 
 
-RUBRIC = {"kind": "report-quality@1", "blocking": ["factual contradiction of the packet", "uncited or unsupported claim", "fixture described as live", "missing required section"], "minor": ["style issues"]}
-RUBRIC_DIGEST = hashlib.sha256(json.dumps(RUBRIC, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
 REPORT_SECTIONS = ("Live-proven", "Fixture-only", "Remaining gaps", "Next priority")
 _IDS = {"packet_findings@1": "F", "packet_risks@1": "R"}
 
@@ -144,10 +142,52 @@ def _findings(value: object, ids: set[str], claim_ids: set[str] | None = None) -
     return value
 
 
+def _part_value(part: object) -> object:
+    """The JSON value one received input Part carries (text or data)."""
+    _require(isinstance(part, dict), "input: Part object required")
+    if isinstance(part.get("text"), str):
+        try:
+            return json.loads(part["text"])
+        except ValueError:
+            return None
+    return part.get("data")
+
+
+def working_view(brief: dict, inputs: list) -> dict:
+    """The agent's own working view: its brief plus the inputs it received.
+
+    Inputs are the Parts after the brief, identified by their JSON ``kind``.
+    Synthesis builds its evidence from the research results and, on repair,
+    reads the prior draft; Quality reviews the draft, naming it by its own
+    ``revision`` and the sha256 this agent computes over the received text.
+    """
+    _require(isinstance(brief, dict), "brief: object required")
+    _require(isinstance(inputs, list), "inputs: list required")
+    view = dict(brief)
+    findings, risks, reports = [], [], []
+    for part in inputs:
+        value = _part_value(part)
+        kind = value.get("kind") if isinstance(value, dict) else None
+        if kind == "packet_findings@1":
+            findings.extend(value.get("items") or [])
+        elif kind == "packet_risks@1":
+            risks.extend(value.get("items") or [])
+        elif kind == "verified_report@1" and isinstance(part.get("text"), str):
+            reports.append({"revision": value.get("revision"),
+                            "sha256": hashlib.sha256(part["text"].encode("utf-8")).hexdigest(),
+                            "content": part["text"]})
+    if brief.get("kind") == "synthesis_assignment@1":
+        view["evidence"] = {"findings": findings, "risks": risks}
+        if brief.get("mode") == "repair" and len(reports) == 1:
+            view["prior"] = reports[0]
+    elif brief.get("kind") == "quality_review_request@1" and len(reports) == 1:
+        view["candidate"] = reports[0]
+    return view
+
+
 def _candidate(brief: dict) -> dict:
-    candidate = _keys(brief.get("candidate"), {"revision", "sha256", "author", "content"}, "candidate")
+    candidate = _keys(brief.get("candidate"), {"revision", "sha256", "content"}, "candidate")
     _require(candidate["revision"] == brief.get("revision"), "candidate: revision mismatch")
-    _string(candidate["author"], "candidate.author")
     _require(isinstance(candidate["sha256"], str) and
              re.fullmatch(r"[0-9a-f]{64}", candidate["sha256"]) is not None, "candidate: invalid sha256")
     _require(isinstance(candidate["content"], str), "candidate: content text required")
@@ -157,12 +197,30 @@ def _candidate(brief: dict) -> dict:
     return content
 
 
-def _verdict(brief: dict, identity: str, accepted: bool, findings: list[dict], decided_by: str) -> dict:
+def _criteria(brief: dict) -> dict:
+    """The acceptance criteria the client sent with this review request."""
+    value = brief.get("acceptance_criteria")
+    _keys(value, {"kind", "blocking", "minor"}, "acceptance_criteria")
+    _string(value["kind"], "acceptance_criteria.kind")
+    for key in ("blocking", "minor"):
+        _require(isinstance(value[key], list) and all(isinstance(x, str) and x.strip()
+                                                      for x in value[key]),
+                 f"acceptance_criteria.{key}: list of strings required")
+    _require(bool(value["blocking"]), "acceptance_criteria.blocking: required")
+    return value
+
+
+def _verdict(brief: dict, accepted: bool, findings: list[dict], decided_by: str) -> dict:
+    """The verdict names its candidate only by the received draft's revision and
+    digest, and the criteria it applied by their kind and digest."""
     candidate = brief.get("candidate") if isinstance(brief.get("candidate"), dict) else {}
+    criteria = brief.get("acceptance_criteria")
+    criteria = criteria if isinstance(criteria, dict) else {}
     return {"kind": "quality_verdict@1",
-            "candidate": {key: candidate.get(key, "") for key in ("revision", "sha256", "author")},
-            "reviewer": identity, "accepted": accepted, "decided_by": decided_by,
-            "findings": findings, "rubric": RUBRIC["kind"], "rubric_digest": RUBRIC_DIGEST}
+            "candidate": {key: candidate.get(key, "") for key in ("revision", "sha256")},
+            "accepted": accepted, "decided_by": decided_by,
+            "findings": findings, "rubric": str(criteria.get("kind", "")),
+            "rubric_digest": _digest(criteria)}
 
 
 @dataclass(frozen=True)
@@ -196,7 +254,8 @@ class Role:
                 "A factual contradiction, unsupported claim, fixture called live, or a missing or placeholder-only "
                 "required report section is blocking. "
                 "Style issues may be minor. Inspect every claim and the markdown. "
-                "accepted must be false exactly when any finding is blocking. Rubric: " + _json(RUBRIC))
+                "accepted must be false exactly when any finding is blocking. Apply the "
+                "assignment's acceptance_criteria: its blocking items are blocking findings.")
 
     def user_prompt(self, brief: dict) -> str:
         _require(isinstance(brief, dict), "brief: object required")
@@ -242,23 +301,21 @@ class Role:
                      "synthesis: invalid brief")
             return _report(value, brief)
         _require(self.name == "quality" and brief.get("kind") == "quality_review_request@1", "quality: invalid brief")
-        _require(isinstance(brief.get("policy_digest"), str) and
-                 re.fullmatch(r"[0-9a-f]{64}", brief["policy_digest"]) is not None,
-                 "quality: invalid policy digest")
+        _criteria(brief)
         content = _candidate(brief)
         if set(value) == {"accepted", "findings"}:
             pass
         else:
-            _keys(value, {"kind", "candidate", "reviewer", "accepted", "decided_by", "findings",
+            _keys(value, {"kind", "candidate", "accepted", "decided_by", "findings",
                           "rubric", "rubric_digest"}, "quality")
-            expected = _verdict(brief, identity, value["accepted"], value["findings"], "model")
-            for key in ("kind", "candidate", "reviewer", "decided_by", "rubric", "rubric_digest"):
+            expected = _verdict(brief, value["accepted"], value["findings"], "model")
+            for key in ("kind", "candidate", "decided_by", "rubric", "rubric_digest"):
                 _require(value[key] == expected[key], f"quality: {key} mismatch")
         _require(type(value["accepted"]) is bool, "quality: accepted must be boolean")
         findings = _findings(value["findings"], ids, {claim["id"] for claim in content["claims"]})
         _require(value["accepted"] == (not any(f["severity"] == "blocking" for f in findings)),
                  "quality: accepted contradicts findings")
-        return _verdict(brief, identity, value["accepted"], findings, "model")
+        return _verdict(brief, value["accepted"], findings, "model")
 
     def precheck(self, brief: dict, identity: str) -> dict | None:
         if self.name != "quality":
@@ -267,14 +324,11 @@ class Role:
             _string(identity, "identity")
             _require(brief.get("kind") == "quality_review_request@1", "quality: invalid brief")
             _packet_ids(brief)
-            _require(isinstance(brief.get("policy_digest"), str) and
-                     re.fullmatch(r"[0-9a-f]{64}", brief["policy_digest"]) is not None,
-                     "quality: invalid policy digest")
-            _require(brief.get("candidate", {}).get("author") != identity, "candidate: author is reviewer")
+            _criteria(brief)
             _candidate(brief)
         except (RoleOutputError, AttributeError, TypeError) as exc:
             finding = {"claim_id": None, "severity": "blocking", "problem": str(exc), "evidence": []}
-            return _verdict(brief, identity, False, [finding], "deterministic-precheck")
+            return _verdict(brief, False, [finding], "deterministic-precheck")
         return None
 
     def scripted_reply(self, brief: dict, identity: str) -> str:

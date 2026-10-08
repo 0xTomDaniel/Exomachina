@@ -48,6 +48,154 @@ def as_a2a_v1(value):
     return value
 
 
+AGENT_NAMES = ("research_findings", "research_risks", "synthesizer", "quality")
+
+
+def as_factory_side(e):
+    """Re-express preserved agent-side evidence as factory-side evidence in memory.
+
+    ``scripted-7.json`` predates agent decoupling (8 Oct 2026): its agent
+    records were copied from agent stores and carried run/action echoes. The
+    checker now accepts only factory-side evidence, so the false-pass probes
+    run against the same observation projected onto it: the factory journal's
+    taskId/contextId/messageId correlation and receipt digest, and one
+    factory-recorded agent_reported usage row per Task that made model calls.
+    """
+    agents = e.get("agents") or {}
+    journal = e.get("journal") or []
+    e.setdefault("import_audit", {})["factory_names_clean"] = True
+    for name in AGENT_NAMES:
+        agent = agents.get(name) or {}
+        agent["card_sha256"] = hashlib.sha256(name.encode()).hexdigest()
+        records, usage_rows = [], []
+        for task in agent.get("tasks") or []:
+            match = next((x for x in journal if x.get("action_id") == task.get("action_id")), {})
+            records.append(match)
+            artifact = task.get("artifact") or {}
+            context = f"context:{match.get('run_id')}:{agent.get('identity')}"
+            task.update({"run_id": match.get("run_id"), "context_id": context,
+                         "journal_context_id": context, "message_id": f"m:{task.get('action_id')}",
+                         "journal_message_id": f"m:{task.get('action_id')}",
+                         "receipt_sha256": artifact.get("sha256"),
+                         "correlated": task.get("journal_task_id") == task.get("task_id")})
+            if task.get("model_calls"):
+                usage = {category: {"value": None, "status": "unavailable"} for category in
+                         ("input_tokens", "output_tokens", "cache_read_tokens",
+                          "cache_write_tokens", "total_tokens")}
+                usage["output_tokens"] = {"value": 1, "status": "reported"}
+                row = {"task_id": task.get("task_id"), "service_identity": agent.get("identity"),
+                       "evidence_status": "agent_reported",
+                       "measurement_source": "agent_reported", "usage": usage}
+                usage_rows.append(row)
+                task["agent_usage"] = row
+            for retired in ("model_calls", "live"):
+                task.pop(retired, None)
+        agent["factory_records"] = {"journal": records, "agent_usage": usage_rows}
+        agent.pop("sqlite", None)
+        agent.pop("store_path", None)
+    return e
+
+
+def _canonical(value) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def as_composed_inputs(e: dict) -> dict:
+    """Re-express preserved agent evidence in the composed-input wire contract.
+
+    Preserved observations predate decision 9 (8 Oct 2026): their briefs
+    embedded the research join, the prior draft and the Quality candidate,
+    and Quality verdicts echoed a ``reviewer`` and the candidate ``author``.
+    Now each consumed item travels as its own Part after the brief (evidence
+    keeps only the items' digests), and a verdict names its candidate by
+    ``{revision, sha256}``. The same observation is projected onto that shape
+    in memory; the evidence files stay byte-identical.
+    """
+    agents = e.get("agents") or {}
+    def sha(text):
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()
+    def item(digest):
+        return {"part_kinds": ["text"], "media_type": "application/json", "sha256": digest}
+    research = {}
+    for name in ("research_findings", "research_risks"):
+        for task in (agents.get(name) or {}).get("tasks") or []:
+            research.setdefault(task.get("run_id"), []).append(
+                (task.get("artifact") or {}).get("sha256"))
+    for task in (agents.get("synthesizer") or {}).get("tasks") or []:
+        brief = task.get("brief") if isinstance(task.get("brief"), dict) else {}
+        prior = brief.pop("prior", None)
+        brief.pop("evidence", None)
+        task["inputs"] = [item(digest) for digest in research.get(task.get("run_id"), [])] + (
+            [item(prior["sha256"])] if isinstance(prior, dict) else [])
+    for task in (agents.get("quality") or {}).get("tasks") or []:
+        brief = task.get("brief") if isinstance(task.get("brief"), dict) else {}
+        candidate = brief.pop("candidate", None) or {}
+        task["inputs"] = [item(candidate.get("sha256"))]
+        verdict = task.get("verdict")
+        if not isinstance(verdict, dict) or not verdict:
+            continue
+        verdict.pop("reviewer", None)
+        verdict["candidate"] = {key: (verdict.get("candidate") or {}).get(key)
+                                for key in ("revision", "sha256")}
+        content = _canonical(verdict)
+        task["artifact"] = {**(task.get("artifact") or {}), "content": content,
+                            "sha256": sha(content)}
+        task["artifact_id"] = task["receipt_sha256"] = sha(content)
+    return e
+
+
+def as_a2a_release(e: dict) -> dict:
+    """Re-express the preserved observation's release evidence as A2A release evidence.
+
+    ``scripted-7.json`` predates the A2A release agent (8 Oct 2026): its
+    receiver rows carried factory run ids. The A2A agent is factory-unaware, so
+    its rows are keyed by its own Task, message and receipt ids; the factory
+    journal maps each release attempt to them, and the route's Observation
+    holds exactly one delivery.receipt fact per delivery.
+    """
+    contents = {(task.get("artifact") or {}).get("sha256"): (task.get("artifact") or {}).get("content")
+                for task in e["agents"]["synthesizer"]["tasks"]}
+    deliveries = []
+    for number in ("1", "2", "3"):
+        route = e["routes"][number]
+        route["receipt_audit"] = {"events": [], "source_ids": [],
+                                  "dashboard_contract_valid": True, "histories_checked": 2}
+        for row in e["journal"]:
+            if row.get("effect_kind") != "release" or row.get("run_id") != route["child_run_id"]:
+                continue
+            content = contents[row["sha256"]]
+            task_id, message_id, receipt_id = (f"release-task-{number}", f"message-{number}",
+                                               f"receipt-{number}")
+            receipt = {"release_id": row["action_id"], "run_id": row["run_id"],
+                       "definition_digest": row["definition_digest"], "revision": row["revision"],
+                       "sha256": row["sha256"], "receipt_id": receipt_id,
+                       "byte_length": len(content.encode("utf-8")),
+                       "media_type": "application/json", "accepted_at": "2026-10-08T10:00:00Z",
+                       "outcome": "delivered", "task_id": task_id, "message_id": message_id,
+                       "destination_identity": e["agents"]["release"]["identity"],
+                       "a2a_protocol": "1.0"}
+            row.update(task_id=task_id, message_id=message_id, receipt=receipt)
+            for part in route["task"]["artifacts"][0]["parts"]:
+                if "data" in part and "release_receipt" in part["data"]:
+                    part["data"]["release_receipt"] = receipt
+            deliveries.append({"task_id": task_id, "context_id": "context-" + number,
+                "message_id": message_id, "fingerprint": "f" * 64, "state": "completed",
+                "status_text": "Delivered.", "receipt_id": receipt_id,
+                "media_type": "application/json", "sha256": row["sha256"],
+                "byte_length": receipt["byte_length"], "accepted_at": receipt["accepted_at"],
+                "sends": 1, "effect_count": 1})
+            route["receipt_audit"]["source_ids"].append("delivery-receipt:" + receipt_id)
+            route["receipt_audit"]["events"].append({
+                "type": "com.exomachina.delivery.receipt.v1", "time": receipt["accepted_at"],
+                "data": {"schema_version": 1, "factory_id": "report-factory",
+                         "run_id": row["run_id"], "receipt_id": receipt_id,
+                         "artifact_revision": row["revision"], "artifact_sha256": row["sha256"],
+                         "destination_id": receipt["destination_identity"],
+                         "delivered_at": receipt["accepted_at"], "outcome": "delivered"}})
+    e["releases"] = deliveries
+    return e
+
+
 def handoff_audit() -> dict:
     """In-memory G-8 hand-off evidence for preserved observations.
 
@@ -79,8 +227,8 @@ def handoff_audit() -> dict:
 class ReviewTwoCheckerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.snapshot = as_a2a_v1(json.loads(
-            (ROOT / "evidence" / "single-factory" / "scripted-7.json").read_text()))
+        cls.snapshot = as_composed_inputs(as_factory_side(as_a2a_release(as_a2a_v1(json.loads(
+            (ROOT / "evidence" / "single-factory" / "scripted-7.json").read_text())))))
 
     def setUp(self):
         self.e = copy.deepcopy(self.snapshot)
@@ -128,9 +276,16 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         del self.e["routes"]["3"]["handoff_audit"]
         self.fails("G-8")
 
-    def test_model_selection_must_match_authoring_and_agent_observations(self):
+    def test_model_selection_must_match_authoring_observation(self):
         self.e["model_id"] = "gpt-6-luna"
-        for check in ("SF-1", "R1-b", "R1-c", "G-2"):
+        self.fails("SF-1")
+        # Agent model selection is the agent's private implementation since
+        # agent decoupling (8 Oct 2026); R1-b, R1-c and G-2 now require
+        # factory-recorded agent-reported model work instead.
+        for name in AGENT_NAMES:
+            for task in self.e["agents"][name]["tasks"]:
+                task.pop("agent_usage", None)
+        for check in ("R1-b", "R1-c", "G-2", "G-3"):
             self.fails(check)
 
     def test_f1_quality_candidate_task_and_journal(self):
@@ -182,6 +337,80 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.e["releases"][0]["sha256"] = "unrelated"
         self.fails("R1-d")
 
+    def test_release_is_one_a2a_delivery_with_exactly_one_receipt_fact(self):
+        def mutate(change):
+            self.e = copy.deepcopy(self.snapshot)
+            for route in self.e["routes"].values():
+                route["handoff_audit"] = handoff_audit()
+            change()
+        facts = lambda n: self.e["routes"][n]["receipt_audit"]["events"]
+        # A duplicate receipt fact for the same delivery (the 8 Oct floor bug).
+        mutate(lambda: facts("1").append(copy.deepcopy(facts("1")[0])))
+        self.fails("R1-d")
+        mutate(lambda: facts("2").clear())
+        self.fails("R2-d")
+        mutate(lambda: facts("1")[0]["data"].update(receipt_id="another-receipt"))
+        self.fails("R1-d")
+        mutate(lambda: self.e["routes"]["1"]["receipt_audit"].update(
+            dashboard_contract_valid=False))
+        self.fails("R1-d")
+        # The agent's own record must bind the journaled Task, message and receipt.
+        for field in ("task_id", "message_id", "receipt_id", "byte_length"):
+            mutate(lambda: self.e["releases"][0].update({field: "other"}))
+            self.fails("R1-d")
+        mutate(lambda: self.e["releases"][0].update(effect_count=2))
+        self.fails("R1-d")
+        # A delivery no factory release attempt accounts for, or any route-3 receipt.
+        mutate(lambda: self.e["releases"].append({**self.e["releases"][0], "task_id": "stray"}))
+        self.fails("R3-d")
+        mutate(lambda: facts("3").append(copy.deepcopy(facts("1")[0])))
+        self.fails("R3-d")
+
+    def test_g8_delivered_receipt_must_equal_the_accepted_report_sha256(self):
+        """False-pass probe: exactly one receipt per delivered route, and its
+        sha256 is the accepted report's plain sha256."""
+        def mutate(change):
+            self.e = copy.deepcopy(self.snapshot)
+            for route in self.e["routes"].values():
+                route["handoff_audit"] = handoff_audit()
+            change()
+        self.assertTrue(check_evidence(self.e)["G-8"]["pass"])
+        delivery = check_evidence(self.e)["G-8"]["decisive_evidence"]["1"]["delivery"]
+        self.assertTrue(delivery["ok"] and delivery["accepted_sha256"])
+        facts = lambda n: self.e["routes"][n]["receipt_audit"]["events"]
+        journal = lambda n: next(j for j in self.e["journal"] if j.get("effect_kind") == "release"
+                                 and j["run_id"] == self.e["routes"][n]["child_run_id"])
+        for number in ("1", "2"):
+            mutate(lambda: facts(number)[0]["data"].update(artifact_sha256="0" * 64))
+            self.fails("G-8")
+            mutate(lambda: journal(number)["receipt"].update(sha256="0" * 64))
+            self.fails("G-8")
+            mutate(lambda: facts(number).append(copy.deepcopy(facts(number)[0])))
+            self.fails("G-8")
+            mutate(lambda: facts(number).clear())
+            self.fails("G-8")
+        mutate(lambda: facts("3").append(copy.deepcopy(facts("1")[0])))
+        self.fails("G-8")
+
+    def test_quality_must_receive_the_candidate_part_and_echo_no_identity(self):
+        quality = lambda: self._tasks(1, "quality")[0]
+        quality()["inputs"][0]["sha256"] = "0" * 64
+        self.fails("R1-c")
+        self.e = copy.deepcopy(self.snapshot)
+        quality()["inputs"].append(dict(quality()["inputs"][0]))
+        self.fails("R1-c")
+        self.e = copy.deepcopy(self.snapshot)
+        quality()["verdict"]["reviewer"] = quality()["artifact"]["author"]
+        self.fails("R1-c")
+        self.e = copy.deepcopy(self.snapshot)
+        repair = next(t for t in self._tasks(2, "synthesizer") if t["artifact"]["revision"] == "r2")
+        repair["inputs"][-1]["sha256"] = "0" * 64
+        self.fails("R2-c")
+        self.e = copy.deepcopy(self.snapshot)
+        repair = next(t for t in self._tasks(2, "synthesizer") if t["artifact"]["revision"] == "r2")
+        repair["brief"]["prior"] = {"sha256": repair["inputs"][-1]["sha256"]}
+        self.fails("R2-c")
+
     def test_f6_structured_controls_and_whole_stimulus_log(self):
         self.e["routes"]["2"]["caller_messages"][0]["append_claim"] = {"text": "hidden"}
         self.fails("R2-a")
@@ -224,8 +453,8 @@ class ReviewTwoCheckerTests(unittest.TestCase):
 
     def test_live_attempt_1_corrected_predicates(self):
         """Replay preserved live observations without changing the evidence file."""
-        live = as_a2a_v1(json.loads((ROOT / "evidence" / "single-factory" /
-                                     "codex-subscription-1.json").read_text()))
+        live = as_composed_inputs(as_factory_side(as_a2a_v1(json.loads(
+            (ROOT / "evidence" / "single-factory" / "codex-subscription-1.json").read_text()))))
         checks = check_evidence(live)
         for key in ("R2-b", "R3-b", "R3-d", "G-5"):
             self.assertTrue(checks[key]["pass"], key)
@@ -266,11 +495,24 @@ class ReviewTwoCheckerTests(unittest.TestCase):
 
         # Reconstruct the session field that the old installed broker omitted.
         # The 34 saved streams comprise 4 authoring, 18 agent and 12 Director calls.
+        # The preserved agents labelled sessions <identity>:<taskId> with their
+        # former self-declared identity. Agents now label them with their own
+        # pinned card digest, <card sha256>:<taskId>; the preserved run kept no
+        # card digest, so a stand-in digest is adapted in memory.
         repaired_broker = copy.deepcopy(live)
-        sessions = [call["session_id"] for name in
-                    ("research_findings", "research_risks", "synthesizer", "quality")
-                    for task in repaired_broker["agents"][name]["tasks"]
-                    for call in task["model_calls"]]
+        preserved = json.loads((ROOT / "evidence" / "single-factory" /
+                                "codex-subscription-1.json").read_text())
+        self.assertTrue(all(session == f"{preserved['agents'][name]['identity']}:{task['task_id']}"
+                            for name in AGENT_NAMES
+                            for task in preserved["agents"][name]["tasks"]
+                            for session in [c["session_id"] for c in task["model_calls"]]))
+        for name in AGENT_NAMES:
+            repaired_broker["agents"][name]["card_sha256"] = hashlib.sha256(
+                name.encode()).hexdigest()
+        sessions = [f"{repaired_broker['agents'][name]['card_sha256']}:{task['task_id']}"
+                    for name in AGENT_NAMES
+                    for task in preserved["agents"][name]["tasks"]
+                    for _call in task["model_calls"]]
         streams = [row for row in repaired_broker["broker_events"]
                    if row.get("event") == "stream"]
         self.assertEqual((len(streams), len(sessions)), (34, 18))

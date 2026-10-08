@@ -1,11 +1,15 @@
-"""Pinned, bounded nested A2A fan-out over the shared outcome authority.
+"""Pinned, bounded A2A fan-out over the shared outcome authority.
 
 This module owns no workflow, spending, or outcome database. Callers supply the
 existing ``OutcomeJournal``, immutable identity snapshot, parent assignment,
-and an explicit finite set of child assignments. A lost response is reconciled
-by caller action ID when the pinned service supports that lookup, then the
-original A2A Task is fetched by its persisted remote Task ID. This module never
-resends an uncertain request.
+and an explicit finite set of child assignments.
+
+Suppliers are ordinary A2A agent services (A2A decision 7): each child is sent
+as a plain Message whose text Part is the canonical child payload. Parent and
+child factory bindings never cross the wire; the journal maps them to the
+A2A ``messageId``/``contextId``/``taskId``. A lost response is reconciled by
+resending the same journaled Message only when the supplier's pinned Agent
+Card tags a skill ``message-id-idempotent``; otherwise it stays unknown.
 """
 from __future__ import annotations
 
@@ -16,6 +20,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import long_client as a2a
+from uuid import uuid4
 from a2a_outcome import (OutcomeJournal, OutcomeRecord, Phase, ReceiverKind,
                          send_ambiguous, send_completed, submitted,
                          task_finished, task_incident, task_started)
@@ -51,12 +56,7 @@ class SupplierRequest:
 _PARENT_KEYS = ("parent_task_id", "parent_run_id", "parent_definition_digest",
                 "parent_assignment_id", "parent_attempt_id")
 _CHILD_KEYS = ("action_id", "run_id", "definition_digest", "assignment_id", "attempt_id")
-_RECONCILIATION_PINS = {"fixture-lookup", "a2a-idempotent-resend", "opaque"}
-_SUPPLIER_ECHO_FIELDS = sorted((*_PARENT_KEYS, *_CHILD_KEYS))
-_SUPPLIER_ECHO_DECLARATION = {
-    "version": 1,
-    "fields": _SUPPLIER_ECHO_FIELDS,
-}
+_RECONCILIATION_PINS = {"a2a-idempotent-resend", "opaque"}
 
 
 def _text(value: Any, name: str) -> str:
@@ -114,35 +114,31 @@ class SupplierFanout:
 
     def dispatch_child(self, parent: ParentAssignment,
                        child: SupplierRequest) -> dict[str, Any]:
-        """Submit once, or resume a journaled child without resubmission."""
+        """Submit once, or resume a journaled child by its journaled Message."""
         self._validate_parent(parent)
         self._validate_child(child)
-        command = self._command(parent, child)
-        expected = self._expected(parent, child, command)
+        expected = self._expected(parent, child)
 
         # Resolve before creating durable intent. Pin checks are read-only; a
         # missing or changed pin cannot leave a false dispatch record behind.
         url, _observed = self._resolve(child)
         record, created = self.journal.begin(expected)
-        if record.phase == Phase.CONFIRMED:
-            return self._view(parent, child, record)
-        if record.phase == Phase.INCIDENT:
+        if record.phase in {Phase.CONFIRMED, Phase.INCIDENT}:
             return self._view(parent, child, record)
         if not created and record.phase == Phase.SUBMITTED:
             # Another process may have stopped after committing intent and
             # before recording the response. Treat that boundary as unknown.
             record = self.journal.put(send_ambiguous(record))
         if created:
-            return self._send(parent, child, command, record, url)
-        return self._resume(parent, child, command, record)
+            return self._send(parent, child, record, url)
+        return self._resume(parent, child, record)
 
     def reconcile_child(self, parent: ParentAssignment,
                         child: SupplierRequest) -> dict[str, Any]:
-        """Reconcile only an existing child action; this method never sends."""
+        """Reconcile only an existing child action from its journaled Message."""
         self._validate_parent(parent)
         self._validate_child(child)
-        command = self._command(parent, child)
-        expected = self._expected(parent, child, command)
+        expected = self._expected(parent, child)
         record = self.journal.get(child.action_id)
         if record is None:
             return self._view(parent, child, None, reason="no-dispatch-record")
@@ -154,7 +150,7 @@ class SupplierFanout:
             record = self.journal.put(send_ambiguous(record))
         if record.phase in {Phase.CONFIRMED, Phase.INCIDENT}:
             return self._view(parent, child, record)
-        return self._resume(parent, child, command, record)
+        return self._resume(parent, child, record)
 
     @staticmethod
     def _validate_parent(parent: ParentAssignment) -> None:
@@ -179,26 +175,16 @@ class SupplierFanout:
         _json_copy(dict(child.contract), "child.contract")
         _json_copy(dict(child.payload), "child.payload")
 
-    def _command(self, parent: ParentAssignment,
-                 child: SupplierRequest) -> dict[str, Any]:
-        return {
-            "op": "nested_factory",
-            "action_id": child.action_id,
-            "run_id": child.run_id,
-            "definition_digest": child.definition_digest,
-            "parent_task_id": parent.task_id,
-            "parent_run_id": parent.run_id,
-            "parent_definition_digest": parent.definition_digest,
-            "parent_assignment_id": parent.assignment_id,
-            "parent_attempt_id": parent.attempt_id,
-            "assignment_id": child.assignment_id,
-            "attempt_id": child.attempt_id,
-            "payload": _json_copy(dict(child.payload), "child.payload"),
-        }
+    @staticmethod
+    def _text_part(child: SupplierRequest) -> str:
+        """The only content sent: the child payload, with no factory binding."""
+        return _canonical(_json_copy(dict(child.payload), "child.payload")).decode("utf-8")
 
-    def _expected(self, parent: ParentAssignment, child: SupplierRequest,
-                  command: Mapping[str, Any]) -> OutcomeRecord:
-        bound = {"command": command, "supplier_identity": child.identity,
+    def _expected(self, parent: ParentAssignment, child: SupplierRequest) -> OutcomeRecord:
+        bound = {"parent": [parent.task_id, parent.run_id, parent.definition_digest,
+                            parent.assignment_id, parent.attempt_id],
+                 "child": [child.assignment_id, child.attempt_id],
+                 "message": self._text_part(child), "supplier_identity": child.identity,
                  "supplier_role": child.role, "contract": dict(child.contract),
                  "expected_revision": child.expected_revision}
         payload_sha256 = hashlib.sha256(_canonical(bound)).hexdigest()
@@ -206,82 +192,49 @@ class SupplierFanout:
                     else ReceiverKind.PARTICIPATING)
         return submitted(child.action_id, child.run_id, child.definition_digest,
                          receiver, payload_sha256=payload_sha256,
-                         pinned_identity=child.identity)
+                         pinned_identity=child.identity, message_id=str(uuid4()),
+                         context_id=self.journal.context_for(child.run_id, child.identity))
 
     def _resolve(self, child: SupplierRequest) -> tuple[str, dict[str, Any]]:
         url, observed = a2a.resolve_pinned(
             self.snapshot_path, child.identity, dict(child.contract))
-        document = observed.get("contract_document") or {}
-        if document.get("supplier_assignment_echo") != _SUPPLIER_ECHO_DECLARATION:
-            raise SupplierBindingError(
-                "pinned supplier contract does not declare parent/child assignment echo")
-        remote_mode = document.get("reconcile")
-        pinned_mode = child.contract.get("reconcile")
-        # agent_binding.pin conservatively collapses fixture-lookup to opaque;
-        # preserve the original distinction from the digest-bound document.
-        if remote_mode == "fixture-lookup":
-            if pinned_mode not in {"opaque", "fixture-lookup"}:
-                raise SupplierBindingError("fixture lookup conflicts with pinned mode")
-        elif remote_mode == "a2a-idempotent-resend":
-            if pinned_mode != "a2a-idempotent-resend":
-                raise SupplierBindingError("remote idempotency conflicts with pinned mode")
-        elif pinned_mode != "opaque":
-            raise SupplierBindingError("remote reconciliation mode conflicts with pin")
+        if (child.contract.get("reconcile") == "a2a-idempotent-resend"
+                and observed.get("reconcile") != "a2a-idempotent-resend"):
+            raise SupplierBindingError("pinned resend mode is not declared by the Agent Card")
         return url, observed
 
     def _send(self, parent: ParentAssignment, child: SupplierRequest,
-              command: dict[str, Any], record: OutcomeRecord,
-              url: str) -> dict[str, Any]:
+              record: OutcomeRecord, url: str) -> dict[str, Any]:
         try:
-            task = a2a.send_async(url, command)
+            task = a2a.send_async(url, self._text_part(child), message_id=record.message_id,
+                                  context_id=record.context_id)
         except Exception:
             # The receiver might have committed before the connection failed.
             uncertain = self.journal.put(send_ambiguous(record))
             return self._view(parent, child, uncertain)
-        return self._accept_task(parent, child, command, record, task)
+        return self._accept_task(parent, child, record, task)
 
     def _resume(self, parent: ParentAssignment, child: SupplierRequest,
-                command: dict[str, Any], record: OutcomeRecord) -> dict[str, Any]:
+                record: OutcomeRecord) -> dict[str, Any]:
         if record.phase == Phase.UNKNOWN:
-            try:
-                url, observed = self._resolve(child)
-                # The special action endpoint is a fixture capability only.
-                # Generic A2A has GetTask, which requires a known Task ID.
-                if (observed.get("contract_document") or {}).get("reconcile") != "fixture-lookup":
-                    return self._view(parent, child, record)
-                prior = a2a.reconcile(url, child.action_id, child.run_id,
-                                      child.definition_digest)
-            except RuntimeError as error:
-                if str(error).startswith("HTTP 404:"):
-                    return self._view(parent, child, record)
+            if record.receiver == ReceiverKind.OPAQUE:
                 return self._view(parent, child, record)
+            try:
+                url, _observed = self._resolve(child)
+                # The declared resend rule returns the original Task for the
+                # journaled messageId; it cannot create a second effect.
+                task = a2a.send_async(url, self._text_part(child),
+                                      message_id=record.message_id,
+                                      context_id=record.context_id)
             except Exception:
                 return self._view(parent, child, record)
-            if not self._lookup_matches(parent, child, command, prior):
-                incident = self.journal.put(task_incident(
-                    record, "supplier-reconcile-binding-inconsistent"))
-                return self._view(parent, child, incident)
-            task_id = prior.get("task_id")
-            if not isinstance(task_id, str) or not task_id:
-                return self._view(parent, child, record)
-            return self._poll(parent, child, command, record, task_id)
+            return self._accept_task(parent, child, record, task)
         if record.phase == Phase.WORKING:
-            return self._poll(parent, child, command, record, record.task_id)
+            return self._poll(parent, child, record, record.task_id)
         return self._view(parent, child, record)
 
-    @staticmethod
-    def _lookup_matches(parent: ParentAssignment, child: SupplierRequest,
-                        command: Mapping[str, Any], lookup: Mapping[str, Any]) -> bool:
-        if not isinstance(lookup, Mapping):
-            return False
-        keys = (*_PARENT_KEYS, *_CHILD_KEYS)
-        return all(lookup.get(key) == command.get(key) for key in keys) and \
-            lookup.get("harness_identity", child.identity) == child.identity and \
-            lookup.get("harness_role", child.role) == child.role
-
     def _poll(self, parent: ParentAssignment, child: SupplierRequest,
-              command: dict[str, Any], record: OutcomeRecord,
-              task_id: str | None) -> dict[str, Any]:
+              record: OutcomeRecord, task_id: str | None) -> dict[str, Any]:
         if not isinstance(task_id, str) or not task_id:
             return self._view(parent, child, record)
         try:
@@ -291,76 +244,59 @@ class SupplierFanout:
             # A failed read is not evidence that the original Task disappeared.
             return self._view(parent, child, record)
         try:
-            state = self._validate_task(parent, child, command, task)
-            if task["id"] != task_id:
-                raise SupplierBindingError("remote Task ID changed")
+            state = self._validate_task(child, record, task, task_id=task_id)
         except Exception:
             incident = self.journal.put(task_incident(
                 record, "supplier-task-binding-inconsistent"))
             return self._view(parent, child, incident)
-
-        if record.phase in {Phase.SUBMITTED, Phase.UNKNOWN}:
-            try:
-                record = self.journal.put(task_started(record, task_id))
-            except Exception:
-                current = self.journal.get(child.action_id)
-                if current is None:
-                    raise
-                return self._view(parent, child, current)
-        elif record.task_id != task_id:
-            incident = self.journal.put(task_incident(record, "supplier-task-id-inconsistent"))
-            return self._view(parent, child, incident)
-
         if state in {"failed", "canceled", "rejected"}:
             incident = self.journal.put(task_incident(record, "supplier-task-not-completed"))
             return self._view(parent, child, incident)
         if state != "completed":
             return self._view(parent, child, record)
-        return self._complete(parent, child, command, record, task)
+        return self._complete(parent, child, record, task)
 
     def _accept_task(self, parent: ParentAssignment, child: SupplierRequest,
-                     command: dict[str, Any], record: OutcomeRecord,
-                     task: dict[str, Any]) -> dict[str, Any]:
+                     record: OutcomeRecord, task: dict[str, Any]) -> dict[str, Any]:
         try:
-            state = self._validate_task(parent, child, command, task)
+            state = self._validate_task(child, record, task)
             record = self.journal.put(task_started(record, task["id"]))
         except Exception:
             incident = self.journal.put(task_incident(
                 record, "supplier-task-binding-inconsistent"))
             return self._view(parent, child, incident)
+        if record.phase == Phase.INCIDENT:
+            return self._view(parent, child, record)
         if state in {"failed", "canceled", "rejected"}:
             incident = self.journal.put(task_incident(record, "supplier-task-not-completed"))
             return self._view(parent, child, incident)
         if state == "completed":
-            return self._complete(parent, child, command, record, task)
+            return self._complete(parent, child, record, task)
         return self._view(parent, child, record)
 
     @staticmethod
-    def _validate_task(parent: ParentAssignment, child: SupplierRequest,
-                       command: Mapping[str, Any], task: Mapping[str, Any]) -> str:
-        state = a2a.validate_async_task(dict(task), dict(command), child.identity)
-        metadata = task.get("metadata") or {}
-        for key in _PARENT_KEYS:
-            if metadata.get(key) != command[key]:
-                raise SupplierBindingError("A2A Task parent binding mismatch: " + key)
-        for key in ("assignment_id", "attempt_id"):
-            if metadata.get(key) != command[key]:
-                raise SupplierBindingError("A2A Task child binding mismatch: " + key)
-        if metadata.get("parent_definition_digest") != parent.definition_digest:
-            raise SupplierBindingError("A2A Task parent definition mismatch")
-        return state
+    def _validate_task(child: SupplierRequest, record: OutcomeRecord,
+                       task: Mapping[str, Any], *, task_id: str | None = None) -> str:
+        return a2a.validate_async_task(dict(task), context_id=record.context_id,
+                                       task_id=task_id or record.task_id)
 
     def _complete(self, parent: ParentAssignment, child: SupplierRequest,
-                  command: dict[str, Any], record: OutcomeRecord,
-                  task: Mapping[str, Any]) -> dict[str, Any]:
+                  record: OutcomeRecord, task: Mapping[str, Any]) -> dict[str, Any]:
         try:
-            receipt = a2a.async_receipt(dict(task), command, child.identity,
-                                        child.expected_revision, child.role)
-            artifact = receipt["artifact"]
-            for key in (*_PARENT_KEYS, "assignment_id", "attempt_id"):
-                if artifact.get(key) != command[key]:
-                    raise SupplierBindingError("A2A artifact assignment binding mismatch: " + key)
-            receipt.update({key: command[key] for key in (*_PARENT_KEYS, "assignment_id", "attempt_id")})
+            receipt = a2a.async_receipt(dict(task), {
+                "action_id": record.action_id, "run_id": record.run_id,
+                "definition_digest": record.definition_digest, "task_id": record.task_id,
+                "context_id": record.context_id, "message_id": record.message_id},
+                identity=child.identity, expected_revision=child.expected_revision,
+                role=child.role)
+            # Parent and child bindings come from the factory, never the agent.
+            receipt.update({"parent_task_id": parent.task_id,
+                            "parent_run_id": parent.run_id,
+                            "parent_definition_digest": parent.definition_digest,
+                            "parent_assignment_id": parent.assignment_id,
+                            "parent_attempt_id": parent.attempt_id,
+                            "assignment_id": child.assignment_id,
+                            "attempt_id": child.attempt_id})
             confirmed = self.journal.put(task_finished(record, receipt))
         except Exception:
             incident = self.journal.put(task_incident(

@@ -72,10 +72,8 @@ from local_delivery_routes import install_local_delivery_routes  # noqa: E402
 from commercial import CommercialLedger  # noqa: E402
 from model_broker import (BROKER_PROGRAM, DEFAULT_HOME, DEFAULT_MODEL_ID,
                           DEFAULT_REASONING_EFFORT, ModelBroker)  # noqa: E402
-from model_usage import ModelUsageJournal  # noqa: E402
-from agent_binding import (CONTRACT as A2A_ACTION_CONTRACT,  # noqa: E402
-                           EXTENSION_URI as A2A_ACTION_EXTENSION_URI,
-                           digest as agent_contract_digest)
+from model_usage import AGENT_USAGE_DATABASE, ModelUsageJournal  # noqa: E402
+from agent_binding import digest as agent_contract_digest  # noqa: E402
 from agent_binding import resolve as resolve_agent_binding  # noqa: E402
 from admission import AdmissionQueue  # noqa: E402
 from supplier_protocol import (  # noqa: E402
@@ -121,6 +119,13 @@ def _dashboard_js_content_digest(directory: Path) -> str:
 USAGE_CATEGORIES = ("input_tokens", "output_tokens", "cache_read_tokens",
                     "cache_write_tokens", "total_tokens")
 USAGE_CALL_SCOPES = {"authoring_overhead", "director_call", "assignment_call"}
+# The nested-supplier mode is this factory's own caller-facing A2A server (a
+# factory service, not an agent service); it keeps its own action extension.
+A2A_ACTION_EXTENSION_URI = "urn:exomachina:a2a-action-contract:v1"
+A2A_ACTION_CONTRACT = "action-idempotent-async@1"
+# provider_reported: this factory's own model calls; agent_reported: an agent
+# service's A2A budget-extension report recorded by the factory's on-complete hook.
+USAGE_EVIDENCE = {"provider_reported", "agent_reported", "unknown"}
 USAGE_FILTERS = ("run_id", "task_id", "assignment_id", "attempt_id",
                  "model_call_id", "call_scope")
 USAGE_VIEW_FIELDS = ("measurement_id", "model_call_id", "recorded_at", "call_scope",
@@ -319,9 +324,9 @@ def _safe_measurement(value: object, *, service_identity: str | None = None) -> 
         return None
     if value["completeness"] not in {"complete", "partial", "unknown"}:
         return None
-    if value["evidence_status"] not in {"provider_reported", "unknown"}:
+    if value["evidence_status"] not in USAGE_EVIDENCE:
         return None
-    if value["measurement_source"] not in {"provider_reported", "unknown"}:
+    if value["measurement_source"] not in USAGE_EVIDENCE:
         return None
     try:
         timestamp = datetime.fromisoformat(value["recorded_at"].replace("Z", "+00:00"))
@@ -348,10 +353,9 @@ def _safe_measurement(value: object, *, service_identity: str | None = None) -> 
         safe_usage[category] = {"value": amount, "status": item["status"]}
     expected_completeness = ("complete" if reported == len(USAGE_CATEGORIES) else
                              "partial" if reported else "unknown")
-    expected_evidence = "provider_reported" if reported else "unknown"
     if (value["completeness"] != expected_completeness or
-            value["evidence_status"] != expected_evidence or
-            value["measurement_source"] != expected_evidence):
+            (value["evidence_status"] == "unknown") is bool(reported) or
+            value["measurement_source"] != value["evidence_status"]):
         return None
     safe = {key: value.get(key) for key in USAGE_VIEW_FIELDS if key in value}
     safe["usage"] = safe_usage
@@ -564,8 +568,13 @@ def _usage_scopes(snapshot: Mapping, director: Director,
     return scopes
 
 
-def _pinned_usage_owners(director: Director, scope: Mapping) -> tuple[list[dict], int, int]:
-    """Resolve only the service identities in this run's immutable closure."""
+def _pinned_usage_owners(director: Director, scope: Mapping, *,
+                         resolve: bool = True) -> tuple[list[dict], int, int]:
+    """Pinned A2A agent services in this run's immutable closure.
+
+    With ``resolve`` the Agent Card is fetched and checked against its pin; that
+    standard A2A discovery read is the only request made to an agent here.
+    """
     try:
         pinned = scope["pinned"]
         publication = director.module.publications.get(pinned["manifest_digest"])
@@ -589,12 +598,8 @@ def _pinned_usage_owners(director: Director, scope: Mapping) -> tuple[list[dict]
             if not isinstance(manifest_service, Mapping) or not isinstance(binding, Mapping):
                 failures += 1
                 continue
-            # The published manifest pins two different digest domains:
-            # binding_digest covers the package binding, while
-            # contract_digest covers the URL-less AgentCard descriptor. That
-            # descriptor's a2a_extension.contract_digest is the inner
-            # protocol-document pin and must not be compared to either outer
-            # digest.
+            # binding_digest covers the package binding; contract_digest covers
+            # the pinned Agent Card descriptor.
             identity = binding.get("identity")
             binding_digest = manifest_service.get("binding_digest")
             descriptor_digest = manifest_service.get("contract_digest")
@@ -612,19 +617,22 @@ def _pinned_usage_owners(director: Director, scope: Mapping) -> tuple[list[dict]
                     agent_contract_digest(contract) != descriptor_digest):
                 failures += 1
                 continue
-            extension = contract.get("a2a_extension")
-            if extension is None:
-                # Other pinned services in a closure (for example, a local
-                # release receiver) are not model-usage owners. Their absence
-                # of the pinned model-agent A2A extension is durable evidence
-                # that this token measurement reader does not apply.
+            if "card_sha256" not in contract:
+                # Pinned services without an Agent Card pin (for example the
+                # local HTTP release receiver) are not A2A agent services.
                 non_usage_services += 1
                 continue
-            if not isinstance(extension, Mapping):
+            if not isinstance(contract.get("card_sha256"), str):
                 failures += 1
                 continue
+            role = binding.get("role")
+            if not resolve:
+                owners.append({"name": name, "identity": identity, "role": role})
+                continue
+            # Every agent, release included, is identified by its pinned Agent
+            # Card and re-verifies through that card alone.
             try:
-                url, _observed = resolve_agent_binding(snapshot_path, identity, dict(contract))
+                url, observed = resolve_agent_binding(snapshot_path, identity, dict(contract))
             except Exception:
                 failures += 1
                 continue
@@ -632,7 +640,8 @@ def _pinned_usage_owners(director: Director, scope: Mapping) -> tuple[list[dict]
             if parsed.scheme != "http" or parsed.hostname != "127.0.0.1" or not parsed.port:
                 failures += 1
                 continue
-            owners.append({"name": name, "identity": identity, "url": url})
+            owners.append({"name": name, "identity": identity, "role": role, "url": url,
+                           "skills": list(observed.get("skills") or [])})
         if set(manifest_services) != set(package_bindings):
             failures += 1
         return owners, failures, non_usage_services
@@ -671,21 +680,6 @@ def _redacted_subscription_status() -> str:
         return "unavailable"
 
 
-def _public_owner_health(url: str) -> dict | None:
-    """Read one already-resolved, digest-pinned local owner's public health."""
-    request = urllib.request.Request(url.rstrip("/") + "/health", method="GET")
-    try:
-        with urllib.request.urlopen(request, timeout=2) as response:
-            raw = response.read(64 * 1024 + 1)
-        if len(raw) > 64 * 1024:
-            return None
-        value = json.loads(raw)
-        return value if isinstance(value, dict) else None
-    except (OSError, urllib.error.URLError, TimeoutError, ValueError,
-            json.JSONDecodeError):
-        return None
-
-
 def _worker_readiness_evidence(build_id: str | None, value: object) -> dict:
     """Reduce Runner's live poller proof to a safe, build-bound readiness view."""
     unavailable = {"status": "unavailable", "build_id": build_id,
@@ -712,11 +706,16 @@ def _worker_readiness_evidence(build_id: str | None, value: object) -> dict:
 
 
 def _submission_readiness(director: Director, config: Mapping, *,
-                          broker_status_reader=None, owner_health_reader=None,
+                          broker_status_reader=None, owner_reader=None,
                           worker_readiness_reader=None) -> dict:
-    """Check provider, pin, owner, and live worker prerequisites without inference."""
+    """Check provider, pin, agent card, and live worker prerequisites without inference.
+
+    Agent services are checked only through A2A discovery: each pinned Agent
+    Card must resolve to its pin and declare the expected skill. Their model
+    configuration is their own implementation and is not observable here.
+    """
     broker_status_reader = broker_status_reader or _redacted_subscription_status
-    owner_health_reader = owner_health_reader or _public_owner_health
+    owner_reader = owner_reader or _pinned_usage_owners
     worker_readiness_reader = worker_readiness_reader or (
         lambda build_id: director.module.runner.wait_worker(build_id, timeout=1.0))
     selection = config.get("director_model")
@@ -776,28 +775,15 @@ def _submission_readiness(director: Director, config: Mapping, *,
         scope = {"pinned": {"manifest_digest": manifest_digest,
                             "package_digest": package_digest,
                             "definition_digest": manifest.get("root_digest")}}
-        owners, owner_failures, _non_usage_services = _pinned_usage_owners(director, scope)
-        owner_by_name = {owner.get("name"): owner for owner in owners}
-        if (owner_failures or set(owner_by_name) != set(_BASIC_MODEL_OWNERS) or
-                len(owners) != len(_BASIC_MODEL_OWNERS)):
+        owners, owner_failures, _non_usage_services = owner_reader(director, scope)
+        owner_by_name = {owner.get("name"): owner for owner in owners
+                         if owner.get("name") in _BASIC_MODEL_OWNERS}
+        if owner_failures or set(owner_by_name) != set(_BASIC_MODEL_OWNERS):
             raise ValueError("pinned model owner resolution incomplete")
         publication_status = "pinned"
         for name, expected_capability in _BASIC_MODEL_OWNERS.items():
-            owner = owner_by_name[name]
-            health = owner_health_reader(owner["url"])
-            contract = contracts[name]
-            expected_role = "quality" if contract.get("role") == "quality" else "capability"
-            if (not isinstance(health, Mapping) or
-                    health.get("identity") != owner.get("identity") or
-                    health.get("role") != expected_role or
-                    health.get("capability") != expected_capability or
-                    health.get("provider") != "codex-subscription" or
-                    health.get("model_id") != DEFAULT_MODEL_ID or
-                    health.get("reasoning_effort") != DEFAULT_REASONING_EFFORT or
-                    health.get("inference_enabled") is not True or
-                    health.get("read_only_usage") is not False):
-                continue
-            owners_ready += 1
+            if expected_capability in (owner_by_name[name].get("skills") or []):
+                owners_ready += 1
     except Exception:
         publication_status = "unavailable"
 
@@ -830,7 +816,7 @@ def _submission_readiness(director: Director, config: Mapping, *,
         "temporal_worker": temporal_worker,
         "pinned_model_owners": {"status": "ready" if owners_ready == 4 else "unavailable",
                                 "expected": 4, "ready": owners_ready},
-        # Health and configuration checks do not prove that inference succeeded.
+        # Agent Card and configuration checks do not prove that inference succeeded.
         "verification_status": "not_checked",
         "live_inference_ready": False,
     }
@@ -873,57 +859,56 @@ def _submission_readiness_callbacks(director: Director, config: Mapping):
 
 def _pinned_service_measurements(director: Director, scopes: list[dict],
                                  filters: Mapping[str, str | None]):
+    """Agent-reported usage the factory recorded for this run's pinned agents.
+
+    The factory's on-complete hook records each agent Task's budget-extension
+    report in its own journal (A2A decision 8). Agents are never polled.
+    """
     rows: dict[str, dict] = {}
     conflicts: set[str] = set()
-    owners_total = owners_ready = owner_resolution_failures = requests_failed = malformed = 0
+    owners_total = owner_resolution_failures = queries_failed = malformed = 0
     non_usage_services = 0
+    database = Path(director.module.home) / "runner" / AGENT_USAGE_DATABASE
+    journal = None
     for scope in scopes:
-        owners, owner_failures, skipped_services = _pinned_usage_owners(director, scope)
-        owners_total += len(owners) + owner_failures
+        owners, owner_failures, skipped_services = _pinned_usage_owners(
+            director, scope, resolve=False)
         owner_resolution_failures += owner_failures
         non_usage_services += skipped_services
-        for owner in owners:
-            params = {"run_id": scope["run_id"]}
-            if filters.get("task_id") is not None:
-                # This exact filter denotes a remote owner Task, only after
-                # the service was resolved from the authenticated run pins.
-                params["task_id"] = filters["task_id"]
-            endpoint = owner["url"].rstrip("/") + "/usage/measurements?" + urlencode(params)
-            request = urllib.request.Request(endpoint, headers={
-                "Authorization": TOKEN, "Accept": "application/json"})
+        values, queried = [], False
+        if database.is_file():
             try:
-                with urllib.request.urlopen(request, timeout=3) as response:
-                    payload = json.load(response)
-                values = payload.get("measurements") if isinstance(payload, Mapping) else None
-                if not isinstance(values, list):
-                    requests_failed += 1
-                    continue
-                owners_ready += 1
-            except (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError, TimeoutError):
-                requests_failed += 1
+                journal = journal or ModelUsageJournal(database)
+                values = journal.list_measurements(run_id=scope["run_id"],
+                                                   call_scope="assignment_call")
+                queried = True
+            except Exception:
+                queries_failed += 1
+        # A release agent makes no model calls: it is a usage owner only when
+        # it actually reported usage for this run, otherwise a non-usage service.
+        reporting = {raw.get("service_identity") for raw in values if isinstance(raw, Mapping)}
+        usage_owners = [owner for owner in owners
+                        if owner.get("role") != "release" or owner["identity"] in reporting]
+        non_usage_services += len(owners) - len(usage_owners)
+        owners_total += len(usage_owners) + owner_failures
+        identities = {owner["identity"] for owner in usage_owners}
+        if not queried:
+            continue
+        for raw in values:
+            identity = raw.get("service_identity") if isinstance(raw, Mapping) else None
+            view = _safe_measurement(raw, service_identity=identity)
+            if (view is None or identity not in identities or
+                    view.get("evidence_status") not in {"agent_reported", "unknown"} or
+                    view.get("run_id") != scope["run_id"] or
+                    view.get("definition_digest") != scope["pinned"].get("definition_digest")):
+                malformed += 1
                 continue
-            for raw in values:
-                if (not isinstance(raw, Mapping) or
-                        raw.get("service_identity") != owner["identity"]):
-                    malformed += 1
-                    continue
-                view = _safe_measurement(raw, service_identity=owner["identity"])
-                if view is None:
-                    malformed += 1
-                    continue
-                if (view.get("run_id") != scope["run_id"] or
-                        view.get("definition_digest") !=
-                        scope["pinned"].get("definition_digest")):
-                    malformed += 1
-                    continue
-                if not _measurement_matches(view, filters):
-                    continue
-                _merge_measurement(rows, conflicts, view)
+            if not _measurement_matches(view, filters):
+                continue
+            _merge_measurement(rows, conflicts, view)
     return list(rows.values()), {"pinned_owner_count": owners_total,
-        "owners_responded": owners_ready,
         "owner_resolution_failures": owner_resolution_failures,
-        "request_failures": requests_failed,
-        "owner_or_request_failures": owner_resolution_failures + requests_failed,
+        "queries_failed": queries_failed,
         "non_usage_service_count": non_usage_services,
         "rows_rejected": malformed, "conflicts": len(conflicts)}
 
@@ -2077,7 +2062,6 @@ class FactoryTaskStore(ProjectionTaskStore):
                         "run_inputs_digest": record["run_inputs_digest"]}
         if supplier_echo is not None:
             metadata.update(supplier_echo)
-            metadata["agent_identity"] = self.director.identity
         # A2A Adapter boundary: the version-neutral projection state becomes TASK_STATE_*.
         return Task(id=task_id, context_id=context_id,
                     status=TaskStatus(state=task_state(state), message=message),
@@ -2266,7 +2250,8 @@ def create_app(instance_dir: Path, *, commercial_reader=None, usage_broker=None)
     if config["mode"] == "agent":
         # Ordinary agent mode: the same harness serves one capability directly.
         return harness_server.create_app(instance_dir / "agent-state",
-                                         config.get("agent_role", "capability"), port)
+                                         config.get("agent_role", "capability"), port,
+                                         name=config.get("name"))
     director = Director(instance_dir, config)
     read_submission_readiness, submission_preflight = _submission_readiness_callbacks(
         director, config)
@@ -2294,8 +2279,7 @@ def create_app(instance_dir: Path, *, commercial_reader=None, usage_broker=None)
                             "parent_run_id", "parent_definition_digest", "parent_assignment_id",
                             "parent_attempt_id", "assignment_id", "attempt_id", "payload"))}},
             "response": {"result": "task", "metadata": sorted((
-                "action_id", "run_id", "definition_digest", "agent_identity",
-                "parent_task_id", "parent_run_id", "parent_definition_digest",
+                "action_id", "run_id", "definition_digest", "parent_task_id", "parent_run_id", "parent_definition_digest",
                 "parent_assignment_id", "parent_attempt_id", "assignment_id", "attempt_id"))},
             "completion": {"method": a2a_v1.GET_TASK, "state": a2a_v1.wire_state("completed"),
                            "artifact_count": 1, "data": sorted((
@@ -2661,7 +2645,7 @@ window.EXO_DASHBOARD_BOOTSTRAP.artifactEndpoint=({{run_id,revision,sha256}})=>
     def usage_measurements(run_id: str | None = None, task_id: str | None = None,
                            assignment_id: str | None = None, attempt_id: str | None = None,
                            model_call_id: str | None = None, call_scope: str | None = None):
-        """Read safe token measurements from this factory's pinned public owners."""
+        """Read safe token measurements this factory recorded or received."""
         filters = {"run_id": run_id, "task_id": task_id,
                    "assignment_id": assignment_id, "attempt_id": attempt_id,
                    "model_call_id": model_call_id, "call_scope": call_scope}
@@ -2711,9 +2695,8 @@ window.EXO_DASHBOARD_BOOTSTRAP.artifactEndpoint=({{run_id,revision,sha256}})=>
         # complete run binding for those calls. Rows without an authorized
         # original Task remain unavailable in director_unbound below.
         director_coverage = _director_coverage_status(director_report, director_rows)
-        service_partial = bool(service_report["owner_or_request_failures"] or
-                               service_report["owners_responded"] !=
-                               service_report["pinned_owner_count"] or
+        service_partial = bool(service_report["owner_resolution_failures"] or
+                               service_report["queries_failed"] or
                                service_report["rows_rejected"] or service_report["conflicts"])
         partial = bool(authoring_partial or director_coverage == "partial" or service_partial or
                        conflicts)
@@ -2727,9 +2710,9 @@ window.EXO_DASHBOARD_BOOTSTRAP.artifactEndpoint=({{run_id,revision,sha256}})=>
             "authoring_unbound": {
                 "status": "unavailable",
                 "reason": "shared_model_home_factory_exclusivity_not_proven"},
-            "pinned_services": {"status": "fixture_only",
+            "pinned_services": {"status": "agent_reported",
                 "availability": "partial" if service_partial else "available",
-                "authentication": "fixture_bearer_only", **service_report},
+                "source": "factory_journal", **service_report},
             "director": {"status": director_coverage,
                 **director_report},
             "director_unbound": {"status": "unavailable",

@@ -4,6 +4,8 @@
 
 **A2A v1.0 update (7 Oct 2026).** The prototype now speaks A2A v1.0 only (a2a-sdk 1.2.2, operator decision 1 in `docs/a2a-v1-mediation-decision-2026-10-07.md`). There is no 0.3 interface, dual advertisement, shim, or fallback. Requests use `SendMessage` and `GetTask` with the `A2A-Version: 1.0` header (plus `A2A-Extensions` for a required extension). Results are `{task}` or `{message}`, Task states are `TASK_STATE_*`, and Parts carry one of `text`/`raw`/`url`/`data` with no `kind`. Rows and evidence below dated before 7 Oct 2026 record the a2a-sdk 0.3.26 wire (`message/send`, `tasks/get`, lowercase states) as it was observed then. Reproduce with the new pinned environment below; the shared 2026-09-22 environment stays on 0.3 and is no longer the prototype interpreter. See `INTERFACES.md`, "A2A v1 baseline and hand-off records".
 
+**A2A release agent (8 Oct 2026).** A2A is the only channel between the factory and agent services, with no side channels (operator rule, 8 Oct 2026). The release receiver is now an ordinary A2A v1 agent (`services/release_server.py`): it serves only the JSON-RPC endpoint and its Agent Card, accepts one Message Part with a `mediaType`, deduplicates by `messageId`, and completes with a receipt artifact over the exact delivered bytes. The factory reaches it through `SendMessage` and `GetTask` only (`src/release_delivery.py`); the plain-HTTP `src/receiver_client.py` is gone. One delivery now yields exactly one `delivery.receipt` Observation fact. Rows below that mention the "HTTP fixture release receiver" record runs observed before this change. See `INTERFACES.md`, "A2A release agent".
+
 This merges the four bounded Temporal lanes (`temporal-director-contract`, `temporal-version-binding`, `temporal-quality-reconciliation`, `temporal-package-ops`) into one candidate built around the corrected architecture. A customized Strands harness instance runs as an ordinary agent or as a factory. In factory mode, its Director agent and Factory Module sit inside the instance, behind that instance's normal A2A identity and `verified-research@1` capability contract. There is no separate factory endpoint, and callers never choose a graph, package or version. The shared contract between modules is in [`INTERFACES.md`](INTERFACES.md).
 
 ## Verdict
@@ -63,7 +65,8 @@ The credential stays in the Node process and an owner-only install-wide store, s
 | `broker/` | Node CLI and persistent pi-ai model broker; pinned package and offline tests |
 | `broker/testing/` | Loopback Codex SSE and OAuth fixtures |
 | `services/` | Pinned test A2A services (the stand-in for the directory) |
-| `scenarios/integrated.py`, `scenarios/replay_check.py`, `scenarios/live_authoring.py` | Original happy paths, replay, synthetic and live-provider authoring scenario |
+| `scenarios/integrated.py`, `scenarios/replay_check.py`, `scenarios/live_authoring.py` | Original happy paths (historical record, not runnable), replay, synthetic and live-provider authoring scenario |
+| `scenarios/spike_a_delayed.py`, `spike_b_two_instances.py`, `spike_c_director.py` | Qualification spikes: historical records of the results in `QUALIFICATION.md`, not runnable |
 | `evidence/broker-phase/`, `evidence/live-refresh-codex-subscription.json`, `evidence/live-authoring-codex-subscription*.json`, `evidence/live-authoring-synthetic-loopback*.json` | Broker test transcripts, live refresh, live authoring attempts and scans, synthetic repair-loop run |
 | `briefs/`, `handoff/` | Parallel worker assignments and their reports |
 | `src/runtime.py`, `src/supervisor.py` | Unmodified lane baselines kept for diff reference; not imported |
@@ -76,10 +79,6 @@ cd prototype/temporal-factory
 npm --prefix broker ci --offline --cache /tmp/exomachina-pi-strands-debate/npm-cache
 node --test broker/test/*.test.mjs                # 18 passed in evidence/broker-phase/
 $PY -B -m unittest discover -s tests              # 90 total: 80 in final regression plus 10 provider-specific acceptance tests
-$PY -B scenarios/integrated.py --home /tmp/exo-proto-int-<fresh>
-$PY -B src/runner.py start --home /tmp/exo-proto-int-<fresh> --reason replay
-$PY -B "$PWD/scenarios/replay_check.py" --home /tmp/exo-proto-int-<fresh> --address 127.0.0.1:44002 --out "$PWD/evidence/histories-<run>"
-$PY -B src/runner.py stop --home /tmp/exo-proto-int-<fresh>
 $PY -B scenarios/live_authoring.py --home /tmp/exo-proto-live-syn-<fresh> --provider synthetic-loopback
 
 # For a new own-store subscription sign-in, use device flow; do not set EXO_MODEL_HOME or EXO_CODEX_BASE_URL.
@@ -87,7 +86,7 @@ node broker/exo-model.mjs login --device
 $PY -B scenarios/live_authoring.py --home /tmp/exo-proto-live-codex-<fresh> --provider codex-subscription
 ```
 
-The integrated scenario uses ports 44000–44012, 32400–32404, 44800 and 45200–45205; live authoring uses runner ports 44100 onward, 32420 onward, harness 44830, testbed 45300–45305 and mock 46100–46149. Both require the pinned local binaries named in `INTERFACES.md`. Use a fresh `/tmp/exo-proto-live-*` home for each authoring run. The live-provider command passed once on attempt 2 at `/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e`; attempt 1 stopped before A2A on the scenario assumption described above. All trial state is preserved: r1 `/tmp/exo-proto-int-r1`, r2 `/tmp/exo-proto-int-r2` (including earlier replay attempts under `replay-attempts/`), and the worker smokes under `/tmp/exo-proto-*`.
+`scenarios/integrated.py` and the three qualification spikes (`spike_a_delayed.py`, `spike_b_two_instances.py`, `spike_c_director.py`) are historical records since 8 Oct 2026, not runnable: they read the retired HTTP release receiver and agent envelope. Their results stand as recorded; `scenarios/single_factory.py` is the maintained end-to-end check. The integrated scenario used ports 44000–44012, 32400–32404, 44800 and 45200–45205; live authoring uses runner ports 44100 onward, 32420 onward, harness 44830, testbed 45300–45305 and mock 46100–46149. Both require the pinned local binaries named in `INTERFACES.md`. Use a fresh `/tmp/exo-proto-live-*` home for each authoring run. The live-provider command passed once on attempt 2 at `/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e`; attempt 1 stopped before A2A on the scenario assumption described above. All trial state is preserved: r1 `/tmp/exo-proto-int-r1`, r2 `/tmp/exo-proto-int-r2` (including earlier replay attempts under `replay-attempts/`), and the worker smokes under `/tmp/exo-proto-*`.
 
 ## Operator stack
 
@@ -100,16 +99,17 @@ $PY -B scenarios/operator_stack.py status   # processes, ports, v1 cards, runner
 $PY -B scenarios/operator_stack.py down     # graceful stop: harness, agents, runner
 ```
 
-- **Ports.** Harness `report-factory` (`verified-research@1`) and `/floor` are on `127.0.0.1:47053`. The model agents are on 47100–47103: two research agents, the synthesizer (with `--test-controls`) and Quality, all `codex-subscription` `gpt-6-luna`. The release receiver (`--mode participating`) is on 47104. Runner port base 47020 puts the Temporal frontend on 47022; member base 32620 puts PostgreSQL on 32620.
+- **Ports.** Harness `report-factory` (`verified-research@1`) and `/floor` are on `127.0.0.1:47053`. The model agents are on 47100–47103: two research agents, the synthesizer and Quality, all `codex-subscription` `gpt-6-luna`. Production agents start without `--test-controls`; only qualification runs (`single_factory.py`; formerly `sf_agent_probe.py`, now a historical record) start the synthesizer with the test-only stimulus extension. The release receiver (`--mode participating`) is on 47104. Runner port base 47020 puts the Temporal frontend on 47022; member base 32620 puts PostgreSQL on 32620.
 - **State and runtime.** Every process runs detached, and its log stays in the home: `logs/`, `services/*/service.log` and `runner/*.log`. The hand-off digest key is created as `handoff-digest.key` on first use. Temporal Server 1.32.0 and the CLI are durable copies under `~/.exomachina/temporal/1.32.0`. PostgreSQL comes from `/opt/homebrew/opt/postgresql@16/bin`.
 - **Broker.** The stack uses the operator's install-wide model broker (`~/.exomachina/model-broker`). The launcher never signs in and never prints a credential.
 - **No inference.** `up`, `status` and `down` submit no work and make no model call. Model agents start with an empty ledger, so they recover nothing.
 - **Floor.** Open `http://127.0.0.1:47053/qa/login` and start a local QA session. With no runs yet, the Observation freshness is `unknown`, and the run-history pill shows it as an error. Submission readiness still reports `ready`.
+- **Agent decoupling (8 Oct 2026).** Agents speak only A2A: a plain Message carrying the brief plus the consumed upstream artifact Parts copied verbatim, `messageId` resend for idempotency, identity from the pinned Agent Card, usage through the optional budget extension, and no private routes. `status` reads agents only through their Agent Cards plus process/port checks. Agent ledgers from before decoupling are migrated forward on start; re-provisioning the home is equivalent. See "Agent decoupling" and "Agent wire contract (decision 9)" in [`INTERFACES.md`](INTERFACES.md).
 - **History.** A new home starts a new factory identity with no job history. The old stack's Observation and Director databases remain in its `/private/tmp` home, but this stack does not import them.
 
 ## Qualification spikes
 
-Three follow-up spikes tested the delayed external A2A agent, two instances in one home and the broker-backed Director. Their checks were fixed before any code change. Results, preserved failures and remaining limits are in [`QUALIFICATION.md`](QUALIFICATION.md). That file supersedes the Director, second-instance and fixture-only-A2A gaps below.
+Three follow-up spikes tested the delayed external A2A agent, two instances in one home and the broker-backed Director. Their scenario modules are now historical records and no longer run (see Reproduce). Their checks were fixed before any code change. Results, preserved failures and remaining limits are in [`QUALIFICATION.md`](QUALIFICATION.md). That file supersedes the Director, second-instance and fixture-only-A2A gaps below.
 
 ## Single factory, real agent work
 
@@ -129,5 +129,5 @@ Live attempt 3, the final pre-registered attempt, qualified. It passed all 24 au
 - **Contract and Quality-policy attestation is missing.** Contracts are fixture-authored (`attested: false`).
 - **Operational hardening is out of scope and unbuilt:** Temporal frontend auth, relocatable/signed packaging, online backup, and the memory ceiling. The Director token still travels in Workflow history.
 - **Operator CLI concurrency is only partially covered.** Operator tooling now shares the instance catalog with the serving harness through `PublicationStore` locks; concurrent publication was not stress-tested.
-- **Some probes are fixture-only.** The release receiver is an HTTP fixture, not A2A. The Director model and capability/Quality data are fixtures in both the live and synthetic runs; the loopback provider is a fixture only in the synthetic run. `outcome_mode` remains a declared, caller-allowlisted fixture input that steers a candidate toward repair.
+- **Some probes are fixture-only.** The release receiver is a fixture A2A agent (a local receipt-issuing destination, not a real external release target). The Director model and capability/Quality data are fixtures in both the live and synthetic runs; the loopback provider is a fixture only in the synthetic run. `outcome_mode` remains a declared, caller-allowlisted fixture input that steers a candidate toward repair.
 - **Scale is one factory instance and one organization.** A second instance attaching to the same runner is designed but was not exercised. Broker singleton and session separation were exercised with two processes against a fixture store; two factory harness instances were not. The credential uses an owner-only file; Keychain storage was not tested.

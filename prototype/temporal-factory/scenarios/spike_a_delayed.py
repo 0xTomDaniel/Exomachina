@@ -1,4 +1,12 @@
-"""Registered A-1..A-5 through harness A2A, Temporal and independent delayed A2A."""
+"""Registered A-1..A-5 through harness A2A, Temporal and independent delayed A2A.
+
+HISTORICAL RECORD, NOT RUNNABLE (8 Oct 2026). This scenario predates the A2A
+release agent and agent decoupling: it reads the retired plain-HTTP release
+receiver's ``releases`` table (factory run ids in agent state) and the old
+agent envelope. It is kept only as the record of the results cited in
+QUALIFICATION.md/README.md. No gate imports it, and running it exits with this
+notice. ``scenarios/single_factory.py`` is the maintained end-to-end check.
+"""
 from __future__ import annotations
 
 import argparse
@@ -67,15 +75,24 @@ def wait_journal(home: Path, action_id: str, *, seconds: float = 120) -> dict:
     raise TimeoutError(f"remote Task id was not journaled: {action_id}")
 
 
+AGENT_DB = Path("services") / "counter_beta" / "delayed-agent.sqlite3"
+
+
+def fixture_rows(state_db: Path) -> list[dict]:
+    """Test-fixture observation of the delayed agent's own Tasks (keyed by messageId)."""
+    if not state_db.exists():
+        return []
+    return sqlite_rows(state_db, "SELECT message_id, task_id FROM messages")
+
+
 def wait_effect(home: Path, action_id: str, *, seconds: float = 120) -> dict:
+    """The fixture committed a Task for the factory-journaled messageId."""
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
-        path = home / "services" / "counter_beta" / "delayed-agent.sqlite3"
-        if path.exists():
-            rows = sqlite_rows(path, "SELECT action_id, task_id FROM actions")
-            for row in rows:
-                if row["action_id"] == action_id:
-                    return row
+        record = journal(home, action_id) or {}
+        for row in fixture_rows(home / AGENT_DB):
+            if record.get("message_id") and row["message_id"] == record["message_id"]:
+                return row
         time.sleep(0.1)
     raise TimeoutError(f"agent did not commit {action_id}")
 
@@ -91,13 +108,16 @@ def wait_unknown(home: Path, action_id: str, *, seconds: float = 30) -> dict:
 
 
 def test_remote_task_id(home: Path, action_id: str) -> str:
-    rows = sqlite_rows(home / "services" / "counter_beta" / "delayed-agent.sqlite3",
-                       "SELECT action_id, task_id FROM actions")
-    return next(row["task_id"] for row in rows if row["action_id"] == action_id)
+    return wait_effect(home, action_id, seconds=1)["task_id"]
 
 
-def effects(url: str) -> dict:
-    return http(url.rstrip("/") + "/_test/effects")
+def effects(state_db: Path) -> dict:
+    """Fixture effect counts per messageId (one Task per messageId)."""
+    rows = fixture_rows(state_db)
+    counts: dict[str, int] = {}
+    for row in rows:
+        counts[row["message_id"]] = counts.get(row["message_id"], 0) + 1
+    return {"effects": counts, "total": len(rows)}
 
 
 def release_rows(home: Path, run_id: str) -> list[dict]:
@@ -153,16 +173,18 @@ def stop_pid(pid: int, port: int) -> None:
         raise TimeoutError(f"agent did not stop on {port}")
 
 
-def start_agent(state: Path, port: int, *, identity_file: Path | None = None):
+def start_agent(state: Path, port: int, *, identity_file: Path | None = None,
+                faults: tuple[str, ...] = ()):
+    """Start the delayed agent; faults are process options, never wire controls."""
     state.mkdir(parents=True, exist_ok=True)
     command = [PY, "-B", str(ROOT / "services" / "delayed_agent.py"),
-               "--state", str(state), "--port", str(port), "--delay-seconds", "15"]
+               "--state", str(state), "--port", str(port), "--delay-seconds", "15", *faults]
     if identity_file:
         command.extend(["--identity-file", str(identity_file)])
     log = (state / f"agent-{port}.log").open("a")
     process = subprocess.Popen(command, stdout=log, stderr=log, start_new_session=True)
     log.close()
-    wait_http(f"http://127.0.0.1:{port}/health")
+    wait_http(f"http://127.0.0.1:{port}/.well-known/agent-card.json")
     return process
 
 
@@ -180,7 +202,7 @@ def capture(home: Path, base: str, sent: dict, before: dict, agent_url: str) -> 
             "caller_artifact_count": len(final.get("artifacts") or []),
             "remote_task_id": row.get("task_id") if row else None,
             "journal": row, "activity_events": logs,
-            "effects_before": before, "effects_after": effects(agent_url),
+            "effects_before": before, "effects_after": effects(home / AGENT_DB),
             "workflows": asyncio.run(workflows(address, run_id)),
             "release_rows": release_rows(home, run_id)}
 
@@ -195,7 +217,8 @@ def verdict(name: str, record: dict, *, accepted: bool, identity: str,
     task = record["caller_task"]
     state = task_state(task)
     journal_row = record["journal"] or {}
-    remote_effect = record["effects_after"]["effects"].get(record["action_id"], 0)
+    # Effects are counted per factory-journaled messageId (the A2A idempotency key).
+    remote_effect = record["effects_after"]["effects"].get(journal_row.get("message_id"), 0)
     pin_logs = [x for x in record["activity_events"] if x["kind"] == "agent-card-verified"]
     conditions = {"effect_at_most_one": remote_effect <= 1,
                   "remote_task_journaled": bool(record["remote_task_id"]),
@@ -214,9 +237,10 @@ def verdict(name: str, record: dict, *, accepted: bool, identity: str,
         import hashlib
         conditions["accepted_artifact_binding"] = (
             artifact.get("author") == identity
-            and artifact.get("action_id") == record["action_id"]
-            and artifact.get("run_id") == journal_row.get("run_id")
-            and artifact.get("definition_digest") == journal_row.get("definition_digest")
+            # Run/action binding is the factory's receipt, never an agent echo.
+            and receipt.get("action_id") == record["action_id"]
+            and receipt.get("run_id") == journal_row.get("run_id")
+            and receipt.get("definition_digest") == journal_row.get("definition_digest")
             and isinstance(artifact.get("content"), str)
             and artifact.get("sha256") == hashlib.sha256(artifact.get("content", "").encode()).hexdigest())
     record["conditions"] = conditions
@@ -257,7 +281,7 @@ def main() -> None:
             str(ROOT / "definitions" / "spike-a-template.json"), "--label", "spike-a"))
         harness = start_harness(instance, PORT)
         agent_url = f"http://127.0.0.1:{active_port}"
-        before = effects(agent_url)
+        before = effects(home / AGENT_DB)
         sent = started(base, "async")
         first = wait_journal(home, action_id_for(sent["metadata"]["run_id"]))
         entry = capture(home, base, sent, before, agent_url)
@@ -271,13 +295,12 @@ def main() -> None:
         result["checks"]["A-2"] = {**entry, "verdict": "pass" if entry["conditions"]["pin_observed"]
             and entry["activity_events"][0]["kind"] == "agent-card-verified"
             and all(x.get("observed", {}).get("card_sha256") == result["pin"]["card_sha256"]
-                    and x.get("observed", {}).get("extension_identity") == identity
-                    and x.get("observed", {}).get("contract_sha256") == result["pin"]["a2a_extension"]["contract_digest"]
+                    and x.get("observed", {}).get("identity") == identity
                     for x in entry["activity_events"] if x["kind"] == "agent-card-verified")
             else "fail"}
         save(result)
 
-        before = effects(agent_url)
+        before = effects(home / AGENT_DB)
         sent = started(base, "move")
         first = wait_journal(home, action_id_for(sent["metadata"]["run_id"]))
         stop_pid(active_agent_pid, active_port)
@@ -299,17 +322,18 @@ def main() -> None:
         result["checks"]["A-3a"]["verdict"] = "pass" if all(conditions.values()) else "fail"
         save(result)
 
-        before = effects(agent_url)
+        before = effects(home / AGENT_DB)
         sent = started(base, "impostor")
         first = wait_journal(home, action_id_for(sent["metadata"]["run_id"]))
         impostor = start_agent(home / "services" / "impostor", 45407)
         extra_agents.append(impostor)
-        impostor_before = effects("http://127.0.0.1:45407")
+        impostor_db = home / "services" / "impostor" / "delayed-agent.sqlite3"
+        impostor_before = effects(impostor_db)
         snapshot_url(home, identity, "http://127.0.0.1:45407")
         entry = capture(home, base, sent, before, agent_url)
         entry["first_journal"] = first
         entry["impostor_effects_before"] = impostor_before
-        entry["impostor_effects_after"] = effects("http://127.0.0.1:45407")
+        entry["impostor_effects_after"] = effects(impostor_db)
         result["checks"]["A-3b"] = verdict("A-3b", entry, accepted=False,
             identity=identity, original_task=first["task_id"],
             impostor=entry["impostor_effects_after"])
@@ -326,13 +350,18 @@ def main() -> None:
         snapshot_url(home, identity, agent_url)
         save(result)
 
-        before = effects(agent_url)
+        before = effects(home / AGENT_DB)
         # The Director run id is a deterministic function of its caller action id.
         import hashlib
         director_identity = http(base + "/health", token=False)["identity"]
         run_id = f"{director_identity}.{hashlib.sha256('spike-a:lost'.encode()).hexdigest()[:20]}"
         action_id = action_id_for(run_id)
-        http(agent_url + "/_test/faults", {"drop_response_once_for": action_id})
+        # Lose the next response: restart the fixture with its process-level fault.
+        stop_pid(active_agent_pid, active_port)
+        faulty = start_agent(home / "services" / "counter_beta", active_port,
+                             faults=("--drop-first-response",))
+        extra_agents.append(faulty)
+        active_agent_pid = faulty.pid
         sent = started(base, "lost")
         wait_effect(home, action_id)
         first = wait_unknown(home, action_id)
@@ -361,13 +390,16 @@ def main() -> None:
         result["checks"]["A-4"]["verdict"] = "pass" if all(conditions.values()) else "fail"
         save(result)
 
-        before = effects(agent_url)
-        run_id = f"{director_identity}.{hashlib.sha256('spike-a:mismatch'.encode()).hexdigest()[:20]}"
-        http(agent_url + "/_test/faults", {"mismatch_artifact_for": action_id_for(run_id)})
+        before = effects(home / AGENT_DB)
+        stop_pid(active_agent_pid, active_port)
+        mismatching = start_agent(home / "services" / "counter_beta", active_port,
+                                  faults=("--mismatch-artifact",))
+        extra_agents.append(mismatching)
+        active_agent_pid = mismatching.pid
         sent = started(base, "mismatch")
         entry = capture(home, base, sent, before, agent_url)
         result["checks"]["A-5"] = verdict("A-5", entry, accepted=False, identity=identity)
-        result["all_delayed_effects"] = effects(agent_url)
+        result["all_delayed_effects"] = effects(home / AGENT_DB)
         result["global_invariants"] = {
             "each_action_effect_at_most_one": all(
                 count <= 1 for count in result["all_delayed_effects"]["effects"].values()),
@@ -408,4 +440,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit("historical record, not runnable: " + __doc__.split("HISTORICAL RECORD")[0].strip().splitlines()[0]
+                     + "; see the module docstring")

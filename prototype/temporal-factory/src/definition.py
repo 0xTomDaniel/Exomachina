@@ -226,6 +226,7 @@ def _definition(document: dict, children: dict, bindings: dict, *, parent: bool)
         raise ValueError("definition needs 1..32 nodes")
     if document["start"] not in nodes:
         raise ValueError("start node missing")
+    handoff_graph = declares_handoff_graph(document, bindings)
     for name, node in nodes.items():
         if not isinstance(name, str) or not name or not isinstance(node, dict):
             raise ValueError("invalid node")
@@ -294,9 +295,16 @@ def _definition(document: dict, children: dict, bindings: dict, *, parent: bool)
                 if type(human["timeout_seconds"]) is not int or not 1 <= human["timeout_seconds"] <= 3600:
                     raise ValueError("human escalation timeout must be explicit and bounded (1..3600 seconds)")
         elif kind == "release":
+            # A release node must bind an approved A2A agent whose completed
+            # Task carries its receipt as a result artifact (strict output),
+            # so an unverified delivery can never look complete.
             binding = bindings.get(node["service"])
-            if not isinstance(binding, dict) or binding.get("role") != "release" or not binding.get("approved"):
-                raise ValueError("unapproved release receiver")
+            if (not isinstance(binding, dict) or binding.get("role") != "release"
+                    or binding.get("approved") is not True):
+                raise ValueError("release node must bind an approved release agent")
+            if binding_output(binding) != "artifacts":
+                raise ValueError("release node binding output must be strict artifacts "
+                                 "(the receipt is its result artifact)")
         elif kind == "nested_factory":
             if not parent:
                 raise ValueError("recursive child nesting is outside this trial")
@@ -318,8 +326,12 @@ def _definition(document: dict, children: dict, bindings: dict, *, parent: bool)
                     raise ValueError(f"{name}: edge kind must be material or control")
                 if target not in execution_targets(node) and edge_kind != "material":
                     raise ValueError(f"{name}: a bypass edge must be material")
-        # A side-effect node has incoming material only (decision 5).
-        if node_output(node, bindings) == "none" and any(
+        # A side-effect node has incoming material only (decision 5): a
+        # result-less (output none) node, and a release node, whose receipt
+        # hand-off has no consumer and retires at the station.
+        side_effect = node_output(node, bindings) == "none" or (
+            kind == "release" and handoff_graph)
+        if side_effect and any(
                 edge_kind == "material" for _, edge_kind in declared_edges(node)):
             raise ValueError(f"{name}: side-effect node may not have an outgoing material edge")
 
@@ -442,9 +454,8 @@ def validate(package: dict, approved_bindings: dict | None = None) -> str:
     for name, binding in bindings.items():
         _keys(binding, {"role", "url", "identity", "approved"} | ({"output"} & set(binding)
               if isinstance(binding, dict) else set()), f"binding {name}")
-        if "output" in binding and (binding["output"] not in NODE_OUTPUTS or (
-                binding["role"] == "release") != (binding["output"] == "none")):
-            raise ValueError("binding output must be artifacts or message, or none for a release receiver")
+        if "output" in binding and binding["output"] not in NODE_OUTPUTS:
+            raise ValueError("binding output must be artifacts, message or none")
         if (binding["role"] not in {"capability", "quality", "release"}
                 or not isinstance(binding["url"], str)
                 or not binding["url"].startswith("http://127.0.0.1:")
@@ -457,8 +468,6 @@ def validate(package: dict, approved_bindings: dict | None = None) -> str:
         raise ValueError("unapproved service binding name")
     if sum(b["role"] == "quality" for b in bindings.values()) != 1:
         raise ValueError("one independent Quality binding required")
-    if sum(b["role"] == "release" for b in bindings.values()) < 1:
-        raise ValueError("a release receiver binding is required")
     children = package["children"]
     if not isinstance(children, dict) or not children:
         raise ValueError("missing child definition closure")

@@ -25,9 +25,10 @@ import model_agent  # noqa: E402
 
 
 import a2a_v1  # noqa: E402
+import a2a_extensions  # noqa: E402
 
 AUTH = {"Authorization": "Bearer fixture-token",
-        **a2a_v1.headers([model_agent.EXTENSION_URI])}
+        **a2a_v1.headers([a2a_extensions.BUDGET_URI])}
 
 
 def canonical(value: object) -> str:
@@ -249,7 +250,7 @@ class BrokerMeasurementTests(unittest.IsolatedAsyncioTestCase):
             finally:
                 await missing.close()
 
-    async def test_external_task_measurement_is_bound_to_action_and_public_api(self):
+    async def test_agent_usage_leaves_only_through_budget_extension(self):
         with tempfile.TemporaryDirectory(prefix="exo-model-usage-task-") as folder:
             state = Path(folder)
             socket_path = state / "broker.sock"
@@ -281,36 +282,37 @@ class BrokerMeasurementTests(unittest.IsolatedAsyncioTestCase):
 
                     def use_client():
                         with TestClient(app) as client:
-                            command = {"op": "assign", "action_id": "action-synthetic",
-                                       "run_id": "run-synthetic", "definition_digest": "digest-synthetic",
-                                       "brief": canonical({"revision": "r1"})}
+                            # A plain A2A Message: the brief is the only content.
                             result = client.post("/", json={"jsonrpc": "2.0", "id": "send-1",
                                 "method": "SendMessage", "params": {"message": {
-                                    "role": "ROLE_USER", "messageId": "message-1", "parts": [
-                                        {"data": command}]},
+                                    "role": "ROLE_USER", "messageId": "message-1",
+                                    "contextId": "context-1", "parts": [
+                                        {"text": canonical({"revision": "r1"}),
+                                         "mediaType": "application/json"}]},
                                     "configuration": {"returnImmediately": True}}},
                                 headers=AUTH).json()["result"]["task"]
+                            budget_headers = {**AUTH, a2a_v1.EXTENSIONS_HEADER:
+                                              a2a_extensions.BUDGET_URI}
                             deadline = time.monotonic() + 5
                             while time.monotonic() < deadline:
                                 task = client.post("/", json={"jsonrpc": "2.0", "id": "get-1",
-                                    "method": "GetTask", "params": {"id": result["id"]}}, headers=AUTH).json()["result"]
+                                    "method": "GetTask", "params": {"id": result["id"]}},
+                                    headers=budget_headers).json()["result"]
                                 if task["status"]["state"] in {"TASK_STATE_COMPLETED", "TASK_STATE_FAILED"}:
                                     break
                                 time.sleep(0.02)
                             self.assertEqual(task["status"]["state"], "TASK_STATE_COMPLETED")
-                            response = client.get("/usage/measurements?run_id=run-synthetic", headers=AUTH)
-                            self.assertEqual(response.status_code, 200)
-                            measurement = response.json()["measurements"][0]
-                            self.assertEqual((measurement["task_id"], measurement["action_id"],
-                                              measurement["run_id"], measurement["definition_digest"]),
-                                             (result["id"], "action-synthetic", "run-synthetic", "digest-synthetic"))
-                            self.assertEqual(measurement["usage"]["input_tokens"],
-                                             {"value": 7, "status": "reported"})
-                            self.assertEqual(measurement["usage"]["cache_read_tokens"],
-                                             {"value": 0, "status": "reported"})
-                            self.assertNotIn("content", canonical(measurement))
-                            self.assertNotIn("prompt", canonical(measurement))
-                            self.assertNotIn("synthetic evidence", canonical(measurement))
+                            # Usage leaves the agent only through the budget
+                            # extension on its terminal Task (decision 8).
+                            incurred = a2a_extensions.parse_incurred(task["metadata"])
+                            self.assertEqual(incurred["tokens"]["input"], 7)
+                            self.assertEqual(incurred["tokens"]["output"], 5)
+                            self.assertNotIn("cost", incurred)
+                            self.assertEqual(client.get("/usage/measurements?run_id=x",
+                                                        headers=AUTH).status_code, 404)
+                            exposed = canonical(task["metadata"])
+                            self.assertNotIn("synthetic evidence", exposed)
+                            self.assertNotIn("prompt", exposed)
 
                     await asyncio.to_thread(use_client)
                 finally:

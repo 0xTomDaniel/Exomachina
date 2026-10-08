@@ -34,6 +34,7 @@ What attempt 3 proves, and what it does not:
   - Every Quality verdict is a **live model verdict** (`decided_by:"model"`), bound to the exact candidate sha256.
 - **Does not prove.**
   - Real release: the release receiver is still an **HTTP fixture**.
+    - *Amendment (8 Oct 2026):* the receiver is now a fixture **A2A v1 agent** (no HTTP side channel; receipt as an A2A result artifact). The results below were observed before this change.
   - Unprompted defect discovery: the route 2 and route 3 defects were **induced** by a test-only stimulus.
   - An autonomous Director choice: the abort is **caller-prompted, model-decided**, and abort is the only action the graph permits at `repair_exhausted`.
   - Reliability across accounts, models, questions or repeated runs: two live runs (2 and 3) showed the same behaviour, but that is too few to measure reliability.

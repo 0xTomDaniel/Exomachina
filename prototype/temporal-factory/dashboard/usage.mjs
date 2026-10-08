@@ -3,18 +3,22 @@ const DIGEST = /^[0-9a-f]{64}$/;
 const SAFE_LABEL = /^[A-Za-z0-9][A-Za-z0-9._:/@_+-]{0,127}$/;
 const CALL_SCOPES = new Set(["authoring_overhead", "director_call", "assignment_call"]);
 const COMPLETENESS = new Set(["complete", "partial", "unknown"]);
-const EVIDENCE = new Set(["provider_reported", "unknown"]);
+// agent_reported: an A2A agent's budget-extension report, recorded by the factory.
+const EVIDENCE = new Set(["provider_reported", "agent_reported", "unknown"]);
 const CATEGORY_NAMES = ["input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "total_tokens"];
 const MEASUREMENT_KEYS = new Set([
   "measurement_id", "model_call_id", "recorded_at", "call_scope", "provider", "model_id",
   "reasoning_effort", "unit", "measurement_source", "completeness", "evidence_status", "usage",
   "service_identity", "task_id", "message_id", "run_id", "definition_digest", "assignment_id", "attempt_id",
 ]);
+// The factory cannot see an agent's model, provider, or individual model calls;
+// those stay visible only for the factory's own Director and authoring calls.
+const AGENT_HIDDEN_KEYS = ["provider", "model_id", "model_call_id", "reasoning_effort"];
 const COVERAGE_STATUSES = new Set(["partial", "unavailable"]);
 const COVERAGE_MAIN_KEYS_LEGACY = ["status", "factory_id", "scoped_run_count", "bound_sources_status", "authoring_bound", "authoring_unbound", "pinned_services", "director", "commercial_costs"];
 const COVERAGE_MAIN_KEYS = [...COVERAGE_MAIN_KEYS_LEGACY, "director_unbound"];
 const AUTHORING_BOUND_KEYS = ["status", "queries_failed", "rows_rejected", "conflicts"];
-const PINNED_SERVICE_OPTIONAL_COUNTERS = ["non_usage_service_count", "owner_resolution_failures", "request_failures"];
+const PINNED_SERVICE_COUNTERS = ["pinned_owner_count", "owner_resolution_failures", "queries_failed", "non_usage_service_count", "rows_rejected", "conflicts"];
 const AUTHORING_UNBOUND_REASON = "shared_model_home_factory_exclusivity_not_proven";
 const DIRECTOR_REASON = "no_public_list_measurements_accessor";
 
@@ -55,18 +59,23 @@ function validateTime(value, path) {
 function validateMeasurement(row, index) {
   const path = `$measurements[${index}]`;
   plainRecord(row, path);
-  exactKeys(row, MEASUREMENT_KEYS, path, ["measurement_id", "model_call_id", "recorded_at", "call_scope", "provider", "model_id", "unit", "measurement_source", "completeness", "evidence_status", "usage"]);
-  for (const key of ["measurement_id", "model_call_id"]) safeId(row[key], `${path}.${key}`);
+  // An already-projected agent row (see measurementView) carries the label instead of model identity.
+  const agentView = Object.hasOwn(row, "usage_label");
+  if (agentView && (row.usage_label !== "agent-reported" || row.evidence_status !== "agent_reported")) fail("usage_label is only the agent-reported label", `${path}.usage_label`);
+  const hidden = agentView ? new Set(AGENT_HIDDEN_KEYS) : new Set();
+  const required = ["measurement_id", "model_call_id", "recorded_at", "call_scope", "provider", "model_id", "unit", "measurement_source", "completeness", "evidence_status", "usage"].filter(key => !hidden.has(key));
+  exactKeys(row, agentView ? [...[...MEASUREMENT_KEYS].filter(key => !hidden.has(key)), "usage_label"] : MEASUREMENT_KEYS, path, required);
+  for (const key of ["measurement_id", "model_call_id"].filter(key => !hidden.has(key))) safeId(row[key], `${path}.${key}`);
   validateTime(row.recorded_at, `${path}.recorded_at`);
   if (!CALL_SCOPES.has(row.call_scope)) fail("unsupported call_scope", `${path}.call_scope`);
-  for (const key of ["provider", "model_id", "unit"]) if (typeof row[key] !== "string" || !SAFE_LABEL.test(row[key])) fail("invalid safe label", `${path}.${key}`);
+  for (const key of ["provider", "model_id", "unit"].filter(key => !hidden.has(key))) if (typeof row[key] !== "string" || !SAFE_LABEL.test(row[key])) fail("invalid safe label", `${path}.${key}`);
   if (row.unit !== "tokens") fail("only token measurements are supported", `${path}.unit`);
   if (row.reasoning_effort != null && (typeof row.reasoning_effort !== "string" || !SAFE_LABEL.test(row.reasoning_effort))) fail("invalid reasoning_effort", `${path}.reasoning_effort`);
   for (const key of ["service_identity", "task_id", "message_id", "run_id", "assignment_id", "attempt_id"]) {
     if (Object.hasOwn(row, key) && row[key] !== null) safeId(row[key], `${path}.${key}`);
   }
   if (Object.hasOwn(row, "definition_digest") && row.definition_digest !== null && (typeof row.definition_digest !== "string" || !DIGEST.test(row.definition_digest))) fail("invalid definition_digest", `${path}.definition_digest`);
-  if (!new Set(["provider_reported", "unknown"]).has(row.measurement_source)) fail("invalid measurement_source", `${path}.measurement_source`);
+  if (!EVIDENCE.has(row.measurement_source)) fail("invalid measurement_source", `${path}.measurement_source`);
   if (!COMPLETENESS.has(row.completeness)) fail("invalid completeness", `${path}.completeness`);
   if (!EVIDENCE.has(row.evidence_status)) fail("invalid evidence_status", `${path}.evidence_status`);
 
@@ -85,9 +94,11 @@ function validateMeasurement(row, index) {
     } else fail("status must be reported or unavailable", `${cellPath}.status`);
   }
   const completeness = reported === CATEGORY_NAMES.length ? "complete" : reported ? "partial" : "unknown";
-  const evidence = reported ? "provider_reported" : "unknown";
   if (row.completeness !== completeness) fail("does not match reported category coverage", `${path}.completeness`);
-  if (row.evidence_status !== evidence || row.measurement_source !== evidence) fail("does not match reported category evidence", `${path}.evidence_status`);
+  // Reported rows name who reported them; nothing reported is unknown, never zero.
+  const evidenceOk = reported ? row.evidence_status !== "unknown" : row.evidence_status === "unknown";
+  if (!evidenceOk || row.measurement_source !== row.evidence_status) fail("does not match reported category evidence", `${path}.evidence_status`);
+  if (row.evidence_status === "agent_reported" && row.call_scope !== "assignment_call") fail("agent-reported usage is assignment usage only", `${path}.evidence_status`);
   return structuredClone(row);
 }
 
@@ -132,11 +143,11 @@ function validateCoverage(coverage) {
   }
 
   const pinned = plainRecord(coverage.pinned_services, `${path}.pinned_services`);
-  const pinnedRequiredCounts = ["pinned_owner_count", "owners_responded", "owner_or_request_failures", "rows_rejected", "conflicts"];
-  exactKeys(pinned, ["status", "availability", "authentication", ...pinnedRequiredCounts, ...PINNED_SERVICE_OPTIONAL_COUNTERS], `${path}.pinned_services`, ["status", "availability", "authentication", ...pinnedRequiredCounts]);
-  if (pinned.status !== "fixture_only" || !["available", "partial"].includes(pinned.availability) || pinned.authentication !== "fixture_bearer_only") fail("invalid pinned service status", `${path}.pinned_services`);
-  validateCounts(pinned, pinnedRequiredCounts, `${path}.pinned_services`);
-  for (const key of PINNED_SERVICE_OPTIONAL_COUNTERS) if (Object.hasOwn(pinned, key)) boundedCount(pinned[key], `${path}.pinned_services.${key}`);
+  // Agent services are never polled: pinned-service usage is what the factory
+  // recorded from each agent Task's budget-extension report.
+  exactKeys(pinned, ["status", "availability", "source", ...PINNED_SERVICE_COUNTERS], `${path}.pinned_services`, ["status", "availability", "source", ...PINNED_SERVICE_COUNTERS]);
+  if (pinned.status !== "agent_reported" || !["available", "partial"].includes(pinned.availability) || pinned.source !== "factory_journal") fail("invalid pinned service status", `${path}.pinned_services`);
+  validateCounts(pinned, PINNED_SERVICE_COUNTERS, `${path}.pinned_services`);
 
   if (typeof coverage.director === "string") {
     if (coverage.director !== "unavailable_no_public_list_measurements_accessor") fail("invalid director status", `${path}.director`);
@@ -159,6 +170,14 @@ function validateCoverage(coverage) {
   return structuredClone(coverage);
 }
 
+/** Agent rows are labelled agent-reported and carry no model, provider, or model-call identity. */
+function measurementView(row) {
+  if (row.evidence_status !== "agent_reported") return row;
+  const view = { ...row, usage_label: "agent-reported" };
+  for (const key of AGENT_HIDDEN_KEYS) delete view[key];
+  return view;
+}
+
 /** Validate the safe MeasurementView rows returned by Runtime /usage/measurements. */
 export function validateMeasurements(rows) {
   if (!Array.isArray(rows) || rows.length > 256) fail("expected a bounded measurement array", "$measurements");
@@ -169,7 +188,7 @@ export function validateMeasurements(rows) {
     if (previous && JSON.stringify(previous) !== JSON.stringify(row)) fail("measurement_id conflicts with an earlier fact", `$measurements[${index}].measurement_id`);
     if (!previous) byId.set(row.measurement_id, row);
   });
-  return [...byId.values()];
+  return [...byId.values()].map(measurementView);
 }
 
 /** Validate Runtime's envelope and its finite nested coverage metadata. */
