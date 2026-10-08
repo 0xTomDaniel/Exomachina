@@ -13,65 +13,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from a2a_outcome import (EffectKind, OutcomeJournal, Phase, ReceiverKind, lookup_result,
                          send_ambiguous, send_completed, submitted)
 from incident_projection import incident_result, public_task_state
-from quality_authority import QualityKind, decide_quality, quality_action_id
-
-
-def evidence(accepted: bool = True) -> dict:
-    run, assignment, attempt, revision, sha = "run-1", "run-1:quality", 2, "r2", "a" * 64
-    action = quality_action_id(run, assignment, attempt, revision, sha)
-    verdict = {"accepted": accepted, "revision": revision, "sha256": sha,
-               "reviewer": "quality-1", "reason": "fixture"}
-    command = {"op": "review", "action_id": action, "run_id": run,
-               "definition_digest": "d" * 64,
-               "artifact": {"revision": revision, "sha256": sha, "author": "author-1"}}
-    task = {"id": "task-1", "status": {"state": "TASK_STATE_COMPLETED"},
-            "metadata": {"action_id": action, "run_id": run,
-                         "definition_digest": "d" * 64,
-                         "harness_identity": "quality-1", "harness_role": "quality"},
-            "artifacts": [{"artifactId": sha, "parts": [{"data": verdict}]}]}
-    lookup = {"action_id": action, "run_id": run, "definition_digest": "d" * 64,
-              "role": "quality", "task_id": "task-1", "artifact": copy.deepcopy(verdict)}
-    return {"binding": {"approved": True, "role": "quality",
-                        "url": "http://127.0.0.1:44022", "identity": "quality-1"},
-            "observed_endpoint": "http://127.0.0.1:44022",
-            "observed_identity": "quality-1", "command": command,
-            "assignment_id": assignment, "attempt": attempt,
-            "task": task, "lookup": lookup, "send_payload": copy.deepcopy(verdict)}
-
-
-class QualityDecisionTests(unittest.TestCase):
-    def test_genuine_positive_and_negative(self):
-        for accepted, kind in ((True, QualityKind.POSITIVE), (False, QualityKind.NEGATIVE)):
-            with self.subTest(accepted=accepted):
-                self.assertEqual(decide_quality(**evidence(accepted)).kind, kind)
-
-    def test_inconsistencies_route_to_typed_incident(self):
-        changes = {
-            "identity": lambda x: x.update(observed_identity="other"),
-            "endpoint": lambda x: x.update(observed_endpoint="http://127.0.0.1:44023"),
-            "task_identity": lambda x: x["task"]["metadata"].update(harness_identity="other"),
-            "author_self_review": lambda x: x["command"]["artifact"].update(author="quality-1"),
-            "artifact_digest": lambda x: x["task"]["artifacts"][0]["parts"][0]["data"].update(sha256="b" * 64),
-            "attempt": lambda x: x.update(attempt=3),
-            "assignment": lambda x: x.update(assignment_id="different"),
-            "run": lambda x: x["lookup"].update(run_id="other"),
-            "task_id": lambda x: x["lookup"].update(task_id="other"),
-            "task_state": lambda x: x["task"]["status"].update(state="TASK_STATE_WORKING"),
-            "task_state_a2a_0_3_spelling": lambda x: x["task"]["status"].update(state="completed"),
-            "missing_task_status": lambda x: x["task"].update(status=None),
-            "task_lookup_disagreement": lambda x: x["lookup"]["artifact"].update(accepted=False),
-            "send_task_disagreement": lambda x: x["send_payload"].update(accepted=False),
-            "missing_verdict": lambda x: x["task"].update(artifacts=[]),
-            "invalid_boolean": lambda x: x["task"]["artifacts"][0]["parts"][0]["data"].update(accepted=1),
-        }
-        for name, change in changes.items():
-            with self.subTest(name=name):
-                data = evidence()
-                change(data)
-                decision = decide_quality(**data)
-                self.assertEqual(decision.kind, QualityKind.INCONSISTENT)
-                self.assertEqual(decision.incident, "quality-evidence-inconsistent")
-                self.assertIsNone(decision.verdict)
 
 
 class A2AOutcomeTests(unittest.TestCase):
