@@ -89,6 +89,24 @@ $PY -B scenarios/live_authoring.py --home /tmp/exo-proto-live-codex-<fresh> --pr
 
 The integrated scenario uses ports 44000–44012, 32400–32404, 44800 and 45200–45205; live authoring uses runner ports 44100 onward, 32420 onward, harness 44830, testbed 45300–45305 and mock 46100–46149. Both require the pinned local binaries named in `INTERFACES.md`. Use a fresh `/tmp/exo-proto-live-*` home for each authoring run. The live-provider command passed once on attempt 2 at `/tmp/exo-proto-live-codex-49b4c44-attempt2-83f74a4e`; attempt 1 stopped before A2A on the scenario assumption described above. All trial state is preserved: r1 `/tmp/exo-proto-int-r1`, r2 `/tmp/exo-proto-int-r2` (including earlier replay attempts under `replay-attempts/`), and the worker smokes under `/tmp/exo-proto-*`.
 
+## Operator stack
+
+The operator's long-running local factory (A2A v1) is managed by `scenarios/operator_stack.py`. Its home defaults to `~/.exomachina/operator-stack` and must not be under `/tmp`, `/private/tmp`, `/var/folders` or `$TMPDIR`, because the macOS temp cleaners empty them. The first stack, under `/private/tmp/exo-sf-4d63084518b4401ca6148cfcf2f9a262`, was lost that way on 8 Oct 2026.
+
+```sh
+PY=/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-10-07/a2a-v1/.venv/bin/python
+$PY -B scenarios/operator_stack.py up       # provision once, then reuse; republish only on a template or build change
+$PY -B scenarios/operator_stack.py status   # processes, ports, v1 cards, runner/Temporal/Postgres, pollers, readiness, broker flags
+$PY -B scenarios/operator_stack.py down     # graceful stop: harness, agents, runner
+```
+
+- **Ports.** Harness `report-factory` (`verified-research@1`) and `/floor` are on `127.0.0.1:47053`. The model agents are on 47100–47103: two research agents, the synthesizer (with `--test-controls`) and Quality, all `codex-subscription` `gpt-6-luna`. The release receiver (`--mode participating`) is on 47104. Runner port base 47020 puts the Temporal frontend on 47022; member base 32620 puts PostgreSQL on 32620.
+- **State and runtime.** Every process runs detached, and its log stays in the home: `logs/`, `services/*/service.log` and `runner/*.log`. The hand-off digest key is created as `handoff-digest.key` on first use. Temporal Server 1.32.0 and the CLI are durable copies under `~/.exomachina/temporal/1.32.0`. PostgreSQL comes from `/opt/homebrew/opt/postgresql@16/bin`.
+- **Broker.** The stack uses the operator's install-wide model broker (`~/.exomachina/model-broker`). The launcher never signs in and never prints a credential.
+- **No inference.** `up`, `status` and `down` submit no work and make no model call. Model agents start with an empty ledger, so they recover nothing.
+- **Floor.** Open `http://127.0.0.1:47053/qa/login` and start a local QA session. With no runs yet, the Observation freshness is `unknown`, and the run-history pill shows it as an error. Submission readiness still reports `ready`.
+- **History.** A new home starts a new factory identity with no job history. The old stack's Observation and Director databases remain in its `/private/tmp` home, but this stack does not import them.
+
 ## Qualification spikes
 
 Three follow-up spikes tested the delayed external A2A agent, two instances in one home and the broker-backed Director. Their checks were fixed before any code change. Results, preserved failures and remaining limits are in [`QUALIFICATION.md`](QUALIFICATION.md). That file supersedes the Director, second-instance and fixture-only-A2A gaps below.
