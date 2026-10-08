@@ -578,6 +578,28 @@ PAYMENT_ADAPTER_PROFILES = {
                 with self.assertRaisesRegex(ValueError, message):
                     qualification.attest_public_exports(export)
 
+    def test_s33_accepts_the_runtime_snapshot_freshness_scope_fields_only(self):
+        """Live Observation snapshots carry schema-declared scope fields (snapshot.schema.json)."""
+        def snapshot(freshness):
+            return {"schema_version": 1, "cursor": "c1", "captured_at": "2026-10-03T12:00:00Z",
+                    "freshness": {"status": "fresh", "observed_at": "2026-10-03T12:00:00Z", **freshness},
+                    "state": {"factory": {"id": "factory-1", "graph": {"nodes": [], "edges": []}},
+                              "runs": [], "active_publication": None, "capacity": None,
+                              "commercial": {"usage": [], "obligations": [], "payments": []}}}
+        for freshness in ({}, {"unavailable_run_ids": []}, {"scope": "factory", "unavailable_run_ids": []},
+                          {"scope": "run", "run_id": "run-1", "included_run_ids": ["run-1", "run-1:child:a"],
+                           "factory_status": "stale", "unavailable_run_ids": ["run-2"]}):
+            with self.subTest(accepted=freshness):
+                qualification._validate_snapshot_envelope(snapshot(freshness))
+        for freshness in ({"scope": "tenant"}, {"scope": "factory", "run_id": "run-1"},
+                          {"run_id": "run-1"}, {"scope": "run", "run_id": "run-1"},
+                          {"scope": "run", "run_id": "run-1", "included_run_ids": [], "factory_status": "fresh"},
+                          {"scope": "factory", "unavailable_run_ids": ["run-1", "run-1"]},
+                          {"scope": "factory", "unavailable_run_ids": ["secret text with spaces"]},
+                          {"scope": "factory", "note": "x"}):
+            with self.subTest(rejected=freshness), self.assertRaisesRegex(ValueError, "freshness|identifier"):
+                qualification._validate_snapshot_envelope(snapshot(freshness))
+
     def test_public_export_attestation_names_missing_canonical_inputs(self):
         export = Path(tempfile.mkdtemp(prefix="exo-public-incomplete-", dir="/tmp"))
         (export / "snapshot.json").write_text("{}", encoding="utf-8")

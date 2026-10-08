@@ -600,9 +600,11 @@ function liveFlow(state, run, nodes, edges, pods) {
       if (isGate(k.node) && item === c.id) {
         here = k.node; ready = Math.max(k.t, arrived);
         const visit = visitAt(k.node, k.t); if (visit && !visit.item) visit.item = item;
-        const vv = verdicts.find(v => c.shas.has(v.artifact_sha256) && v.t >= k.t - EPS);
+        // A retained snapshot keeps the verdict row but not its time: seal on arrival at the gate.
+        const vv = verdicts.find(v => c.shas.has(v.artifact_sha256) && v.t >= k.t - EPS)
+          ?? (run.quality ?? []).filter(v => c.shas.has(v.artifact_sha256) && typeof v.accepted === "boolean" && !verdicts.some(x => x.artifact_sha256 === v.artifact_sha256)).map(v => ({ ...v, t:arrived, untimed:true })).at(-1);
         if (vv) {
-          out.push({ t:at(Math.max(vv.t, arrived)), type:"verdict", step:k.node, item, verdict:vv.accepted === true ? "accepted" : "rejected", rev:vv.artifact_revision, sha:vv.artifact_sha256.slice(0, 12), finding:`${vv.finding_count ?? 0} finding${vv.finding_count === 1 ? "" : "s"}`, job, seal:true });
+          out.push({ t:at(Math.max(vv.t, arrived)), type:"verdict", step:k.node, item, verdict:vv.accepted === true ? "accepted" : "rejected", rev:vv.artifact_revision, sha:vv.artifact_sha256.slice(0, 12), finding:`${vv.finding_count ?? 0} finding${vv.finding_count === 1 ? "" : "s"}`, job, seal:true, ...(vv.untimed ? { observed:"verdict time not recorded" } : {}) });
           if (vv.accepted === false) out.push({ t:at(Math.max(vv.t, arrived)), type:"flag", item, flag:"rejected", job });
           ready = Math.max(ready, vv.t);
         }

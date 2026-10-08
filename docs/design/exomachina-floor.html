@@ -2482,7 +2482,9 @@ const Floor = (() => {
     const dp = f.budget?.director || 0; if (dp) for (const d of R.turns) R.costs.push({ t0:d.t0, t1:d.t1, amt:dp, job:d.job, agent:'director' });
     R.accrued = (t, pick) => { let s = 0; for (const c of R.costs){ if (c.t0 > t || (pick && !pick(c))) continue; s += c.t1 <= t ? c.amt : c.amt * (t - c.t0) / Math.max(1e-6, c.t1 - c.t0); } return s; };
     R.spendBase = f.budget ? f.budget.spentAt.usd - R.accrued(f.budget.spentAt.t) : 0;
-    R.tMax = run.live ? run.now : (R.end ? R.end.t : Math.max(0, ...R.times) + (R.times.length ? 2 : 0));
+    // A finished run replays until its last belt hop settles: hops under 0.8 s are drawn at 0.8 s, so
+    // recorded carriers can still be riding after the observed end.
+    R.tMax = run.live ? run.now : (R.end ? Math.max(R.end.t, ...ev.map(e => e.t + (e.type === 'move' ? e.dur || 0 : 0))) : Math.max(0, ...R.times) + (R.times.length ? 2 : 0));
     R.ops = multi ? [] : buildOps(f, R, null);
     R.opsFor = id => { if (!R.opsCache.has(id)) R.opsCache.set(id, buildOps(f, R, id)); return R.opsCache.get(id); };
     R.con = buildConsole(f, R);

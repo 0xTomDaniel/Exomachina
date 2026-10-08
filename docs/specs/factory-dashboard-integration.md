@@ -1099,4 +1099,11 @@ These settle details the decision left open:
   hand-off once.
 - **Snapshots.** Snapshot run rows do not yet carry hand-off records, so a
   refreshed or retained run shows inferred carriers until the runtime phase
-  adds them to the snapshot contract.
+  adds them to the snapshot contract. *Superseded by the runtime phase (7 Oct
+  2026):* snapshot run rows carry `handoffs: {produced, consumed, ready}`
+  (deduplicated, at most 256 per list), so a refreshed run replays the same
+  recorded carriers. Snapshot quality rows have no verdict time, so a retained
+  carrier is sealed when it arrives at the gate and its inspector says
+  "verdict time not recorded". A finished run replays until its last belt hop
+  settles, because hops are drawn at 0.8 s or more and can outlast a sub-second
+  run.

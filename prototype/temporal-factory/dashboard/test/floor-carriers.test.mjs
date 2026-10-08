@@ -245,3 +245,45 @@ test("retained snapshots carry timed hand-off rows, so a refreshed run replays t
   const extra = structuredClone(snap); extra.state.runs[0].handoffs.items = [];
   assert.throws(() => createDashboardState(extra, { source:"recorded" }), /not allowlisted/);
 });
+
+test("a sub-second finished run replays until its last carrier settles, past the observed end", async () => {
+  // A scripted run ends 0.43 s after it starts; belt hops are drawn at no less than 0.8 s.
+  const tl = timeline(build([
+    produced("research_findings", "gather", "h-fast", 1, 0.19, [item(0, ["text"], DF0, 0.19)]),
+    consumed("synth", "draft", 0.23, [["h-fast", DF0]]),
+    produced("synth", "draft", "h-fast-draft", 1, 0.31, [item(0, ["text"], DD1, 0.31, { artifact_revision:"r1", artifact_sha256:S1 })]),
+    frame("artifact.revised", { ...task, artifact_revision:"r1", artifact_sha256:S1 }, 0.31),
+    consumed("quality", "quality", 0.33, [["h-fast-draft", DD1]]),
+    frame("quality.verdict", { ...task, artifact_revision:"r1", artifact_sha256:S1, reviewer_identity:"identity-quality", accepted:true, finding_count:0 }, 0.35),
+    consumed("release", "publish", 0.40, [["h-fast-draft", DD1]]),
+    runState({ state:"completed", phase:"accepted", ended_at:T(0.43) }, 0.43),
+  ]));
+  const end = tl.find(e => e.type === "end").t;
+  const settle = Math.max(...tl.map(e => e.t + (e.type === "move" ? e.dur ?? 0 : 0)));
+  assert.ok(Math.abs(end - 0.43) < 1e-6, "the end event keeps the observed end time");
+  assert.ok(settle > end + 1, "stretched carrier hops finish after the observed end");
+  const last = of(tl, "carrier:h-fast-draft:1").at(-1);
+  assert.equal(last.at ?? last.to, "publish", "the side-effect node takes the draft carrier off the belt");
+  // The Floor's replay length must cover the settle time, or recorded carriers are cut off.
+  const { readFile } = await import("node:fs/promises");
+  const html = await readFile(new URL("../../../../docs/design/exomachina-floor.html", import.meta.url), "utf8");
+  const line = html.split("\n").find(l => l.includes("R.tMax = run.live"));
+  const tMax = new Function("run", "R", "ev", `${line.trim()} return R.tMax;`)({ live:false }, { end:tl.find(e => e.type === "end"), times:tl.map(e => e.t) }, tl);
+  assert.ok(tMax >= settle - 1e-9, `replay length ${tMax} covers the last carrier at ${settle}`);
+});
+
+test("a retained run keeps its gate seals: snapshot verdict rows seal the carrier on arrival, time not recorded", () => {
+  const streamed = build(reportRun());
+  const run = streamed.runs.get("run-c");
+  const snap = snapshot();
+  const row = snap.state.runs[0];
+  row.handoffs = { produced:run.handoffs.produced, consumed:run.handoffs.consumed, ready:run.handoffs.ready };
+  row.artifacts = run.artifacts; row.quality = run.quality; row.delivery = run.delivery;
+  row.status = { state:"completed", phase:"accepted", started_at:T(0), ended_at:T(35) };
+  const seals = state => timeline(state).filter(e => e.type === "verdict" && e.item?.startsWith("carrier:")).map(e => `${e.item}:${e.verdict}`);
+  const retained = createDashboardState(snap, { source:"recorded" });
+  assert.deepEqual(seals(retained), seals(streamed), "the same carriers are sealed the same way");
+  assert.deepEqual(seals(retained), ["carrier:h-draft:1:rejected", "carrier:h-draft:2:accepted"]);
+  assert.ok(timeline(retained).filter(e => e.type === "verdict").every(e => e.observed === "verdict time not recorded"));
+  assert.ok(timeline(streamed).filter(e => e.type === "verdict").every(e => e.observed === undefined), "streamed verdicts keep their observed time");
+});

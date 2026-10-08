@@ -1627,3 +1627,29 @@ Presentation for the [A2A v1 mediation decision](../../docs/a2a-v1-mediation-dec
 - Gates: `node --test dashboard/test/*.test.mjs` 177/177; Python `unittest discover -s tests` 451 OK (after a gitignored `npm ci` in `broker/` for this fresh worktree).
 - Visual check (headless Edge, worktree HTML served on a private port with a synthetic recorded bundle; screenshots under `/tmp/floor-carriers/`, not committed): filling station, three gems mid-belt after the merge, +N badge with inspector, accepted and rejected seals, control edges, inferred carrier with inspector, low-zoom badges, Demo. Console errors: only the known favicon 404.
 - Spec details settled during implementation are recorded under "Implementation notes" in `docs/specs/factory-dashboard-integration.md` and in INTERFACES.md.
+
+### Runtime hand-off records: emission, snapshots, S33 requalification check, and floor proof (2026-10-07)
+
+Earlier entries and status rows are preserved. This entry adds evidence and does not promote or demote any row. The S33 row stays as recorded: everything below is scripted-provider or fixture evidence on private ports, never operator-stack evidence. Branch `feat/a2a-v1`.
+- **Runtime.** Activities record content-free `handoff.produced.v1` and `handoff.consumed.v1` facts at the factory's own A2A boundary:
+  - output contracts apply, with `output.missing` as a Task incident;
+  - digests are keyed HMAC-SHA256 under a per-instance key at `<home>/handoff-digest.key` (mode 0600), which never enters Workflow history;
+  - the Workflow patch is `exo-handoff-records-v1`.
+- **Observation and snapshots.** Observation projects the facts through exact allowlists. Snapshot run rows retain `handoffs` (deduplicated, at most 256 per list).
+- **Streaming.** `item_ready.v1` is accepted end to end. Live `SendStreamingMessage` dispatch is not wired yet, so no ready rows are emitted today.
+- **S33 check extended.** `scenarios/dashboard_qualification.py` validates hand-off envelopes and snapshot `handoffs` with exact field sets. It also now accepts the schema-declared freshness scope fields (`scope`, `run_id`, `included_run_ids`, `factory_status`, `unavailable_run_ids`). Without that, every current runtime snapshot was rejected with "snapshot freshness fields are unsupported", a validator lag unrelated to hand-offs.
+- **S33 rerun on a real public snapshot.** The snapshot came from a private harness's authenticated WebSocket: two child runs, each with 3 produced and 3 consumed rows. Both the Python check and the Dashboard `validateSnapshot` accepted it. Copied canaries injected into `handoffs` were rejected by both: item `text`, `name` and `url`; row `task_id`; input `metadata`; a foreign `run_id`; an extra list.
+- **`single_factory.py --provider scripted`** (fresh attempt id, isolated `/tmp/exo-sf-handoff-3` home, private ports, no model inference): all 25 checks passed.
+  - Checks: SF-0..3, R1-a..e, R2-a..d, R3-a..e, G-1..5, G-7, and the new G-8 hand-off chain check.
+  - G-8 per route (produced/consumed): route 1 3/3; route 2 4/5, where the repair draft consumes the research and the R1 draft; route 3 5/6.
+  - On every route the chain recomputes, the key is absent from history and events, contract validation passes, and the events are content-free.
+- **Floor proof** (headless Edge against a private scripted harness; two jobs driven through the loopback QA session; screenshots in `/tmp/handoff-runtime/job2-*.png`, not committed):
+  - recorded R1 carriers with green gems leave the `research_risks` and `research_findings` pods;
+  - the draft carrier is sealed "ACCEPTED · r1" at `independent_quality`;
+  - it rides the material bypass belt to `publish`;
+  - `publish` (`output: none`) has only a thin control line to `done`, with no outgoing belt.
+- **Floor fixes found by the proof** (both tested in `dashboard/test/floor-carriers.test.mjs`):
+  - Replay length used the observed end, which cut off carriers on sub-second scripted runs (hops are drawn at 0.8 s or more). A finished run now replays until its last hop settles.
+  - Retained snapshots had verdict rows but no verdict time, so they lost their seals. A retained carrier is now sealed on arrival, marked "verdict time not recorded".
+- **Gates** under `/tmp/exo-qual-suite.lock`: dashboard 182/182, broker 20/20, Python 483 OK.
+- **Remaining limits.** The release station shows "Delivery unverified" because Observation emits two receipts with the same `receipt_id` but different `destination_id` and `delivered_at` values: the release Activity's receipt and the workflow's final-delivery receipt. This predates hand-off records, and the carrier is consumed at `publish`, not released. B-row and live S33 requalification still need the operator's stack on the new build.

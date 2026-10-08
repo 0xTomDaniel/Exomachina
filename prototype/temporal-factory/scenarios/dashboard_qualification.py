@@ -1079,10 +1079,30 @@ def _validate_snapshot_envelope(snapshot: Any) -> Mapping[str, Any]:
     if not isinstance(record.get("freshness"), Mapping):
         raise ValueError("snapshot freshness is missing")
     freshness = record["freshness"]
-    if set(freshness) != {"status", "observed_at"} or freshness.get("status") not in {
-        "fresh", "stale", "disconnected", "unknown",
-    }:
+    states = {"fresh", "stale", "disconnected", "unknown"}
+    # Scope fields follow snapshot.schema.json $defs/freshness exactly: a factory
+    # scope names only unavailable runs; a run scope names its run, the runs it
+    # includes and the factory's own freshness.
+    scope = freshness.get("scope")
+    allowed = {"status", "observed_at"} | ({"scope", "unavailable_run_ids"} if scope == "factory" else
+        {"scope", "run_id", "included_run_ids", "factory_status", "unavailable_run_ids"} if scope == "run" else
+        {"unavailable_run_ids"})
+    if (not {"status", "observed_at"} <= set(freshness) or set(freshness) - allowed
+            or freshness.get("status") not in states
+            or ("scope" in freshness and scope not in {"factory", "run"})):
         raise ValueError("snapshot freshness fields are unsupported")
+    if scope == "run":
+        if not {"run_id", "included_run_ids", "factory_status"} <= set(freshness) or freshness["factory_status"] not in states:
+            raise ValueError("snapshot freshness fields are unsupported")
+        _expect_id(freshness["run_id"], "freshness run id")
+    for key in ("included_run_ids", "unavailable_run_ids"):
+        if key in freshness:
+            ids = freshness[key]
+            if (not isinstance(ids, list) or len(ids) > 256 or len(set(map(str, ids))) != len(ids)
+                    or (key == "included_run_ids" and not ids)):
+                raise ValueError("snapshot freshness fields are unsupported")
+            for value in ids:
+                _expect_id(value, "freshness run id")
     commercial = _expect_mapping(state.get("commercial"), "snapshot commercial projection")
     if set(commercial) != {"usage", "obligations", "payments"}:
         raise ValueError("snapshot commercial projection fields are unsupported")
