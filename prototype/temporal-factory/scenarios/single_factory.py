@@ -910,8 +910,11 @@ def _route(base: str, instance: Path, question: str, number: int,
 
 
 def _import_audit() -> dict:
-    # The A2A v1 wire Adapters are shared protocol code, not factory state.
-    src_names = {p.stem for p in SRC.glob("*.py")} - {"model_broker", "a2a_v1", "a2a_v1_server"}
+    # The A2A v1 wire Adapters are shared protocol code and the admission queue
+    # is a self-contained capacity store each service owns; neither is factory
+    # state. They stay shared only while they import no other factory module.
+    shared = {"a2a_v1", "a2a_v1_server", "admission"}
+    src_names = {p.stem for p in SRC.glob("*.py")} - shared - {"model_broker"}
     def names(path: Path) -> set[str]:
         tree = ast.parse(path.read_text())
         return {alias.name.split(".")[0] for node in ast.walk(tree)
@@ -921,7 +924,9 @@ def _import_audit() -> dict:
     product = [p for p in SRC.glob("*.py") if "services" in names(p)]
     running = [ROOT / "services" / name for name in
                ("model_agent.py", "agent_roles.py", "release_server.py")]
-    service = [p for p in running if names(p) & src_names]
+    service = [p for p in running if names(p) & src_names] + [
+        SRC / f"{name}.py" for name in sorted(shared)
+        if names(SRC / f"{name}.py") & (src_names | {"model_broker"})]
     launcher = ROOT / "services" / "testbed.py"
     launcher_imports = sorted(names(launcher) & (src_names | {"model_broker", "agent_roles"}))
     launcher_tree = ast.parse(launcher.read_text())
