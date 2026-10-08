@@ -420,7 +420,7 @@ def main() -> None:
                       "limits": limits, "model": {"provider": args.provider,
                         "billing": "none" if level == "synthetic" else "subscription",
                         "live": level == "real"},
-                      "director_model": "fixture", "release": "http-release (fixture)",
+                      "director_model": "fixture", "release": "a2a-release (fixture agent)",
                       "wall_times": {"level": "real", "value": {}}}
     if broker_status is not None:
         evidence["claims"]["broker_status"] = claim(broker_status, "real")
@@ -679,11 +679,19 @@ def main() -> None:
                 "v2 run used wrong publication")
         checked(run["build_id"] == authored["publication"]["build_id"], "v2 run used wrong build")
         evidence["claims"]["pinned_run"] = claim(run, "real")
+        # The A2A release agent is factory-unaware: the factory journal maps the
+        # run's release attempt to the agent's own Task id.
+        journal = [json.loads(row["value"]) for row in sqlite_rows(
+            home / "runner" / "outcomes.sqlite3", "SELECT value FROM outcomes")]
+        release_tasks = {row.get("task_id") for row in journal
+                         if row.get("effect_kind") == "release"
+                         and str(row.get("run_id", "")).startswith(run_id)}
         released = [row for row in sqlite_rows(home / "services" / "release" / "release.sqlite3",
-                                                "SELECT * FROM releases")
-                    if row["run_id"].startswith(run_id)]
-        checked(len(released) == 1, "expected one HTTP release fixture effect")
-        evidence["claims"]["release"] = claim({"transport": "http-release (fixture)",
+                                                "SELECT * FROM deliveries")
+                    if row["task_id"] in release_tasks]
+        checked(len(released) == 1 and released[0]["effect_count"] == 1,
+                "expected one A2A release fixture effect")
+        evidence["claims"]["release"] = claim({"transport": "a2a-release (fixture agent)",
             "effects": released}, "synthetic")
 
         step = "Temporal history export"

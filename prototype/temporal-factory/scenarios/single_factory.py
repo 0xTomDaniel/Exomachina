@@ -39,6 +39,7 @@ CHECK_IDS = ("SF-0", "SF-1", "SF-2", "SF-3", *(f"R1-{x}" for x in "abcde"),
              *(f"G-{x}" for x in (1, 2, 3, 4, 5, 7, 8)))
 # G-8 (A2A v1 mediation decision 4): content-free hand-off records observed
 # at the factory boundary, digests chaining from producer to consumer.
+RECEIPT_TYPE = "com.exomachina.delivery.receipt.v1"
 HANDOFF_TYPES = {"produced": "com.exomachina.handoff.produced.v1",
                  "consumed": "com.exomachina.handoff.consumed.v1",
                  "ready": "com.exomachina.handoff.item_ready.v1"}
@@ -138,9 +139,35 @@ def _run_actions(evidence: dict, route: int, agent: str) -> list[dict]:
             if row.get("action_id", "").startswith(str(run_id) + ":") and run_id]
 
 
-def _release_rows(evidence: dict, route: int) -> list[dict]:
+def _release_journal(evidence: dict, route: int) -> list[dict]:
     run_id = (evidence.get("routes", {}).get(str(route)) or {}).get("child_run_id")
-    return [row for row in evidence.get("releases", []) if row.get("run_id") == run_id]
+    return [j for j in evidence.get("journal") or []
+            if j.get("effect_kind") == "release" and run_id and j.get("run_id") == run_id]
+
+
+def _release_rows(evidence: dict, route: int) -> list[dict]:
+    """The A2A release agent's own deliveries for one route.
+
+    The agent is factory-unaware: its store has no run id. The factory journal
+    maps each release attempt to the A2A messageId and taskId it used.
+    """
+    journal = _release_journal(evidence, route)
+    tasks = {j.get("task_id") for j in journal if j.get("task_id")}
+    messages = {j.get("message_id") for j in journal if j.get("message_id")}
+    return [row for row in evidence.get("releases", [])
+            if row.get("task_id") in tasks or row.get("message_id") in messages]
+
+
+def _unjournaled_releases(evidence: dict) -> list[dict]:
+    """Agent deliveries no factory release attempt accounts for (must be none)."""
+    journal = [j for j in evidence.get("journal") or [] if j.get("effect_kind") == "release"]
+    tasks = {j.get("task_id") for j in journal}
+    return [row for row in evidence.get("releases", []) if row.get("task_id") not in tasks]
+
+
+def _receipt_facts(route: dict) -> list[dict]:
+    return [event["data"] for event in (route.get("receipt_audit") or {}).get("events") or []
+            if isinstance(event, dict) and event.get("type") == RECEIPT_TYPE]
 
 
 def _findings_on_claim(verdict_value: dict, stimulus: dict, synthesis: dict) -> bool:
@@ -169,18 +196,32 @@ def _stimulus_bound(row: dict, synthesis_tasks: list[dict]) -> bool:
 
 
 def _exact_release(route: dict, releases: list[dict], revision: str, sha: str) -> bool:
+    """One A2A delivery of exactly the accepted bytes, one receipt, one receipt fact."""
     task = route.get("task") or {}
     data = _data(task)
     artifacts = task.get("artifacts") or []
     acceptance = data.get("acceptance") or {}
     receipt = data.get("release_receipt") or {}
+    facts = _receipt_facts(route)
     return (len(releases) == 1 and len(artifacts) == 1 and
             artifacts[0].get("artifactId") == sha and
             data.get("revision") == revision and data.get("sha256") == sha and
             acceptance.get("revision") == revision and acceptance.get("sha256") == sha and
             receipt.get("revision") == revision and receipt.get("sha256") == sha and
-            releases[0].get("revision") == revision and releases[0].get("sha256") == sha and
-            releases[0].get("accepted_effect_count") == 1)
+            # The agent's own record of the delivered bytes and its receipt.
+            releases[0].get("state") == "completed" and releases[0].get("sha256") == sha and
+            releases[0].get("effect_count") == 1 and
+            releases[0].get("task_id") == receipt.get("task_id") and
+            releases[0].get("message_id") == receipt.get("message_id") and
+            releases[0].get("receipt_id") == receipt.get("receipt_id") and
+            releases[0].get("byte_length") == receipt.get("byte_length") and
+            receipt.get("outcome") == "delivered" and
+            # Exactly one delivery.receipt Observation fact for this delivery.
+            len(facts) == 1 and facts[0].get("receipt_id") == receipt.get("receipt_id") and
+            facts[0].get("artifact_revision") == revision and
+            facts[0].get("artifact_sha256") == sha and facts[0].get("outcome") == "delivered" and
+            facts[0].get("destination_id") == receipt.get("destination_identity") and
+            (route.get("receipt_audit") or {}).get("dashboard_contract_valid") is True)
 
 
 def _quality_bound(e: dict, route_no: int, synthesis: dict, quality: dict,
@@ -534,8 +575,13 @@ def check_evidence(e: dict) -> dict[str, dict]:
          report_sha256 == _sha(markdown)) and
         len(release_journal1) == 1 and release_journal1[0].get("phase") == "confirmed" and
         release1[0].get("sha256") == _sha((a1.get("artifact") or {}).get("content", "")) and
-        (release_journal1[0].get("receipt") or {}).get("sha256") == h1,
+        release1[0].get("byte_length") ==
+            len(((a1.get("artifact") or {}).get("content") or "").encode("utf-8")) and
+        (release_journal1[0].get("receipt") or {}).get("sha256") == h1 and
+        release_journal1[0].get("task_id") == release1[0].get("task_id") and
+        release_journal1[0].get("message_id") == release1[0].get("message_id"),
         {"release": _release_rows(e, 1), "artifact": t1.get("artifacts"),
+         "receipt_facts": _receipt_facts(r1),
          "usefulness": useful, "claim_count": len(claims), "claims_cite_packet": cited,
          "packet_ids": sorted(packet_ids), "report_path": report_path,
          "report_sha256": report_sha256}, label)
@@ -607,7 +653,7 @@ def check_evidence(e: dict) -> dict[str, dict]:
         _exact_release(r2, _release_rows(e, 2), ak2, h2) and
         all(x.get("sha256") != (first2.get("artifact") or {}).get("sha256") for x in _release_rows(e, 2)),
         {"acceptance": accepted2, "release": _release_rows(e, 2), "artifact": t2.get("artifacts"),
-         "max_repairs": max_repairs}, label, behavior="spontaneous verdict" if live else quality_behavior)
+         "receipt_facts": _receipt_facts(r2), "max_repairs": max_repairs}, label, behavior="spontaneous verdict" if live else quality_behavior)
 
     stimuli3 = r3.get("stimulus_log") or []
     s3 = _run_actions(e, 3, "synthesizer"); q3 = _run_actions(e, 3, "quality")
@@ -661,8 +707,10 @@ def check_evidence(e: dict) -> dict[str, dict]:
         calls3[aborted[0]].get("arguments", {}).get("sha256") == child3.get("current_sha256") and
         _recorded_state(t3) == "completed" and
         r3.get("result_status") == "aborted" and not (t3.get("artifacts") or []) and
-        len(_release_rows(e, 3)) == 0,
-        {"calls": calls3, "task": t3, "release": _release_rows(e, 3)}, label,
+        len(_release_rows(e, 3)) == 0 and not _release_journal(e, 3) and
+        not _receipt_facts(r3) and not _unjournaled_releases(e),
+        {"calls": calls3, "task": t3, "release": _release_rows(e, 3),
+         "receipt_facts": _receipt_facts(r3), "unjournaled": _unjournaled_releases(e)}, label,
         behavior="caller-prompted, model-decided (abort is the only permitted action)" if live else
                  "caller-prompted scripted abort")
     turns = [x for r in routes.values() for x in r.get("director_turns") or []]
@@ -1116,6 +1164,11 @@ def _history_dict_events(document: dict) -> list[dict]:
             attrs = {"scheduled_event_id": int(raw["scheduledEventId"]),
                      "started_event_id": int(raw["startedEventId"]),
                      "result": decode(raw.get("result"))}
+        elif name == "WORKFLOW_EXECUTION_COMPLETED":
+            # A run's result repeats its release receipt; the receipt audit
+            # must see it to prove that repetition is not a second fact.
+            raw = event["workflowExecutionCompletedEventAttributes"]
+            attrs = {"result": decode(raw.get("result"))}
         else:
             continue
         events.append({"event_id": int(event["eventId"]), "event_type": name,
@@ -1159,6 +1212,36 @@ def _handoff_audit(raw_paths: list[tuple[str, Path]], factory_id: str, key_path:
     return {"events": [{"type": e["type"], "time": e["time"], "data": e["data"]} for e in events],
             "key_configured": bool(key), "key_absent_history": key_absent_history,
             "key_absent_events": bool(key) and not any(m in encoded for m in markers),
+            "dashboard_contract_valid": contract.returncode == 0 and contract.stdout.strip() == "ok",
+            "histories_checked": len(raw_paths)}
+
+
+def _receipt_audit(raw_paths: list[tuple[str, Path]], factory_id: str, scratch: Path) -> dict:
+    """Project the route's histories through the Runtime source and Observation
+    allowlist and keep every delivery.receipt fact, validated by the dashboard
+    contract. One delivery must yield exactly one fact across all workflows."""
+    from types import SimpleNamespace
+    from observation import project_source_record
+    from observation_source import RuntimeObservationSource
+    source = RuntimeObservationSource.__new__(RuntimeObservationSource)
+    source.director = SimpleNamespace(identity=factory_id)
+    source.database = scratch / "receipt-audit.sqlite3"
+    events, source_ids = [], []
+    for workflow_id, raw_path in raw_paths:
+        document = json.loads(raw_path.read_text())
+        for record in source._history_records(workflow_id, _history_dict_events(document),
+                                              None, None):
+            if record.get("event_type") == RECEIPT_TYPE:
+                source_ids.append(record.get("source_id"))
+                events.append(project_source_record(record, factory_id)[3])
+    contract = subprocess.run([os.environ.get("EXO_NODE", "node"), "--input-type=module", "-e",
+        "import {validateCloudEvent} from './dashboard/contract.mjs';"
+        "import fs from 'node:fs';"
+        "for (const e of JSON.parse(fs.readFileSync(0,'utf8'))) validateCloudEvent(e);"
+        "console.log('ok');"], cwd=ROOT, input=json.dumps(events), capture_output=True,
+        text=True, timeout=60)
+    return {"events": [{"type": e["type"], "time": e["time"], "data": e["data"]} for e in events],
+            "source_ids": source_ids,
             "dashboard_contract_valid": contract.returncode == 0 and contract.stdout.strip() == "ok",
             "histories_checked": len(raw_paths)}
 
@@ -1269,7 +1352,7 @@ def main() -> int:
                     if synthetic else {},
                 "setup": {"fresh_home": True,
                           "environment": {name: name in os.environ for name in env_names}},
-                "release_label": "http-release (fixture)"}
+                "release_label": "a2a-release (fixture agent)"}
     evidence["git_commit"] = subprocess.check_output(["git", "rev-parse", "HEAD"],
         cwd=ROOT, text=True).strip()
     evidence["checker_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
@@ -1493,6 +1576,9 @@ def main() -> int:
                 [(w["workflow_id"], Path(w["raw_path"])) for w in route["workflows"]],
                 testbed.get("factory_id") or "report-factory", home / "handoff-digest.key",
                 home)
+            route["receipt_audit"] = _receipt_audit(
+                [(w["workflow_id"], Path(w["raw_path"])) for w in route["workflows"]],
+                testbed.get("factory_id") or "report-factory", home)
             director_stream_windows.extend(x for x in
                 jsonl(model_home / "broker-events.jsonl")[route_event_before:]
                 if x.get("event") == "stream")
@@ -1513,7 +1599,7 @@ def main() -> int:
             "director": sum(row.get("session") not in agent_sessions
                 for row in director_stream_windows)}
         evidence["incidents"] = _rows(instance / "director.sqlite3", "incidents")
-        evidence["releases"] = _rows(home / "services" / "release" / "release.sqlite3", "releases")
+        evidence["releases"] = _rows(home / "services" / "release" / "release.sqlite3", "deliveries")
         raw_stimuli = http(f"http://127.0.0.1:{args.services_port_base + 2}/_test/stimulus-log")
         evidence["stimulus_log"] = raw_stimuli if isinstance(raw_stimuli, list) else raw_stimuli.get("applied", [])
         for number in routes:

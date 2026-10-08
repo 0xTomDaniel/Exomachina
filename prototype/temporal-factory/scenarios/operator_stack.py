@@ -161,7 +161,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--pg-bin", type=Path, default=DEFAULT_PG_BIN)
     parser.add_argument("--harness-port", type=int, default=DEFAULT_HARNESS_PORT)
     parser.add_argument("--agent-port-base", type=int, default=DEFAULT_AGENT_PORT_BASE,
-                        help="four model agents then the release receiver")
+                        help="four model agents then the A2A release agent")
     parser.add_argument("--runner-port-base", type=int, default=DEFAULT_RUNNER_PORT_BASE)
     parser.add_argument("--runner-member-base", type=int, default=DEFAULT_RUNNER_MEMBER_BASE,
                         help="PostgreSQL and Temporal membership ports; base+4 must be <= 32767")
@@ -457,6 +457,7 @@ def down(args: argparse.Namespace) -> dict:
 
 def _card_summary(port: int) -> dict:
     import a2a_v1
+    from agent_binding import card_identity, digest
     code, card = _http_json(f"http://127.0.0.1:{port}/.well-known/agent-card.json")
     if code != 200 or not isinstance(card, dict):
         return {"status": code, "v1_only": False}
@@ -467,6 +468,7 @@ def _card_summary(port: int) -> dict:
     except a2a_v1.ProtocolError:
         v1_only = False
     return {"status": code, "v1_only": v1_only,
+            "identity": card_identity(digest(a2a_v1.card_without_endpoint(card))),
             "supported_interfaces": [{"protocolBinding": i.get("protocolBinding"),
                                       "protocolVersion": i.get("protocolVersion")}
                                      for i in interfaces if isinstance(i, dict)],
@@ -514,6 +516,13 @@ def status(args: argparse.Namespace) -> dict:
         port = plan[name]
         entry = {"pid": record.get("pid"), "alive": _alive(record.get("pid")), "port": port,
                  "listening": port in listening}
+        if name == "release":
+            # The release receiver is an ordinary A2A v1 agent: its Agent Card
+            # is its only status surface, and its identity is its card pin.
+            entry["card"] = _card_summary(port)
+            entry["identity_matches"] = entry["card"].get("identity") == record.get("identity")
+            services[name] = entry
+            continue
         service_code, service_health = _http_json(f"http://127.0.0.1:{port}/health")
         entry["health"] = service_code
         if isinstance(service_health, dict):

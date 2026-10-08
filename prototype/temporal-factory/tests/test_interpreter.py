@@ -40,7 +40,7 @@ class InterpreterTests(unittest.TestCase):
                         "synthesizer": "report_synthesis@1",
                         "quality": "report_quality_review@1"}
         contracts = {name: {"contract": name, "version": 1,
-                            "capability": capabilities.get(name, "http-release@1")}
+                            "capability": capabilities.get(name, "release@1")}
                      for name in package["bindings"]}
         policy = {"authority": "quality", "version": 1}
         code_digest = source_digest(SRC)

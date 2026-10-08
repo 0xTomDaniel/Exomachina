@@ -1,4 +1,4 @@
-"""The release receiver is an ordinary A2A v1 agent with output none.
+"""The release receiver is an ordinary A2A v1 agent whose result is a receipt.
 
 Its only routes are the JSON-RPC endpoint and the Agent Card; it deduplicates by
 A2A ``messageId``; its receipt is a data-part artifact over the exact delivered

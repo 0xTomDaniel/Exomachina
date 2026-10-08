@@ -48,6 +48,58 @@ def as_a2a_v1(value):
     return value
 
 
+def as_a2a_release(e: dict) -> dict:
+    """Re-express the preserved observation's release evidence as A2A release evidence.
+
+    ``scripted-7.json`` predates the A2A release agent (8 Oct 2026): its
+    receiver rows carried factory run ids. The A2A agent is factory-unaware, so
+    its rows are keyed by its own Task, message and receipt ids; the factory
+    journal maps each release attempt to them, and the route's Observation
+    holds exactly one delivery.receipt fact per delivery.
+    """
+    contents = {(task.get("artifact") or {}).get("sha256"): (task.get("artifact") or {}).get("content")
+                for task in e["agents"]["synthesizer"]["tasks"]}
+    deliveries = []
+    for number in ("1", "2", "3"):
+        route = e["routes"][number]
+        route["receipt_audit"] = {"events": [], "source_ids": [],
+                                  "dashboard_contract_valid": True, "histories_checked": 2}
+        for row in e["journal"]:
+            if row.get("effect_kind") != "release" or row.get("run_id") != route["child_run_id"]:
+                continue
+            content = contents[row["sha256"]]
+            task_id, message_id, receipt_id = (f"release-task-{number}", f"message-{number}",
+                                               f"receipt-{number}")
+            receipt = {"release_id": row["action_id"], "run_id": row["run_id"],
+                       "definition_digest": row["definition_digest"], "revision": row["revision"],
+                       "sha256": row["sha256"], "receipt_id": receipt_id,
+                       "byte_length": len(content.encode("utf-8")),
+                       "media_type": "application/json", "accepted_at": "2026-10-08T10:00:00Z",
+                       "outcome": "delivered", "task_id": task_id, "message_id": message_id,
+                       "destination_identity": e["agents"]["release"]["identity"],
+                       "a2a_protocol": "1.0"}
+            row.update(task_id=task_id, message_id=message_id, receipt=receipt)
+            for part in route["task"]["artifacts"][0]["parts"]:
+                if "data" in part and "release_receipt" in part["data"]:
+                    part["data"]["release_receipt"] = receipt
+            deliveries.append({"task_id": task_id, "context_id": "context-" + number,
+                "message_id": message_id, "fingerprint": "f" * 64, "state": "completed",
+                "status_text": "Delivered.", "receipt_id": receipt_id,
+                "media_type": "application/json", "sha256": row["sha256"],
+                "byte_length": receipt["byte_length"], "accepted_at": receipt["accepted_at"],
+                "sends": 1, "effect_count": 1})
+            route["receipt_audit"]["source_ids"].append("delivery-receipt:" + receipt_id)
+            route["receipt_audit"]["events"].append({
+                "type": "com.exomachina.delivery.receipt.v1", "time": receipt["accepted_at"],
+                "data": {"schema_version": 1, "factory_id": "report-factory",
+                         "run_id": row["run_id"], "receipt_id": receipt_id,
+                         "artifact_revision": row["revision"], "artifact_sha256": row["sha256"],
+                         "destination_id": receipt["destination_identity"],
+                         "delivered_at": receipt["accepted_at"], "outcome": "delivered"}})
+    e["releases"] = deliveries
+    return e
+
+
 def handoff_audit() -> dict:
     """In-memory G-8 hand-off evidence for preserved observations.
 
@@ -79,8 +131,8 @@ def handoff_audit() -> dict:
 class ReviewTwoCheckerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.snapshot = as_a2a_v1(json.loads(
-            (ROOT / "evidence" / "single-factory" / "scripted-7.json").read_text()))
+        cls.snapshot = as_a2a_release(as_a2a_v1(json.loads(
+            (ROOT / "evidence" / "single-factory" / "scripted-7.json").read_text())))
 
     def setUp(self):
         self.e = copy.deepcopy(self.snapshot)
@@ -181,6 +233,35 @@ class ReviewTwoCheckerTests(unittest.TestCase):
         self.e = copy.deepcopy(self.snapshot)
         self.e["releases"][0]["sha256"] = "unrelated"
         self.fails("R1-d")
+
+    def test_release_is_one_a2a_delivery_with_exactly_one_receipt_fact(self):
+        def mutate(change):
+            self.e = copy.deepcopy(self.snapshot)
+            for route in self.e["routes"].values():
+                route["handoff_audit"] = handoff_audit()
+            change()
+        facts = lambda n: self.e["routes"][n]["receipt_audit"]["events"]
+        # A duplicate receipt fact for the same delivery (the 8 Oct floor bug).
+        mutate(lambda: facts("1").append(copy.deepcopy(facts("1")[0])))
+        self.fails("R1-d")
+        mutate(lambda: facts("2").clear())
+        self.fails("R2-d")
+        mutate(lambda: facts("1")[0]["data"].update(receipt_id="another-receipt"))
+        self.fails("R1-d")
+        mutate(lambda: self.e["routes"]["1"]["receipt_audit"].update(
+            dashboard_contract_valid=False))
+        self.fails("R1-d")
+        # The agent's own record must bind the journaled Task, message and receipt.
+        for field in ("task_id", "message_id", "receipt_id", "byte_length"):
+            mutate(lambda: self.e["releases"][0].update({field: "other"}))
+            self.fails("R1-d")
+        mutate(lambda: self.e["releases"][0].update(effect_count=2))
+        self.fails("R1-d")
+        # A delivery no factory release attempt accounts for, or any route-3 receipt.
+        mutate(lambda: self.e["releases"].append({**self.e["releases"][0], "task_id": "stray"}))
+        self.fails("R3-d")
+        mutate(lambda: facts("3").append(copy.deepcopy(facts("1")[0])))
+        self.fails("R3-d")
 
     def test_f6_structured_controls_and_whole_stimulus_log(self):
         self.e["routes"]["2"]["caller_messages"][0]["append_claim"] = {"text": "hidden"}

@@ -891,6 +891,13 @@ rejection/repair/acceptance, and exhaustion/abort. Defects on repair/exhaustion
 routes were induced, and delivery was an HTTP fixture. It does not qualify Luna,
 extra repair, human escalation, the current mock capacity/prices, or payments.
 
+Amendment (8 Oct 2026): the release receiver is no longer an HTTP fixture. It is
+an ordinary A2A v1 agent reached only through `SendMessage` and `GetTask`, whose
+Task completes with a receipt artifact over the exact delivered bytes; one
+delivery yields exactly one `delivery.receipt` fact. It remains a local fixture
+destination, not a real external release target. The qualification above was
+observed before this change.
+
 The [existing prototype Interface description](../../prototype/temporal-factory/INTERFACES.md)
 and [prototype overview](../../prototype/temporal-factory/README.md) describe the
 integration to extend. The [factory floor](../design/exomachina-floor.html) is the

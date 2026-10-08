@@ -1,4 +1,4 @@
-"""Release receiver: an ordinary A2A v1 agent with ``output: none``.
+"""Release receiver: an ordinary A2A v1 agent whose result is its receipt.
 
 A client delivers one document as a single Message Part (text, raw bytes or
 structured data) carrying a ``mediaType``. The agent records the exact bytes it
