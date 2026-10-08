@@ -2,6 +2,8 @@
 
 23 September 2026 · branch `feat/temporal-factory-prototype` · macOS arm64, Python 3.12.9, Node 26.0.0, temporalio 1.33.0, Temporal Server 1.32.0, PostgreSQL 16.15, strands-agents 1.57.0, a2a-sdk 0.3.26, `@earendil-works/pi-ai` 0.87.1 · **a lean, runnable integration candidate, not product qualification.**
 
+**A2A v1.0 update (7 Oct 2026).** The prototype now speaks A2A v1.0 only (a2a-sdk 1.2.2, operator decision 1 in `docs/a2a-v1-mediation-decision-2026-10-07.md`). There is no 0.3 interface, dual advertisement, shim, or fallback. Requests use `SendMessage` and `GetTask` with the `A2A-Version: 1.0` header (plus `A2A-Extensions` for a required extension). Results are `{task}` or `{message}`, Task states are `TASK_STATE_*`, and Parts carry one of `text`/`raw`/`url`/`data` with no `kind`. Rows and evidence below dated before 7 Oct 2026 record the a2a-sdk 0.3.26 wire (`message/send`, `tasks/get`, lowercase states) as it was observed then. Reproduce with the new pinned environment below; the shared 2026-09-22 environment stays on 0.3 and is no longer the prototype interpreter. See `INTERFACES.md`, "A2A v1 baseline and hand-off records".
+
 This merges the four bounded Temporal lanes (`temporal-director-contract`, `temporal-version-binding`, `temporal-quality-reconciliation`, `temporal-package-ops`) into one candidate built around the corrected architecture. A customized Strands harness instance runs as an ordinary agent or as a factory. In factory mode, its Director agent and Factory Module sit inside the instance, behind that instance's normal A2A identity and `verified-research@1` capability contract. There is no separate factory endpoint, and callers never choose a graph, package or version. The shared contract between modules is in [`INTERFACES.md`](INTERFACES.md).
 
 ## Verdict
@@ -69,7 +71,7 @@ The credential stays in the Node process and an owner-only install-wide store, s
 ## Reproduce
 
 ```sh
-PY=/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python
+PY=/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-10-07/a2a-v1/.venv/bin/python   # a2a-sdk 1.2.2, A2A v1.0 only (7 Oct 2026)
 cd prototype/temporal-factory
 npm --prefix broker ci --offline --cache /tmp/exomachina-pi-strands-debate/npm-cache
 node --test broker/test/*.test.mjs                # 18 passed in evidence/broker-phase/

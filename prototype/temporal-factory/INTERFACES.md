@@ -12,7 +12,7 @@ Branch `feat/temporal-factory-prototype`. Root: `prototype/temporal-factory/`. T
 
 ## Conventions (all lanes)
 
-- Python: `/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python` (3.12.9, temporalio 1.33.0, strands-agents 1.57.0, a2a-sdk 0.3.26). Run tests with `-B`.
+- Python: `/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-10-07/a2a-v1/.venv/bin/python` (3.12.9, temporalio 1.33.0, strands-agents 1.57.0 without its `a2a` extra, a2a-sdk 1.2.2; A2A v1.0 only, see "A2A v1 baseline and hand-off records"). Run tests with `-B`. The shared 2026-09-22 environment (a2a-sdk 0.3.26) is not modified and is no longer the prototype interpreter.
 - All runtime modules are flat in `src/`. Import them by module name, with `src/` on `sys.path`. `services/` modules add `../src` to `sys.path`. Nothing imports from `tools/spikes/`.
 - **No deletion.** Do not run `rm`, `shutil.rmtree`, `Path.unlink`, `os.remove`, or equivalent on anything. Leave trial state behind and report its path. If any command or automatic approval is rejected, stop that action and report it. Do not reword it, retry it another way, or route around it.
 - Trial state lives only under `/tmp/exo-proto-<lane>-<suffix>/`. Stay inside your assigned port block.
@@ -586,7 +586,7 @@ start a third paid workflow automatically. B06 may use deterministic normal
 Runtime command proof. The canonical basic gate governs current qualification;
 historical S/P evidence remains preserved as later roadmap evidence.
 
-Basic admission uses the existing normal factory A2A `message/send` path. The
+Basic admission uses the existing normal factory A2A `SendMessage` path. The
 explicit instance option `basic_single_active_job: true` reserves one durable
 Director-owned slot before provider preflight or model selection, including the
 interval before a run exists. Another original Task is rejected rather than
@@ -650,9 +650,11 @@ Runtime may append a deterministic `projection-correction:assignment-node-link-v
 ## A2A v1 baseline and hand-off records (operator decision, 7 Oct 2026)
 
 Authoritative direction: [A2A v1 baseline, factory mediation, and hand-off records](../../docs/a2a-v1-mediation-decision-2026-10-07.md).
-This section supersedes the `a2a-sdk 0.3.26` pin in Conventions once the
-migration lands, and supersedes every `message/send`, `kind`-discriminated part,
-and lowercase Task-state reference in this file and its lanes.
+This section supersedes the former `a2a-sdk 0.3.26` pin (the migration landed
+on 7 Oct 2026; Conventions now names the v1 environment), and supersedes every
+`message/send`, `tasks/get`, `kind`-discriminated part, and lowercase wire
+Task-state reference in this file and its lanes. Lowercase state names remain
+the version-neutral Observation vocabulary.
 
 **Wire protocol.** Every A2A server (harness in factory and agent mode,
 capability services, model agents, Quality, supplier fixtures) and every A2A
@@ -671,9 +673,45 @@ Adapter, floor composer) uses A2A v1.0 only.
   extension fails with `ExtensionSupportRequiredError`.
 
 The migration runs in a new pinned Python environment with `a2a-sdk` 1.x,
-recorded here when created. The shared 2026-09-22 spike environment is not
+recorded below. The shared 2026-09-22 spike environment is not
 modified, and the operator's running stack is restarted onto v1 only with
 operator approval.
+
+**Migration record (7 Oct 2026).**
+
+- Environment: `/Users/tomdaniel/Documents/Ember_Cognition_Inc/Software/Exomachina/tools/spikes/2026-10-07/a2a-v1/.venv`,
+  built from the committed `tools/spikes/2026-10-07/a2a-v1/pyproject.toml` and
+  `uv.lock` (`UV_PROJECT_ENVIRONMENT=<venv> uv sync --frozen --python 3.12.9`).
+  Pins: Python 3.12.9, `a2a-sdk[fastapi]` 1.2.2, temporalio 1.33.0,
+  strands-agents 1.57.0, fastapi 0.141.1, uvicorn 0.53.0, httpx 0.28.1.
+- strands-agents: every release through 1.58.1 pins `a2a-sdk<0.4.0` in its
+  `a2a` extra. The prototype never uses Strands' A2A layer, so strands-agents
+  1.57.0 is installed without that extra.
+- Wire Adapter: `src/a2a_v1.py` (SDK-free; methods, headers, Part/Task readers,
+  the single `TASK_STATE_*` <-> Observation-state mapping, v1-only Agent Card
+  validation, and integral-number restoration for protobuf `Value` data).
+  Server Adapter: `src/a2a_v1_server.py` builds every Agent Card with exactly one
+  `supportedInterfaces` entry (`JSONRPC`, `1.0`) and mounts the SDK
+  `JsonRpcDispatcher` with `enable_v0_3_compat=False` behind a strict pre-check.
+- Wire behaviour: `message/send`, `tasks/get` and other 0.3 methods answer
+  `MethodNotFound` (-32601). A missing or 0.3 `A2A-Version` header answers
+  `VersionNotSupportedError` (-32009). A `kind` on a Message or Part, a 0.3
+  role, `configuration.blocking`, or a Part with more than one content field
+  answers `InvalidParams` (-32602). A send that does not list every required
+  card extension in `A2A-Extensions` answers `ExtensionSupportRequiredError`
+  (-32008); the factory's required extension is
+  `urn:exomachina:a2a-action-contract:v1`. Asynchronous sends use
+  `configuration.returnImmediately: true` and poll `GetTask`.
+- Services use the SDK `LegacyRequestHandler` (TaskStore-authoritative flow),
+  because their ledger-backed stores acknowledge only Tasks the ledger already
+  committed.
+- Agent Card digest pins hash the card with the interface `url` removed. Pins,
+  descriptors and read-only usage records made under 0.3 do not match v1 cards
+  and need fresh provisioning.
+- Proof: `tests/test_a2a_v1_only.py`, plus a fixture-only
+  `scenarios/single_factory.py --provider scripted` run on the new environment
+  (all A2A-dependent checks pass; SF-2 fails on the pre-existing
+  `services/model_agent.py` -> `src/admission.py` import, unchanged from 0.3).
 
 **Observation stays version-neutral.** The A2A Adapter maps `TASK_STATE_*` to the
 existing Observation state vocabulary (`working`, `input-required`, …). No
