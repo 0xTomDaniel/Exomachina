@@ -214,10 +214,11 @@ export function createLiveAdapter({
         if(current.status!=='ready')return {lifecycle:'unavailable',reason:`Current factory cannot accept work: ${current.reason_code}.`};
       }
       if(submitFn)return submitFn(request);
-      if(!messageSendEndpoint||typeof fetcher!=="function")return {lifecycle:"unavailable",reason:"A2A message/send endpoint is not configured by server bootstrap"};
-      const response=await fetcher(messageSendEndpoint,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(request)});
+      if(!messageSendEndpoint||typeof fetcher!=="function")return {lifecycle:"unavailable",reason:"A2A SendMessage endpoint is not configured by server bootstrap"};
+      // A2A v1.0 only: every JSON-RPC request carries the A2A-Version service parameter.
+      const response=await fetcher(messageSendEndpoint,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json",Accept:"application/json","A2A-Version":"1.0"},body:JSON.stringify(request)});
       const body=await response.json().catch(()=>({}));
-      if(response.status===401||response.status===403)return {lifecycle:"unavailable",reason:"Unauthenticated: the same-origin server session is not authorized for A2A message/send."};
+      if(response.status===401||response.status===403)return {lifecycle:"unavailable",reason:"Unauthenticated: the same-origin server session is not authorized for A2A SendMessage."};
       if(!response.ok)throw new Error(`A2A submission failed (${response.status})`);
       return body;
     },

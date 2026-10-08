@@ -4092,14 +4092,14 @@ function controlReason({requireRun=true,runId=null,requireSubmission=false}={}){
   if(currentSource==='live'){
     if(bootstrap.authorizedSession!==true)return 'Unauthenticated: no server-authorized same-origin session is configured.';
     if(requireSubmission&&bootstrap.submissionReadinessEndpoint){
-      if(!bootstrap.a2aMessageSendEndpoint)return 'A2A message/send endpoint is not configured by server bootstrap.';
+      if(!bootstrap.a2aMessageSendEndpoint)return 'A2A SendMessage endpoint is not configured by server bootstrap.';
       if(!adapter.submissionConnectionReady?.())return 'Factory connection is unavailable; reconnect before submitting.';
       if(!submissionReadiness.ready)return submissionReadiness.reason;
       return '';
     }
     if(dashboardState?.transport?.status!=='connected'||dashboardState?.freshness?.status!=='fresh')return 'Live Observation is not current and connected; commands are unavailable.';
     if(requireSubmission&&dashboardState?.freshness?.scope==='run'&&dashboardState.freshness.factory_status!=='fresh')return 'Selected run is current, but factory-wide Observation is incomplete; new submission is unavailable.';
-    if(requireSubmission&&!bootstrap.a2aMessageSendEndpoint)return 'A2A message/send endpoint is not configured by server bootstrap.';
+    if(requireSubmission&&!bootstrap.a2aMessageSendEndpoint)return 'A2A SendMessage endpoint is not configured by server bootstrap.';
     if(requireSubmission&&!submissionReadiness.ready)return submissionReadiness.reason;
   }
   if(requireRun&&!currentRunTask(runId||window.Alpine.store('floor').runId))return 'No observed Task and context IDs are available for this action.';
@@ -4179,17 +4179,19 @@ async function submitBrief(value,run=null,onStatus=()=>{}){
   const reason=run?controlReason({runId:run.run_id}):controlReason({requireRun:false,requireSubmission:true});if(reason){report(reason);return;}
   const brief=String(value||'').trim();if(!brief){report('Enter a brief before submitting.');return;}
   const selectedAdapter=adapter,generation=sourceGeneration,submittingFactory=activeFactoryId;
-  const message={messageId:`dash-${crypto.randomUUID()}`,role:'user',parts:[{kind:'text',text:brief}]};
+  // A2A v1.0: no kind discriminators; the role is the ROLE_* enum name.
+  const message={messageId:`dash-${crypto.randomUUID()}`,role:'ROLE_USER',parts:[{text:brief,mediaType:'text/plain'}]};
   if(run){message.contextId=run.task.context_id;message.taskId=run.task.id;}
   report(currentSource==='demo'?'Checking local Demo brief…':'Submitting brief through A2A…');
   try{
-    const result=await selectedAdapter.submit(currentSource==='demo'?{text:brief}:{jsonrpc:'2.0',id:message.messageId,method:'message/send',params:{message}});
+    const result=await selectedAdapter.submit(currentSource==='demo'?{text:brief}:{jsonrpc:'2.0',id:message.messageId,method:'SendMessage',params:{message}});
     if(generation!==sourceGeneration||submittingFactory!==activeFactoryId)return;
-    const replyError=briefReplyError(result?.result?.parts||result?.result?.status?.message?.parts);
+    // v1 wraps the SendMessage result as {message} or {task}.
+    const replyError=briefReplyError(result?.result?.message?.parts||result?.result?.task?.status?.message?.parts);
     if(['rejected','unavailable'].includes(result?.lifecycle)||result?.error||replyError){report(result.reason||result.error?.message||replyError||'Submission rejected');return;}
     if(currentSource==='demo'){report('Demo only: no real work was started. '+(result.reason||'The brief stays local.'));return;}
-    const acceptedTask=result?.result,replyParts=acceptedTask?.parts||acceptedTask?.status?.message?.parts||[];
-    const replyText=replyParts.filter(part=>part.kind==='text'&&typeof part.text==='string').map(part=>part.text).join('\n').slice(0,4000);
+    const acceptedTask=result?.result?.task,replyParts=result?.result?.message?.parts||acceptedTask?.status?.message?.parts||[];
+    const replyText=replyParts.filter(part=>part&&!('kind' in part)&&typeof part.text==='string').map(part=>part.text).join('\n').slice(0,4000);
     report(replyText?`Factory reply: ${replyText}`:'Brief received by A2A; workflow outcome is pending Observation.');
     if(SAFE_SELECTION_ID.test(acceptedTask?.metadata?.run_id||'')&&SAFE_SELECTION_ID.test(acceptedTask?.id||'')&&SAFE_SELECTION_ID.test(acceptedTask?.contextId||'')){const store=window.Alpine.store('floor');store.dashboardRevealTask={taskId:acceptedTask.id,contextId:acceptedTask.contextId};store.dashboardRunId=null;store.dashboardScope='all';liveHistory=null;store.setView('Floor');await selectFactoryAndRestore(submittingFactory,null,{runId:acceptedTask.metadata.run_id,taskId:acceptedTask.id,contextId:acceptedTask.contextId});}
     if(generation===sourceGeneration&&submittingFactory===activeFactoryId)await refreshSubmissionReadiness();

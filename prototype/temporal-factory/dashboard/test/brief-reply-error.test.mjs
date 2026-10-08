@@ -8,7 +8,7 @@ const start=html.indexOf('  const DIRECTOR_FAILURE_TEXT='),end=html.indexOf('  c
 const briefReplyError=runInNewContext(html.slice(start,end)+'\nbriefReplyError',{});
 
 test('a failed Director model call reads as no job started, not a refusal',()=>{
- const parts=[{kind:'data',data:{error:'Director issued no accepted command',director_turn:{accepted:[],failure:'RuntimeError',model_calls:1,tool_calls:0}}}];
+ const parts=[{data:{error:'Director issued no accepted command',director_turn:{accepted:[],failure:'RuntimeError',model_calls:1,tool_calls:0}}}];
  const text=briefReplyError(parts);
  assert.match(text,/^No job started: the Director could not act because the model provider returned an error \(RuntimeError\)/);
  assert.match(briefReplyError([{data:{error:'x',director_turn:{accepted:[],failure:'SubscriptionQuotaExhausted'}}}]),/usage limit/);

@@ -910,7 +910,8 @@ def _route(base: str, instance: Path, question: str, number: int,
 
 
 def _import_audit() -> dict:
-    src_names = {p.stem for p in SRC.glob("*.py")} - {"model_broker"}
+    # The A2A v1 wire Adapters are shared protocol code, not factory state.
+    src_names = {p.stem for p in SRC.glob("*.py")} - {"model_broker", "a2a_v1", "a2a_v1_server"}
     def names(path: Path) -> set[str]:
         tree = ast.parse(path.read_text())
         return {alias.name.split(".")[0] for node in ast.walk(tree)

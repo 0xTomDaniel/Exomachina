@@ -93,10 +93,26 @@ test("submission reports its lifecycle in the composer and guards a double click
 
 test("plain A2A replies remain visible without inventing a new workflow", async () => {
  const {runInNewContext}=await import('node:vm');
- const start=floorHtml.indexOf('async function submitBrief('),end=floorHtml.indexOf('function appendBriefForm(',start),outcomes=new Map(),statuses=[];
- const fn=runInNewContext('('+floorHtml.slice(start,end).trim()+')',{currentSource:'live',activeFactoryId:'factory-one',sourceGeneration:1,briefOutcomeByFactory:outcomes,controlReason:()=>'',sourceStatus:()=>{},adapter:{submit:async()=>({result:{parts:[{kind:'text',text:'Fixture reply only.'}]}})},crypto:{randomUUID:()=> 'fixture-id'},SAFE_SELECTION_ID:/^[a-z]+$/,refreshSubmissionReadiness:async()=>{}});
- await fn('Fixture input',null,value=>statuses.push(value));
- assert.equal(statuses.at(-1),'Factory reply: Fixture reply only.');
- assert.equal(outcomes.get('["live","factory-one"]'),'Factory reply: Fixture reply only.');
+ const start=floorHtml.indexOf('async function submitBrief('),end=floorHtml.indexOf('function appendBriefForm(',start);
+ const run=async reply=>{
+  const outcomes=new Map(),statuses=[],requests=[];
+  const fn=runInNewContext('('+floorHtml.slice(start,end).trim()+')',{currentSource:'live',activeFactoryId:'factory-one',sourceGeneration:1,briefOutcomeByFactory:outcomes,controlReason:()=>'',sourceStatus:()=>{},adapter:{submit:async request=>{requests.push(request);return reply;}},crypto:{randomUUID:()=> 'fixture-id'},SAFE_SELECTION_ID:/^[a-z]+$/,refreshSubmissionReadiness:async()=>{}});
+  await fn('Fixture input',null,value=>statuses.push(value));
+  return {outcomes,statuses,requests};
+ };
+ // A2A v1.0: the request is SendMessage with a kind-free text Part and ROLE_USER.
+ const v1=await run({result:{message:{messageId:'reply',role:'ROLE_AGENT',parts:[{text:'Fixture reply only.'}]}}});
+ assert.equal(v1.statuses.at(-1),'Factory reply: Fixture reply only.');
+ assert.equal(v1.outcomes.get('["live","factory-one"]'),'Factory reply: Fixture reply only.');
+ assert.equal(v1.requests.length,1);
+ assert.equal(v1.requests[0].method,'SendMessage');
+ assert.equal(v1.requests[0].params.message.role,'ROLE_USER');
+ assert.deepEqual(JSON.parse(JSON.stringify(v1.requests[0].params.message.parts)),[{text:'Fixture input',mediaType:'text/plain'}]);
+ // A v1 Director error reply arrives as {message}; it is reported, not treated as a Task.
+ const failed=await run({result:{message:{messageId:'reply',role:'ROLE_AGENT',parts:[{data:{error:'factory permits one active job; another original Task is busy'}}]}}});
+ assert.equal(failed.statuses.at(-1),'factory permits one active job; another original Task is busy');
+ // A 0.3-shaped reply (unwrapped result, kind Parts) is never shown as a factory reply.
+ const legacy=await run({result:{kind:'message',parts:[{kind:'text',text:'Legacy reply.'}]}});
+ assert.equal(legacy.statuses.at(-1),'Brief received by A2A; workflow outcome is pending Observation.');
  assert.match(floorHtml,/outcome.dataset.briefResult/);
 });

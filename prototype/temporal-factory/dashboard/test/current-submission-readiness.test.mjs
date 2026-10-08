@@ -12,7 +12,7 @@ test('current submission projection is strict and factory-bound',()=>{
 });
 test('current submission rechecks its own authority while old-run commands remain gated',async()=>{
  let socket,gets=0,posts=0,projection=response();
- const adapter=createLiveAdapter({principalResolverReady:true,observationEndpoint:'ws://localhost/observations',a2aMessageSendEndpoint:'/',submissionReadinessEndpoint:'/submission/readiness',socketFactory:()=>socket=new Socket(),fetcher:async(_url,options)=>{if(options.method==='POST'){posts++;return {ok:true,json:async()=>({fixture:true})};}gets++;assert.equal(options.cache,'no-store');return {ok:true,json:async()=>projection};}});
+ const adapter=createLiveAdapter({principalResolverReady:true,observationEndpoint:'ws://localhost/observations',a2aMessageSendEndpoint:'/',submissionReadinessEndpoint:'/submission/readiness',socketFactory:()=>socket=new Socket(),fetcher:async(_url,options)=>{if(options.method==='POST'){posts++;assert.equal(options.headers['A2A-Version'],'1.0');return {ok:true,json:async()=>({fixture:true})};}gets++;assert.equal(options.cache,'no-store');return {ok:true,json:async()=>projection};}});
  adapter.observe('factory-one');socket.open();
  assert.equal(adapter.submissionConnectionReady(),true);
  assert.equal((await adapter.submit({params:{message:{taskId:'old-task',contextId:'old-context'}}})).lifecycle,'unavailable');assert.equal(gets,0);assert.equal(posts,0);
