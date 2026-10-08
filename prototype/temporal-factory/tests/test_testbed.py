@@ -49,7 +49,7 @@ class TestbedTests(unittest.TestCase):
             self.assertEqual(set(contract), {"name", "role", "capability", "a2a_protocol",
                                              "input", "output", "operations", "attested"})
             self.assertEqual(contract["role"], binding["role"])
-            self.assertEqual(contract["a2a_protocol"], "0.3.0")
+            self.assertEqual(contract["a2a_protocol"], "1.0")
             self.assertIs(contract["attested"], False)
             self.assertIs(contract["operations"]["idempotent_action_id"], True)
             self.assertEqual(contract["operations"]["lookup"],

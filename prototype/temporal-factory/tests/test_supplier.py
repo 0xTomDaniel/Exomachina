@@ -66,7 +66,9 @@ class SupplierHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         request = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        if request.get("method") == "message/send":
+        if request.get("method") == "SendMessage":
+            assert self.headers.get("A2A-Version") == "1.0"
+            assert self.headers.get("A2A-Extensions") == agent_binding.EXTENSION_URI
             self.server.sends += 1
             message = request["params"]["message"]
             command = message["parts"][0]["data"]
@@ -84,9 +86,9 @@ class SupplierHandler(BaseHTTPRequestHandler):
                 self.close_connection = True
                 return
             self.reply({"jsonrpc": "2.0", "id": request["id"],
-                        "result": self.server.tasks[action_id]["task"]})
+                        "result": {"task": self.server.tasks[action_id]["task"]}})
             return
-        if request.get("method") == "tasks/get":
+        if request.get("method") == "GetTask":
             task_id = request["params"]["id"]
             self.server.task_get_ids.append(task_id)
             saved = next((value for value in self.server.tasks.values()
@@ -135,7 +137,8 @@ class SupplierServer(ThreadingHTTPServer):
         port = self.server_address[1]
         self.card = {
             "name": "synthetic nested supplier",
-            "url": f"http://127.0.0.1:{port}",
+            "supportedInterfaces": [{"url": f"http://127.0.0.1:{port}",
+                                     "protocolBinding": "JSONRPC", "protocolVersion": "1.0"}],
             "skills": [{"id": "nested_factory@1"}],
             "capabilities": {"extensions": [{
                 "uri": agent_binding.EXTENSION_URI,
@@ -162,11 +165,11 @@ class SupplierServer(ThreadingHTTPServer):
             "sha256": hashlib.sha256(content.encode()).hexdigest(),
         }
         return {
-            "kind": "task", "id": f"remote-task-{number}",
+            "id": f"remote-task-{number}",
             "metadata": metadata,
-            "status": {"state": "completed"},
+            "status": {"state": "TASK_STATE_COMPLETED"},
             "artifacts": [{"artifactId": artifact["sha256"],
-                           "parts": [{"kind": "data", "data": artifact}]}],
+                           "parts": [{"data": artifact}]}],
         }
 
 
@@ -178,7 +181,7 @@ class SupplierFanoutTests(unittest.TestCase):
         self.directory = Path(tempfile.mkdtemp(prefix="exo-proto-supplier-", dir="/tmp"))
         self.database = self.directory / "outcomes.sqlite3"
         self.snapshot = self.directory / "agent_snapshot.json"
-        url = self.server.card["url"]
+        url = self.server.card["supportedInterfaces"][0]["url"]
         self.snapshot.write_text(json.dumps({"snapshot_version": 1,
             "agents": {self.server.identity: {"url": url}}}))
         self.parent = ParentAssignment("parent-task-7", "parent-run-3", "d" * 64,
@@ -264,7 +267,7 @@ class SupplierFanoutTests(unittest.TestCase):
                 else:
                     self.server.contract.pop("idempotency", None)
                 self.server.refresh_card()
-                contract = agent_binding.pin(self.server.card["url"], self.server.identity)
+                contract = agent_binding.pin(self.server.card["supportedInterfaces"][0]["url"], self.server.identity)
                 child = self.child(suffix=mode[0], contract=contract)
                 child = SupplierRequest(**{**child.__dict__, "action_id": f"action-{mode}",
                     "run_id": f"run-{mode}", "assignment_id": f"assignment-{mode}"})
@@ -290,7 +293,7 @@ class SupplierFanoutTests(unittest.TestCase):
     def test_supplier_must_declare_parent_child_echo_before_send(self):
         self.server.contract["supplier_assignment_echo"] = None
         self.server.refresh_card()
-        contract = agent_binding.pin(self.server.card["url"], self.server.identity)
+        contract = agent_binding.pin(self.server.card["supportedInterfaces"][0]["url"], self.server.identity)
         with self.assertRaisesRegex(SupplierBindingError, "does not declare"):
             self.fanout.dispatch_child(self.parent, self.child(contract=contract))
         self.assertEqual(self.server.sends, 0)

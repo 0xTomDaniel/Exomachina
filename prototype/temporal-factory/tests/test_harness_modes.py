@@ -23,6 +23,7 @@ sys.path.insert(0, str(SRC))
 sys.path.insert(0, str(ROOT / "services"))
 
 import harness  # noqa: E402
+import a2a_v1_server  # noqa: E402
 sys.path.insert(0, str(ROOT / "scenarios"))
 from single_factory import CHECK_IDS, FOLLOW_UP, check_evidence  # noqa: E402
 from authoring import approve, materialize  # noqa: E402
@@ -255,7 +256,7 @@ print("same-context")
             self.assertEqual(start_workflow.await_count, 1)
             self.assertEqual(ensure_runner.call_count, 1)
             queued_task = harness.sync(harness.FactoryTaskStore(self.director).get("task-2"))
-            self.assertEqual(queued_task.status.state.value, "working")
+            self.assertEqual(queued_task.status.state, harness.task_state("working"))
             self.assertEqual(start_workflow.await_count, 1)
 
             run_id = self.director.run_id_for("action-1")
@@ -296,7 +297,7 @@ print("same-context")
                 harness.CURRENT_ACTOR.reset(actor)
             self.assertEqual(accepted["admission_state"], "queued")
             task = harness.sync(harness.FactoryTaskStore(self.director).get("task-paused"))
-        self.assertEqual(task.status.state.value, "working")
+        self.assertEqual(task.status.state, harness.task_state("working"))
         self.assertEqual(queue.get("action-paused")["state"], "queued")
         self.assertEqual(ensure_runner.call_count, 0)
         self.assertEqual(start_workflow.await_count, 0)
@@ -440,12 +441,14 @@ print("same-context")
                            {"state": "completed", "status": {}, "result": result})
         self.assertEqual(len(task.artifacts), 1)
         self.assertEqual(task.artifacts[0].artifact_id, "a" * 64)
-        self.assertEqual(task.artifacts[0].parts[0].root.text, "# Accepted report\n")
-        self.assertEqual(task.artifacts[0].parts[1].root.data["packet_digest"], "packet")
+        self.assertEqual(task.artifacts[0].parts[0].text, "# Accepted report\n")
+        self.assertEqual(task.artifacts[0].parts[0].media_type, "text/markdown")
+        self.assertEqual(a2a_v1_server.part_data(task.artifacts[0].parts[1])["packet_digest"],
+                         "packet")
         aborted = store._task("task", "context", record,
                               {"state": "completed", "status": {},
                                "result": {"status": "aborted"}})
-        self.assertIsNone(aborted.artifacts)
+        self.assertEqual(len(aborted.artifacts), 0)
 
     def test_inspection_returns_only_semantic_wait_fields(self):
         raw = {"phase": "awaiting-director", "current_revision": "r3",
@@ -496,8 +499,8 @@ print("same-context")
                 "result": None, "incident": None})
         self.assertEqual(task.id, "original-task")
         self.assertEqual(task.context_id, "original-context")
-        self.assertEqual(task.status.state.value, "input-required")
-        self.assertEqual(task.status.message.parts[0].root.data, {"director_wait": {
+        self.assertEqual(task.status.state, harness.task_state("input-required"))
+        self.assertEqual(a2a_v1_server.part_data(task.status.message.parts[0]), {"director_wait": {
             "phase": "awaiting-human", "child_id": "run-human:child:abc",
             "decision_actor": "fixture-observer", "permitted_actions": ["abort"],
             "deadline": 1234.5, "applied_decisions": {"escalate-1": "escalate-recorded"}}})

@@ -11,6 +11,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from a2a.types import Task, TaskStatus
+from google.protobuf.json_format import MessageToDict
 from fastapi.testclient import TestClient
 
 SRC = Path(__file__).resolve().parents[1] / "src"
@@ -18,9 +19,10 @@ sys.path.insert(0, str(SRC))
 
 import director_agent  # noqa: E402
 import harness  # noqa: E402
+import a2a_v1  # noqa: E402
 
 
-AUTH = {"Authorization": "Bearer fixture-token"}
+AUTH = {"Authorization": "Bearer fixture-token", **a2a_v1.headers()}
 ERROR = "factory caller messages must contain text parts only"
 
 
@@ -33,14 +35,13 @@ class StubRunner:
 
 
 def send(parts, *, task_id=None, context_id=None):
-    message = {"kind": "message", "role": "user", "messageId": str(uuid4()),
-               "parts": parts}
+    message = {"role": "ROLE_USER", "messageId": str(uuid4()), "parts": parts}
     if task_id:
         message["taskId"] = task_id
     if context_id:
         message["contextId"] = context_id
-    return {"jsonrpc": "2.0", "id": str(uuid4()), "method": "message/send",
-            "params": {"message": message, "configuration": {"blocking": False}}}
+    return {"jsonrpc": "2.0", "id": str(uuid4()), "method": "SendMessage",
+            "params": {"message": message, "configuration": {"returnImmediately": True}}}
 
 
 class FactoryBoundaryTests(unittest.TestCase):
@@ -71,15 +72,15 @@ class FactoryBoundaryTests(unittest.TestCase):
              patch.object(harness.Director, "perform", side_effect=AssertionError("performed")), \
              TestClient(app) as client:
             for parts in (
-                [{"kind": "data", "data": {"op": "start", "action_id": "a",
-                                            "inputs": {"question": "report?"}}}],
-                [{"kind": "data", "data": {"op": "abort", "action_id": "b",
-                                            "revision": "r1", "sha256": "a" * 64}}],
-                [{"kind": "text", "text": "Start a report"},
-                 {"kind": "data", "data": {"op": "inspect"}}],
+                [{"data": {"op": "start", "action_id": "a",
+                           "inputs": {"question": "report?"}}}],
+                [{"data": {"op": "abort", "action_id": "b",
+                           "revision": "r1", "sha256": "a" * 64}}],
+                [{"text": "Start a report"},
+                 {"data": {"op": "inspect"}}],
             ):
                 result = client.post("/", json=send(parts), headers=AUTH).json()["result"]
-                self.assertEqual(result["parts"][0]["data"], {"error": ERROR})
+                self.assertEqual(result["message"]["parts"][0]["data"], {"error": ERROR})
                 self.assertEqual(self.counts(), (0, 0, 0))
 
     def test_text_reaches_director_turn_and_starts(self):
@@ -105,10 +106,10 @@ class FactoryBoundaryTests(unittest.TestCase):
              patch.object(harness.Director, "ensure_runner", return_value={}), \
              patch.object(harness.Director, "_start", no_temporal_start), \
              TestClient(app) as client:
-            result = client.post("/", json=send([{"kind": "text", "text": "Research this report"}]),
+            result = client.post("/", json=send([{"text": "Research this report"}]),
                                  headers=AUTH).json()["result"]
-        self.assertEqual(result["kind"], "task")
-        self.assertEqual(result["status"]["state"], "working")
+        self.assertEqual(set(result), {"task"})
+        self.assertEqual(result["task"]["status"]["state"], "TASK_STATE_WORKING")
         self.assertEqual(self.counts(), (1, 1, 1))
         with sqlite3.connect(self.instance / "director.sqlite3") as db:
             self.assertEqual(db.execute("SELECT op FROM commands").fetchone()[0], "start")
@@ -122,7 +123,8 @@ class FactoryBoundaryTests(unittest.TestCase):
             return {"accepted_command": "start"}
 
         async def task_get(store, task_id, context=None):
-            return Task(id=task_id, context_id="context", status=TaskStatus(state="working"))
+            return Task(id=task_id, context_id="context",
+                        status=TaskStatus(state=harness.task_state("working")))
 
         async def task_save(store, task, context=None):
             pass
@@ -131,10 +133,10 @@ class FactoryBoundaryTests(unittest.TestCase):
              patch.object(harness.FactoryTaskStore, "get", task_get), \
              patch.object(harness.FactoryTaskStore, "save", task_save), \
              TestClient(app) as client:
-            result = client.post("/", json=send([{"kind": "data", "data": {
+            result = client.post("/", json=send([{"data": {
                 "op": "start", "action_id": "legacy-a",
                 "inputs": {"question": "report?"}}}]), headers=AUTH).json()["result"]
-        self.assertEqual(result["kind"], "task")
+        self.assertEqual(set(result), {"task"})
         self.assertEqual([command["op"] for command in commands], ["start"])
 
     def test_task_metadata_and_artifacts_have_no_actor_epoch_or_token(self):
@@ -150,7 +152,7 @@ class FactoryBoundaryTests(unittest.TestCase):
             "state": "completed", "status": {}, "result": {"status": "accepted",
                 "artifact": accepted, "acceptance": {"sha256": "a" * 64},
                 "receipt": {"sha256": "a" * 64}}})
-        visible = json.dumps(task.model_dump(mode="json"), sort_keys=True)
+        visible = json.dumps(MessageToDict(task), sort_keys=True)
         for secret in ("authorized_input_actor", "fixture-operator", "incarnation",
                        "actor", "epoch", "token"):
             self.assertNotIn(secret, visible)

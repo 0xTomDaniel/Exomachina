@@ -19,11 +19,13 @@ from fastapi.testclient import TestClient
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "services"))
+sys.path.insert(0, str(ROOT / "src"))
+import a2a_v1  # noqa: E402
 from delayed_agent import (CONTRACT_DIGEST, CONTRACT_NAME, EXTENSION_URI,  # noqa: E402
                            canonical, create_app, digest)
 
 
-AUTH = {"Authorization": "Bearer fixture-token"}
+AUTH = {"Authorization": "Bearer fixture-token", **a2a_v1.headers([EXTENSION_URI])}
 
 
 def command(action_id="action-1", **changes):
@@ -35,14 +37,14 @@ def command(action_id="action-1", **changes):
 
 def send_body(value, request_id=None):
     return {"jsonrpc": "2.0", "id": request_id or str(uuid4()),
-            "method": "message/send",
-            "params": {"message": {"role": "user", "messageId": str(uuid4()),
-                                   "parts": [{"kind": "data", "data": value}]},
-                       "configuration": {"blocking": False}}}
+            "method": "SendMessage",
+            "params": {"message": {"role": "ROLE_USER", "messageId": str(uuid4()),
+                                   "parts": [{"data": value}]},
+                       "configuration": {"returnImmediately": True}}}
 
 
 def get_body(task_id):
-    return {"jsonrpc": "2.0", "id": str(uuid4()), "method": "tasks/get",
+    return {"jsonrpc": "2.0", "id": str(uuid4()), "method": "GetTask",
             "params": {"id": task_id}}
 
 
@@ -64,7 +66,11 @@ class DelayedAgentTests(unittest.TestCase):
     def test_card_contract_working_completion_and_idempotency(self):
         with TestClient(create_app(self.state, 46210, delay_seconds=0.15)) as client:
             card = client.get("/.well-known/agent-card.json").json()
-            self.assertEqual(card["protocolVersion"], "0.3.0")
+            self.assertEqual(card["supportedInterfaces"], [{
+                "url": "http://127.0.0.1:46210/", "protocolBinding": "JSONRPC",
+                "protocolVersion": "1.0"}])
+            self.assertNotIn("protocolVersion", card)
+            self.assertNotIn("url", card)
             self.assertEqual([skill["id"] for skill in card["skills"]],
                              ["counter_evidence@1"])
             extensions = card["capabilities"]["extensions"]
@@ -78,13 +84,13 @@ class DelayedAgentTests(unittest.TestCase):
             self.assertEqual(digest(client.get("/contract", headers=AUTH).json()),
                              CONTRACT_DIGEST)
             self.assertEqual(client.get("/contract").status_code, 401)
-            first = client.post("/", json=send_body(command()), headers=AUTH).json()["result"]
-            self.assertEqual(first["status"]["state"], "working")
+            first = client.post("/", json=send_body(command()), headers=AUTH).json()["result"]["task"]
+            self.assertEqual(first["status"]["state"], "TASK_STATE_WORKING")
             self.assertEqual(first["metadata"], {
                 "action_id": "action-1", "run_id": "run-1",
                 "definition_digest": "definition-1", "agent_identity": params["identity"]})
             task_id = first["id"]
-            again = client.post("/", json=send_body(command()), headers=AUTH).json()["result"]
+            again = client.post("/", json=send_body(command()), headers=AUTH).json()["result"]["task"]
             self.assertEqual(again["id"], task_id)
             self.assertEqual(client.get("/_test/effects", headers=AUTH).json(), {
                 "identity": params["identity"], "effects": {"action-1": 1}, "total": 1})
@@ -94,7 +100,7 @@ class DelayedAgentTests(unittest.TestCase):
             self.assertEqual(client.get("/_test/effects", headers=AUTH).json()["total"], 1)
             time.sleep(0.18)
             done = client.post("/", json=get_body(task_id), headers=AUTH).json()["result"]
-            self.assertEqual(done["status"]["state"], "completed")
+            self.assertEqual(done["status"]["state"], "TASK_STATE_COMPLETED")
             self.assertEqual(len(done["artifacts"]), 1)
             artifact = done["artifacts"][0]
             data = artifact["parts"][0]["data"]
@@ -117,8 +123,8 @@ class DelayedAgentTests(unittest.TestCase):
         self.addCleanup(self._stop, first)
         self._ready(old_base, first)
         old_card = http(old_base, "/.well-known/agent-card.json", authenticated=False)
-        task = http(old_base, "/", body=send_body(command()))["result"]
-        self.assertEqual(task["status"]["state"], "working")
+        task = http(old_base, "/", body=send_body(command()))["result"]["task"]
+        self.assertEqual(task["status"]["state"], "TASK_STATE_WORKING")
         self._stop(first)
         time.sleep(0.15)
         new_base = "http://127.0.0.1:46212"
@@ -127,18 +133,16 @@ class DelayedAgentTests(unittest.TestCase):
         self.addCleanup(self._stop, second)
         self._ready(new_base, second)
         new_card = http(new_base, "/.well-known/agent-card.json", authenticated=False)
-        self.assertNotEqual(old_card["url"], new_card["url"])
-        self.assertEqual(digest({key: value for key, value in old_card.items()
-                                 if key != "url"}),
-                         digest({key: value for key, value in new_card.items()
-                                 if key != "url"}))
+        self.assertNotEqual(a2a_v1.card_url(old_card), a2a_v1.card_url(new_card))
+        self.assertEqual(digest(a2a_v1.card_without_endpoint(old_card)),
+                         digest(a2a_v1.card_without_endpoint(new_card)))
         done = http(new_base, "/", body=get_body(task["id"]))["result"]
-        self.assertEqual(done["status"]["state"], "completed")
+        self.assertEqual(done["status"]["state"], "TASK_STATE_COMPLETED")
         self.assertEqual(done["id"], task["id"])
         self.assertEqual(done["metadata"]["agent_identity"],
                          task["metadata"]["agent_identity"])
         self.assertEqual(http(new_base, "/", body=send_body(command()))
-                         ["result"]["id"], task["id"])
+                         ["result"]["task"]["id"], task["id"])
         self.assertEqual(http(new_base, "/_test/effects")["total"], 1)
 
     def test_mismatch_fault_and_identity_file_override(self):
@@ -147,8 +151,8 @@ class DelayedAgentTests(unittest.TestCase):
                                    identity_file=impostor_file,
                                    mismatch_artifact_for="action-1")) as client:
             card = client.get("/.well-known/agent-card.json").json()
-            result = client.post("/", json=send_body(command()), headers=AUTH).json()["result"]
-            self.assertEqual(result["status"]["state"], "working")
+            result = client.post("/", json=send_body(command()), headers=AUTH).json()["result"]["task"]
+            self.assertEqual(result["status"]["state"], "TASK_STATE_WORKING")
             completed = client.post("/", json=get_body(result["id"]),
                                     headers=AUTH).json()["result"]
             data = completed["artifacts"][0]["parts"][0]["data"]
@@ -183,7 +187,7 @@ class DelayedAgentTests(unittest.TestCase):
         self._ready(base, restarted)
         effects = http(base, "/_test/effects")
         self.assertEqual(effects["effects"], {"action-1": 1})
-        task = http(base, "/", body=send_body(command()))["result"]
+        task = http(base, "/", body=send_body(command()))["result"]["task"]
         self.assertEqual(task["id"], original_task_id)
         self.assertEqual(task["metadata"]["agent_identity"], effects["identity"])
         self.assertEqual(http(base, "/", body=get_body(task["id"]))["result"]["id"],

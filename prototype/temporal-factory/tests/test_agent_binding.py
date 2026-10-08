@@ -24,7 +24,10 @@ class BindingTests(unittest.TestCase):
         self.snapshot(self.url)
 
     def make_card(self, url, identity):
-        return {"name": "counter evidence", "url": url, "skills": [{"id": "counter_evidence@1"}],
+        return {"name": "counter evidence",
+                "supportedInterfaces": [{"url": url, "protocolBinding": "JSONRPC",
+                                         "protocolVersion": "1.0"}],
+                "skills": [{"id": "counter_evidence@1"}],
                 "capabilities": {"extensions": [{"uri": agent_binding.EXTENSION_URI,
                     "required": True, "params": {"identity": identity,
                     "contract": agent_binding.CONTRACT,
@@ -72,6 +75,19 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(pin["reconcile"], "opaque")
         self.assertEqual(pin["a2a_extension"]["contract_digest"],
                          agent_binding.digest(self.contract))
+
+    def test_card_that_is_not_v1_only_is_rejected(self):
+        legacy = {key: value for key, value in self.card.items() if key != "supportedInterfaces"}
+        legacy.update({"url": self.url, "protocolVersion": "0.3.0"})
+        dual = dict(self.card, supportedInterfaces=[
+            *self.card["supportedInterfaces"],
+            {"url": self.url + "/v03", "protocolBinding": "JSONRPC", "protocolVersion": "0.3"}])
+        extra_legacy_field = dict(self.card, protocolVersion="0.3.0")
+        for card in (legacy, dual, extra_legacy_field):
+            with self.subTest(card=sorted(card)), patch.object(
+                    agent_binding, "read_json", side_effect=self.responses(card)):
+                with self.assertRaisesRegex(ValueError, "A2A v1.0 only"):
+                    agent_binding.pin(self.url, self.identity)
 
 
 if __name__ == "__main__":

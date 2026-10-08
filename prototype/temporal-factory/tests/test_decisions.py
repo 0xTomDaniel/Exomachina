@@ -24,7 +24,7 @@ def evidence(accepted: bool = True) -> dict:
     command = {"op": "review", "action_id": action, "run_id": run,
                "definition_digest": "d" * 64,
                "artifact": {"revision": revision, "sha256": sha, "author": "author-1"}}
-    task = {"id": "task-1", "status": {"state": "completed"},
+    task = {"id": "task-1", "status": {"state": "TASK_STATE_COMPLETED"},
             "metadata": {"action_id": action, "run_id": run,
                          "definition_digest": "d" * 64,
                          "harness_identity": "quality-1", "harness_role": "quality"},
@@ -56,7 +56,8 @@ class QualityDecisionTests(unittest.TestCase):
             "assignment": lambda x: x.update(assignment_id="different"),
             "run": lambda x: x["lookup"].update(run_id="other"),
             "task_id": lambda x: x["lookup"].update(task_id="other"),
-            "task_state": lambda x: x["task"]["status"].update(state="working"),
+            "task_state": lambda x: x["task"]["status"].update(state="TASK_STATE_WORKING"),
+            "task_state_a2a_0_3_spelling": lambda x: x["task"]["status"].update(state="completed"),
             "missing_task_status": lambda x: x["task"].update(status=None),
             "task_lookup_disagreement": lambda x: x["lookup"]["artifact"].update(accepted=False),
             "send_task_disagreement": lambda x: x["send_payload"].update(accepted=False),

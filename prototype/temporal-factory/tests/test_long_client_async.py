@@ -1,4 +1,4 @@
-"""In-test A2A 0.3 wire stub for async, resend and artifact incidents."""
+"""In-test A2A v1.0 wire stub for async, resend and artifact incidents."""
 import json
 import asyncio
 import sqlite3
@@ -41,9 +41,14 @@ class StubHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         rpc = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        if rpc["method"] == "message/send":
-            self.server.blocking.append(rpc["params"]["configuration"]["blocking"])
-            command = rpc["params"]["message"]["parts"][0]["data"]
+        self.server.headers.append((self.headers.get("A2A-Version"),
+                                    self.headers.get("A2A-Extensions")))
+        if rpc["method"] == "SendMessage":
+            self.server.return_immediately.append(
+                rpc["params"]["configuration"]["returnImmediately"])
+            part = rpc["params"]["message"]["parts"][0]
+            assert "kind" not in part and rpc["params"]["message"]["role"] == "ROLE_USER"
+            command = part["data"]
             action_id = command["action_id"]
             if action_id not in self.server.tasks:
                 self.server.tasks[action_id] = {"id": "remote-task-1", "command": command,
@@ -56,8 +61,9 @@ class StubHandler(BaseHTTPRequestHandler):
                 self.server.drop_once = False
                 self.close_connection = True
                 return
-            task = self.server.task(action_id)
+            task = {"task": self.server.task(action_id)}
         else:
+            assert rpc["method"] == "GetTask"
             remote_id = rpc["params"]["id"]
             task = next(self.server.task(action_id) for action_id, value in self.server.tasks.items()
                         if value["id"] == remote_id)
@@ -72,7 +78,10 @@ class StubServer(ThreadingHTTPServer):
                          "reconcile": "a2a-idempotent-resend",
                          "idempotency": {"key": "action_id", "same_payload": "original_task_id",
                                          "commit_before_response": True}}
-        self.card = {"name": "counter evidence", "url": f"http://127.0.0.1:{address[1]}",
+        self.card = {"name": "counter evidence",
+                     "supportedInterfaces": [{"url": f"http://127.0.0.1:{address[1]}",
+                                              "protocolBinding": "JSONRPC",
+                                              "protocolVersion": "1.0"}],
                      "skills": [{"id": "counter_evidence@1"}],
                      "capabilities": {"extensions": [{"uri": agent_binding.EXTENSION_URI,
                          "required": True, "params": {"identity": self.identity,
@@ -82,7 +91,8 @@ class StubServer(ThreadingHTTPServer):
         self.effects = 0
         self.drop_once = False
         self.mismatch = False
-        self.blocking = []
+        self.return_immediately = []
+        self.headers = []
 
     def task(self, action_id):
         value = self.tasks[action_id]
@@ -90,8 +100,9 @@ class StubServer(ThreadingHTTPServer):
         completed = time.monotonic() - value["accepted"] >= 0.15
         metadata = {key: command[key] for key in ("action_id", "run_id", "definition_digest")}
         metadata["agent_identity"] = self.identity
-        task = {"kind": "task", "id": value["id"], "metadata": metadata,
-                "status": {"state": "completed" if completed else "working"}}
+        task = {"id": value["id"], "metadata": metadata,
+                "status": {"state": "TASK_STATE_COMPLETED" if completed
+                           else "TASK_STATE_WORKING"}}
         if completed:
             content = "fixture-result:" + command["brief"]
             import hashlib
@@ -100,7 +111,7 @@ class StubServer(ThreadingHTTPServer):
                         "action_id": action_id, "run_id": "wrong" if self.mismatch else command["run_id"],
                         "definition_digest": command["definition_digest"]}
             task["artifacts"] = [{"artifactId": artifact["sha256"],
-                                  "parts": [{"kind": "data", "data": artifact}]}]
+                                  "parts": [{"data": artifact}]}]
         return task
 
 
@@ -122,11 +133,12 @@ class AsyncClientTests(unittest.TestCase):
         self.server.effects = 0
         self.server.drop_once = False
         self.server.mismatch = False
-        self.server.blocking = []
+        self.server.return_immediately = []
+        self.server.headers = []
         self.home = Path(tempfile.mkdtemp(prefix="exo-qual-a-unit-", dir="/tmp"))
         (self.home / "testbed").mkdir()
         (self.home / "runner").mkdir()
-        self.url = self.server.card["url"]
+        self.url = self.server.card["supportedInterfaces"][0]["url"]
         (self.home / "testbed" / "agent_snapshot.json").write_text(json.dumps({
             "snapshot_version": 1, "agents": {self.server.identity: {"url": self.url}}}))
         self.binding = {"url": self.url, "identity": self.server.identity,
@@ -147,17 +159,21 @@ class AsyncClientTests(unittest.TestCase):
     def test_working_task_is_journaled_and_completed(self):
         result = self.invoke()
         self.assertEqual(self.server.effects, 1)
-        self.assertEqual(self.server.blocking, [False])
+        self.assertEqual(self.server.return_immediately, [True])
         self.assertEqual(self.journal()["task_id"], "remote-task-1")
         self.assertEqual(self.journal()["phase"], "confirmed")
         self.assertEqual(result["artifact"]["revision"], "r2")
+        # Every v1 request carries the version header and activates the
+        # required action-contract extension.
+        self.assertTrue(self.server.headers)
+        self.assertEqual(set(self.server.headers), {("1.0", agent_binding.EXTENSION_URI)})
 
     def test_lost_reply_resends_exact_payload_once(self):
         self.server.drop_once = True
         result = self.invoke()
         self.assertEqual(result["task_id"], "remote-task-1")
         self.assertEqual(self.server.effects, 1)
-        self.assertEqual(self.server.blocking, [False, False])
+        self.assertEqual(self.server.return_immediately, [True, True])
 
     def test_mismatched_artifact_is_incident(self):
         self.server.mismatch = True
@@ -172,7 +188,7 @@ class AsyncClientTests(unittest.TestCase):
         result = self.invoke()
         self.assertEqual(result["unresolved"], "opaque-effect-unknown")
         self.assertEqual(self.server.effects, 1)
-        self.assertEqual(self.server.blocking, [False])
+        self.assertEqual(self.server.return_immediately, [True])
 
     def test_incomplete_async_pin_is_incident(self):
         contract = {"reconcile": "a2a-idempotent-resend"}

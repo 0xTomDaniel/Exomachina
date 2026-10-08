@@ -12,6 +12,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import httpx
+from google.protobuf.json_format import MessageToDict
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
@@ -141,7 +142,7 @@ class RuntimeNestedSupplierTests(unittest.TestCase):
         context = SimpleNamespace(
             task_id="received-child-task", context_id="received-child-context",
             message=SimpleNamespace(message_id="message-1", parts=[
-                harness.Part(root=harness.DataPart(data=command))]))
+                harness.data_part(command)]))
         actor = harness.CURRENT_ACTOR.set("fixture-operator")
         try:
             asyncio.run(executor.execute(context, event_queue))
@@ -213,7 +214,8 @@ class RuntimeNestedSupplierTests(unittest.TestCase):
             self.assertEqual(task.metadata[field], command[field])
         self.assertEqual(len(task.artifacts), 1)
         self.assertEqual(len(task.artifacts[0].parts), 1)
-        artifact = task.artifacts[0].parts[0].root.data
+        artifact = harness.a2a_v1.normalize_numbers(
+            MessageToDict(task.artifacts[0].parts[0].data))
         self.assertEqual(artifact["content"], content)
         self.assertEqual(artifact["revision"], "accepted-r7")
         self.assertEqual(artifact["sha256"], accepted_sha)
@@ -230,8 +232,19 @@ class RuntimeNestedSupplierTests(unittest.TestCase):
                 extension = card["capabilities"]["extensions"][0]
                 contract = (await client.get("/contract", headers={
                     "Authorization": harness.TOKEN})).json()
-                return card, extension, contract
-        card, extension, contract = asyncio.run(enabled_http())
+                # The supplier extension is required: a v1 send that does not
+                # activate it is refused before the Director sees it.
+                body = harness.a2a_v1.rpc(harness.a2a_v1.SEND_MESSAGE, harness.a2a_v1.send_params(
+                    harness.a2a_v1.user_message([harness.a2a_v1.data_part(envelope(self.root))]),
+                    return_immediately=True))
+                unactivated = (await client.post("/", json=body, headers={
+                    "Authorization": harness.TOKEN, **harness.a2a_v1.headers()})).json()
+                return card, extension, contract, unactivated
+        card, extension, contract, unactivated = asyncio.run(enabled_http())
+        with self.subTest(required_extension_not_activated=True):
+            self.assertIs(extension["required"], True)
+            self.assertEqual(unactivated["error"]["code"], -32008)
+            self.assertIn(harness.A2A_ACTION_EXTENSION_URI, unactivated["error"]["message"])
         with self.subTest(enabled_contract=True):
             self.assertEqual(extension["params"]["identity"], self.director.identity)
             self.assertEqual(extension["params"]["contract_digest"],

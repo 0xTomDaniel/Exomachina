@@ -23,7 +23,9 @@ import agent_binding  # noqa: E402
 from model_agent import canonical, contract_for, create_app, digest  # noqa: E402
 import model_agent  # noqa: E402
 
-AUTH = {"Authorization": "Bearer fixture-token"}
+import a2a_v1  # noqa: E402
+
+AUTH = {"Authorization": "Bearer fixture-token", **a2a_v1.headers([agent_binding.EXTENSION_URI])}
 
 
 class FakeRole:
@@ -60,14 +62,14 @@ def command(action="a1", run="run-1", revision="r1"):
 
 
 def send(value):
-    return {"jsonrpc": "2.0", "id": str(uuid4()), "method": "message/send",
-            "params": {"message": {"role": "user", "messageId": str(uuid4()),
-                                   "parts": [{"kind": "data", "data": value}]},
-                       "configuration": {"blocking": False}}}
+    return {"jsonrpc": "2.0", "id": str(uuid4()), "method": "SendMessage",
+            "params": {"message": {"role": "ROLE_USER", "messageId": str(uuid4()),
+                                   "parts": [{"data": value}]},
+                       "configuration": {"returnImmediately": True}}}
 
 
 def get(task_id):
-    return {"jsonrpc": "2.0", "id": str(uuid4()), "method": "tasks/get",
+    return {"jsonrpc": "2.0", "id": str(uuid4()), "method": "GetTask",
             "params": {"id": task_id}}
 
 
@@ -75,7 +77,7 @@ def completed(client, task_id):
     deadline = time.monotonic() + 5
     while time.monotonic() < deadline:
         task = client.post("/", json=get(task_id), headers=AUTH).json()["result"]
-        if task["status"]["state"] in {"completed", "failed"}:
+        if task["status"]["state"] in {"TASK_STATE_COMPLETED", "TASK_STATE_FAILED"}:
             return task
         time.sleep(0.02)
     raise AssertionError("Task did not finish")
@@ -130,15 +132,15 @@ class ModelAgentTests(unittest.TestCase):
                               card if url.endswith("agent-card.json") else contract):
                 pinned = agent_binding.pin("http://127.0.0.1:45748", extension["params"]["identity"])
             self.assertEqual(pinned["reconcile"], "a2a-idempotent-resend")
-            first = client.post("/", json=send(command()), headers=AUTH).json()["result"]
-            self.assertEqual(first["status"]["state"], "working")
-            again = client.post("/", json=send(command()), headers=AUTH).json()["result"]
+            first = client.post("/", json=send(command()), headers=AUTH).json()["result"]["task"]
+            self.assertEqual(first["status"]["state"], "TASK_STATE_WORKING")
+            again = client.post("/", json=send(command()), headers=AUTH).json()["result"]["task"]
             self.assertEqual(again["id"], first["id"])
             changed = command()
             changed["brief"] = canonical({"revision": "r2"})
             self.assertEqual(client.post("/", json=send(changed), headers=AUTH).json()["error"]["code"], -32602)
             done = completed(client, first["id"])
-            self.assertEqual(done["status"]["state"], "completed")
+            self.assertEqual(done["status"]["state"], "TASK_STATE_COMPLETED")
             self.assertEqual(len(done["artifacts"]), 1)
             artifact = done["artifacts"][0]
             data = artifact["parts"][0]["data"]
@@ -150,15 +152,15 @@ class ModelAgentTests(unittest.TestCase):
 
     def test_restart_keeps_identity_task_and_distinct_sessions(self):
         with TestClient(self.app()) as client:
-            one = client.post("/", json=send(command()), headers=AUTH).json()["result"]
+            one = client.post("/", json=send(command()), headers=AUTH).json()["result"]["task"]
             completed(client, one["id"])
             identity = client.get("/health").json()["identity"]
         with TestClient(self.app(port=45749, test_controls=True)) as client:
             self.assertEqual(client.get("/health").json()["identity"], identity)
             self.assertEqual(client.get("/health").json()["incarnation"], 2)
             self.assertEqual(completed(client, one["id"])["id"], one["id"])
-            self.assertEqual(client.post("/", json=send(command()), headers=AUTH).json()["result"]["id"], one["id"])
-            two = client.post("/", json=send(command("a2", "run-2")), headers=AUTH).json()["result"]
+            self.assertEqual(client.post("/", json=send(command()), headers=AUTH).json()["result"]["task"]["id"], one["id"])
+            two = client.post("/", json=send(command("a2", "run-2")), headers=AUTH).json()["result"]["task"]
             completed(client, two["id"])
             calls = client.get("/_test/observe", headers=AUTH).json()["model_calls"]
             self.assertEqual(len(calls), 2)
@@ -205,14 +207,14 @@ class ModelAgentTests(unittest.TestCase):
             contract = client.get("/contract", headers=AUTH).json()
             self.assertEqual(contract["request"]["data"]["optional_fields"],
                              ["assignment_id", "attempt_id", "factory_id"])
-            bound_task = client.post("/", json=send(bound_command), headers=AUTH).json()["result"]
+            bound_task = client.post("/", json=send(bound_command), headers=AUTH).json()["result"]["task"]
             completed(client, bound_task["id"])
-            replay = client.post("/", json=send(bound_command), headers=AUTH).json()["result"]
+            replay = client.post("/", json=send(bound_command), headers=AUTH).json()["result"]["task"]
             self.assertEqual(replay["id"], bound_task["id"])
             changed_binding = {**bound_command, "attempt_id": "attempt-synthetic-conflict"}
             conflict = client.post("/", json=send(changed_binding), headers=AUTH).json()
             self.assertEqual(conflict["error"]["code"], -32602)
-            legacy_task = client.post("/", json=send(legacy_command), headers=AUTH).json()["result"]
+            legacy_task = client.post("/", json=send(legacy_command), headers=AUTH).json()["result"]["task"]
             completed(client, legacy_task["id"])
 
             bound = client.get("/usage/measurements", params={
@@ -295,14 +297,14 @@ class ModelAgentTests(unittest.TestCase):
                 self.assertEqual(response.json()["measurements"], [measurement])
                 self.assertEqual(readonly.get("/usage/measurements").status_code, 401)
 
-                # A2A tasks/get remains a safe read; mutation RPC and test writes are rejected.
+                # A2A GetTask remains a safe read; mutation RPC and test writes are rejected.
                 pending = readonly.post("/", json=get(task_id), headers=AUTH)
                 self.assertEqual(pending.status_code, 200)
-                self.assertEqual(pending.json()["result"]["status"]["state"], "working")
+                self.assertEqual(pending.json()["result"]["status"]["state"], "TASK_STATE_WORKING")
                 self.assertEqual(readonly.post("/", json=send(command(
                     "blocked-action-synthetic", "blocked-run-synthetic")), headers=AUTH).status_code,
                     503)
-                cancel = {"jsonrpc": "2.0", "id": "cancel-synthetic", "method": "tasks/cancel",
+                cancel = {"jsonrpc": "2.0", "id": "cancel-synthetic", "method": "CancelTask",
                           "params": {"id": task_id}}
                 self.assertEqual(readonly.post("/", json=cancel, headers=AUTH).status_code, 503)
                 self.assertEqual(readonly.post("/_test/stimulus", json={}, headers=AUTH).status_code,
@@ -311,7 +313,7 @@ class ModelAgentTests(unittest.TestCase):
                                  503)
 
         restored = model_agent.Ledger(self.state, read_only=True)
-        self.assertEqual(restored.task(task_id).status.state.value, "working")
+        self.assertEqual(restored.task(task_id).status.state, model_agent.task_state("working"))
         self.assertEqual(restored.call_count(task_id), 0)
         self.assertEqual((restored.identity, restored.incarnation), (identity, incarnation))
         self.assertEqual(journal.list_measurements(model_call_id=measurement["model_call_id"]),
@@ -494,21 +496,21 @@ class ModelAgentTests(unittest.TestCase):
 
         with patch.object(model_agent.ScriptedModel, "stream", stalled):
             with TestClient(self.app()) as client:
-                first = client.post("/", json=send(command()), headers=AUTH).json()["result"]
+                first = client.post("/", json=send(command()), headers=AUTH).json()["result"]["task"]
                 identity = client.get("/health").json()["identity"]
-                self.assertEqual(first["status"]["state"], "working")
+                self.assertEqual(first["status"]["state"], "TASK_STATE_WORKING")
         with TestClient(self.app(port=45749, test_controls=True)) as client:
             self.assertEqual(client.get("/health").json()["identity"], identity)
             done = completed(client, first["id"])
-            self.assertEqual(done["status"]["state"], "completed")
-            self.assertEqual(client.post("/", json=send(command()), headers=AUTH).json()["result"]["id"], first["id"])
+            self.assertEqual(done["status"]["state"], "TASK_STATE_COMPLETED")
+            self.assertEqual(client.post("/", json=send(command()), headers=AUTH).json()["result"]["task"]["id"], first["id"])
 
     def test_budget_exhaustion_is_fixed_failure(self):
         self.roles["synthesis"] = FakeRole(fail=True)
         with TestClient(self.app(test_controls=True)) as client:
-            task = client.post("/", json=send(command()), headers=AUTH).json()["result"]
+            task = client.post("/", json=send(command()), headers=AUTH).json()["result"]["task"]
             failed = completed(client, task["id"])
-            self.assertEqual(failed["status"]["state"], "failed")
+            self.assertEqual(failed["status"]["state"], "TASK_STATE_FAILED")
             self.assertEqual(failed["status"]["message"]["parts"][0]["text"], "Agent work failed.")
             self.assertFalse(failed.get("artifacts"))
             calls = client.get("/_test/observe", headers=AUTH).json()["model_calls"]
@@ -521,17 +523,17 @@ class ModelAgentTests(unittest.TestCase):
             body = {"append_claim": {"text": "Planted defect.", "evidence": ["E1"]},
                     "revisions": ["r1"]}
             self.assertTrue(client.post("/_test/stimulus", json=body, headers=AUTH).json()["armed"])
-            first = client.post("/", json=send(command()), headers=AUTH).json()["result"]
+            first = client.post("/", json=send(command()), headers=AUTH).json()["result"]["task"]
             done = completed(client, first["id"])
             artifact = done["artifacts"][0]["parts"][0]["data"]
             content = json.loads(artifact["content"])
             self.assertEqual(content["claims"][-1]["id"], "C2")
             self.assertIn("Planted defect.", content["markdown"])
             self.assertEqual(artifact["sha256"], hashlib.sha256(artifact["content"].encode()).hexdigest())
-            repair = client.post("/", json=send(command("a2", "run-1", "r2")), headers=AUTH).json()["result"]
+            repair = client.post("/", json=send(command("a2", "run-1", "r2")), headers=AUTH).json()["result"]["task"]
             repaired = completed(client, repair["id"])
             self.assertNotIn("Planted defect.", repaired["artifacts"][0]["parts"][0]["data"]["content"])
-            next_run = client.post("/", json=send(command("a3", "run-2")), headers=AUTH).json()["result"]
+            next_run = client.post("/", json=send(command("a3", "run-2")), headers=AUTH).json()["result"]["task"]
             completed(client, next_run["id"])
             log = client.get("/_test/stimulus-log", headers=AUTH).json()
             self.assertEqual(log, [{"run_id": "run-1", "revision": "r1", "task_id": first["id"],
@@ -540,14 +542,14 @@ class ModelAgentTests(unittest.TestCase):
 
     def test_stimulus_waits_for_next_new_run(self):
         with TestClient(self.app(test_controls=True)) as client:
-            prior = client.post("/", json=send(command("prior", "old-run")), headers=AUTH).json()["result"]
+            prior = client.post("/", json=send(command("prior", "old-run")), headers=AUTH).json()["result"]["task"]
             completed(client, prior["id"])
             body = {"append_claim": {"text": "Next run only.", "evidence": ["E1"]}, "revisions": "all"}
             client.post("/_test/stimulus", json=body, headers=AUTH)
-            same_run = client.post("/", json=send(command("same", "old-run", "r2")), headers=AUTH).json()["result"]
+            same_run = client.post("/", json=send(command("same", "old-run", "r2")), headers=AUTH).json()["result"]["task"]
             old = completed(client, same_run["id"])
             self.assertNotIn("Next run only.", old["artifacts"][0]["parts"][0]["data"]["content"])
-            new_run = client.post("/", json=send(command("new", "new-run")), headers=AUTH).json()["result"]
+            new_run = client.post("/", json=send(command("new", "new-run")), headers=AUTH).json()["result"]["task"]
             done = completed(client, new_run["id"])
             self.assertIn("Next run only.", done["artifacts"][0]["parts"][0]["data"]["content"])
             self.assertEqual([row["run_id"] for row in client.get("/_test/stimulus-log", headers=AUTH).json()],
@@ -574,13 +576,13 @@ class ModelAgentTests(unittest.TestCase):
         with patch.object(model_agent.Ledger, "finish", die_after_log):
             with TestClient(self.app(test_controls=True)) as client:
                 self.assertTrue(client.post("/_test/stimulus", json=body, headers=AUTH).json()["armed"])
-                task = client.post("/", json=send(command()), headers=AUTH).json()["result"]
+                task = client.post("/", json=send(command()), headers=AUTH).json()["result"]["task"]
                 deadline = time.monotonic() + 5
                 while not interrupted and time.monotonic() < deadline:
                     time.sleep(0.02)
                 self.assertEqual(len(interrupted), 1)
                 self.assertEqual(client.post("/", json=get(task["id"]), headers=AUTH).json()["result"]["status"]["state"],
-                                 "working")
+                                 "TASK_STATE_WORKING")
 
         self.roles["synthesis"] = FakeRole(claim_text="Different recovered model output")
         with TestClient(self.app(port=45749, test_controls=True)) as client:

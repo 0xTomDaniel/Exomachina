@@ -24,7 +24,10 @@ from model_broker import (MeasurementConflict, ModelBroker, ModelUsageJournal, P
 import model_agent  # noqa: E402
 
 
-AUTH = {"Authorization": "Bearer fixture-token"}
+import a2a_v1  # noqa: E402
+
+AUTH = {"Authorization": "Bearer fixture-token",
+        **a2a_v1.headers([model_agent.EXTENSION_URI])}
 
 
 def canonical(value: object) -> str:
@@ -282,18 +285,19 @@ class BrokerMeasurementTests(unittest.IsolatedAsyncioTestCase):
                                        "run_id": "run-synthetic", "definition_digest": "digest-synthetic",
                                        "brief": canonical({"revision": "r1"})}
                             result = client.post("/", json={"jsonrpc": "2.0", "id": "send-1",
-                                "method": "message/send", "params": {"message": {
-                                    "role": "user", "messageId": "message-1", "parts": [
-                                        {"kind": "data", "data": command}]},
-                                    "configuration": {"blocking": False}}}, headers=AUTH).json()["result"]
+                                "method": "SendMessage", "params": {"message": {
+                                    "role": "ROLE_USER", "messageId": "message-1", "parts": [
+                                        {"data": command}]},
+                                    "configuration": {"returnImmediately": True}}},
+                                headers=AUTH).json()["result"]["task"]
                             deadline = time.monotonic() + 5
                             while time.monotonic() < deadline:
                                 task = client.post("/", json={"jsonrpc": "2.0", "id": "get-1",
-                                    "method": "tasks/get", "params": {"id": result["id"]}}, headers=AUTH).json()["result"]
-                                if task["status"]["state"] in {"completed", "failed"}:
+                                    "method": "GetTask", "params": {"id": result["id"]}}, headers=AUTH).json()["result"]
+                                if task["status"]["state"] in {"TASK_STATE_COMPLETED", "TASK_STATE_FAILED"}:
                                     break
                                 time.sleep(0.02)
-                            self.assertEqual(task["status"]["state"], "completed")
+                            self.assertEqual(task["status"]["state"], "TASK_STATE_COMPLETED")
                             response = client.get("/usage/measurements?run_id=run-synthetic", headers=AUTH)
                             self.assertEqual(response.status_code, 200)
                             measurement = response.json()["measurements"][0]

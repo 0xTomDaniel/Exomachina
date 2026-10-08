@@ -42,8 +42,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         rpc = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        if rpc["method"] == "message/send":
-            assert rpc["params"]["configuration"]["blocking"] is False
+        assert self.headers.get("A2A-Version") == "1.0"
+        if rpc["method"] == "SendMessage":
+            assert rpc["params"]["configuration"]["returnImmediately"] is True
+            assert self.headers.get("A2A-Extensions") == agent_binding.EXTENSION_URI
             command = rpc["params"]["message"]["parts"][0]["data"]
             action = command["action_id"]
             if action not in self.server.tasks:
@@ -52,10 +54,13 @@ class Handler(BaseHTTPRequestHandler):
                 self.answer({"jsonrpc": "2.0", "id": rpc["id"], "error": {"code": -32000}})
                 return
             self.server.briefs.append(json.loads(command["brief"]))
+            result = {"task": self.server.task(action)}
         else:
+            assert rpc["method"] == "GetTask"
             task_id = rpc["params"]["id"]
             action = next(key for key in self.server.tasks if f"{self.server.identity}:{key}" == task_id)
-        self.answer({"jsonrpc": "2.0", "id": rpc["id"], "result": self.server.task(action)})
+            result = self.server.task(action)
+        self.answer({"jsonrpc": "2.0", "id": rpc["id"], "result": result})
 
 
 class Agent(ThreadingHTTPServer):
@@ -70,7 +75,9 @@ class Agent(ThreadingHTTPServer):
         self.contract = {"name": agent_binding.CONTRACT, "capability": capability,
             "reconcile": "a2a-idempotent-resend", "idempotency": {"key": "action_id",
             "same_payload": "original_task_id", "commit_before_response": True}}
-        self.card = {"name": role, "url": f"http://127.0.0.1:{port}",
+        self.card = {"name": role, "supportedInterfaces": [{
+                "url": f"http://127.0.0.1:{port}", "protocolBinding": "JSONRPC",
+                "protocolVersion": "1.0"}],
             "skills": [{"id": capability}], "capabilities": {"extensions": [{
                 "uri": agent_binding.EXTENSION_URI, "required": True, "params": {
                     "identity": self.identity, "contract": agent_binding.CONTRACT,
@@ -109,17 +116,17 @@ class Agent(ThreadingHTTPServer):
         command, created = self.tasks[action]
         brief = json.loads(command["brief"])
         completed = time.monotonic() - created > 0.03
-        task = {"kind": "task", "id": f"{self.identity}:{action}",
+        task = {"id": f"{self.identity}:{action}",
                 "metadata": {**{key: command[key] for key in
                     ("action_id", "run_id", "definition_digest")}, "agent_identity": self.identity},
-                "status": {"state": "completed" if completed else "working"}}
+                "status": {"state": "TASK_STATE_COMPLETED" if completed else "TASK_STATE_WORKING"}}
         if completed:
             content = canonical(self.result(brief))
             sha = hashlib.sha256(content.encode()).hexdigest()
             artifact = {"revision": brief["revision"], "sha256": sha, "author": self.identity,
                 "content": content, **{key: command[key] for key in
                 ("action_id", "run_id", "definition_digest")}}
-            task["artifacts"] = [{"artifactId": sha, "parts": [{"kind": "data", "data": artifact}]}]
+            task["artifacts"] = [{"artifactId": sha, "parts": [{"data": artifact}]}]
         return task
 
 
@@ -148,10 +155,10 @@ class ReportAsyncTests(unittest.TestCase):
         self.home = Path(tempfile.mkdtemp(prefix="exo-sf-interp-unit-", dir="/tmp"))
         (self.home / "testbed").mkdir()
         (self.home / "runner").mkdir()
-        snapshot = {"snapshot_version": 1, "agents": {agent.identity: {"url": agent.card["url"]}
+        snapshot = {"snapshot_version": 1, "agents": {agent.identity: {"url": agent.card["supportedInterfaces"][0]["url"]}
                     for agent in self.agents.values()}}
         (self.home / "testbed" / "agent_snapshot.json").write_text(json.dumps(snapshot))
-        self.pins = {name: agent_binding.pin(agent.card["url"], agent.identity)
+        self.pins = {name: agent_binding.pin(agent.card["supportedInterfaces"][0]["url"], agent.identity)
                      for name, agent in self.agents.items()}
         self.packet = packet()
         self.question = "What qualified?"
@@ -167,7 +174,7 @@ class ReportAsyncTests(unittest.TestCase):
     def args(self, name):
         agent = self.agents[name]
         return {"run": "run-1", "digest": "d" * 64, "binding": {"role": agent.role if
-                agent.role == "quality" else "capability", "url": agent.card["url"],
+                agent.role == "quality" else "capability", "url": agent.card["supportedInterfaces"][0]["url"],
                 "identity": agent.identity, "approved": True}, "contract": self.pins[name]}
 
     def candidate(self):
@@ -222,7 +229,7 @@ class ReportAsyncTests(unittest.TestCase):
                 (self.home / "testbed").mkdir()
                 (self.home / "runner").mkdir()
                 (self.home / "testbed" / "agent_snapshot.json").write_text(json.dumps({
-                    "snapshot_version": 1, "agents": {agent.identity: {"url": agent.card["url"]}
+                    "snapshot_version": 1, "agents": {agent.identity: {"url": agent.card["supportedInterfaces"][0]["url"]}
                     for agent in self.agents.values()}}))
                 for agent in self.agents.values():
                     agent.tasks = {}
