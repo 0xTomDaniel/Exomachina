@@ -55,6 +55,7 @@ class OutcomeRecord:
     pinned_identity: str | None = None
     sequence: int = 0
     expected_phase: Phase | None = None
+    message_id: str | None = None
 
     @property
     def may_submit(self) -> bool:
@@ -66,7 +67,8 @@ def submitted(action_id: str, run_id: str, definition_digest: str,
               receiver: ReceiverKind, *, effect_kind: EffectKind = EffectKind.A2A,
               revision: str | None = None, sha256: str | None = None,
               lookup_limit: int = 3, payload_sha256: str | None = None,
-              pinned_identity: str | None = None) -> OutcomeRecord:
+              pinned_identity: str | None = None,
+              message_id: str | None = None) -> OutcomeRecord:
     if not all(isinstance(x, str) and x for x in (action_id, run_id, definition_digest)):
         raise ValueError("missing A2A action binding")
     if type(lookup_limit) is not int or lookup_limit < 1:
@@ -79,7 +81,7 @@ def submitted(action_id: str, run_id: str, definition_digest: str,
     return OutcomeRecord(action_id, run_id, definition_digest, receiver,
                          effect_kind=effect_kind, revision=revision, sha256=sha256,
                          lookup_limit=lookup_limit, payload_sha256=payload_sha256,
-                         pinned_identity=pinned_identity)
+                         pinned_identity=pinned_identity, message_id=message_id)
 
 
 def task_started(record: OutcomeRecord, task_id: str) -> OutcomeRecord:
@@ -114,13 +116,15 @@ def _matching(record: OutcomeRecord, receipt: Mapping[str, Any]) -> bool:
             or receipt.get("definition_digest") != record.definition_digest):
         return False
     if record.effect_kind == EffectKind.RELEASE:
+        # An A2A receipt for the exact accepted bytes, bound to the journaled
+        # release attempt (messageId) and the receiver's own Task and receipt ids.
         return (receipt.get("release_id") == record.action_id
                 and receipt.get("revision") == record.revision
                 and receipt.get("sha256") == record.sha256
-                and type(receipt.get("accepted_effect_count")) is int
-                and receipt["accepted_effect_count"] == 1
-                and type(receipt.get("attempts")) is int
-                and receipt["attempts"] >= 1)
+                and receipt.get("message_id") == record.message_id
+                and isinstance(receipt.get("task_id"), str) and bool(receipt["task_id"])
+                and isinstance(receipt.get("receipt_id"), str) and bool(receipt["receipt_id"])
+                and type(receipt.get("byte_length")) is int and receipt["byte_length"] >= 0)
     return (receipt.get("action_id") == record.action_id
             and isinstance(receipt.get("task_id"), str) and bool(receipt["task_id"]))
 
@@ -214,9 +218,9 @@ class OutcomeJournal:
         assert prior is not None
         if (prior.run_id, prior.definition_digest, prior.receiver,
                 prior.effect_kind, prior.revision, prior.sha256,
-                prior.payload_sha256, prior.pinned_identity) != (
+                prior.payload_sha256, prior.pinned_identity, prior.message_id) != (
                 record.run_id, record.definition_digest, record.receiver,
                 record.effect_kind, record.revision, record.sha256,
-                record.payload_sha256, record.pinned_identity):
+                record.payload_sha256, record.pinned_identity, record.message_id):
             raise ValueError("action ID reused with different receiver or binding")
         return prior, created

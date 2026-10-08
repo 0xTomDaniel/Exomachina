@@ -23,7 +23,7 @@ from report_contract import (canonical, packet_evidence_join, research_assignmen
 import long_client as a2a
 import fixture
 import handoff
-import receiver_client
+import release_delivery
 from definition import binding_output
 
 
@@ -467,105 +467,27 @@ async def review(input: dict) -> dict:
 
 
 def _release(input: dict) -> dict:
-    url = input["url"]
-    health = _get_json(url.rstrip("/") + "/health")
-    if health.get("identity") != input["identity"] or health.get("mode") != input["mode"]:
-        raise ValueError("release receiver identity/mode changed")
-    command = input["command"]
+    """Deliver the accepted artifact to the pinned A2A release agent."""
     journal_path = os.environ.get("EXO_OUTCOME_DB")
     if not journal_path:
         raise RuntimeError("durable release outcome journal is not configured")
-    kind = ReceiverKind.PARTICIPATING if input["mode"] == "participating" else ReceiverKind.OPAQUE
-    expected = submitted(command["release_id"], command["run_id"],
-        command["definition_digest"], kind, effect_kind=EffectKind.RELEASE,
-        revision=command["revision"], sha256=command["sha256"])
-    journal = OutcomeJournal(Path(journal_path))
-    try:
-        return _release_journaled(journal, expected, url, command)
-    finally:
-        journal.close()
-
-
-def _release_lookup(url: str, release_id: str) -> dict | None:
-    try:
-        return receiver_client.receipt(url, release_id)
-    except RuntimeError as error:
-        if str(error).startswith("HTTP 404:"):
-            return None
-        raise
-
-
-def _release_unresolved(record) -> dict:
-    return {"unresolved": record.reason, "release_id": record.action_id}
-
-
-def _release_bounded_lookup(journal: OutcomeJournal, record, url: str) -> dict:
-    if record.receiver == ReceiverKind.OPAQUE:
-        record = lookup_result(record, None)
-        journal.put(record)
-        return _release_unresolved(record)
-    while record.phase == Phase.UNKNOWN:
-        try:
-            receipt = _release_lookup(url, record.action_id)
-            record = lookup_result(record, receipt)
-        except Exception:
-            record = lookup_result(record, None, available=False)
-        journal.put(record)
-        if record.phase == Phase.UNKNOWN:
-            time.sleep(0.2)
-    return record.receipt if record.phase == Phase.CONFIRMED else _release_unresolved(record)
-
-
-def _release_journaled(journal: OutcomeJournal, expected, url: str, command: dict) -> dict:
-    record, created = journal.begin(expected)
-    if record.phase == Phase.CONFIRMED:
-        return record.receipt
-    if record.phase == Phase.INCIDENT:
-        return _release_unresolved(record)
-    if not created:
-        # A persisted intent may have been sent before the Activity stopped.
-        if record.phase == Phase.SUBMITTED:
-            record = send_ambiguous(record)
-            journal.put(record)
-        return _release_bounded_lookup(journal, record, url)
-    if record.receiver == ReceiverKind.PARTICIPATING:
-        try:
-            prior = _release_lookup(url, record.action_id)
-        except Exception:
-            record = send_ambiguous(record)
-            journal.put(record)
-            return _release_bounded_lookup(journal, record, url)
-        if prior is not None:
-            record = send_completed(record, prior)
-            journal.put(record)
-            return prior if record.phase == Phase.CONFIRMED else _release_unresolved(record)
-        try:
-            reply = receiver_client.release(url, command)
-        except Exception:
-            record = send_ambiguous(record)
-            journal.put(record)
-            return _release_bounded_lookup(journal, record, url)
-        record = send_completed(record, reply)
-        journal.put(record)
-        return reply if record.phase == Phase.CONFIRMED else _release_unresolved(record)
-    try:
-        receiver_client.opaque_submit(url, command)
-    except Exception:
-        pass
-    # Opaque acknowledgement cannot prove an exact effect or furnish a receipt.
-    record = send_ambiguous(record)
-    journal.put(record)
-    return _release_bounded_lookup(journal, record, url)
+    path = Path(journal_path)
+    return release_delivery.deliver(input, journal_path=path,
+                                    snapshot=path.parent.parent / "testbed" / "agent_snapshot.json",
+                                    log=_log)
 
 
 @activity.defn
 async def release(input: dict) -> dict:
     try:
-        result = await asyncio.to_thread(_release, input)
+        result = await _thread_with_heartbeat(_release, input)
+    except release_delivery.PendingRelease:
+        raise
     except Exception as error:
         result = {"unresolved": "release-adapter-incident",
                   "release_id": input["command"]["release_id"],
                   "error_type": type(error).__name__}
     _log("release-observed", run=input["command"]["run_id"],
-         receipt=result.get("release_id"), unresolved=result.get("unresolved"))
-    return result
+         receipt=result.get("receipt_id"), release_id=result.get("release_id"),
+         task_id=result.get("task_id"), unresolved=result.get("unresolved"))
+    return _with_handoff(result, input) if "unresolved" not in result else result

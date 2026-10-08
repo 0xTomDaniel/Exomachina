@@ -57,11 +57,12 @@ RELEASE_RECEIPT = ["receipt_id", "sha256", "byte_length", "media_type", "accepte
 
 
 def report_bindings(health: dict[str, dict], port_base: int) -> dict[str, dict]:
-    # The release receiver is an A2A side-effect agent: output "none" (A2A v1
-    # mediation decision 3); the other agents keep the strict artifacts default.
+    # The release receiver is an A2A agent bound with strict artifacts output:
+    # its receipt is its result artifact. Release stays a side-effect node
+    # through its control-only outgoing edge in the definition.
     return {name: {"role": report_role(name), "url": f"http://127.0.0.1:{port_base + index}",
                    "identity": health[name]["identity"], "approved": True,
-                   **({"output": "none"} if name == "release" else {})}
+                   **({"output": "artifacts"} if name == "release" else {})}
             for index, name in enumerate(REPORT_NAMES)}
 
 
@@ -102,7 +103,6 @@ def binding_records(health: dict[str, dict], port_base: int) -> dict[str, dict]:
             "url": f"http://127.0.0.1:{port_base + index}",
             "identity": health[name]["identity"],
             "approved": True,
-            **({"output": "none"} if name == "release" else {}),
         }
         for index, name in enumerate(SERVICE_NAMES)
     }
@@ -123,15 +123,15 @@ def contract_records() -> dict[str, dict]:
             output_contract = {"verdict": ["accepted", "revision", "sha256", "reviewer", "reason"]}
             lookup = "/fixture/actions/{id}"
         else:
-            # An ordinary A2A agent with output none: one Part carrying the
-            # accepted document and its mediaType; the receipt is the Task's
-            # data-part artifact; messageId is the idempotency key.
+            # An ordinary A2A agent: one Part carrying the accepted document
+            # and its mediaType; the receipt is the Task's (strict) data-part
+            # result artifact; messageId is the idempotency key.
             contracts[name] = {
                 "name": name, "role": role, "capability": CAPABILITIES[name],
                 "a2a_protocol": "1.0",
                 "input": {"transport": "a2a-SendMessage", "parts": 1,
                           "media_type": "application/json"},
-                "output": {"mode": "none", "receipt": RELEASE_RECEIPT},
+                "output": {"mode": "artifacts", "receipt": RELEASE_RECEIPT},
                 "operations": {"idempotency": "messageId", "task_lookup": "GetTask"},
                 "attested": False,
             }

@@ -127,7 +127,7 @@ class WorkflowHandoffCompositionTests(unittest.IsolatedAsyncioTestCase):
         bindings = {"research": {"role": "capability", "url": "http://127.0.0.1:1", "identity": "research"},
                     "synthesis": {"role": "capability"}, "quality": {"role": "quality"},
                     "release": {"role": "release", "url": "http://127.0.0.1:1", "identity": "release",
-                                "output": "none"}}
+                                "output": "artifacts"}}
         branch = lambda name: dict(service="research", result_type=name, capability=name)
         document = {"start": "gather", "nodes": {
             "gather": dict(type="parallel", branches={"findings": branch("findings"), "risks": branch("risks")}, next="join"),
@@ -152,7 +152,7 @@ class WorkflowHandoffCompositionTests(unittest.IsolatedAsyncioTestCase):
             if fn is factory.review:
                 return dict(task_id="quality-task", artifact=dict(accepted=True, reviewer="quality"))
             if fn is factory.release:
-                return dict(receipt_id="synthetic")
+                return dict(receipt_id="synthetic", handoff=record("publish", "e" * 64))
             raise AssertionError("unexpected activity")
         with patch.object(factory, "verify_closure"), patch.object(factory, "_activity", side_effect=execute), \
                 patch.object(factory.workflow, "uuid4", side_effect=[uuid4() for _ in range(10)]):
@@ -172,6 +172,12 @@ class WorkflowHandoffCompositionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(by_fn[factory.review][0]["consumes"], draft)
         self.assertEqual(by_fn[factory.release][0]["consumes"], draft)
         self.assertEqual(by_fn[factory.release][0]["node"], "publish")
+        # The receipt hand-off has no consumer: it never rides in the Workflow result.
+        self.assertEqual((by_fn[factory.release][0]["handoff_id"],
+                          by_fn[factory.release][0]["handoff_revision"]), ("publish", 1))
+        self.assertEqual(result["receipt"], {"receipt_id": "synthetic"})
+        self.assertEqual(set(by_fn[factory.release][0]) & {"url", "mode"}, set())
+        self.assertEqual(by_fn[factory.release][0]["binding"], bindings["release"])
         # Every Workflow-recorded Activity input (what Temporal history holds) is key-free.
         encoded = json.dumps([value for _, value in calls], default=str)
         self.assertNotIn(key.hex(), encoded)

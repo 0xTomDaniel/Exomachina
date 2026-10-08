@@ -865,7 +865,7 @@ class RuntimeObservationSource:
                     continue
                 data, result = item["input"], attributes.get("result") or {}
                 name = item["name"]
-                if name in {"assign", "synthesize"}:
+                if name in {"assign", "synthesize", "release"}:
                     append_handoff_produced(event_id, data, item, scheduled_id,
                                             completed_attempt(attributes, scheduled_id), result)
                 if name == "assign":
@@ -981,7 +981,26 @@ class RuntimeObservationSource:
                         records.append(self._record("temporal", f"{workflow_id}:{event_id}:quality",
                             "com.exomachina.quality.verdict.v1", at, run_id=workflow_id,
                             fields=fields, task_id=task_id))
-                elif name == "release" and isinstance(result, Mapping):
+                elif (name == "release" and isinstance(result, Mapping)
+                        and isinstance(result.get("message_id"), str)):
+                    # A2A release receipt: the node's evidence, from the
+                    # receiver's own receipt over the exact delivered bytes.
+                    command = data.get("command") or {}
+                    fields = {"receipt_id": result.get("receipt_id"),
+                              "artifact_revision": result.get("revision"),
+                              "artifact_sha256": result.get("sha256"),
+                              "destination_id": result.get("destination_identity"),
+                              "delivered_at": result.get("accepted_at"),
+                              "outcome": result.get("outcome")}
+                    if ("unresolved" not in result and all(
+                            isinstance(value, str) and value for value in fields.values())
+                            and fields["artifact_sha256"] == command.get("sha256")
+                            and fields["artifact_revision"] == command.get("revision")):
+                        records.append(self._record("outcome", f"{workflow_id}:{event_id}:delivery",
+                            "com.exomachina.delivery.receipt.v1", fields["delivered_at"],
+                            run_id=workflow_id, fields=fields, task_id=task_id))
+                elif name == "release" and isinstance(result, Mapping) and "unresolved" not in result:
+                    # Histories from before the A2A release agent.
                     command = data.get("command") or {}
                     receipt_id = result.get("receipt_id") or result.get("release_id")
                     if isinstance(receipt_id, str):

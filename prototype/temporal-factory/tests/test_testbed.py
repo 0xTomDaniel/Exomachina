@@ -42,8 +42,7 @@ class TestbedTests(unittest.TestCase):
         self.assertEqual(set(contracts), set(SERVICE_NAMES))
         for index, name in enumerate(SERVICE_NAMES):
             binding = self.bindings[name]
-            self.assertEqual(set(binding), {"role", "url", "identity", "approved"} |
-                             ({"output"} if name == "release" else set()))
+            self.assertEqual(set(binding), {"role", "url", "identity", "approved"})
             self.assertEqual(binding["url"], f"http://127.0.0.1:{45100 + index}")
             self.assertTrue(binding["approved"])
             contract = contracts[name]
@@ -53,10 +52,9 @@ class TestbedTests(unittest.TestCase):
             self.assertEqual(contract["a2a_protocol"], "1.0")
             self.assertIs(contract["attested"], False)
             if name == "release":
-                # An ordinary A2A agent with output none: no private route.
-                self.assertEqual(binding["output"], "none")
+                # An ordinary A2A agent whose receipt is its result artifact.
                 self.assertEqual(contract["input"]["transport"], "a2a-SendMessage")
-                self.assertEqual(contract["output"]["mode"], "none")
+                self.assertEqual(contract["output"]["mode"], "artifacts")
                 self.assertEqual(contract["operations"],
                                  {"idempotency": "messageId", "task_lookup": "GetTask"})
                 self.assertNotIn("/", json.dumps(contract).replace("application/json", ""))
@@ -109,7 +107,7 @@ class TestbedTests(unittest.TestCase):
             self.assertEqual(observation["contract_document"]["capability"],
                              REPORT_CAPABILITIES[name])
         release, contract = bindings["release"], contracts["release"]
-        self.assertEqual(release["output"], "none")
+        self.assertEqual(release["output"], "artifacts")
         self.assertEqual(release["identity"], card_identity(contract["card_sha256"]))
         self.assertEqual(contract["reconcile"], "a2a-idempotent-resend")
         resolved_url, observation = resolve_card(directory / "agent_snapshot.json",

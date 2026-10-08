@@ -148,10 +148,12 @@ class ReleaseOutcomeTests(unittest.TestCase):
     def setUp(self):
         self.base = submitted("release-1", "run-1", "d" * 64,
             ReceiverKind.PARTICIPATING, effect_kind=EffectKind.RELEASE,
-            revision="r2", sha256="a" * 64, lookup_limit=2)
+            revision="r2", sha256="a" * 64, lookup_limit=2, message_id="message-1")
+        # The factory-side record of an A2A release receipt.
         self.receipt = {"release_id": "release-1", "run_id": "run-1",
             "definition_digest": "d" * 64, "revision": "r2", "sha256": "a" * 64,
-            "attempts": 1, "accepted_effect_count": 1}
+            "message_id": "message-1", "task_id": "task-1", "receipt_id": "receipt-1",
+            "byte_length": 12}
 
     def test_exact_release_reply_confirmed(self):
         result = send_completed(self.base, self.receipt)
@@ -183,8 +185,8 @@ class ReleaseOutcomeTests(unittest.TestCase):
     def test_release_receipt_inconsistencies(self):
         for change in ({"release_id": "other"}, {"run_id": "other"},
                        {"definition_digest": "other"}, {"revision": "r1"},
-                       {"sha256": "b" * 64}, {"accepted_effect_count": 0},
-                       {"attempts": 0}):
+                       {"sha256": "b" * 64}, {"message_id": "other"}, {"task_id": ""},
+                       {"receipt_id": None}, {"byte_length": "12"}):
             with self.subTest(change=change):
                 bad = {**self.receipt, **change}
                 self.assertEqual(send_completed(self.base, bad).phase, Phase.INCIDENT)
@@ -207,7 +209,11 @@ class ReleaseOutcomeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 journal.begin(submitted("release-1", "run-1", "d" * 64,
                     ReceiverKind.PARTICIPATING, effect_kind=EffectKind.RELEASE,
-                    revision="r2", sha256="b" * 64))
+                    revision="r2", sha256="b" * 64, message_id="message-1"))
+            with self.assertRaises(ValueError):
+                journal.begin(submitted("release-1", "run-1", "d" * 64,
+                    ReceiverKind.PARTICIPATING, effect_kind=EffectKind.RELEASE,
+                    revision="r2", sha256="a" * 64, message_id="message-2"))
             journal.close()
 
 
