@@ -1,5 +1,15 @@
 """Bounded pre-integration probe (not counted) of the four report agents.
 
+HISTORICAL RECORD, NOT RUNNABLE (8 Oct 2026). This direct A2A driver predates
+the decision-9 agent wire contract: it embeds upstream evidence and the
+candidate inside the brief, sends a ``policy_digest`` instead of the acceptance
+criteria, expects an artifact envelope with an author echo, and checks the
+retired ``agent_identity`` Task metadata. It is kept only as the record of the
+agent-probe evidence in ``evidence/single-factory/agent-probe-*``, which a run
+would overwrite. No gate imports it, and running it exits with this notice.
+``scenarios/single_factory.py`` and ``tests/test_third_party_agent.py`` are the
+maintained end-to-end checks.
+
 This is a direct A2A driver, not a factory or a pre-registered scenario.
 Trial state is preserved. The default broker is never stopped or configured here.
 """
@@ -404,4 +414,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit("historical record, not runnable: " + __doc__.split("HISTORICAL RECORD")[0].strip().splitlines()[0]
+                     + "; see the module docstring")
