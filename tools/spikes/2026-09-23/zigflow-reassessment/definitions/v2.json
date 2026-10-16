@@ -1,0 +1,42 @@
+{
+  "document": {
+    "dsl": "1.0.0",
+    "taskQueue": "exo-zigflow-reassessment",
+    "workflowType": "reassessment-factory",
+    "version": "2.0.0"
+  },
+  "do": [
+    {
+      "approval": {
+        "metadata": {
+          "timeout": "600s"
+        },
+        "listen": {
+          "to": {
+            "one": {
+              "with": {
+                "id": "approve",
+                "type": "signal"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "expanded": {
+        "set": {
+          "path": "expanded"
+        }
+      }
+    },
+    {
+      "result": {
+        "set": {
+          "revision": "2.0.0",
+          "path": "expanded"
+        }
+      }
+    }
+  ]
+}

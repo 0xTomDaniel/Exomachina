@@ -1,0 +1,17 @@
+id: parity_parent
+namespace: exomachina.kestra_parity
+tasks:
+  - id: child
+    type: io.kestra.plugin.core.flow.Subflow
+    namespace: exomachina.kestra_parity
+    flowId: parity_child
+    revision: 1
+    wait: true
+    transmitFailed: true
+  - id: observed
+    type: io.kestra.plugin.core.debug.Return
+    format: "{{ outputs.child.outputs.public_result }}"
+outputs:
+  - id: public_result
+    type: STRING
+    value: "{{ outputs.observed.value }}"

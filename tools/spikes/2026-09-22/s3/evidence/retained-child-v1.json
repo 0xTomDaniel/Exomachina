@@ -1,0 +1,27 @@
+{
+  "status": 200,
+  "body": {
+    "id": "s3_child",
+    "namespace": "exomachina.s3",
+    "revision": 1,
+    "updated": "2026-09-22T20:17:47.124132Z",
+    "outputs": [
+      {
+        "id": "marker",
+        "value": "{{ outputs.research.value }}",
+        "type": "STRING"
+      }
+    ],
+    "disabled": false,
+    "deleted": false,
+    "draft": false,
+    "tasks": [
+      {
+        "id": "research",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "format": "child-v1"
+      }
+    ],
+    "triggers": []
+  }
+}

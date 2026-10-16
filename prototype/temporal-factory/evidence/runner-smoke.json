@@ -1,0 +1,228 @@
+{
+  "build": {
+    "build_id": "b-aff77432772e",
+    "kind": "real interpreter snapshot",
+    "path": "/tmp/exo-proto-runner-smoke-20260923/runner/builds/b-aff77432772e",
+    "source_digest": "aff77432772e05f880eaa46b115be41c0eb57f621471ed407c63418eb3f2b0ba"
+  },
+  "events": [
+    {
+      "first": true,
+      "kind": "postgres-start",
+      "time": 1790192827.161013
+    },
+    {
+      "kind": "temporal-start",
+      "pid": 14951,
+      "time": 1790192827.1667972
+    },
+    {
+      "kind": "serve-stop",
+      "pid": 14843,
+      "time": 1790192828.6192179
+    },
+    {
+      "kind": "serve-stop",
+      "pid": 15151,
+      "time": 1790192856.421094
+    },
+    {
+      "first": false,
+      "kind": "postgres-start",
+      "time": 1790192871.597492
+    },
+    {
+      "kind": "temporal-start",
+      "pid": 15288,
+      "time": 1790192871.6069849
+    },
+    {
+      "kind": "serve-ready",
+      "pid": 15272,
+      "time": 1790192871.864508
+    },
+    {
+      "kind": "start",
+      "pid": 15272,
+      "reason": "smoke-cold-retry-2",
+      "time": 1790192872.0022779
+    },
+    {
+      "kind": "serve-stop",
+      "pid": 15272,
+      "time": 1790192892.786732
+    },
+    {
+      "first": false,
+      "kind": "postgres-start",
+      "time": 1790192905.339842
+    },
+    {
+      "kind": "temporal-start",
+      "pid": 15616,
+      "time": 1790192905.345668
+    },
+    {
+      "kind": "namespace-create",
+      "namespace": "exomachina",
+      "time": 1790192905.732512
+    },
+    {
+      "kind": "serve-ready",
+      "pid": 15588,
+      "time": 1790192905.734455
+    },
+    {
+      "kind": "start",
+      "pid": 15588,
+      "reason": "smoke-start",
+      "time": 1790192905.773231
+    },
+    {
+      "kind": "attach",
+      "pid": 15588,
+      "reason": "smoke-attach",
+      "time": 1790192914.866378
+    },
+    {
+      "build_id": "b-aff77432772e",
+      "kind": "build-added",
+      "source_digest": "aff77432772e05f880eaa46b115be41c0eb57f621471ed407c63418eb3f2b0ba",
+      "time": 1790192914.8950772
+    },
+    {
+      "build_id": "b-aff77432772e",
+      "kind": "worker-start",
+      "pid": 15851,
+      "time": 1790192915.31405
+    },
+    {
+      "kind": "temporal-restart",
+      "pid": 16026,
+      "time": 1790192928.428003
+    },
+    {
+      "kind": "serve-stop",
+      "pid": 15588,
+      "time": 1790192946.912004
+    },
+    {
+      "first": false,
+      "kind": "postgres-start",
+      "time": 1790192951.53359
+    },
+    {
+      "kind": "temporal-start",
+      "pid": 16651,
+      "time": 1790192951.542739
+    },
+    {
+      "kind": "serve-ready",
+      "pid": 16639,
+      "time": 1790192952.073039
+    },
+    {
+      "build_id": "b-aff77432772e",
+      "kind": "worker-start",
+      "pid": 16683,
+      "time": 1790192952.083245
+    },
+    {
+      "kind": "start",
+      "pid": 16639,
+      "reason": "smoke-warm",
+      "time": 1790192952.2127209
+    },
+    {
+      "kind": "serve-stop",
+      "pid": 16639,
+      "time": 1790192964.094702
+    },
+    {
+      "first": false,
+      "kind": "postgres-start",
+      "time": 1790193016.038923
+    },
+    {
+      "kind": "temporal-start",
+      "pid": 17691,
+      "time": 1790193016.0473359
+    },
+    {
+      "kind": "serve-ready",
+      "pid": 17679,
+      "time": 1790193016.6886542
+    },
+    {
+      "build_id": "b-aff77432772e",
+      "kind": "worker-start",
+      "pid": 17718,
+      "time": 1790193016.694154
+    },
+    {
+      "kind": "start",
+      "pid": 17679,
+      "reason": "verify-restart-ready",
+      "time": 1790193016.789325
+    },
+    {
+      "kind": "temporal-restart",
+      "pid": 17767,
+      "time": 1790193018.228749
+    },
+    {
+      "kind": "serve-stop",
+      "pid": 17679,
+      "time": 1790193020.900016
+    }
+  ],
+  "final_ready": {
+    "address": "127.0.0.1:46002",
+    "builds": {
+      "b-aff77432772e": {
+        "pid": 17768,
+        "source_digest": "aff77432772e05f880eaa46b115be41c0eb57f621471ed407c63418eb3f2b0ba"
+      }
+    },
+    "namespace": "exomachina",
+    "pid": 17679,
+    "pids": {
+      "postgres": null,
+      "temporal": 17767
+    },
+    "running": false,
+    "started_at": "2026-09-23T19:50:15.639807+00:00"
+  },
+  "initial_failure": {
+    "cause": "Temporal PostgreSQL cluster_membership.rpc_port SMALLINT rejected port 33602",
+    "resolution": "idempotent ALTER TABLE cluster_membership ALTER COLUMN rpc_port TYPE INTEGER"
+  },
+  "ports": {
+    "frontend": 46002,
+    "membership": [
+      33601,
+      33602,
+      33603,
+      33604
+    ],
+    "postgres": 33600
+  },
+  "restart_ready_verification": {
+    "new_temporal_pid": 17767,
+    "new_temporal_rss_kib": 117472,
+    "old_temporal_pid": 17691,
+    "runner_pid": 17679,
+    "stopped_after": true
+  },
+  "state_dir": "/tmp/exo-proto-runner-smoke-20260923",
+  "superseded_note": "The high-port attempt failed on Temporal's signed SMALLINT cluster_membership.rpc_port column. Its later passes recovered from a partial initialization and are not clean-cold proof; see runner-cold-smoke.json for the clean first-start run at member_base 32500.",
+  "worker_observation": {
+    "api": "describe_worker_deployment_version",
+    "registered": true,
+    "task_queues": [
+      "WORKFLOW exo-factory",
+      "ACTIVITY exo-factory"
+    ],
+    "version": "exo-factory.b-aff77432772e"
+  }
+}

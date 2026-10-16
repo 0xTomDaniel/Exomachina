@@ -1,0 +1,22 @@
+steps:
+  - id: director_wait
+    action: human.task
+    with:
+      prompt: Authorize the exact child root
+      form:
+        type: object
+        additionalProperties: false
+        properties:
+          decision:
+            type: string
+            enum: [accept]
+        required: [decision]
+  - id: child_outcome
+    depends: director_wait
+    run: @PYTHON@ -B @BRIDGE@ record-outcome @RUNTIME@
+  - id: notify_parent
+    depends: child_outcome
+    run: @PYTHON@ -B @BRIDGE@ reconcile @RUNTIME@ --expected-epoch 1
+    retry_policy:
+      limit: 3
+      interval_sec: 2

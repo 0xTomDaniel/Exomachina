@@ -1,0 +1,34 @@
+{
+  "document": {
+    "dsl": "1.0.0",
+    "taskQueue": "exomachina-countertrial",
+    "workflowType": "countertrial-factory",
+    "version": "1.0.0"
+  },
+  "do": [
+    {
+      "approval": {
+        "metadata": {
+          "timeout": "600s"
+        },
+        "listen": {
+          "to": {
+            "one": {
+              "with": {
+                "id": "approve",
+                "type": "signal"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "result": {
+        "set": {
+          "revision": "1.0.0"
+        }
+      }
+    }
+  ]
+}

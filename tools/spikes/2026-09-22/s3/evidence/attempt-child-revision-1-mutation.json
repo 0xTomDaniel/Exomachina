@@ -1,0 +1,31 @@
+{
+  "status": 200,
+  "body": {
+    "id": "s3_child",
+    "namespace": "exomachina.s3",
+    "revision": 2,
+    "outputs": [
+      {
+        "id": "marker",
+        "value": "{{ outputs.research.value }}",
+        "type": "STRING"
+      }
+    ],
+    "disabled": false,
+    "deleted": false,
+    "draft": false,
+    "tasks": [
+      {
+        "id": "research",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "format": "child-v2"
+      },
+      {
+        "id": "source_check",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "format": "source-check-v2"
+      }
+    ],
+    "source": "id: s3_child\nnamespace: exomachina.s3\n# Deliberate attempt to overwrite revision 1. The API's response is evidence.\nrevision: 1\ntasks:\n  - id: research\n    type: io.kestra.plugin.core.debug.Return\n    format: child-v2\n  - id: source_check\n    type: io.kestra.plugin.core.debug.Return\n    format: source-check-v2\noutputs:\n  - id: marker\n    type: STRING\n    value: \"{{ outputs.research.value }}\"\n"
+  }
+}

@@ -1,0 +1,34 @@
+id: exomachina_s4_a2a
+namespace: exomachina.spikes
+description: One native HTTP task invokes the real Strands A2A fixture.
+tasks:
+  - id: assign
+    type: io.kestra.plugin.core.http.Request
+    uri: http://127.0.0.1:28092/
+    method: POST
+    contentType: application/json
+    headers:
+      Authorization: Bearer director-test-token
+    body: |
+      {
+        "jsonrpc": "2.0",
+        "id": "kestra-native-s4",
+        "method": "message/send",
+        "params": {
+          "message": {
+            "role": "user",
+            "messageId": "kestra-native-s4-message",
+            "parts": [{
+              "kind": "data",
+              "data": {
+                "op": "start",
+                "key": "kestra-native-s4-assignment",
+                "brief": "Native Kestra HTTP task invokes Strands A2A capability"
+              }
+            }]
+          }
+        }
+      }
+  - id: observed
+    type: io.kestra.plugin.core.log.Log
+    message: A2A response received by native HTTP task.

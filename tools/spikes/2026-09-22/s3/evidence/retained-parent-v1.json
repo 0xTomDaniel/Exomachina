@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "body": {
+    "id": "s3_parent_pinned",
+    "namespace": "exomachina.s3",
+    "revision": 1,
+    "updated": "2026-09-22T20:17:47.160376Z",
+    "outputs": [
+      {
+        "id": "observed",
+        "value": "{{ outputs.observed.value }}",
+        "type": "STRING"
+      }
+    ],
+    "disabled": false,
+    "deleted": false,
+    "draft": false,
+    "tasks": [
+      {
+        "id": "publication_wait",
+        "type": "io.kestra.plugin.core.flow.Pause"
+      },
+      {
+        "id": "child",
+        "type": "io.kestra.plugin.core.flow.Subflow",
+        "namespace": "exomachina.s3",
+        "flowId": "s3_child",
+        "revision": 1
+      },
+      {
+        "id": "observed",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "format": "{{ outputs.child.outputs.marker }}"
+      }
+    ],
+    "triggers": []
+  }
+}

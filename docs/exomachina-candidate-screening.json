@@ -1,0 +1,362 @@
+{
+  "engine": "dagu",
+  "title": "Dagu: focused production and factory-composition screen",
+  "assessmentDate": "2026-09-22",
+  "status": "under-evaluation",
+  "baseline": "Unmodified Dagu Community self-hosted server and workers, used through the CLI/HTTP boundary; no paid controls or proprietary embedded Go API license assumed.",
+  "evidenceLevel": "Primary documentation and source inspection. No runtime, concurrency, recovery, security, or legal-distribution certification. No feature-matrix score assigned.",
+  "inspectedCommit": "f501e3fefb2e52f9430d56b8ac7a055ec97ce320",
+  "releaseCaveat": "Current documentation and repository main can precede a released binary. Pin a release and confirm every relied-on capability before the spike.",
+  "summary": "Dagu Community v2.17.0 ran as a lightweight file-backed local helper and preserved native nested approval through restart. A paused parent invoked a changed child definition after resume, so transitive immutable publication is required. GPL-compliant packaging, product authorization, independent-root lifecycle and real A2A recovery remain open.",
+  "eligibility": {
+    "freeProduction": {
+      "status": "documented",
+      "finding": "Community is offered for continuing self-hosted use with unlimited servers and workers. No developer-only restriction or documented license execution-count cap was identified. Retention and capacity still require deployment configuration.",
+      "sources": [
+        "pricing",
+        "plans",
+        "operations",
+        "license-manager"
+      ]
+    },
+    "ossDistribution": {
+      "status": "conditional-on-distribution-design",
+      "finding": "GPL-3.0-or-later permits commercial activity and GPL-compliant redistribution. Distributing Dagu requires the applicable notices and corresponding-source obligations; an OSS label alone does not establish compatibility for a combined work.",
+      "sources": [
+        "gpl",
+        "licensing"
+      ]
+    },
+    "commercialProduct": {
+      "status": "conditional-on-distribution-design",
+      "finding": "A separately operated CLI/server is materially different from importing Dagu into a distributed Go binary. GPL does not automatically cover every independent HTTP client. A proprietary combined binary that cannot comply with GPL needs separate embedding rights. A self-host plan is not evidence of those rights.",
+      "sources": [
+        "gpl",
+        "licensing",
+        "plans"
+      ]
+    }
+  },
+  "strengths": [
+    {
+      "id": "declarative-authoring",
+      "finding": "Native YAML and MCP read/change/execute tools provide a credible agent authoring loop: inspect, preview/apply definitions, then explicitly start or enqueue. Exomachina still supplies publication policy and capability contracts.",
+      "sources": [
+        "mcp"
+      ]
+    },
+    {
+      "id": "existing-runtime",
+      "finding": "Distributed workers, queues, retry scanning, and persistent run snapshots provide existing execution infrastructure. Separate factory services need not invent another DAG scheduler.",
+      "sources": [
+        "distributed",
+        "durable",
+        "human"
+      ]
+    }
+  ],
+  "restrictions": [
+    {
+      "id": "gpl-combined-distribution",
+      "classification": "conditional-license-blocker",
+      "finding": "The public source license is GPL-3.0-or-later. Proprietary distribution that links the experimental Go API raises combined-work obligations; the vendor offers separately negotiated non-GPL embedding rights.",
+      "condition": "Blocking only if our chosen distribution forms an incompatible combined work and we require neither GPL compliance nor a separate agreement.",
+      "response": "Evaluate a separate server/HTTP packaging model and its actual notices/source delivery. Do not infer that a container boundary settles every licensing question. Commercial customer-authored workflows are not themselves prohibited by GPL.",
+      "sources": [
+        "gpl",
+        "licensing"
+      ]
+    },
+    {
+      "id": "community-identities-and-controls",
+      "classification": "paid-feature-gates",
+      "finding": "Community supports the first administrator and up to two API keys. Additional user management, OIDC/SSO, audit logs, and incident routing are paid controls. Workspace roles are explicitly not tenant isolation.",
+      "response": "A private runtime behind Exomachina-owned authentication, authorization, audit, and per-tenant deployment boundaries is feasible engineering. It must not expose an unrestricted engine credential to customers. This does not make native Community RBAC or audit complete.",
+      "sources": [
+        "plans",
+        "builtin-auth"
+      ]
+    },
+    {
+      "id": "commercial-license-activation",
+      "classification": "paid-mode-operational-dependency",
+      "finding": "With no configured license, source enters Community mode without activation. Key-based paid activation uses periodic heartbeats; signed inline/file JWT sources do not. License startup failures degrade rather than block application startup.",
+      "response": "Do not describe Community as requiring registration or payment. If paid controls are chosen, establish supported offline entitlement and failure behavior for those controls. This inspection does not certify absence of every unrelated outbound request.",
+      "sources": [
+        "license-manager",
+        "license-discovery"
+      ]
+    },
+    {
+      "id": "processless-human-task-scope",
+      "classification": "native-composition-restriction",
+      "finding": "The processless typed action human.task is allowed only in roots, not DAGs invoked by dag.run, dag.enqueue, or parallel. It also rejects foreach placement and step timeout settings.",
+      "response": "Evaluate independent root services for reusable factories. Do not generalize this restriction to every approval gate: current source has sub-DAG approval/resume endpoints, while approval inputs differ from typed human-task outputs.",
+      "sources": [
+        "human",
+        "approval",
+        "subdag-approval-code"
+      ]
+    },
+    {
+      "id": "failure-recovery-boundary",
+      "classification": "configuration-and-proof-required",
+      "finding": "Automatic DAG retries require the scheduler, explicit retry policy, and an eligible failed top-level run. The default scan window is 24 hours from the original run timestamp, so long-lived runs can age out.",
+      "response": "Configure the recovery window for factory lifetimes and define escalation beyond it. Worker-crash tests in source demonstrate failure detection paths, not verified exactly-once external effects or complete Exomachina recovery.",
+      "sources": [
+        "durable",
+        "zombie-tests"
+      ]
+    },
+    {
+      "id": "independent-root-relationship",
+      "classification": "reusable-integration-required",
+      "finding": "HTTP-started roots are not automatically a native parent/child execution tree. Dagu can own each root's execution while Exomachina owns the logical service relationship.",
+      "response": "Persist versioned invocation identity, parent/child linkage, deadline and budget authority, cancellation state, accepted results, and recovery ownership. A one-shot callback or in-memory map is insufficient.",
+      "sources": [
+        "api",
+        "start-code",
+        "human"
+      ]
+    },
+    {
+      "id": "transport-default",
+      "classification": "deployment-configuration",
+      "finding": "Distributed transport documents TLS/mTLS, but peer.insecure defaults to true. Web/API TLS is a separate concern. No paid-only transport gate was identified in the reviewed Dagu documentation.",
+      "response": "Configure and test authenticated encrypted transport plus private API access. Do not equate available TLS with a hardened default installation.",
+      "sources": [
+        "transport"
+      ]
+    }
+  ],
+  "separateRootComposition": {
+    "status": "plausible-untested",
+    "answer": "Yes, provisionally: expose every reusable factory as an independent root run behind an HTTP service, optionally with an A2A facade. Each root may then own processless waits. Dagu's scheduler still owns queueing and execution; Exomachina needs a durable service-coordination adapter, not a replacement DAG scheduler.",
+    "nativeMechanisms": [
+      "HTTP APIs start/enqueue roots, accept supplied run IDs, inspect state, stop runs, and expose completion/resume operations.",
+      "A human task persists Waiting and releases its attempt. Completion commits validated input before enqueueing a continuation of the same run from its stored snapshot.",
+      "Repeated identical completion is documented as idempotent; queue failure after persistence can be repaired through resume/repeated completion. These semantics do not establish idempotent external agent submission."
+    ],
+    "proposedFlow": [
+      "Publish an immutable factory revision and persist an invocation intent with stable logical action ID, run ID, caller, contract, deadline, and budget reservation.",
+      "Submit the callee as a root through the service adapter. If acceptance is uncertain, reconcile by identity before starting another invocation.",
+      "Let the caller reach a dedicated result checkpoint. Let the callee independently run, pause for decisions, and resume through Dagu.",
+      "Persist the callee's accepted terminal outcome. An authenticated reconciler completes the caller's checkpoint with a compact result reference and outcome.",
+      "Use scheduled reconciliation to recover lost callbacks, delayed queueing, cancellation, deadlines, and abandoned ownership. Its persistent records must survive process failure."
+    ],
+    "adapterResponsibilities": [
+      "Correlation: stable factory revision, contract and execution profile, logical invocation ID, caller/callee run and attempt identities, and artifact references.",
+      "Delivery races: a result can arrive before the parent checkpoint exists; retain and retry delivery rather than discard an early callback.",
+      "Cancellation: propagate cancellation across roots, reconcile already accepted remote work, and reject late results after authority is revoked.",
+      "Deadlines: propagate an absolute deadline and enforce expiry while runs are waiting. A synchronous HTTP request timeout is not cancellation; the documented start-sync timeout leaves the run active.",
+      "Budgets: reserve and reconcile shared token, cost, concurrency, and depth limits across independent roots; prevent fan-out from independently spending the same remaining budget.",
+      "Recovery: an elected/fenced owner reconciles unresolved submissions and callbacks before creating new effects; recovery of the adapter itself cannot depend on a lost in-memory task.",
+      "Publication: bind a logical factory version to the exact submitted definition/dependencies. A stored run snapshot does not by itself provide a complete authorized, immutable factory catalog."
+    ],
+    "alternativeToTestFirst": "For a simpler post-execution review, test native sub-DAG approval/resume before adding separate roots solely to emulate a human task. Typed form semantics, worker release, restart behavior, and distributed propagation still need proof.",
+    "notEstablished": "No native A2A factory facade, atomic concurrent root-submission deduplication, automatic cross-root cancellation/budget cascade, or production-safe bridge is claimed. No no-feasible-workaround blocker has been established for the HTTP composition route.",
+    "sources": [
+      "api",
+      "start-code",
+      "human",
+      "subdag-approval-code",
+      "approval",
+      "distributed"
+    ]
+  },
+  "proofObligations": [
+    {
+      "id": "D01",
+      "title": "Pin a distributable production baseline",
+      "scenario": "Build/deploy the chosen released artifact without registration or a paid key; document separate-service versus combined-binary packaging.",
+      "passCriteria": "Required capabilities exist in that release; GPL notices/source delivery and product license boundaries are resolved; no trial expiry governs the Community runtime.",
+      "status": "unrun",
+      "sources": [
+        "gpl",
+        "licensing",
+        "pricing",
+        "license-manager"
+      ]
+    },
+    {
+      "id": "D02",
+      "title": "Both roots wait across complete host loss",
+      "scenario": "Caller and callee independently reach durable checkpoints; kill server/scheduler/workers, replace workers, edit the source definitions, then complete the waits.",
+      "passCriteria": "Waits free execution capacity, persist through restart, resume the intended snapshots, and produce one accepted downstream effect.",
+      "status": "unrun",
+      "sources": [
+        "human",
+        "distributed"
+      ]
+    },
+    {
+      "id": "D03",
+      "title": "Lost acceptance and duplicate submissions",
+      "scenario": "Drop the child-start response after acceptance and concurrently retry the same logical invocation from two recovery processes.",
+      "passCriteria": "One logical child and one external effect; existing execution is recovered rather than duplicated. Run-ID prechecks alone are not accepted as concurrency proof.",
+      "status": "unrun",
+      "sources": [
+        "start-code",
+        "api"
+      ]
+    },
+    {
+      "id": "D04",
+      "title": "Early, duplicated, stale, and partially committed results",
+      "scenario": "Deliver a child result before the caller checkpoint, duplicate it, lose the resume response, and fail queueing after completion was persisted.",
+      "passCriteria": "Durable reconciliation eventually resumes once; incompatible or revoked results cannot overwrite accepted state; no completed input is lost.",
+      "status": "unrun",
+      "sources": [
+        "human",
+        "api"
+      ]
+    },
+    {
+      "id": "D05",
+      "title": "Cancel and expire a waiting tree",
+      "scenario": "Cancel/expire the caller while the child is running or waiting, including a race with result delivery and recovery-owner replacement.",
+      "passCriteria": "Cancellation/deadline policy reaches every correlated root and remote assignment; no late callback resurrects authority or permits a new effect.",
+      "status": "unrun",
+      "sources": [
+        "api",
+        "human"
+      ]
+    },
+    {
+      "id": "D06",
+      "title": "Concurrent budgets and isolation",
+      "scenario": "Fan out competing independent roots under one budget, then crash the reservation owner; attempt cross-customer API and artifact access.",
+      "passCriteria": "Atomic reservations cap aggregate use, recovery reconciles outstanding spend, and the Exomachina gateway/deployment boundary enforces tenant access despite shared engine credentials.",
+      "status": "unrun",
+      "sources": [
+        "builtin-auth",
+        "plans",
+        "api"
+      ]
+    },
+    {
+      "id": "D07",
+      "title": "Long-lived failure recovery and worker leases",
+      "scenario": "Kill workers during a remote side effect, test coordinator replacement, and fail a run older than the configured automatic-retry window.",
+      "passCriteria": "One fenced recovery owner reconciles effects before replay; failure beyond the window is escalated or explicitly recovered without silent abandonment.",
+      "status": "unrun",
+      "sources": [
+        "durable",
+        "zombie-tests"
+      ]
+    },
+    {
+      "id": "D08",
+      "title": "Compare native sub-DAG approval with root-service composition",
+      "scenario": "Run a nested approval gate locally and on distributed workers; approve, reject, restart, and lose a response.",
+      "passCriteria": "Determine which requirements native approval meets, including release of waiting capacity and parent continuation; add an adapter only for the remaining typed-wait/service semantics.",
+      "status": "unrun",
+      "sources": [
+        "approval",
+        "subdag-approval-code"
+      ]
+    }
+  ],
+  "recommendation": "Keep Dagu as a credible unscored lightweight challenger. Run the complete Strands+A2A product slice and serial matched resource comparison only after its exact GPL bundle, Community authorization boundary, transitive definition binding and independent-root recovery approach are accepted. Do not infer whole-install memory from this partial topology.",
+  "userFacingAssessment": "Dagu now has a pinned local trial: one warm helper used 120.8 MiB RSS and nested approval survived restart. A child edited while its parent waited ran the new version after resume, so publication must pin children. The package is promising but has unproved product rights, authorization and A2A recovery.",
+  "sources": [
+    {
+      "id": "gpl",
+      "title": "Dagu GPL license",
+      "url": "https://github.com/dagucloud/dagu/blob/f501e3fefb2e52f9430d56b8ac7a055ec97ce320/LICENSE"
+    },
+    {
+      "id": "licensing",
+      "title": "Dagu embedding and GPL licensing guidance",
+      "url": "https://docs.dagu.sh/embedding/licensing"
+    },
+    {
+      "id": "pricing",
+      "title": "Dagu Community and self-hosted plans",
+      "url": "https://dagu.sh/pricing"
+    },
+    {
+      "id": "plans",
+      "title": "Self-hosted license comparison",
+      "url": "https://docs.dagu.sh/overview/self-host-license"
+    },
+    {
+      "id": "builtin-auth",
+      "title": "Builtin authentication, licensed controls, and workspace limits",
+      "url": "https://docs.dagu.sh/server-admin/authentication/builtin"
+    },
+    {
+      "id": "operations",
+      "title": "Dagu production operations",
+      "url": "https://docs.dagu.sh/server-admin/operations"
+    },
+    {
+      "id": "license-manager",
+      "title": "Community startup and paid activation manager",
+      "url": "https://github.com/dagucloud/dagu/blob/f501e3fefb2e52f9430d56b8ac7a055ec97ce320/internal/license/manager.go"
+    },
+    {
+      "id": "license-discovery",
+      "title": "License sources and heartbeat applicability",
+      "url": "https://github.com/dagucloud/dagu/blob/f501e3fefb2e52f9430d56b8ac7a055ec97ce320/internal/license/discover.go"
+    },
+    {
+      "id": "mcp",
+      "title": "Dagu MCP read, change, and execute tools",
+      "url": "https://docs.dagu.sh/mcp/tools"
+    },
+    {
+      "id": "human",
+      "title": "Human-task persistence, completion, and root-only restrictions",
+      "url": "https://docs.dagu.sh/writing-workflows/human-tasks"
+    },
+    {
+      "id": "approval",
+      "title": "Approval gates and review semantics",
+      "url": "https://docs.dagu.sh/writing-workflows/approval"
+    },
+    {
+      "id": "subdag-approval-code",
+      "title": "Sub-DAG approval and resume implementation",
+      "url": "https://github.com/dagucloud/dagu/blob/f501e3fefb2e52f9430d56b8ac7a055ec97ce320/internal/service/frontend/api/v1/dagruns.go"
+    },
+    {
+      "id": "durable",
+      "title": "Automatic retries and scheduler recovery window",
+      "url": "https://docs.dagu.sh/writing-workflows/durable-execution"
+    },
+    {
+      "id": "distributed",
+      "title": "Distributed execution and workflow snapshots",
+      "url": "https://docs.dagu.sh/server-admin/distributed/"
+    },
+    {
+      "id": "transport",
+      "title": "Distributed TLS and mTLS configuration",
+      "url": "https://docs.dagu.sh/server-admin/distributed/transport-security"
+    },
+    {
+      "id": "api",
+      "title": "Dagu REST API, root execution, and completion endpoints",
+      "url": "https://docs.dagu.sh/web-ui/api"
+    },
+    {
+      "id": "start-code",
+      "title": "Root submission, supplied run IDs, and start timeout behavior",
+      "url": "https://github.com/dagucloud/dagu/blob/f501e3fefb2e52f9430d56b8ac7a055ec97ce320/internal/service/frontend/api/v1/dags.go"
+    },
+    {
+      "id": "zombie-tests",
+      "title": "Worker-crash and distributed recovery integration tests, inspected only",
+      "url": "https://github.com/dagucloud/dagu/blob/f501e3fefb2e52f9430d56b8ac7a055ec97ce320/internal/intg/distr/zombie_recovery_test.go"
+    }
+  ],
+  "resourceCountertrial": {
+    "status": "bounded-complete; full-product-gates-open",
+    "comparison": "Shared-local Kestra reference, non-development Temporal and core Strands Graph, on the same host with one and at least two Strands harness instances.",
+    "measure": "Whole-install idle, paused and small overlapping-run memory without double-counting shared pages; startup, disk, process count and helper ownership.",
+    "firstGate": "Pin released separately operated Community package and permitted distribution; test native nested approval versus separate-root factory service and recovery.",
+    "source": "../tools/spikes/2026-09-22/countertrials/dagu/result.md",
+    "observed": "v2.17.0 separate local server/scheduler: 105.6 MiB fresh idle, 120.8 MiB warm RSS; 156 MB macOS group footprint for seven-process two-active-run sample. Nested approval survived restart; mutable child lookup changed behavior after parent wait. Other trials ran concurrently and Strands/A2A was absent."
+  }
+}

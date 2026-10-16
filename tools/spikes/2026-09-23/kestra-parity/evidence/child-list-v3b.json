@@ -1,0 +1,323 @@
+{
+  "status": 200,
+  "body": {
+    "results": [
+      {
+        "tenantId": "main",
+        "id": "1eTgOO1H44wD6IkcQPn3KK",
+        "namespace": "exomachina.kestra_parity",
+        "flowId": "parity_child",
+        "flowRevision": 1,
+        "labels": [
+          {
+            "key": "system.from",
+            "value": "api"
+          },
+          {
+            "key": "system.correlationId",
+            "value": "7JRL9FyEOjcAJQlE4O4QRi"
+          }
+        ],
+        "state": {
+          "current": "PAUSED",
+          "histories": [
+            {
+              "state": "CREATED",
+              "date": "2026-09-23T13:27:19.047263Z"
+            },
+            {
+              "state": "RUNNING",
+              "date": "2026-09-23T13:27:19.253391Z"
+            },
+            {
+              "state": "PAUSED",
+              "date": "2026-09-23T13:27:19.264874Z"
+            }
+          ],
+          "startDate": "2026-09-23T13:27:19.047263Z",
+          "endDate": "2026-09-23T13:27:19.264874Z",
+          "duration": "PT0.217611S"
+        },
+        "originalId": "1eTgOO1H44wD6IkcQPn3KK",
+        "trigger": {
+          "id": "child",
+          "type": "io.kestra.plugin.core.flow.Subflow",
+          "variables": {
+            "flowId": "parity_parent",
+            "taskId": "child",
+            "namespace": "exomachina.kestra_parity",
+            "taskRunId": "6bsMkGi94ZhoWjjKJl6CtW",
+            "executionId": "7JRL9FyEOjcAJQlE4O4QRi",
+            "flowRevision": 1
+          }
+        }
+      },
+      {
+        "tenantId": "main",
+        "id": "3EnW1uxuYcSTjzwq8ymlTc",
+        "namespace": "exomachina.kestra_parity",
+        "flowId": "parity_child",
+        "flowRevision": 4,
+        "inputs": {
+          "outcome": "direct"
+        },
+        "labels": [
+          {
+            "key": "system.from",
+            "value": "api"
+          },
+          {
+            "key": "system.correlationId",
+            "value": "4PrXp2MidSzdQvYkga3kzB"
+          }
+        ],
+        "state": {
+          "current": "SUCCESS",
+          "histories": [
+            {
+              "state": "CREATED",
+              "date": "2026-09-23T13:32:10.644307Z"
+            },
+            {
+              "state": "RUNNING",
+              "date": "2026-09-23T13:32:10.906533Z"
+            },
+            {
+              "state": "SUCCESS",
+              "date": "2026-09-23T13:32:13.527885Z"
+            }
+          ],
+          "startDate": "2026-09-23T13:32:10.644307Z",
+          "endDate": "2026-09-23T13:32:13.527885Z",
+          "duration": "PT2.883578S"
+        },
+        "originalId": "3EnW1uxuYcSTjzwq8ymlTc",
+        "trigger": {
+          "id": "child",
+          "type": "io.kestra.plugin.core.flow.Subflow",
+          "variables": {
+            "flowId": "parity_parent",
+            "taskId": "child",
+            "namespace": "exomachina.kestra_parity",
+            "taskRunId": "5Pub6FdGdvq2qOlN0Qgih2",
+            "executionId": "4PrXp2MidSzdQvYkga3kzB",
+            "flowRevision": 4
+          }
+        }
+      },
+      {
+        "tenantId": "main",
+        "id": "32SMUqkPRcKfDrAPUlcIkq",
+        "namespace": "exomachina.kestra_parity",
+        "flowId": "parity_child",
+        "flowRevision": 2,
+        "inputs": {
+          "outcome": "exhausted"
+        },
+        "labels": [
+          {
+            "key": "system.from",
+            "value": "api"
+          },
+          {
+            "key": "system.correlationId",
+            "value": "1hg7QvKgbxEbYXXnF9Vdx0"
+          }
+        ],
+        "state": {
+          "current": "PAUSED",
+          "histories": [
+            {
+              "state": "CREATED",
+              "date": "2026-09-23T13:28:20.102456Z"
+            },
+            {
+              "state": "RUNNING",
+              "date": "2026-09-23T13:28:20.123150Z"
+            },
+            {
+              "state": "PAUSED",
+              "date": "2026-09-23T13:28:20.694319Z"
+            }
+          ],
+          "startDate": "2026-09-23T13:28:20.102456Z",
+          "endDate": "2026-09-23T13:28:20.694319Z",
+          "duration": "PT0.591863S"
+        },
+        "originalId": "32SMUqkPRcKfDrAPUlcIkq",
+        "trigger": {
+          "id": "child",
+          "type": "io.kestra.plugin.core.flow.Subflow",
+          "variables": {
+            "flowId": "parity_parent",
+            "taskId": "child",
+            "namespace": "exomachina.kestra_parity",
+            "taskRunId": "34YMQToQpCneGPhEJqEn50",
+            "executionId": "1hg7QvKgbxEbYXXnF9Vdx0",
+            "flowRevision": 2
+          }
+        }
+      },
+      {
+        "tenantId": "main",
+        "id": "5DwlNgL6bkDwxlRr3IYhjA",
+        "namespace": "exomachina.kestra_parity",
+        "flowId": "parity_child",
+        "flowRevision": 3,
+        "inputs": {
+          "outcome": "exhausted"
+        },
+        "labels": [
+          {
+            "key": "system.from",
+            "value": "api"
+          },
+          {
+            "key": "system.correlationId",
+            "value": "7i7ScQ1E0aOWNLRZlLD8n2"
+          }
+        ],
+        "state": {
+          "current": "PAUSED",
+          "histories": [
+            {
+              "state": "CREATED",
+              "date": "2026-09-23T13:31:36.699038Z"
+            },
+            {
+              "state": "RUNNING",
+              "date": "2026-09-23T13:31:36.723615Z"
+            },
+            {
+              "state": "PAUSED",
+              "date": "2026-09-23T13:31:39.643069Z"
+            }
+          ],
+          "startDate": "2026-09-23T13:31:36.699038Z",
+          "endDate": "2026-09-23T13:31:39.643069Z",
+          "duration": "PT2.944031S"
+        },
+        "originalId": "5DwlNgL6bkDwxlRr3IYhjA",
+        "trigger": {
+          "id": "child",
+          "type": "io.kestra.plugin.core.flow.Subflow",
+          "variables": {
+            "flowId": "parity_parent",
+            "taskId": "child",
+            "namespace": "exomachina.kestra_parity",
+            "taskRunId": "74yodtCzUKhPj15myGEslv",
+            "executionId": "7i7ScQ1E0aOWNLRZlLD8n2",
+            "flowRevision": 3
+          }
+        }
+      },
+      {
+        "tenantId": "main",
+        "id": "1mg5VzDcmF3jy31ccpiU61",
+        "namespace": "exomachina.kestra_parity",
+        "flowId": "parity_child",
+        "flowRevision": 2,
+        "inputs": {
+          "outcome": "repair_success"
+        },
+        "labels": [
+          {
+            "key": "system.from",
+            "value": "api"
+          },
+          {
+            "key": "system.correlationId",
+            "value": "4HIjqyf4PGWKLhw7CIBDjR"
+          }
+        ],
+        "state": {
+          "current": "SUCCESS",
+          "histories": [
+            {
+              "state": "CREATED",
+              "date": "2026-09-23T13:28:19.592917Z"
+            },
+            {
+              "state": "RUNNING",
+              "date": "2026-09-23T13:28:19.997909Z"
+            },
+            {
+              "state": "SUCCESS",
+              "date": "2026-09-23T13:28:20.605956Z"
+            }
+          ],
+          "startDate": "2026-09-23T13:28:19.592917Z",
+          "endDate": "2026-09-23T13:28:20.605956Z",
+          "duration": "PT1.013039S"
+        },
+        "originalId": "1mg5VzDcmF3jy31ccpiU61",
+        "trigger": {
+          "id": "child",
+          "type": "io.kestra.plugin.core.flow.Subflow",
+          "variables": {
+            "flowId": "parity_parent",
+            "taskId": "child",
+            "namespace": "exomachina.kestra_parity",
+            "taskRunId": "4vCWJnmqKLmRTJQQczPrSb",
+            "executionId": "4HIjqyf4PGWKLhw7CIBDjR",
+            "flowRevision": 2
+          }
+        }
+      },
+      {
+        "tenantId": "main",
+        "id": "7bJewQCXVBZ0jZau5ALS1M",
+        "namespace": "exomachina.kestra_parity",
+        "flowId": "parity_child",
+        "flowRevision": 3,
+        "inputs": {
+          "outcome": "repair_success"
+        },
+        "labels": [
+          {
+            "key": "system.from",
+            "value": "api"
+          },
+          {
+            "key": "system.correlationId",
+            "value": "7l2abV8xI94tMd7OqGFhMb"
+          }
+        ],
+        "state": {
+          "current": "SUCCESS",
+          "histories": [
+            {
+              "state": "CREATED",
+              "date": "2026-09-23T13:31:36.201582Z"
+            },
+            {
+              "state": "RUNNING",
+              "date": "2026-09-23T13:31:36.665356Z"
+            },
+            {
+              "state": "SUCCESS",
+              "date": "2026-09-23T13:31:39.649864Z"
+            }
+          ],
+          "startDate": "2026-09-23T13:31:36.201582Z",
+          "endDate": "2026-09-23T13:31:39.649864Z",
+          "duration": "PT3.448282S"
+        },
+        "originalId": "7bJewQCXVBZ0jZau5ALS1M",
+        "trigger": {
+          "id": "child",
+          "type": "io.kestra.plugin.core.flow.Subflow",
+          "variables": {
+            "flowId": "parity_parent",
+            "taskId": "child",
+            "namespace": "exomachina.kestra_parity",
+            "taskRunId": "4cifwNEHnc7dsT3qzRLO2d",
+            "executionId": "7l2abV8xI94tMd7OqGFhMb",
+            "flowRevision": 3
+          }
+        }
+      }
+    ],
+    "total": 6
+  }
+}

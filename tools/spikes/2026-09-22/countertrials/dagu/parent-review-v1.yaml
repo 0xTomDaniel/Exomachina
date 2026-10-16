@@ -1,0 +1,10 @@
+steps:
+  - id: child
+    action: dag.run
+    with:
+      dag: exo_child_v1
+    approval:
+      prompt: Review exact child artifact
+  - id: deliver
+    depends: child
+    run: printf 'delivery-after-approval\n'

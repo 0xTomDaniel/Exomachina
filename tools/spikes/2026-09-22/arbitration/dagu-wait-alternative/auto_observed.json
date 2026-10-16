@@ -1,0 +1,113 @@
+{
+  "authorized_child": {
+    "child_id": "exo-wait-child-001",
+    "dagu_response": {
+      "alreadyCompleted": false,
+      "dagName": "exo_wait_child_v1",
+      "dagRunId": "exo-wait-child-001",
+      "queued": true,
+      "remainingWaitingSteps": 0,
+      "stepId": "director_wait"
+    },
+    "decision": "accept"
+  },
+  "before_kill": {
+    "bridge_pid": 34684,
+    "child": {
+      "dag_name": "exo_wait_child_v1",
+      "nodes": {
+        "child_outcome": "succeeded",
+        "director_wait": "succeeded",
+        "notify_parent": "running"
+      },
+      "run_id": "exo-wait-child-001",
+      "status": "running"
+    },
+    "child_outcome_node": {
+      "done_count": 1,
+      "status": "succeeded"
+    },
+    "parent": {
+      "dag_name": "exo_wait_parent_v1",
+      "nodes": {
+        "child_gate": "waiting",
+        "parent_continuation": "not_started"
+      },
+      "run_id": "exo-wait-parent-001",
+      "status": "waiting"
+    }
+  },
+  "both_waiting": {
+    "child": {
+      "dag_name": "exo_wait_child_v1",
+      "nodes": {
+        "child_outcome": "not_started",
+        "director_wait": "waiting",
+        "notify_parent": "not_started"
+      },
+      "run_id": "exo-wait-child-001",
+      "status": "waiting"
+    },
+    "parent": {
+      "dag_name": "exo_wait_parent_v1",
+      "nodes": {
+        "child_gate": "waiting",
+        "parent_continuation": "not_started"
+      },
+      "run_id": "exo-wait-parent-001",
+      "status": "waiting"
+    },
+    "processes": {
+      "bridge_process_count": 0,
+      "dagu_process_count": 1,
+      "matched_processes": [
+        {
+          "command": "/tmp/exomachina-countertrials/dagu/dagu start-all --host 127.0.0.1 --port 63724",
+          "pid": 34673,
+          "ppid": 34663,
+          "rss_kib": 107760
+        }
+      ]
+    }
+  },
+  "child_start": {
+    "dagRunId": "exo-wait-child-001"
+  },
+  "dagu_binary_sha256": "fd855996bab956835043ae8cbb00ac3ea5211a6be6992374727b7908d393aac3",
+  "definition_sha256": {
+    "exo_wait_child_v1.yaml": "624e75167d2dbf8066ef326c476c0ff6f667b795148e15402f950503955c328a",
+    "exo_wait_parent_v1.yaml": "a4404595fc55bad8c14b64b986997d5386832abd42519df865acd8e38b403ced"
+  },
+  "error": "TimeoutError('automatic parent continuation: None')",
+  "fault_restarted_dagu_pid": 34686,
+  "first_dagu_pid": 34673,
+  "outcome": "failed",
+  "parent_start": {
+    "dagRunId": "exo-wait-parent-001"
+  },
+  "registered": {
+    "child_id": "exo-wait-child-001",
+    "owner_epoch": 1,
+    "parent_id": "exo-wait-parent-001"
+  },
+  "restarted_dagu_pid": 34677,
+  "runtime": "/tmp/exomachina-dagu-wait-auto-001",
+  "source_sha256_after": {
+    "auto_bridge.py": "3b0e78c20d57e2c6d3400132eb1b1faeffb1d74246aa73a3886feae13b10af56",
+    "auto_trial.py": "ea28dd8e35815bca9cb5dd0d9b2e9fb4f41bf30b9c9804af6685015cf4ba96f8",
+    "bridge.py": "c501b14fed63ef9534fb1e988924a02b2bc5a42259ab5058c85613865c1fa2e7"
+  },
+  "source_sha256_before": {
+    "auto_bridge.py": "3b0e78c20d57e2c6d3400132eb1b1faeffb1d74246aa73a3886feae13b10af56",
+    "auto_trial.py": "ea28dd8e35815bca9cb5dd0d9b2e9fb4f41bf30b9c9804af6685015cf4ba96f8",
+    "bridge.py": "c501b14fed63ef9534fb1e988924a02b2bc5a42259ab5058c85613865c1fa2e7"
+  },
+  "unauthorized_rejected": {
+    "error": "ValueError: unauthorized Director",
+    "returncode": 1
+  },
+  "wrong_child_rejected": {
+    "error": "ValueError: wrong-child binding",
+    "returncode": 1
+  }
+}

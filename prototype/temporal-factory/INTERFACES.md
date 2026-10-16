@@ -1,0 +1,1167 @@
+# Integrated Temporal factory prototype: shared interfaces
+
+Branch `feat/temporal-factory-prototype`. Root: `prototype/temporal-factory/`. This is the contract between the parallel lanes. Change it only through the orchestrator.
+
+## Architecture being built
+
+- One **customized Strands harness instance** (`src/harness.py`, orchestrator-owned) is configured as `mode: agent` or `mode: factory`. In factory mode, its Director agent and Factory Module run **inside** the instance and expose only that instance's normal A2A identity, Agent Card, and capability contract (`verified-research@1`). There is no separate factory endpoint. Callers never supply a package digest, graph, or version.
+- A new graph definition/version or run **does not** spawn a harness service. New runs use the instance's active publication. Waiting runs keep their pinned closure.
+- The bundled **local runner** (PostgreSQL + Temporal + interpreter workers, `src/runner.py`) starts **lazily**: on the first factory work, or at harness startup only when the instance has unfinished runs to recover. Routine harness startup must not start it. It is a detached process shared by harness instances on the install. It is not owned by one harness process.
+- External agent nodes are **independent black-box services**. Capabilities, Quality and the release receiver are all called over A2A v1, with no side channel (see "A2A release agent" below). Pinned test services (`services/testbed.py`) stand in for the future directory. No directory discovery.
+- The bounded declarative graph interpreter (`src/factory.py` + `src/definition.py`) stays. Every run pins its definition, service bindings and contracts, Quality policy, and interpreter/worker build (`src/binding.py` closure).
+
+## Conventions (all lanes)
+
+- Python: `~/src/Exomachina/tools/spikes/2026-10-07/a2a-v1/.venv/bin/python` (3.12.9, temporalio 1.33.0, strands-agents 1.57.0 without its `a2a` extra, a2a-sdk 1.2.2; A2A v1.0 only, see "A2A v1 baseline and hand-off records"). Run tests with `-B`. The shared 2026-09-22 environment (a2a-sdk 0.3.26) is not modified and is no longer the prototype interpreter.
+- All runtime modules are flat in `src/`. Import them by module name, with `src/` on `sys.path`. `services/` modules add `../src` to `sys.path`. Nothing imports from `tools/spikes/`.
+- **No deletion.** Do not run `rm`, `shutil.rmtree`, `Path.unlink`, `os.remove`, or equivalent on anything. Leave trial state behind and report its path. If any command or automatic approval is rejected, stop that action and report it. Do not reword it, retry it another way, or route around it.
+- Trial state lives only under `/tmp/exo-proto-<lane>-<suffix>/`. Stay inside your assigned port block.
+- Edit only the files your brief assigns. Do not commit; the orchestrator commits. At the end, write `handoff/<lane>.md`: files changed, exact commands run with pass/fail output, evidence paths, known gaps, and anything you could not do.
+- Test fault profiles must not be reachable from any product path.
+
+## Install layout (`EXO_HOME`)
+
+```
+$EXO_HOME/
+  runner/                      # shared lazy runner (runner lane)
+    secrets/{postgres-password,temporal-password}   0600
+    pgdata/  pgsocket/  server.yaml  temporal.log  postgres.log
+    builds/<build_id>/          # immutable interpreter snapshot: INTERPRETER_FILES + build.json
+    outcomes.sqlite3            # A2A outcome journal (EXO_OUTCOME_DB)
+    activities.jsonl            # EXO_ACTIVITY_LOG
+    runner-events.jsonl  runner.lock  runner-ready.json
+  instances/<name>/            # one harness instance (orchestrator)
+    instance.json  director.sqlite3  catalog/
+  services/<name>/              # pinned test A2A services (testbed lane)
+```
+
+## Interpreter lane (`src/`: factory, adapter, binding, buildinfo, worker, definition, fixture, projections)
+
+- `binding.py`: `DEPLOYMENT = "exo-factory"`, `QUEUE = "exo-factory"`, `NAMESPACE = "exomachina"`. `INTERPRETER_FILES`: tuple of every flat `src/` file a worker build needs. `source_digest(directory)` hashes exactly those files. `build_id_for(source_digest) -> "b-" + digest[:12]`. `make_manifest`, `verify_closure`, `may_retire` as in the version lane. `PublicationStore(catalog)` has `publish(package, closure, *, label) -> manifest_digest`, `activate(manifest_digest, *, registered_version, registered_source_digest)`, `active() -> record`, `get(manifest_digest) -> record`, and `list() -> [record]`. A record holds `{manifest_digest, package_digest, build_id, label, closure}`.
+- `buildinfo.py`: `BUILD_ID`, `SOURCE_DIGEST` read once from env `EXO_WORKER_BUILD_ID` and `EXO_WORKER_SOURCE_DIGEST`. It is imported by `factory.py` as a passed-through import.
+- `worker.py`: verifies that `source_digest(own dir) == EXO_WORKER_SOURCE_DIGEST`. It connects to `EXO_TEMPORAL_ADDRESS` in namespace `exomachina` and polls `QUEUE` as `WorkerDeploymentVersion(DEPLOYMENT, BUILD_ID)` with `PINNED` default and `workflow_failure_exception_types=[ValueError]`. It uses env `EXO_OUTCOME_DB` and `EXO_ACTIVITY_LOG`.
+- **Workflow start input** (Director → `FactoryRun.run`), exact keys:
+  `{run, definition_digest, package_digest, document, package, closure, director:{identity, token, epoch}, run_inputs, run_inputs_digest, authorized_actor, input_authority, wait_seconds}`. There is no `faults` key.
+- **Status query** `FactoryRun.status`: lane-1 fields plus `manifest_digest` and `interpreter_build`.
+- **Updates**: `claim_owner({actor, token, epoch})` and `director_command({command_id, action:"abort", actor, token, run, definition_digest, revision, sha256, epoch})`, unchanged from lane 1.
+- **Results**: `accepted` (with `acceptance`, `receipt`, `released: true`), `aborted`, `expired`, `failed` (child failure incident), and `incident` (unresolved assignment, release, or Quality-inconsistent evidence, from `incident_result`). The parent propagates a child's non-accepted status.
+- The run input `question` (optional caller string) flows into each assignment brief: `fixture.branch_brief(..., question=...)`. A `None` question keeps the fixture default.
+- `failure_projection.project(status, execution, result)` maps a result `incident` and a closed failed execution to A2A `failed`, `accepted/aborted/expired` to `completed`, and Director/child waits to `input-required`.
+
+## Runner lane (`src/runner.py`; folds in `runtime.py`/`supervisor.py`)
+
+```python
+class Runner:
+    def __init__(self, home: Path, *, port_base: int | None = None, member_base: int | None = None): ...
+    address: str            # "127.0.0.1:<frontend>"
+    namespace: str          # "exomachina"
+    def is_running(self) -> bool
+    def ensure_started(self, *, reason: str, timeout: float = 180) -> dict   # idempotent attach-or-start
+    def ensure_build(self, source_dir: Path) -> dict   # {build_id, source_digest, path}; immutable snapshot
+    def wait_worker(self, build_id: str, timeout: float = 60) -> dict   # Temporal reports that version polling
+    def stop(self, timeout: float = 60) -> dict
+    def status(self) -> dict
+```
+CLI: `python src/runner.py {serve,start,stop,status} --home H`. `ensure_started` spawns a detached `serve` process when needed and waits for `runner-ready.json`. The `serve` supervisor creates secrets, initdb with SCRAM, the Temporal schema, and namespace `exomachina` on first start. It restarts crashed children. It runs one worker per non-retired build under `builds/`, and picks up new builds without a restart. Every start and attach is recorded with its `reason` in `runner-events.jsonl`. Binaries default to `/tmp/exomachina-countertrials/temporal/runtime`, `/opt/homebrew/opt/postgresql@16/bin`, and `/tmp/exomachina-temporal-evaluation/temporal`, with env overrides `EXO_TEMPORAL_RUNTIME`, `EXO_PG_BIN`, and `EXO_TEMPORAL_CLI`. Ports: frontend = `port_base+2`, http `+3`, matching `+4`, history `+5`, worker `+6`, pprof `+11`, metrics `+12`; postgres = `member_base`, membership `member_base+1..4`. Defaults are `port_base=44000` and `member_base=32400`, with env overrides `EXO_RUNNER_PORT_BASE` and `EXO_RUNNER_MEMBER_BASE`.
+
+## Authoring lane (`src/authoring.py`)
+
+- `authoring_vocabulary(approved_bindings) -> dict`: the node types, fields, typed route values, result types, bounds and rules an author may use, generated from `definition.py` constants.
+- `materialize(template, bindings) -> package`: `template = {schema, root, child, run_inputs}`, with `"@child"` digest substitution as in lane-1 `author.py`.
+- `class GraphAuthor(Protocol)`: the authoring Interface. `StrandsGraphAuthor(model)` is a real Strands `Agent` with tools `describe_vocabulary`, `validate_draft(template_json)`, and `submit_draft(template_json)`. Validation errors go back to the agent, which revises. The session caps rounds. Submission succeeds only if `definition.validate(package, approved_bindings)` passes.
+- `AuthoringSession(author, *, approved_bindings, max_rounds=4).run(brief, base_template=None) -> AuthoringOutcome{status, template, package, package_digest, rounds:[{round, draft_digest, valid, errors}], model:{kind, id, live: bool}}`.
+- **Hard authoring budget (final-phase amendment).** A round cap counts distinct evaluated drafts only and does not bound model calls. `AuthoringSession(author, *, approved_bindings, max_rounds=4, max_model_calls=12, max_tool_calls=24, deadline_seconds=600)` enforces all four limits. The model is wrapped so the call that would exceed `max_model_calls`, or any call after the deadline, raises `AuthoringBudgetExhausted` **before** reaching the inner model. No provider request is sent after exhaustion. The wall-clock deadline also cancels an in-flight stream, which sends the broker `cancel`. Tool calls past `max_tool_calls`, and every tool call after `round_limit` is reached, terminate the session instead of returning another result for the agent to loop on. The outcome is `status: "aborted"` with `abort: {reason: "round_limit"|"model_call_limit"|"tool_call_limit"|"deadline", model_calls, tool_calls, elapsed_seconds}`, plus the rounds and calls so far. Nothing is approved or published. `admin.py author` returns that outcome and exits non-zero. All four limits are reported in the outcome and in evidence.
+- `approve(package, *, approver, policy) -> approval record` (auto-approval within the bounded profile; human approval is a policy choice).
+- `model_from_environment() -> (model | None, reason)`. It reports why no live provider is available and never prompts for credentials.
+- `ScriptedAuthoringModel`: a deterministic Strands `Model` that drives the same tool loop. Its first draft has a defect, and it revises from the returned error. It is always labelled `live: false`.
+
+## Model broker lane (`broker/`, `src/model_broker.py`) — final phase
+
+Decision (debate consensus, 23 Sep 2026): the harness stays **Strands Python**; live model calls go through one **install-wide, persistent Node process running the published `@earendil-works/pi-ai` 0.87.1** behind a custom Strands `Model`. The embedded Pi SDK is the runner-up and is not built here. Proven offline basis: `/tmp/exomachina-pi-strands-debate/matched/strands-broker-interleaved/` (`broker.mjs`, `pi_broker_model.py` with the `contentIndex` ordered-fragment fix and index-restoring reasoning replay, strict mock). Reuse it; do not fork pi-ai or patch `node_modules`.
+
+**Credential policy (hard rules).**
+- Only the ChatGPT/Codex **subscription** OAuth credential (pi-ai provider `openai-codex`, credential `type: "oauth"`). It is obtained by Exomachina's **own** sign-in (`exo-model login`). Never read, copy or import `~/.codex/auth.json`, `~/.pi/**`, or any other tool's credential. pi-ai's `authContext` must return nothing for env and files so `OPENAI_API_KEY` etc. are never consulted.
+- **No API-billing fallback.** A subscription failure (`reauth_required`, quota, rate limit, entitlement) surfaces as an explicit error. It never falls through to `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, AWS, or any other provider.
+- Tokens exist only inside the broker/login Node processes and the credential file. Python, the harness, Temporal workflow inputs/history, A2A messages/artifacts, `evidence/`, logs and git never contain access tokens, refresh tokens, id tokens or authorization codes. Never print a token, even partially. Nobody asks the user for a raw token.
+- Owner-only persistence: `$EXO_MODEL_HOME` is `0700`, the credential file `0600`, written atomically (tmp + rename) under a lock. Refresh happens only inside the broker (pi-ai `Models.getAuth`, which refreshes under the store lock) or via the explicit `refresh` op.
+- Product runtime may remove only its own runtime artifacts (a proven-stale socket or lock). Workers still follow the no-deletion rule for everything else.
+
+**Install layout.** `EXO_MODEL_HOME` (default `~/.exomachina/model-broker`; tests use `/tmp/exo-proto-<lane>-<suffix>/model`). It is install-wide and per OS user, independent of any `EXO_HOME` trial directory, so one sign-in serves every harness instance.
+```
+$EXO_MODEL_HOME/                     0700
+  secrets/openai-codex.json          0600  pi-ai OAuth credential {type:"oauth", access, refresh, expires, accountId}
+  secrets/openai-codex.json.lock/          mkdir lock holding owner pid; stale (dead pid) lock is recovered
+  run/broker.sock                    0600  newline-JSON protocol below (sun_path ≤ 104 bytes)
+  run/broker-ready.json                    {pid, socket, started_at, pi_ai:"0.87.1", provider:"openai-codex", originator}
+  broker-events.jsonl                0600  start/attach/refresh/stream/error events: ids, model, timings, error kinds only
+```
+
+**Node package `broker/`** (owner tw_package). `package.json` pins `"@earendil-works/pi-ai": "0.87.1"` exactly, with `package-lock.json`; `broker/node_modules/` is gitignored and installed with `npm ci` (offline cache `/tmp/exomachina-pi-strands-debate/npm-cache` may be used). Entry point `node broker/exo-model.mjs <command>`:
+- `serve` — persistent singleton for this `EXO_MODEL_HOME`: if a live broker answers `health`, exit 0 reporting attach; replace only a proven-stale socket. Writes `run/broker-ready.json`.
+- `login [--device | --browser]` — interactive sign-in through public `Models.login("openai-codex", "oauth", interaction)`. Default `--device` (prints only the verification URL and one-time user code). Persists via the same store. Prints `{signed_in, account: "sha256:<12 hex>", expires_at}` only.
+- `status` — `{signed_in, account, expires_at, expired}` with no network call and no token material.
+- `refresh` — forces one refresh through the running broker's `refresh` op (starting it if needed); prints `{refreshed, expires_at_before, expires_at_after}`.
+- `logout` — pi-ai `Models.logout`.
+- `leak-scan <path>...` — reads the credential in-process and scans files/directories (binary-safe, including SQLite and JSONL) for the access token, refresh token, and any `id_token`/JWT fragment of them. It excludes **exactly one** file, the canonical credential file (`realpath($EXO_MODEL_HOME/secrets/openai-codex.json)`), and reports it under `excluded`. Every other file is scanned, including other files under `secrets/` and any copy of the credential. Prints `{files_scanned, bytes_scanned, excluded:[path], hits:[{path, kind}]}`, never the matched text. Every scenario run that reports zero hits must also run a **positive control** in the same run, and the control **never reads or copies the real store**:
+1. Create a fresh `FIXTURE_STORE`-marked store with a newly generated synthetic credential.
+2. Plant a copy of that synthetic credential file, plus its bare synthetic access token, outside that store's canonical path.
+3. Run `leak-scan` with `EXO_MODEL_HOME` pointing at the fixture store, and show it reports both.
+4. Record the result in evidence.
+
+The real-store scan is separate. It runs against the default home, and its scanned paths include the control directory.
+- **OAuth identity (from `handoff/pi-ai-credential-audit.md`).** Every OAuth call uses pi-ai's hard-coded Codex CLI `client_id` (`app_EMoamEEZ73f0CkXaXp7hrann`). pi-ai has no public override, and it is recorded as a compatibility and commercial uncertainty. The broker adds `originator: exomachina` and its User-Agent to device start, poll, code exchange and refresh calls. pi-ai itself sends no originator on the device flow. `--browser` rewrites only the authorize URL's `originator=pi` query value to `exomachina`. Whether ChatGPT accepts any of this for a Pro subscription, and whether that use is entitled under the applicable terms, is not verified by Exomachina and is recorded, not assumed.
+- Codex SSE requests carry `originator: exomachina` and `User-Agent: exomachina-model-broker/<version> (pi-ai/0.87.1)`, applied through pi-ai's public `fetch` stream option. If the live backend rejects that originator, report it; do not silently switch to another client's originator.
+- Egress: only `chatgpt.com`, `auth.openai.com`, and loopback.
+- **Base-URL override is fixture-only (must-fix for live auth qualification).** A loopback `EXO_CODEX_BASE_URL` would otherwise receive the real subscription `Authorization` header. The broker accepts `EXO_CODEX_BASE_URL` only when all of these hold: the URL is loopback; `EXO_MODEL_HOME` is set explicitly and its realpath is **not** the default install-wide home; and the store carries the fixture marker `$EXO_MODEL_HOME/FIXTURE_STORE`, written only by test code. Otherwise `serve` (and `refresh`, `login`, `status`) exits with a `config` error **before any credential read that could reach a request and before any HTTP request**. `login` also refuses to run in a fixture-marked store, so a real credential can never land where an override is allowed. A negative test must prove refusal with a recording loopback server that observes **zero** requests.
+- **Error boundary.** pi-ai error text can embed raw provider response bodies, and token/JWT redaction is not a general sanitizer. So no provider free text leaves the broker process. A socket error is `{kind, message, status?, code?}`, where `message` is fixed public text per `kind`, `status` is the HTTP status integer, and `code` is a structured provider code that matches `^[a-z0-9_.-]{1,64}$` and a broker allowlist, or `other`. `broker-events.jsonl`, stdout/stderr, Python exceptions and evidence carry only kind/status/code. No raw diagnostic is retained in any file. Exact-token redaction stays on every line as defence in depth. It is the one permitted alteration of stream content: if model output contains a live credential value byte for byte, that value becomes `[redacted]` in `ev` and `done`. JWT-shaped text that is not the credential is never altered.
+- **Threat model.** The broker defends against accidental exposure: misconfiguration, test overrides, logs, artifacts and git. It also defends against other local users (owner-only modes, symlink/ownership refusal, single-link credential, and an override store whose credential inode must differ from the default store's). It does **not** defend against a concurrent attacker running as the same OS user. Such an attacker can read the store directly, so check-then-use windows open only to that user are accepted and documented: ancestor-directory swaps, and replacing a stale socket between the refusal check and unlink. Races between Exomachina's own processes are **in scope** and must be fixed, for example two brokers recovering the same dead-PID lock.
+
+**Install-wide sharing proof (acceptance).** Sequential attach alone does not qualify as install-wide sharing. Required:
+- **Node (tw_package):** at least two `serve` processes racing on one fixture `EXO_MODEL_HOME` yield exactly one live broker PID. Each loser attaches or exits 0 and never unlinks or replaces the live socket, shown by the socket inode and the ready-file PID staying unchanged.
+- **Python (tw_version):** at least two independent OS processes race `ModelBroker.ensure_started` on the same fixture home, observing one PID. Each then streams concurrently with a different `session_id`. The mock records distinct `session-id` headers and a separate replay history per session, with no cross-session events.
+
+**Model scope in this prototype.** The broker powers **graph authoring only** (`admin.py author` → `StrandsGraphAuthor`). The factory Director agent inside the harness (`src/harness.py`, `ToolCallingModelFixture`) that handles A2A work remains a **scripted fixture model**. Director decisions in any run are synthetic, even when authoring is live, and evidence must label them `director_model: fixture`. A broker-backed Director is not built here.
+
+**Socket protocol** (one JSON object per line; `id` echoes the request):
+- `{id, op:"health"}` → `{id, health:{pid, pi_ai, provider:"openai-codex", originator, signed_in, expires_at, account}}`
+- `{id, op:"stream", model, session, context:{systemPrompt, messages, tools}, options:{reasoningEffort?}}` → `{id, ev:{type, contentIndex, delta?, toolCall?:{id,name}}}`* then exactly one terminal `{id, done:<pi AssistantMessage>}` or `{id, error:{kind, message}}`. Error kinds: `reauth_required`, `rate_limit`, `quota`, `config`, `provider`, `aborted`, `broker`.
+- `{id, op:"cancel"}` aborts that stream; a closed client connection aborts its streams.
+- `{id, op:"refresh"}` → `{id, refresh:{refreshed:true, expires_at_before, expires_at_after}}` or `{id, error}`.
+
+**Python `src/model_broker.py`** (owner tw_version). Imports nothing from `tools/spikes/` or `/tmp`.
+- `ModelBroker(home: Path | None = None)`: `.socket`; `health() -> dict`; `is_running() -> bool`; `ensure_started(*, reason: str, timeout: float = 30) -> dict` (lazy, idempotent attach-or-spawn of a detached `node broker/exo-model.mjs serve`, recording `reason` in `broker-events.jsonl`); `stop()`. Node binary from `EXO_NODE` or `PATH`.
+- `PiBrokerModel(strands.models.Model)`: `PiBrokerModel(broker, *, model_id, session_id, reasoning_effort="low")`, the interleaved spike adapter (per-`contentIndex` routing, reasoning emitted at `done` with its original index, lossless replay, `BrokerLost` on a connection lost before a terminal event, `ModelThrottledException` for `rate_limit`/`quota`, `SubscriptionAuthRequired` for `reauth_required`). It lazily calls `broker.ensure_started(reason="model-call")`.
+- `authoring.model_from_environment()` selects by `EXO_AUTHOR_PROVIDER`: unset or `codex-subscription` → the broker only (default model `EXO_AUTHOR_MODEL`, else `gpt-6-sol`); if not signed in it returns `(None, "codex-subscription: not signed in; run node broker/exo-model.mjs login")` and **does not look at any API key**. `anthropic`, `bedrock`, `openai-api` are used only when named explicitly. `synthetic-loopback` selects the broker against a loopback `EXO_CODEX_BASE_URL` for tests, and requires an explicit, non-default, fixture-marked `EXO_MODEL_HOME`. `codex-subscription` returns `(None, reason)` without contacting or starting the broker if `EXO_CODEX_BASE_URL` is set at all. The outcome's `model` record is `{kind, id, provider, billing, live}`, where `live: true` only for `codex-subscription` against the real backend.
+
+**Live authoring scenario** (owner tw_director): `scenarios/live_authoring.py --home H --provider {synthetic-loopback,codex-subscription}`. It brings up the testbed, provisions a factory-mode instance, publishes v1, runs `admin.py author` with the selected broker model (no `--allow-scripted`), auto-approves and publishes v2, runs v2 through the harness's normal A2A `message/send` (lazy runner, Temporal, pinned build) to a terminal state, exports the Temporal histories, and runs `leak-scan` over `H`, the evidence files, the model home's logs, and the **actual commit-candidate file set**, with the positive control. The candidate set is every file under `prototype/temporal-factory/` from `git ls-files --cached --others --exclude-standard`, which covers tracked, staged and untracked non-ignored files; the scan records the file count. A `git diff` excerpt alone is not a leak claim. The positive control is defined under `leak-scan`. In `codex-subscription` mode, the scenario exits with an error before sign-in checks, broker start or any request if `EXO_CODEX_BASE_URL` is inherited from the environment, and it never sets one. In `synthetic-loopback` mode, the fixture model home is `H/model` with the `FIXTURE_STORE` marker. The release step is the A2A release agent (a fixture agent, not a real external destination); evidence labels it `a2a-release (fixture agent)`. Evidence recorded before 8 Oct 2026 carries the earlier `http-release (fixture)` label. Evidence: `evidence/live-authoring-<provider>.json` with every claim labelled `real` or `synthetic`.
+
+**Live qualification status (23 Sep 2026, one account, `sha256:188b022d6e97`).** Observed against the real ChatGPT/Codex backend:
+- device-code sign-in into the default store;
+- one forced refresh through the token endpoint, carrying the broker's `originator`/User-Agent (`evidence/live-refresh-codex-subscription.json`);
+- SSE requests with `originator: exomachina` accepted;
+- one `gpt-6-sol` authoring run through the harness, A2A and pinned Temporal (`evidence/live-authoring-codex-subscription.json`, attempt 2).
+
+Not live-tested:
+- the `--browser` authorize-URL rewrite and callback;
+- a live repair round;
+- rate-limit, quota and `reauth_required` handling;
+- entitlement and terms;
+- a broker-backed Director.
+
+**Authoring acceptance by provider (revised after live attempt 1).**
+- **`synthetic-loopback` must exercise the repair loop.** The mock forces an invalid first draft, so round 1 has structured validation errors, a later round is valid, and the corrected draft is derived from those errors. The scenario still fails if that loop is missing.
+- **`codex-subscription` is judged on outcome, not path.** A live model is not required to fail first. It must stay within the hard budget. It must call `validate_draft`, and receive structured results, before `submit_draft`. The submitted digest must equal a round recorded as `valid`, and approval and publication must follow. The evidence records `first_pass_valid: true|false` and the round count. If the live model does revise, the invalid rounds and their errors are recorded too.
+- Repair-loop behaviour is proven by the synthetic run and the unit tests. It is not claimed from a live run unless that run actually revised. Ports: runner `EXO_RUNNER_PORT_BASE=44100`, `EXO_RUNNER_MEMBER_BASE=32420`, harness 44830, testbed 45300–45305. Unit/Node tests and mock backends use 46100–46149.
+
+**Test fixtures** (owner tw_quality): `broker/testing/` holds loopback-only test code: the strict-history mock Codex SSE backend (from the interleaved spike, plus an authoring-script mode that drives `describe_vocabulary` → defective `validate_draft` → corrected draft derived from the returned error → `submit_draft`), a `--script runaway` mode that never submits and keeps calling `describe_vocabulary` and re-validating the same invalid draft after every limit is exhausted, and a `node --import` preload that intercepts the OAuth token endpoint for refresh tests. A budget test runs a real Strands session through `PiBrokerModel` → Node broker → runaway mock. It asserts `status: "aborted"` for each limit reason, and that the mock recorded exactly the permitted number of model requests and none after exhaustion. Product code never imports `broker/testing/`.
+
+## Testbed lane (`services/`, `definitions/`)
+
+- `services/testbed.py {up,down,status} --home H [--port-base 45200]`. It starts independent pinned test services, each with durable identity under `$H/services/<name>` (all six are A2A v1 agents): `source_alpha`, `source_beta`, `counter_alpha`, and `counter_beta` (capability, via `src/harness_server.py --role capability`), `quality` (`services/quality_server.py`), and `release` (`services/release_server.py --mode participating`). Ports are `port_base + i` in that order.
+- `up` writes `$H/testbed/approved_bindings.json` (`{name: {role, url, identity, approved: true}}`, the exact shape `definition.validate` requires), `contracts.json` (one fixture-authored capability contract per binding name), and `quality_policy.json`. It is idempotent. On restart, identities are unchanged.
+- The release agent serves only A2A, so the testbed observes it through its Agent Card: its binding identity is `a2a-card-` plus the first 24 hex of its card pin (`agent_binding.card_identity`), and its contract carries that `card_sha256` (8 Oct 2026).
+- `definitions/v1-template.json`: the lane-1 mixed v4 template, plus a caller input `question` (string, not required, `allowed_actors: ["fixture-operator"]`, `may_affect_acceptance: false`).
+
+## Qualification amendments (23 Sep 2026, `QUALIFICATION.md`)
+
+These supersede the statements above where they conflict.
+
+- **Runner configuration is install-scoped (Spike B).**
+  - `Runner(home)` reads and pins `port_base`/`member_base` in `$EXO_HOME/runner-config.json` under a lock. Explicit conflicting ports raise.
+  - `init_instance` stores no runner ports. It rejects a harness port already configured for another instance in the home.
+  - `harness.py serve` holds `instances/<name>/harness.lock` before the Director claims an incarnation. A second process for the same instance exits with `instance already serving`.
+- **Async external agents (Spike A).**
+  - A binding may pin, in its closure contract, `{card_sha256 (url-less card), a2a_extension:{uri:"urn:exomachina:a2a-action-contract:v1", contract, contract_digest}, reconcile}`.
+  - `reconcile` is `a2a-idempotent-resend` only when the served contract document declares action-id keying, same-payload replay to the original Task, and commit-before-response. Otherwise it is `opaque`. Existing fixtures keep `fixture-lookup`.
+  - Before every send, resend and poll, `agent_binding.resolve` maps the pinned identity to a URL through `$EXO_HOME/testbed/agent_snapshot.json` (`{snapshot_version:1, agents:{identity:{url}}}`) and re-verifies the card and contract.
+  - The outcome journal adds phase `working`, `task_id`, `payload_sha256`, `pinned_identity` and a compare-and-set `sequence`. Terminal rows are immutable.
+  - `assign` heartbeats (timeout 15 s). HTTP calls time out at 10 s.
+  - `agent_binding.py` is in `INTERPRETER_FILES`.
+- **Broker-backed Director (Spike C).** This replaces "a broker-backed Director is not built here".
+  - Instance config `director_model: {provider: fixture|synthetic-loopback|codex-subscription, model?}`; the default is `fixture`.
+  - An A2A **text** part goes to `director_agent.DirectorTurn`, whose tools are `start_research(question, outcome_mode)`, `inspect_run()` and `decide_wait(action, revision, sha256, rationale)`. The per-turn budget is 4 model calls, 4 tool calls and 90 s.
+  - Code derives `action_id` from sha256 of the Task id, operation and message id. The model never sees the actor, token, epoch, run, graph, package, version or bindings.
+  - `inspect` and `abort` require the run's `authorized_actor` and the original `context_id`.
+  - A second fixture bearer, `fixture-observer`, authenticates but is not an allowed actor.
+  - Tool calls and turns are audited in `director_tool_calls` and `director_turns`.
+
+## Single-factory spike amendments (24 Sep 2026, `briefs/single-factory.md`)
+
+The frozen cross-lane contract for the single-factory core-routes spike is in [`briefs/single-factory.md`](briefs/single-factory.md#cross-lane-contract-frozen). It supersedes the statements above where they conflict. In particular:
+- `synthesize` delegates to an external `report_synthesis@1` agent;
+- Quality is a model-backed async A2A agent;
+- the caller-steered `outcome_mode` is removed;
+- the evidence packet is pinned in the package.
+
+## Factory dashboard v2 contract (2 Oct 2026)
+
+This section is the shared implementation contract for the dashboard integration spec. The
+specification remains the source of requirements; this file defines the interfaces the lanes build.
+The lead owns changes to this section and merges lane changes after review.
+
+### One dashboard-facing Interface
+
+Recorded, isolated demo, and live Adapters implement the same browser contract:
+
+```text
+discover() -> accessible factories and active publications
+snapshot(factory_id, run_id?) -> {schema_version, cursor, captured_at, freshness, state}
+observe(factory_id, after_cursor, run_id?) -> ordered CloudEvents and a continuation cursor
+inspect_artifact(run_id, revision, sha256) -> authorized bytes plus digest metadata
+command(command_id, task_id, context_id, action, expected_state, expected_revision?)
+    -> received, validated/rejected, and applied/failed outcomes
+submit(factory_identity, capability, brief, caller_context) -> original A2A Task/run binding
+```
+
+The first runnable tracer slice is a run using the ordinary `verified-research@1` A2A identity, its
+existing pinned publication, current Temporal execution, and the original Task. Do not add a parallel
+scheduler, graph selector, or authority ledger. A recorded bundle and isolated deterministic demo
+must validate against the same schema and pass through the same reducer and renderer. Demo commands
+never reach runtime credentials, A2A, Temporal, the Commercial Module, or payment Adapters.
+
+Demo scenarios additionally carry one explicitly labelled illustrative layer through that same Seam:
+`state.demo` on the snapshot (label `Illustrative Demo fixture`; scenario clock/start/now, simulated
+budget, illustrative agent prices quoted through the A2A payment extension, factory WIP limits and
+factory queue occupancy (agents have no capacity; decision 7), programs, result kind, versions, step
+cues) and
+`com.exomachina.demo.illustration.v1` events (one allowlisted original timeline entry each: movement,
+artifacts, verdicts, releases, readouts, Director turns, alarms, recommendations, notes, holds). The
+validators accept this layer only when the caller declares source `demo`; the default, Live, and
+Recorded validation rejects it, and `toFloorModel` reads it only for Demo state. It is never a Live fact
+and is not part of the public JSON schemas.
+
+The live transport is WebSocket. The initial transport message binds an authenticated principal,
+factory identity, optional run filter, and last applied cursor. The server emits either an atomic
+snapshot at cursor C followed by every relevant event after C, or a resumption result for the supplied
+cursor. If the cursor is older than retained data, emit `resync_required` and a fresh snapshot; never
+skip an authoritative transition. A run-filtered consumer receives a continuation cursor that advances
+over unrelated factory events.
+Freshness is a source-read fact; a cursor checkpoint does not make disconnected or
+stale source data fresh. Optional bounded snapshot freshness fields are `scope`
+(`factory` or `run`), `run_id`, `included_run_ids`, `factory_status`, and
+`unavailable_run_ids` (unique safe-ID lists, at most 256). A run scope is fresh
+only after successful reads of that exact owned run and descendants linked by
+actual Temporal child-start events. Missing unrelated histories keep factory-wide
+status disconnected and warnings visible. Other RPC failures remain fail closed.
+The owned source may expose authenticated
+`get_run_freshness(principal, factory_id, run_id)` as a cached, authenticated reader.
+Its `SourcePage.run_freshness` optional map is captured under the source lock
+with the factory freshness and records; projection validates the bindings and
+persists that map atomically with state and cursor. Snapshot construction reads
+this committed capture, never a later mutable source cache. Legacy sources retain
+factory-wide freshness. Incomplete source paging cannot establish fresh scope. Scoped freshness
+never authorizes a new factory submission while factory-wide coverage is incomplete. Buffering is bounded; overflow explicitly requests resynchronization or
+closes the slow connection. Duplicate delivery is permitted and reduction is idempotent.
+
+Each event is a CloudEvents 1.0.2 structured envelope with `id`, `source`, `type`, `time`, `subject`,
+`datacontenttype`, `dataschema`, and versioned Exomachina `data`. The stable event ID is derived from
+its durable source record, not the WebSocket delivery. The ordered cursor is transport/projection
+metadata and is not inferred from event time. Payloads carry applicable factory, run, assignment,
+attempt, original Task, pinned publication/manifest/package/build, artifact revision/digest, decision,
+commercial-record, and evidence identities. Only explicitly allowlisted fields are projected. Raw
+Temporal history, run inputs, credentials, signing material, and mandate presentations never enter
+browser payloads. Artifact bytes use an authorized HTTP path and are digest-checked.
+
+The protocol is documented with AsyncAPI and versioned JSON Schemas. WebSocket commands include a
+stable command ID and expected state/revision/digest. Their transport acknowledgement means only
+`received`; validation/rejection and applied/failure are separate authoritative outcomes. Repeating an
+identical command returns its original outcome. Reusing its ID with different intent is rejected.
+Server-side authority binds the principal to the original Task/context and current run state. The
+browser never supplies an actor identity as authority and never paints a command as applied before the
+authoritative result arrives. Live mode has no playback controls or playback keyboard shortcuts.
+
+The v1 WebSocket uses JSON messages with `op`; each embedded snapshot and CloudEvent carries its
+schema version. A client starts with `{op:"subscribe", factory_id, run_id?, after_cursor?}`. The server
+returns `{op:"snapshot", snapshot:{schema_version:1, cursor, captured_at, freshness, state}}` or
+`{op:"resumed", after_cursor, continuation_cursor}`. Subsequent messages are
+`{op:"event", cursor, event:<CloudEvent>}`, `{op:"checkpoint", cursor}`, or
+`{op:"resync_required", reason, minimum_cursor?, latest_cursor?}`. A command is
+`{op:"command", factory_id, command_id, task_id, context_id, expected_state,
+expected_revision?, expected_sha256?, action}`. Its immediate acknowledgement is
+`{op:"command_ack", command_id, lifecycle:"received"}`. The later authoritative outcome arrives as a
+CloudEvent and is never implied by the acknowledgement. Cursors are opaque strings. The ordered
+projection cursor travels alongside the CloudEvent as WebSocket delivery metadata; the CloudEvent `id`
+remains stable across delivery attempts. Authentication comes from the server-side session/principal
+resolver; credentials are not carried in a query string, event, command, or other application message.
+
+### Commercial Interface
+
+The Commercial Module owns supplier offer pinning, authorization, reservations, metering attribution,
+accrued obligations, credit and settlement reconciliation. It does not own execution transitions,
+artifact acceptance, or customer price. A purchase pins the offer/version, supplier and assignment,
+currency and precision, billable units, cost/hosting disclosure basis, explicit basis-point markup and
+its base, maximum authorized charge, expiry, payment trigger, and failure/repair/cancellation/credit
+terms before work is admitted.
+
+Amounts use integer atomic units plus an explicit currency/scale; rates and conversions never use
+binary floating point. Usage values include unit, source, completeness, and assignment/attempt
+identity. Amount evidence is one of `measured`, `calculated_from_measured_usage`,
+`provider_reported`, `estimated`, `unknown`, or `undisclosed`. Missing usage or cost is never zero. Inference cost, hosting cost,
+markup, supplier service charge, payment/network fees, owner overhead, and factory customer price are
+distinct records. A subscription token count is not an invoice. Hosting without a selected metering and
+allocation basis remains unknown; no default rates or markup are supplied here.
+
+Price basis (`usage`, `fixed_assignment`, `fixed_attempt`, `accepted_outcome`) is separate from payment
+trigger (`upfront`, `incremental_use`, `attempt_completion`, `acceptance`). Only a profile implemented
+and qualified by its Adapter may be advertised as supported. Settlement states distinguish
+authorized, reserved, accrued, settlement-pending, settled, credited/refunded, failed, and unresolved.
+Reservations are atomic across runs/processes, remain held for unresolved liabilities, and reconcile
+late usage and credits without rewriting source usage. MPP and x402 remain separate payment Adapter
+profiles. AP2 v0.2 is an authorization Adapter; it grants no implicit nested-factory delegation. This
+contract selects no inference access method, rate, markup, hosting allocation, fee treatment, payment
+network, asset, facilitator, wallet custody, or trust configuration.
+
+Payment Adapter capability declarations are separate from the Commercial Module's purchase and
+usage ledger. The Module exposes an Adapter seam for MPP bounded metered sessions, x402 bounded
+authorization/settlement, and AP2 v0.2 purchase-authorization verification. Each declaration pins
+protocol/profile and version, operation set, environment prerequisites, and status. `available` may
+be advertised only after implementation and profile-specific qualification; `unconfigured`,
+`unsupported`, and `unqualified` remain explicit and cannot authorize work. Adapter evidence exposes
+safe receipt references and outcomes, never credentials, mandate presentations, signatures, wallet
+secrets, or raw payment headers. This prototype supplies only the seam and declarations: no network
+Adapter is selected or invoked, and P01-P10 remain unqualified.
+
+Commercial Observation events are sourced only from the Commercial Module's public read Interface.
+Usage rows preserve run, assignment, attempt, service identity, and model-call identity when available.
+An unreported quantity is omitted and marked `unknown` or `undisclosed`; missing records never imply
+zero usage or zero cost. Inference cost, hosting cost, markup, supplier charge, fees, and customer
+price are separate cost-component facts. Each money fact carries integer `amount_atoms` or `null`
+only when its evidence is `unknown` or `undisclosed`, with explicit currency and `atomic_scale`.
+Absent cost evidence is rendered as unreported/unknown rather than a zero balance. The current
+prototype does not infer provider usage from token estimates or customer subscription limits.
+
+On the wire, `commercial.usage` includes `usage_id`, `service_identity`, `unit`,
+`measurement_source`, `completeness`, and `evidence_status`, plus applicable `model_call_id`,
+`model_id`, and `reasoning_effort`. A reported quantity is an exact decimal string with
+`completeness: "complete"`; an unreported quantity is omitted with completeness `unknown` or
+`undisclosed`. `evidence_status` independently records whether a reported value is measured,
+calculated from measured usage, provider reported, or estimated. `commercial.obligation`
+uses one row per `component` (`inference_cost`, `hosting_cost`, `markup`, `supplier_charge`,
+`payment_fees`, `owner_overhead`, `production_cost`, or `customer_price`) and carries
+`obligation_id`, `offer_digest`, `amount_atoms`, `currency`, `atomic_scale`, `evidence_status`,
+`price_basis`, and the pinned `payment_trigger`/`markup_bps` when applicable. Unknown or undisclosed
+amounts carry `amount_atoms: null`; they are never encoded as numeric zero.
+
+#### Model-usage measurement read Interface
+
+Provider-reported per-call model measurements are a separate, non-financial read Interface. They do
+not create a purchase, supplier obligation, customer charge, or cost estimate. The approved public
+shape is specified here; this contract does not claim that the aggregate endpoint is mounted or
+that every source already populates it:
+
+```text
+GET /usage/measurements
+    ?run_id=...&task_id=...&assignment_id=...&attempt_id=...&model_call_id=...&call_scope=...
+-> {"measurements": [MeasurementView, ...]}
+
+MeasurementReader.list_measurements(*, run_id?, task_id?, assignment_id?, attempt_id?,
+                                    model_call_id?, call_scope?) -> list[MeasurementView]
+```
+
+Filters are optional and combine as narrowing predicates. Results have deterministic
+`recorded_at, model_call_id` order. `GET` is read-only. The Runtime factory app is the aggregate
+endpoint authority: it uses the existing authenticated Runtime principal and scopes results to the
+factory instance that principal may observe. It reads only each journal owner's public
+`list_measurements` Interface (or that owner's authenticated measurement endpoint), using existing
+pinned service bindings; it never opens another component's SQLite database or accepts a caller
+supplied database path, source URL, service identity, or principal. A source owner assigns
+`recorded_at` when it persists the fact; callers cannot set or backdate it.
+
+Each `MeasurementView` contains `measurement_id`, `model_call_id`, `recorded_at`, `call_scope`,
+`provider`, `model_id`, `reasoning_effort`, `unit: "tokens"`, `measurement_source`, `completeness`,
+`evidence_status`, and the safe per-category usage projection. The supported token categories are
+`input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`, and `total_tokens`; each
+is `{value: nonnegative integer, status: "reported"}` when the provider reported it (including a
+reported zero), or `{value: null, status: "unavailable"}` when it did not. No token estimates are
+substituted. The view may also carry `service_identity`, `task_id`, `message_id`, `run_id`,
+`definition_digest`, `assignment_id`, and `attempt_id`; each is nullable until an authoritative fact
+exists. `attempt_id` follows the existing public ID representation and is populated only from the
+actual workflow attempt. An opaque `action_id` is not parsed to manufacture assignment or attempt
+bindings.
+
+`call_scope` is `authoring_overhead`, `director_call`, or `assignment_call`. An authoring overhead
+measurement has `call_scope: "authoring_overhead"`; `task_id`, `run_id`, `assignment_id`, and
+`attempt_id` are null when authoring occurred without those genuine bindings. A Director call keeps
+its real Task and message IDs, while run and definition bindings remain null until the Director
+resolves the Task to an actual run and pinned definition. Assignment measurements carry only IDs
+received from authoritative workflow/A2A facts. Missing bindings remain null; no sentinel IDs are
+allowed.
+
+The measurement response contains no prompt, model arguments, raw provider request/response,
+credentials, or cost fields. Inference cost, hosting cost, markup, supplier charge, payment fees,
+owner overhead, and customer price require separate Commercial evidence. A token count is not a
+cost and never implies a zero cost. An unbound authoring overhead view is available through this
+read Interface only; the current `commercial.usage` CloudEvent requires run, assignment, and attempt
+IDs, so it must not be emitted for such a row without a separately approved event-schema change.
+
+### Shared file ownership for this implementation
+
+Unless a path starts with `../../`, paths below are relative to
+`prototype/temporal-factory`.
+
+| Lane | Owned implementation files |
+| --- | --- |
+| Lead | This contract; cross-lane integration and review |
+| Observation | `src/observation.py`, `src/observation_transport.py`, `schemas/dashboard/v1/*.schema.json`, `specs/dashboard-asyncapi.yaml`, `tests/test_observation.py`, `tests/test_observation_transport.py` |
+| Runtime | `src/harness.py`, `src/factory.py`, `src/director_agent.py`, `src/receiver_client.py`, new `src/artifact_delivery.py`, new `src/observation_source.py`, and their runtime tests; preserve pre-existing model-migration hunks |
+| Dashboard | `../../docs/design/exomachina-floor.html`, `dashboard/contract.mjs`, `dashboard/reducer.mjs`, `dashboard/adapters/{recorded,demo,live}.mjs`, `dashboard/test/dashboard.test.mjs` |
+| Commerce | `src/commercial.py`, `tests/test_commercial.py`; Commercial ledger, Payment Adapter seam, and MPP/x402/AP2 capability declarations; no edits to pre-existing model-migration files without a separately agreed handoff |
+| Qualification | `DASHBOARD-QUALIFICATION.md`, `scenarios/dashboard_qualification.py`, `tests/test_dashboard_qualification.py` |
+
+`src/harness.py` is runtime-owned: the Observation lane exposes a transport module but does not mount
+it there. The Runtime lane calls the Observation transport from the application mount point. The
+Dashboard lane imports the browser schema/reducer contract and does not redefine protocol semantics.
+Qualification does not edit another lane's tests or implementation. All live claims remain
+unqualified until a real smoke record proves them; fixture and deterministic cases keep their labels.
+
+### Resumed qualification allocation (3 Oct 2026)
+
+The lead owns `docs/design/exomachina-floor.html` during browser integration. The Dashboard lane
+owns its adapters, reducer, and tests; page changes are handed to the lead for review and integration.
+Runtime owns the opt-in loopback QA session adapter and its rejection tests. Observation owns
+actual loopback WebSocket smoke checks. Commerce additionally owns `src/model_usage.py`,
+its tests, and additive measurement changes in `services/model_agent.py` and `src/model_broker.py`.
+Those changes must preserve the pre-existing model migration and distinguish missing usage from
+reported zero. Provider usage measurements do not authorize spending or select prices. Commerce
+also owns additive usage journaling in `src/director_agent.py` during this pass; missing initial
+run bindings must stay unavailable until actual work exists. Harness integration remains
+Runtime-owned. The lead owns the narrow fixture-error envelope fix in `src/harness_server.py`
+and `tests/test_fixture_failure.py`. All shared-port suites use `/tmp/exo-qual-suite.lock`.
+
+Browser QA tooling lives outside product source in a pinned temporary Jev checkout. The operator
+selected native OpenRouter Decisions with `typesafe/jev-1.13` for Jev QA, overriding upstream's
+direct TypeSafe default. This does not change the product's `gpt-6-luna`/`xhigh` inference path.
+Credential values are injected only into bounded QA children through Phase; evidence records only
+safe provider metadata, assertions, source revisions and patch digests.
+
+## Local accepted-report delivery
+
+`local_delivery.LocalDelivery(database, destination, *, factory_id,
+destination_identity)` owns the explicitly configured local destination and its
+receipt journal. `deliver(*, run_id, task_id, context_id, artifact)` accepts a
+verified `DeliveredMarkdown` from the authenticated public Observation artifact
+reader and `accepted_markdown`; `list_receipts(*, run_id=None)` returns safe
+receipts after verifying the deposited bytes. It exposes no SQL connection,
+filesystem path, report text, price, or payment information in its views.
+
+`local_delivery_routes.install_local_delivery_routes` mounts `POST /deliveries`
+and `GET /deliveries` on the existing Runtime factory app. Runtime supplies its
+principal resolver and factory identity. The optional server configuration is
+exactly `local_delivery: {destination: <absolute owned path>, identity: <stable
+destination identity>}`; absence reports unavailable. Requests cannot configure
+a destination. POST accepts only `{run_id, revision, sha256}`, verifies the final
+observed accepted artifact and original Task/context, then deposits the exact
+Markdown once. A changed binding or changed deposited file fails closed.
+
+The safe receipt has `receipt_id`, `factory_id`, `run_id`, `task_id`, `context_id`,
+`artifact_revision`, `artifact_sha256` (accepted report envelope),
+`markdown_sha256` (exact deposited Markdown), `destination_identity`,
+`state: delivered`, `delivery_kind: local_file`, `byte_length`, and writer UTC
+`recorded_at`; the POST result also reports `duplicate`. This is a distinct local
+delivery receipt. It does not establish a remote customer's receipt or payment.
+The release node's A2A receipt (see "A2A release agent") remains separately identified.
+Local delivery receipt fields are not silently added to the release receipt fact.
+
+### Approved local delivery Observation projection
+
+The lead-approved `delivery.receipt` extension allows `markdown_sha256`,
+`destination_identity`, `delivery_kind`, and `byte_length`. When
+`delivery_kind: local_file` is present, the original Task/context, run, receipt,
+accepted artifact revision/digest, Markdown digest, destination identity,
+byte length, and `delivered_at` must all be present; `outcome` must be
+`local-file-delivered`. The timestamp comes from the receipt writer's UTC fact.
+Paths, report text, cost, and payment fields remain excluded.
+
+Runtime projects only its injected LocalDelivery public `list_receipts` reader,
+with an immutable source identity per receipt. Existing fixture receipt facts
+remain separate. The shared renderer labels the local outcome “Saved to local
+destination”; it does not assert receipt by a remote customer.
+
+The Floor's local receipt counter uses `delivered_at` over a rolling five-minute
+window, deduplicated by receipt identity. It does not use workflow completion as
+the deposit time. Historical receipts remain inspectable in Outputs even when
+outside that window. Demo's declared simulated delivery counter is unchanged.
+
+Outputs offers “Save to local destination” for an exact observed artifact through
+this authenticated public POST. The request contains only run/revision/hash;
+Runtime verifies final acceptance and chooses its explicitly configured local
+destination. A retry reuses the existing receipt. The browser does not choose a
+filesystem path or acquire a payment authority.
+
+New Workflow executions behind Temporal patch
+`exo-explicit-assignment-bindings-v1` carry engine-issued opaque assignment and
+attempt UUIDs separately from model-call IDs and Quality's ordinal `attempt`.
+Assignment identity remains stable per graph node/parallel branch across logical
+revisions; a logical invocation receives a new attempt identity. Activity retries
+reuse the persisted input. Actual `node` is explicit. Legacy histories keep their
+original activity envelopes and do not acquire invented identifiers.
+
+### Optional bounded human escalation
+
+A newly published `director_wait` may declare
+`human: {actor: <explicit safe identity>, timeout_seconds: <integer 1..3600>}`.
+Absence retains the existing abort-only Director policy. The declaration is part
+of the pinned definition; it selects no production actor or deadline by default.
+Director can escalate an exhausted rejected candidate to that actor on the same
+original Task/run/revision/digest. Human can abort only, with a separate declared
+deadline and the same owner fence. Stale/wrong-actor/concurrent answers fail.
+Self-escalation to the Director identity fails before model work. Applied decision
+receipts remain available for resolving a lost reply after escalation.
+
+This workflow slice does not grant extra repair, alter Quality acceptance, or
+increase spending authority. Public Runtime/A2A mounting and operational browser
+proof remain required; synthetic workflow tests are not S08 qualification.
+
+### Current wait commands from the dashboard
+
+The Live dashboard builds a wait command only from current observed `awaiting-director` or `awaiting-human` facts, the published permitted actions, the original Task/context, and the exact current rejected Quality/artifact revision pair. It fetches and verifies those candidate bytes through the owned artifact Interface before sending `expected_revision` and `expected_sha256`, then rechecks the current observed wait. Missing facts, a changed candidate, accepted Quality, or unverifiable bytes leave commands unavailable. This browser check does not grant authority: Runtime must still validate the authenticated principal, pinned actor, original Task, current phase, deadline, candidate and update fence.
+
+Historical waits without these facts remain unknown. Recorded sources are read-only. The command builder and bounded regressions are implemented; Runtime human/escalation mounting and operational qualification remain separate pending evidence.
+
+### Current bounded integration allocation and shared capacity approval (capacity part withdrawn 8 Oct 2026)
+
+The lead now owns `src/factory.py`, `src/definition.py`, `dashboard/contract.mjs`, `dashboard/decision.mjs`, and the page outside explicitly allocated Dashboard sections. Runtime retains the harness, runtime source, runtime tests and the human Task projection integration. Observation's temporary Operations source constructor/producer/refresh allocation returns to Runtime after its reviewed handoff; Observation retains its new focused integration test. Dashboard owns usage validation/tests and its current Decisions wait-control section. Commerce owns additive normal model-agent scheduling, adapter factory binding, and their tests. Every allocation preserves earlier migration edits.
+
+S16 approved an additive optional A2A assign `factory_id` under `exo-explicit-factory-binding-v1`. **Superseded by agent decoupling (8 Oct 2026):** no factory identifier crosses the wire. The Temporal patch marker `exo-explicit-factory-binding-v1` stays in `src/factory.py` only for replay determinism; `factory_id` now reaches only the factory's own agent-usage journal binding, never an agent.
+
+**Agent-side capacity withdrawn (operator decision, 8 Oct 2026).** Work-in-progress limits are factory settings. Agent services have no capacity queue and are treated as infinitely scalable; an agent may someday have independent limits of its own, but that is its private business and nothing here models it. Agent-side execution capacity was removed on 8 Oct 2026 by operator decision. The model agent no longer imports `src/admission.py`, has no `--admission-db`/`--execution-capacity` options, no `GET /admission/capacity` occupancy read, no capacity-gated scheduling or Task execution claims, and no "factory_id is required" rejection; every accepted Task runs immediately. The earlier text here (one shared queue owned by the pinned service identity across all caller factories, scoped own/other occupancy reads) is superseded. `src/admission.py` and `AdmissionQueue.read_snapshot()` remain factory-only: the harness owns the factory's admission queue and WIP limit.
+
+Engineering's approved additive `OperationsAdapter.publication_context(factory_id)`
+returns exactly `{manifest_digest, quality_policy_digest}` from one verified
+active publication closure. Evaluation and research requests must use that
+atomic context and fail closed when unavailable; they cannot fall back to two
+independent reads. Manifest-only operations retain their existing reader. This
+contract does not enable candidate evaluation, promotion or research execution
+by itself.
+
+### Bounded supplier destination allocation (implementation in progress)
+
+*Superseded on 8 Oct 2026 by "Nested supplier as a plain A2A agent service"
+below: the parent/child binding tuple, `/contract`, the Task metadata echo and
+the factory-to-factory extension are removed. The paragraphs below are kept as
+the historical allocation.*
+
+Commerce owns `src/supplier_protocol.py` and its focused tests; Runtime owns the
+normal factory harness/Director destination integration. An explicitly enabled
+`nested_supplier_enabled` profile may accept `nested_factory` with the exact
+SupplierFanout parent/child binding tuple and `payload: {inputs: {...}}`.
+The requested child definition must match the destination's active publication.
+Only this separate operation may accept a caller-issued opaque child run ID as
+its actual workflow ID; collisions and a changed accepted tuple fail closed.
+Ordinary start identity and publication selection retain their existing rules.
+
+The destination persists the accepted tuple with its original remote A2A Task
+and context and executes through normal admission/Temporal paths. An enabled
+profile must echo the accepted tuple in Task metadata and its structured
+artifact, preserving the exact accepted report bytes. A normal ModelAgent does
+not own this operation and must not advertise it. Opaque reconciliation remains
+unknown without a durable action lookup; no fixture lookup is advertised by a
+generic destination. This allocation does not qualify S18/S19 or authorize new
+paid execution, and the retained instance keeps the profile disabled.
+
+### Basic prototype milestone — operator scope change (2026-10-03)
+
+Deferred supplier, extended human/repair, capacity queue/contention, Engineering,
+research, payment and full recovery/version qualification work is paused at safe
+edit boundaries. Existing changes and evidence remain preserved. The operator
+owns the canonical spec and CONTEXT scope update. Current implementation work
+prioritizes truthful Board progress, normal dashboard submission/provider
+readiness, a single active job with explicit rejection of another, usage with
+honest gaps and unknown costs, reconnect and source isolation. Two dashboard
+submitted real Luna xhigh cases require resolved execution allowance; retained
+recordings do not satisfy that gate. No additional paid execution is authorized
+by this coordination checkpoint.
+
+Basic provider readiness consumes additive public model-agent health fields
+`provider`, `model_id`, `reasoning_effort` (nullable safe strings),
+`inference_enabled` and `read_only_usage` (booleans). They describe configuration
+and writable mode, not sign-in or successful inference. Read-only owners expose
+null model metadata and inference disabled; scripted work exposes no model/effort
+and is not real provider evidence. Runtime must verify identities and contracts
+against the pinned publication and separately check redacted broker readiness
+before allowing a new live job. No pricing fact follows from token measurements.
+
+The operator subsequently completed the B01–B10 canonical scope update and
+explicitly authorized the two necessary real dashboard workflows in B03. That
+new instruction resolves the earlier basic-run allowance checkpoint for those
+two workflows only. Use existing approved Luna xhigh access and finite existing
+Director, model-call and repair limits; do not repeat failed paid workflows or
+start a third paid workflow automatically. B06 may use deterministic normal
+Runtime command proof. The canonical basic gate governs current qualification;
+historical S/P evidence remains preserved as later roadmap evidence.
+
+Basic admission uses the existing normal factory A2A `SendMessage` path. The
+explicit instance option `basic_single_active_job: true` reserves one durable
+Director-owned slot before provider preflight or model selection, including the
+interval before a run exists. Another original Task is rejected rather than
+queued. This option refuses legacy structured commands and external nested
+supplier entry points. It does not change local Temporal child semantics.
+The Runtime supplies a synchronous `Director.submission_preflight` callback;
+missing readiness fails closed before model scheduling. Completed submission
+replay is bound to the same message, original Task/context, actor and brief
+fingerprint. Pending or uncertain delivery never schedules a duplicate turn.
+Terminal release uses the owned FactoryTaskStore reader and the Director's
+durable closed outcome, never an inferred timestamp or dashboard count.
+Uncertain interrupted model outcomes remain occupied; automatic recovery is
+deferred. `basic_job_status()` exposes occupancy only, without Task IDs or caller
+identity. Twelve focused synthetic gate tests and eighteen existing harness
+regressions pass together. Bound uncertainty is reconciled only through its
+durable original Task alias; unbound uncertainty remains fail-closed. Actual
+simultaneous-dashboard rejection remains to be demonstrated during the
+authorized pair.
+
+
+## Current submission readiness versus historical observation (2026-10-05)
+
+Authenticated `GET /submission/readiness` is bound to this Runtime factory and
+rejects query selectors. Loopback operator session/fixture operator is supported;
+observer principal is denied. It uses a fresh existing submission-readiness check
+(pinned model owners, approved subscription profile, registered worker/pollers)
+and public Director `basic_job_status()` / `unfinished()` readers. It starts no
+Task, workflow, model call, reservation or payment. Unknown state fails closed.
+
+Response fields are exactly `schema_version:1`, `factory_id`, writer-assigned UTC
+`observed_at`, `status:ready|blocked`, `reason_code:null|enum`; no-store. Blocker
+codes: `director_profile_unapproved`, `default_broker_path_overridden`,
+`subscription_status_unavailable`, `pinned_writable_model_owners_unavailable`,
+`pinned_worker_pollers_unavailable`, `factory_busy`, `factory_uncertain`,
+`unfinished_runs`, `current_state_unavailable`. This is a point-in-time view,
+not a slot lease, inference proof, cost estimate or production-auth qualification.
+
+Bootstrap supplies `submissionReadinessEndpoint`. The Live Adapter requires an
+open current factory socket, checks the authenticated same-origin endpoint anew
+before a new-work POST (5s request bound; observed time within 30s), and aborts
+before POST if selection/socket changed. The existing A2A preflight and atomic
+single-job fence remain authoritative. Responses cannot select a different
+factory or arbitrary source URL. Without the configured Interface the old
+conservative gate remains in place.
+
+Task-bound follow-ups and operator commands still require fresh run observation
+and original Task/context. Terminal histories may be expired/disconnected while
+current factory submission is ready; those historical facts are not upgraded.
+Direct A2A text replies are displayed as text, bounded, inside the composer;
+only an actual returned factory Task with run metadata is followed as workflow
+work. Missing observation of that Task does not create a substitute run.
+
+#### Exact submitted Task following and assignment linkage (2026-10-05)
+
+The dashboard follows an accepted A2A Task using the returned explicit `metadata.run_id`, Task ID and context ID. Authenticated scoped Observation must retain that same Task/context before its graph is selected. A factory-wide unavailable history is not a substitute for the returned run. While awaiting a scoped snapshot, old job surfaces and summaries are cleared; failure displays unavailable instead of the previous job. Restoring an unavailable historical selection can prefer an available pinned run, retaining the historical-coverage warning.
+
+Both reducers carry only `started_at`, `provider_identity` and `node` across updates of the same assignment/attempt when omitted by the newer fact. They do not carry queue positions or transfer fields to another attempt. Nonterminal/unknown updates without `ended_at` remove the previously projected end. Raw source facts remain unchanged.
+
+Runtime may append a deterministic `projection-correction:assignment-node-link-v1:` fact using only an explicit activity-input `node` that is present in that workflow's pinned definition. The correction retains the original event time, state, capability, provider and assignment/attempt bindings. An opaque Temporal activity ID is not node evidence. The shared Floor presents its selected observed state and Quality independently from delivery and exposes Board/Outputs without triggering submissions.
+
+## A2A v1 baseline and hand-off records (operator decision, 7 Oct 2026)
+
+Authoritative direction: [A2A v1 baseline, factory mediation, and hand-off records](../../docs/a2a-v1-mediation-decision-2026-10-07.md).
+This section supersedes the former `a2a-sdk 0.3.26` pin (the migration landed
+on 7 Oct 2026; Conventions now names the v1 environment), and supersedes every
+`message/send`, `tasks/get`, `kind`-discriminated part, and lowercase wire
+Task-state reference in this file and its lanes. Lowercase state names remain
+the version-neutral Observation vocabulary.
+
+**Wire protocol.** Every A2A server (harness in factory and agent mode,
+capability services, model agents, Quality, supplier fixtures) and every A2A
+client (`src/adapter.py`, `src/long_client.py`, supplier client, dashboard Live
+Adapter, floor composer) uses A2A v1.0 only.
+
+- Methods are `SendMessage` and `SendStreamingMessage`; responses are
+  `{task}` or `{message}`.
+- Task states are `TASK_STATE_*`.
+- Parts are unified (`text` | `raw` | `url` | `data`, plus `mediaType` and
+  `filename`), with no `kind` field.
+- Agent Cards list `supportedInterfaces` with protocol version 1.0.
+- There is no 0.3 interface or fallback.
+- The JSON-RPC binding is kept.
+- The factory's extensions are declared on the Agent Card; a missing required
+  extension fails with `ExtensionSupportRequiredError`.
+
+The migration runs in a new pinned Python environment with `a2a-sdk` 1.x,
+recorded below. The shared 2026-09-22 spike environment is not
+modified, and the operator's running stack is restarted onto v1 only with
+operator approval.
+
+**Migration record (7 Oct 2026).**
+
+- Environment: `~/src/Exomachina/tools/spikes/2026-10-07/a2a-v1/.venv`,
+  built from the committed `tools/spikes/2026-10-07/a2a-v1/pyproject.toml` and
+  `uv.lock` (`UV_PROJECT_ENVIRONMENT=<venv> uv sync --frozen --python 3.12.9`).
+  Pins: Python 3.12.9, `a2a-sdk[fastapi]` 1.2.2, temporalio 1.33.0,
+  strands-agents 1.57.0, fastapi 0.141.1, uvicorn 0.53.0, httpx 0.28.1,
+  and (8 Oct 2026) websockets 17.1, wsproto 1.2.0, h11 0.16.0 for the
+  harness `/observations` WebSocket, replacing a former `/tmp` `PYTHONPATH`
+  overlay.
+- strands-agents: every release through 1.58.1 pins `a2a-sdk<0.4.0` in its
+  `a2a` extra. The prototype never uses Strands' A2A layer, so strands-agents
+  1.57.0 is installed without that extra.
+- Wire Adapter: `src/a2a_v1.py` (SDK-free; methods, headers, Part/Task readers,
+  the single `TASK_STATE_*` <-> Observation-state mapping, v1-only Agent Card
+  validation, and integral-number restoration for protobuf `Value` data).
+  Server Adapter: `src/a2a_v1_server.py` builds every Agent Card with exactly one
+  `supportedInterfaces` entry (`JSONRPC`, `1.0`) and mounts the SDK
+  `JsonRpcDispatcher` with `enable_v0_3_compat=False` behind a strict pre-check.
+- Wire behaviour: `message/send`, `tasks/get` and other 0.3 methods answer
+  `MethodNotFound` (-32601). A missing or 0.3 `A2A-Version` header answers
+  `VersionNotSupportedError` (-32009). A `kind` on a Message or Part, a 0.3
+  role, `configuration.blocking`, or a Part with more than one content field
+  answers `InvalidParams` (-32602). A send that does not list every required
+  card extension in `A2A-Extensions` answers `ExtensionSupportRequiredError`
+  (-32008). Since agent decoupling (8 Oct 2026) no agent card requires an
+  extension, and since 8 Oct 2026 (`fix/remaining-coupling`) neither does the
+  factory's nested-supplier entry: `urn:exomachina:a2a-action-contract:v1` is
+  removed. Asynchronous sends use
+  `configuration.returnImmediately: true` and poll `GetTask`.
+- Services use the SDK `LegacyRequestHandler` (TaskStore-authoritative flow),
+  because their ledger-backed stores acknowledge only Tasks the ledger already
+  committed.
+- Agent Card digest pins hash the card with the interface `url` removed. Pins,
+  descriptors and read-only usage records made under 0.3 do not match v1 cards
+  and need fresh provisioning.
+- Proof: `tests/test_a2a_v1_only.py`, plus a fixture-only
+  `scenarios/single_factory.py --provider scripted` run on the new environment
+  (all A2A-dependent checks pass; SF-2 fails on the pre-existing
+  `services/model_agent.py` -> `src/admission.py` import, unchanged from 0.3).
+
+**Observation stays version-neutral.** The A2A Adapter maps `TASK_STATE_*` to the
+existing Observation state vocabulary (`working`, `input-required`, …). No
+existing Observation event type, field, or recording changes because of the wire
+migration.
+
+**Definition additions** (validated at publication):
+
+- `output`, on each node binding: `"artifacts"` (default, strict),
+  `"message"` (labelled exception), or `"none"` (side-effect). A completed
+  Task with no artifact on an `artifacts` node fails the attempt with
+  `output.missing`.
+- `kind`, on each edge: `"material"` (default) or `"control"`. A node with
+  `output: "none"` may not have an outgoing material edge. Route-node targets
+  (repair, Director wait, release, terminal) are declared as control edges.
+- The release agent binding is `output: "artifacts"` (strict): its receipt is the
+  release Task's result artifact. Release is a side-effect node because its
+  outgoing edges are control only (amended 8 Oct 2026; see "A2A release agent").
+
+**New Observation facts** (allowlist additions; S33 requalification required).
+All are content-free. They never carry text, data, bytes, artifact names,
+descriptions, `artifactId`s, filenames, URLs, or metadata.
+
+- `com.exomachina.handoff.produced.v1`, emitted on complete:
+  - `run_id`, `assignment_id`, `attempt_id`, `node`;
+  - `handoff_id` and `handoff_revision`;
+  - `produced_at`;
+  - `items[]`, each with `item_index`, `source` (`artifact` | `message`),
+    `part_kinds[]`, `media_type`, `byte_length` (null for `url`),
+    `ready_at`, and `digest` (keyed);
+  - optional `artifact_revision` and `artifact_sha256`, when the item is the
+    report artifact.
+- `com.exomachina.handoff.consumed.v1`, emitted before dispatch:
+  - `run_id`, `assignment_id`, `attempt_id`, `node`;
+  - `consumed_at`;
+  - `inputs[]`, each with `handoff_id` and `item_digests[]`.
+- `com.exomachina.handoff.item_ready.v1`, emitted only when the agent streams,
+  when an artifact's `lastChunk` arrives: `run_id`, `assignment_id`,
+  `attempt_id`, `node`, `handoff_id`, `item_index`, `part_kinds[]`,
+  `media_type`, and `ready_at`.
+
+Digests are HMAC-SHA256 under a per-factory-instance key stored in the instance
+home. The key is never logged, observed, or exported. Report artifacts keep the
+existing plain sha256 chain. Run snapshots retain hand-off records with their
+times so retained runs replay their full path.
+
+Dashboard validator details (7 Oct 2026, ahead of runtime emission): each
+hand-off fact allows exactly `schema_version`, `factory_id` and the fields
+above, at every depth; `media_type` may be null (A2A `mediaType` is
+optional); `byte_length` may be null only when `part_kinds` includes `url`;
+`handoff_revision` is a positive integer; `digest`, `item_digests[]` and
+`artifact_sha256` are 64 lowercase hex; a `message` hand-off has exactly one
+item; `artifact_revision` and `artifact_sha256` appear together, only on an
+`artifact` item. Pinned public graphs accept edge `kind` and node `output`; a
+node with `output: "none"` and an outgoing material edge is rejected. The
+event-stream `graph_nodes` form accepts `output` but has no way to declare an
+edge kind yet.
+
+**Runtime phase: definition syntax (7 Oct 2026).**
+
+- `output` is an optional field of a package binding record
+  (`{"role", "url", "identity", "approved", "output"?}`); absent means
+  `artifacts`. Any binding may declare `artifacts`, `message` or `none`; a
+  release node's binding must be strict `artifacts` (amended 8 Oct 2026). A node's output is its
+  binding's (`synthesize`/`release` by `service`, `quality` by the Quality
+  binding, `parallel` when every branch binding agrees); route, repair, join,
+  Director wait, abort, complete and nested-factory nodes have none.
+- `edges` is an optional node field mapping a target node to `material` or
+  `control`. Execution targets (`next`, `exhausted`, route `cases`) default to
+  `material`; an `edges` key that is not an execution target declares a
+  material bypass edge (it never transfers control). A node whose output is
+  `none`, and a release node in a definition that declares either field, may
+  not have an outgoing material edge.
+- Both fields are optional, so publications made before this phase keep their
+  exact documents, digests and pins; their graph projection is unchanged (no
+  route-case edges, no kinds). New publications that declare either field get
+  new digests in the ordinary way. The shipped `definitions/report-template.json`
+  declares control route/repair/Director/release/terminal edges and the
+  `independent_quality → publish` material bypass; `services/testbed.py`
+  pins the release agent binding with `output: "artifacts"` (8 Oct 2026; it
+  was `none` for the earlier HTTP receiver).
+- Projection: for such definitions every `graph_nodes` entry lists all edges
+  in `next`, adds `control` (the control subset of `next`) and the node's
+  `output`; the snapshot graph carries `edges[].kind` and `nodes[].output`.
+  The dashboard accepts `graph_nodes[].control` (a distinct subset of `next`).
+
+**Runtime phase: emission, Observation and snapshots (7 Oct 2026).**
+
+- Activities (`src/adapter.py`, `src/handoff.py`) run the on-complete hook:
+  enforce the binding's output contract (`output.missing` is an ordinary
+  outcome-journal incident, so it takes the existing unresolved/incident path)
+  and, when `EXO_HANDOFF_KEY_FILE` is configured (the runner sets
+  `<home>/handoff-digest.key`, created 0600 on first use), return the
+  content-free item records in the journaled receipt. A `data` Part's byte
+  length is its canonical JSON encoding; a `raw` Part's is its decoded bytes.
+  The item digest is HMAC-SHA256 over the canonical JSON `[[kind, value], …]`
+  of its Parts. Quality (a gate) produces none. Release produces its receipt
+  hand-off, which has no consumer and retires at the station (8 Oct 2026).
+- The Workflow (patch `exo-handoff-records-v1`) names hand-offs
+  (`<parallel node>.<branch>`, revision 1; `<synthesize node>`, revision
+  `repair_count + 1`) and passes `consumes` (upstream ids and item digests) to
+  synthesis (research hand-offs, plus the rejected draft on repair), Quality
+  and release. It never sees the key.
+- `RuntimeObservationSource` projects `consumed` at the Activity's
+  `ACTIVITY_TASK_STARTED` (before dispatch) and `produced` (plus any streamed
+  `ready` rows) at completion. Assignment identity follows the assignment facts
+  (`instance` for research, else the Workflow `assignment_id`), with the
+  Temporal attempt. Hand-off event data carries exactly the INTERFACES fields:
+  no Task, context or pin fields.
+- `src/observation.py` allowlists the three types with exact nested
+  validation and reduces them into `runs[].handoffs = {produced, consumed,
+  ready}` (deduplicated by the reducer's identities, each list bounded at 256).
+  Snapshot run rows carry `handoffs` when a run has any, and the dashboard
+  accepts it (each row the exact event data of its type, bound to its run).
+- Streaming: no current dispatch path consumes `SendStreamingMessage` (the
+  durable path is `returnImmediately` plus `GetTask`). `handoff.stream_ready_items`
+  turns a v1 stream's `artifactUpdate … lastChunk` events into item ready
+  times and `item_ready` rows, and the projection emits any `ready` rows a
+  record carries; wiring a streaming dispatch is deferred.
+
+## Agent decoupling (operator rule, 8 Oct 2026)
+
+Implements decisions 7 and 8 of `docs/a2a-v1-mediation-decision-2026-10-07.md`.
+Agent services are `services/model_agent.py`, `services/quality_server.py`,
+`services/delayed_agent.py`, `services/supplier_echo_fixture.py`, the
+`src/harness_server.py` fixture roles and harness agent mode
+(`harness.py`, `mode: "agent"`) and the release agent
+(`services/release_server.py`, next section), which is under the same guards.
+
+**Wire contract.** The factory sends an ordinary A2A v1 `SendMessage`
+(superseded in part by "Agent wire contract (decision 9)" below: the Message now
+also carries the consumed upstream artifact Parts, and identity is the pinned
+card):
+
+```text
+message: {role: ROLE_USER, messageId, contextId,
+          parts: [{text: <brief>, mediaType: application/json}, <upstream item Parts>...]}
+configuration: {returnImmediately: true}
+metadata (optional): {"https://github.com/0xTomDaniel/Exomachina/a2a/extensions/budget/v1":
+                      {budget: {cost: {amount, currency}?, tokens: {limit}?, deadline?}}}
+```
+
+- The brief is the node's own content, composed by the factory's
+  before-dispatch hook; upstream hand-offs follow it as their own Parts. No run, assignment, attempt, action,
+  definition digest, factory identity, node, pin or Observation identifier
+  crosses the wire or enters agent state.
+- Idempotency is A2A's own: a resent `messageId` returns the original Task; a
+  different message under a used `messageId` is `InvalidParams`. Continuation
+  uses `taskId`/`contextId`.
+- An agent rejects a clearly insufficient budget (`InvalidParams`).
+- Task metadata carries nothing factory-related (no `agent_identity`); the
+  result artifact is the work product itself (see decision 9 below); the Task
+  history holds the original Message.
+
+**Agent Card.** Agents may declare, `required: false`, only the budget
+extension (and, under `--test-controls` only, the test stimulus extension). The
+earlier `urn:exomachina:a2a-agent:v1` identity extension is removed (decision
+9). The factory's pin is `{card_sha256 (url-less), identity, reconcile}` with
+identity derived from the card; see below. The card at
+`/.well-known/agent-card.json` is the only discovery read.
+
+**Routes.** An agent serves exactly `POST /` (JSON-RPC) and its Agent Card.
+`/health`, `/contract`, `/usage/measurements`, `/fixture/actions/*`, `/_test/*`
+and FastAPI's generated docs routes are removed
+(`tests/test_agent_service_guards.py`). `operator_stack.py status` and the
+testbed observe agents only by Agent Card plus process/port checks. Submission
+readiness checks that each pinned card resolves and declares the expected
+skill; an agent's model configuration is private and no longer checked.
+
+**Factory-side correlation.** `OutcomeJournal` records per action a
+`message_id` (uuid4 at first begin; a later begin keeps the prior record) and a
+`context_id` (one per `(run_id, agent identity)`, table `a2a_contexts`), then
+the received `task_id`. A lost reply resends the journaled Message; after a
+factory restart the activity re-attaches with `GetTask` on the journaled
+`task_id`. Receipts carry the factory's action/run/definition binding plus
+`task_id`, `context_id` and `message_id`.
+
+**Usage (decision 8).** The factory activates the budget extension
+(`A2A-Extensions`). A terminal Task carries
+`metadata[<budget URI>].incurred = {cost?: {amount, currency, source},
+tokens?: {input?, output?, cache_read?, cache_write?, total?}}` with only what
+was reported: never zero-filled, `cost` omitted unless reported. The factory's
+on-complete hook (`adapter._record_agent_usage`) records it in
+`<runner>/agent-usage.sqlite3` with `evidence_status`/`measurement_source`
+`agent_reported` (`unknown` when nothing was reported or the report is
+malformed), `provider: "a2a-agent"`, `model_id: "unreported"`,
+`call_scope: "assignment_call"`. `GET /usage/measurements` reads that journal;
+agents are never polled. Coverage `pinned_services` is exactly
+`{status: "agent_reported", availability, source: "factory_journal",
+pinned_owner_count, owner_resolution_failures, queries_failed,
+non_usage_service_count, rows_rejected, conflicts}`, and `dashboard/usage.mjs`
+accepts `agent_reported` only for reported assignment usage.
+
+**Test controls.** The route-2/3 stimulus is the test-only extension
+`urn:exomachina:a2a-test-stimulus:v1`, declared only by an agent started with
+`--test-controls` (`testbed.py up --test-controls`; production
+`operator_stack.py` never passes it). A control is a `SendMessage` with one
+data Part (`{"arm": {...}}` or `{"stimulus_log": true}`) and the extension
+activated; the reply is a Message. An armed stimulus binds to the next new
+`contextId`; qualification maps logged contexts to runs through the factory's
+`a2a_contexts` (`scenarios/stimulus_client.py`). Fixture faults
+(`--drop-first-response`, `--mismatch-artifact`) are process options.
+
+**Agent storage.** Agent ledgers keep only their own Task identities keyed by
+`messageId`. Forward migrations drop schema-1 run/action/definition columns and
+the `stimulus`, `stimulus_log` and `model_usage_measurements` tables; the live
+stack may instead be re-provisioned with `operator_stack.py`.
+
+**Remaining coupling.** Resolved on `feat/decouple-integration` (see
+decision 9 below): the Quality brief carries the acceptance criteria content,
+not `policy_digest`, and the unused `quality_authority.decide_quality` is
+deleted. Resolved on `fix/remaining-coupling` (see "Quality findings,
+nested supplier and launcher upgrades" below): repair receives Quality's
+findings as Quality's own hand-off instead of brief text, and the nested
+supplier is a plain A2A agent service with no required extension, `/contract`
+or parent/child tuple.
+
+## A2A release agent (operator rule, 8 Oct 2026)
+
+A2A is the only channel between the factory and agent services. The release
+receiver is an ordinary A2A v1 agent; the earlier plain-HTTP release exception
+(`POST /release`, `GET /receipts/<id>`, `src/receiver_client.py`) is removed.
+Decision record: `docs/a2a-v1-mediation-decision-2026-10-07.md` (decisions 3,
+5 and 7).
+
+**Agent** (`services/release_server.py --state S --port P --mode {participating,opaque}`):
+
+- Routes: the A2A JSON-RPC endpoint (`POST /`) and the v1 Agent Card only. The
+  card has one `supportedInterfaces` entry (`JSONRPC`, `1.0`), skill `release@1`,
+  bearer security and no extension.
+- Input: one ordinary Message with exactly one Part (`text`, `raw` or `data`)
+  carrying a `mediaType`. The factory sends the accepted report artifact's own
+  Part, copied verbatim (decision 9); release has no brief Part. Nothing factory-specific: no run, assignment, attempt,
+  action, definition or factory identifier.
+- Idempotency: A2A `messageId`. A repeated identical `SendMessage` returns the
+  original Task and receipt; reuse of a `messageId` with different content
+  answers `InvalidParams` (-32602) without an effect.
+- Result: the Task completes with one data-part artifact (`artifactId` = receipt
+  id) holding `receipt_id`, `sha256` and `byte_length` of the exact delivered
+  bytes, `media_type`, `accepted_at` (UTC) and `outcome: "delivered"`.
+- Rejections are A2A outcomes: a Message the agent will not deliver (several
+  Parts, no `mediaType`, a URL Part, oversize) yields a `TASK_STATE_REJECTED`
+  Task with a descriptive status message. `opaque` mode is a non-participating
+  receiver: every send is a new effect, no Task is retained (`GetTask` answers
+  `TaskNotFound`), and the completed Task carries no receipt. Its card omits
+  the `message-id-idempotent` skill tag.
+- State: its own SQLite store (`release.sqlite3`, table `deliveries`) keyed by
+  its own Task, message and receipt ids.
+
+**Factory side** (`src/release_delivery.py`, called by the `release` Activity):
+
+- Binding: role `release`, strict `output: "artifacts"`, pinned by Agent Card
+  digest like every agent (`agent_binding.pin` / `resolve`, re-verified before
+  every send and poll). The contract's `reconcile` is `a2a-idempotent-resend` only
+  when the card's release skill carries the `message-id-idempotent` tag.
+- The outcome journal records the release attempt with its deterministic, opaque
+  `messageId` (a UUIDv5 of the factory release id) before any I/O, then the
+  returned `taskId`. Recovery is an identical resend (same `messageId`) when the
+  card promises idempotency, otherwise `opaque-effect-unknown`; a journaled
+  `taskId` is re-read only through `GetTask`.
+- On completion the strict output contract applies first (no receipt artifact:
+  `output.missing`), then the receipt must cover the exact accepted bytes: its
+  sha256 must equal both the sha256 of the bytes derived from the delivered
+  Part and the accepted `artifact_sha256`, with matching byte length and
+  mediaType. Any mismatch fails the release node
+  (`release-receipt-inconsistent`); a recorded check alone is not enough. Rejected/failed/canceled Tasks are
+  incidents `release-task-<state>` carrying the agent's status message.
+- The confirmed receipt is the node's evidence and the Workflow's
+  `release_receipt`. Its content-free hand-off is produced (`handoff_id` = the
+  release node) and has no consumer.
+
+**Observation:** one delivery yields exactly one
+`com.exomachina.delivery.receipt.v1` fact, emitted only at the release
+Activity's completion, with source identity `delivery-receipt:<receipt_id>` and
+the existing fields (`receipt_id`, `artifact_revision`, `artifact_sha256`,
+`destination_id` = the agent's binding identity, `delivered_at` = the receipt's
+`accepted_at`, `outcome: "delivered"`). A run's completion result, which repeats
+the receipt (and a parent's, which repeats its child's), emits no second fact.
+Before this fix the source emitted the receipt at both points with different
+`destination_id`/`delivered_at`, so the dashboard reducer correctly flagged the
+pair as conflicting and the floor showed "Delivery unverified".
+
+## Agent wire contract (decision 9, 8 Oct 2026)
+
+Implements decision 9 of `docs/a2a-v1-mediation-decision-2026-10-07.md` for
+every agent the factory binds, Quality and release included.
+
+**Composed inputs (before-dispatch hook).** Each `SendMessage` Message is
+`[brief Part] + [consumed upstream item Parts]`:
+
+- The brief is one `text` Part, `mediaType: application/json`, holding only the
+  node's own assignment (kind, revision, question, evidence packet, acceptance
+  criteria). It embeds no upstream artifact content and no factory reference in
+  place of content; repair findings arrive as Quality's verdict artifact, not
+  in the brief (see "Quality findings, nested supplier and launcher upgrades").
+- Each consumed hand-off item follows as the producing artifact's Parts copied
+  verbatim: same part kind, the same text/data/raw bytes, `mediaType` and
+  `filename`, never re-encoded (`handoff.compose_parts`). Producing Activities
+  return `item_parts`; the Workflow passes `upstream: [{handoff_id,
+  item_parts}]` built from the same carriers as `consumes`
+  (`factory.carrier`/`upstream_inputs`/`consumed_from`).
+- Synthesis receives both research artifacts (and, on repair, the rejected
+  draft and Quality's verdict artifact); Quality receives the draft; release receives the accepted draft's
+  Part alone (no brief). Agents identify inputs by their JSON content `kind`.
+- With hand-off records on, the Activity verifies that `consumes` names exactly
+  the included hand-offs, in order, with item digests equal to the keyed
+  digests of the Parts sent; otherwise the node fails with
+  `input.composition-mismatch` and nothing is sent.
+- `handoff.MAX_MESSAGE_BYTES = 4_000_000` bounds the JSON-encoded Message; an
+  input over the bound fails the node with `input.oversize`, never truncated.
+- The journaled `payload_sha256` covers the whole composed Message; a resend is
+  the identical Message under the same `messageId`/`contextId`.
+
+**Results.** An agent's result is one artifact whose single Part is the work
+product itself (`text`, `application/json`, canonical JSON). The factory
+computes `sha256` over the text bytes and records `revision` (the one it
+assigned) and `author` (the pinned binding) from its own journal; agents echo
+neither. The report's plain sha256 is therefore the sha256 of the exact bytes
+release delivers, so `artifact.revised` → `quality.verdict` →
+`delivery.receipt` share one digest.
+
+**Quality.** The brief carries the factory's `acceptance_criteria` content
+(`report_contract.REPORT_ACCEPTANCE_CRITERIA`); the pinned quality policy keeps
+`rubric_digest` and the factory's Activity input keeps `policy_digest` as
+evidence. The verdict is `{kind, candidate: {revision, sha256}, accepted,
+decided_by, findings, rubric, rubric_digest}`: the candidate's revision is the
+draft content's own and its sha256 the agent's digest of the received Part;
+`rubric_digest` is the digest of the criteria it received. No `reviewer` or
+author field: the factory enforces author ≠ reviewer from its bindings.
+
+**Identity and reconcile.** Every agent is pinned by its Agent Card alone
+(`agent_binding.pin`): `card_sha256` is the digest of the endpoint-free card,
+identity is `a2a-card-<card_sha256[:24]>`, a card marking any extension
+`required: true` is refused, and `reconcile` is `a2a-idempotent-resend` only
+when a skill carries the tag `message-id-idempotent`, else `opaque` (no resend
+after an uncertain send: `opaque-effect-unknown`). The factory requires no
+Exomachina extension, Task metadata or artifact field to dispatch, accept, pin
+or correlate. The `urn:exomachina:a2a-agent:v1` extension and Task metadata
+`agent_identity` are removed rather than kept optional: identity is already in
+the standard card and resend deduplication is A2A `messageId`, so the
+extension only restated standard behaviour. The testbed refuses two services
+whose cards would derive the same identity. Model agents label broker sessions
+`<card sha256>:<taskId>`.
+
+**Conformance proof.** `tests/test_third_party_agent.py`
+(`test_plain_a2a_sdk_agent_runs_an_assignment_end_to_end`) binds an agent built
+only on `a2a-sdk`, with no extensions, no Task metadata and opaque reconcile,
+and runs `adapter.assign` to validated content with journal correlation and a
+keyed hand-off record; no factory identifier reaches the agent. A guard in
+`tests/test_agent_service_guards.py` allows repo agent cards only the budget
+extension (plus the stimulus extension under test controls). Any change that
+breaks these tests violates decision 7.
+
+**Evidence.** `single_factory.py` G-8 requires, per delivered route, exactly
+one `delivery.receipt` fact and one confirmed release record whose sha256
+equals the accepted report's plain sha256 (none on route 3). The dashboard
+shows delivery as verified only on that equality and a mismatch or a second
+receipt as a delivery fault; agent usage is labelled agent-reported without an
+agent model or provider.
+
+**Historical scenarios.** `scenarios/integrated.py`, `spike_a_delayed.py`,
+`spike_b_two_instances.py`, `spike_c_director.py` and `sf_agent_probe.py` read
+the retired HTTP release receiver or the old agent envelope. They are kept as
+non-runnable records of their cited results; no gate imports them.
+
+## Quality findings, nested supplier and launcher upgrades (8 Oct 2026)
+
+Branch `fix/remaining-coupling`. Completes the operator rule "A2A only; agents
+are factory-unaware" (decisions 4, 5 as amended, 7 and 9 of
+`docs/a2a-v1-mediation-decision-2026-10-07.md`).
+
+**Quality findings are a hand-off (amended decision 5).** Quality's result is
+one strict artifact, the verdict `{kind: "quality_verdict@1", candidate,
+accepted, decided_by, findings, rubric, rubric_digest}`. With the patch
+`exo-quality-findings-handoff-v1`, the factory records it as Quality's own
+`handoff.produced` (`handoff_id` = the Quality node, `revision` = the attempt)
+and keeps the `quality.verdict` Observation and the floor seal on the judged
+draft's carrier. `definitions/report-template.json` declares material edges
+`draft → repair` and `independent_quality → repair` (and `repair → draft`
+material). A repair dispatch is `[brief] + [research findings, research risks,
+rejected draft, Quality verdict]`, each Part verbatim, and its
+`handoff.consumed` lists all four, the draft and the verdict hand-offs
+included. The synthesis brief no longer carries `quality_findings`
+(`report_contract.synthesis_assignment(revision, question, packet)`); the
+synthesizer reads findings from the received `quality_verdict@1` Part. Runs
+started before the patch keep the embedded-findings behaviour on replay. On the
+floor the findings carrier (`carrier:h-quality:<attempt>`) spawns at Quality and
+rides the material path into repair; an accepted verdict's carrier retires at
+the gate. `single_factory.py` R2-c requires the four inputs and no findings in
+the brief; G-8 requires each repair's `handoff.consumed` to name the draft and
+Quality hand-offs.
+
+**Nested supplier as a plain A2A agent service.** With
+`nested_supplier_enabled`, the harness card declares no extension and serves no
+`/contract`. Any A2A client sends an ordinary `SendMessage` whose single brief
+Part is the run inputs object (a `data` Part, or a `text` Part with
+`mediaType: application/json`); plain text briefs still go to the Director.
+`src/supplier_protocol.py` validates the shape (one JSON object, 128 KiB
+canonical UTF-8, depth 32). The factory derives the run from the caller's
+`messageId` (`action_id = "a2a-message:" + sha256({actor, messageId})`): a
+resent identical Message returns the same Task, a different Message under a
+used `messageId` is refused. The run executes the active publication through
+normal admission, and the Task's result is one artifact whose single Part is
+the run's output (`application/json` text) with no metadata. No parent or
+child run, assignment, definition or Director identity crosses the wire.
+
+**Guards.** `tests/test_agent_service_guards.py` asserts that no agent or
+factory-service card (factory mode with and without the nested supplier)
+declares a required extension or any Exomachina extension other than the
+optional budget one, that `a2a-action-contract` appears nowhere in `src/` or
+`services/`, and that no research, draft, repair or Quality dispatch brief
+contains another node's output text (upstream content travels only as the
+verbatim Parts after the brief). A grep of `services/` for run/assignment/
+attempt/action/definition/factory/policy identifiers finds none; remaining
+`findings` hits are domain vocabulary (the `packet_findings@1` skill, the
+`research_findings` service name, Quality's own verdict field and the
+synthesizer reading findings from the received verdict Part).
+
+**Operator stack upgrades (`scenarios/operator_stack.py`).**
+
+- `down` stops every process the home records (harness `run/harness.json`,
+  agents `testbed/pids.json`, runner supervisor, PostgreSQL, Temporal and build
+  workers `runner/runner-ready.json`) only after verifying pid, command line
+  (this home's state directory or instance), port holder and home path; card
+  identity plays no part. A process that fails the check is reported
+  (`not-touched:<reason>`) and never signalled. It then waits for this home's
+  listeners to go and reports `ports_free`, `ports_still_held_by_this_home` and
+  `ports_held_outside_this_home`.
+- `up` upgrades in place. `testbed.py plan` reports per agent `reuse`,
+  `replace` (an upgrade: command, code or record schema changed), `start` or
+  `blocked` (port held outside the home, never touched). Replaced agents
+  restart; when the served cards no longer match the instance's pins,
+  `admin.py repin` rewrites the three catalog pin files and the definition is
+  republished with fresh card pins. Instance option drift is applied. The
+  harness restarts when its build, manifest, pins, configuration or
+  interpreter differs from `run/harness.json`. The instance's Observation
+  databases, Director ledger and `handoff-digest.key` are kept.
+- Refused, naming `--reprovision`, with nothing changed: a home written by a
+  newer launcher schema (current `2`), a different port plan, a different
+  Temporal runtime, or an agent upgrade while runs are unfinished.
+  `up --reprovision` stops the home's verified processes, renames the home to
+  `<home>.backup-<UTC yyyymmddThhmmssZ>` (never deleted) and provisions fresh.
+- `--scratch-home` and `--model-provider scripted` exist for throwaway proofs
+  only (fixture agents, Director `fixture`, no broker call).

@@ -1,0 +1,77 @@
+id: parity_child
+namespace: exomachina.kestra_parity
+description: Visible two-branch reference using only native core task types; Quality and release are placeholders.
+inputs:
+  - id: outcome
+    type: STRING
+    defaults: repair_success
+tasks:
+  - id: evidence_parallel
+    type: io.kestra.plugin.core.flow.Parallel
+    concurrent: 2
+    tasks:
+      - id: source
+        type: io.kestra.plugin.core.debug.Return
+        format: source_evidence@1:source-a
+      - id: counter
+        type: io.kestra.plugin.core.debug.Return
+        format: counter_evidence@1:objection-a
+  - id: join
+    type: io.kestra.plugin.core.debug.Return
+    format: "{{ outputs.source.value }}|{{ outputs.counter.value }}"
+  - id: synthesize_r1
+    type: io.kestra.plugin.core.debug.Return
+    format: "candidate-r1:{{ outputs.join.value }}"
+  - id: quality_r1
+    type: io.kestra.plugin.core.debug.Return
+    description: Deterministic placeholder, not independent Quality or identity verification.
+    format: REJECT
+  - id: repair_route
+    type: io.kestra.plugin.core.flow.Switch
+    value: "{{ inputs.outcome }}"
+    cases:
+      repair_success:
+        - id: repair_r2
+          type: io.kestra.plugin.core.debug.Return
+          format: candidate-r2-addressed
+        - id: quality_r2_positive
+          type: io.kestra.plugin.core.debug.Return
+          format: ACCEPT
+        - id: acceptance_r2
+          type: io.kestra.plugin.core.debug.Return
+          description: Placeholder, not an authoritative product acceptance.
+          format: accepted-r2
+        - id: release_r2
+          type: io.kestra.plugin.core.debug.Return
+          description: Placeholder, no external release effect.
+          format: receipt-r2
+      exhausted:
+        - id: repair_r2_unresolved
+          type: io.kestra.plugin.core.debug.Return
+          format: candidate-r2-unresolved
+        - id: quality_r2_negative
+          type: io.kestra.plugin.core.debug.Return
+          format: REJECT
+        - id: repair_r3_unresolved
+          type: io.kestra.plugin.core.debug.Return
+          format: candidate-r3-unresolved
+        - id: quality_r3_negative
+          type: io.kestra.plugin.core.debug.Return
+          format: REJECT
+        - id: director_wait
+          type: io.kestra.plugin.core.flow.Pause
+          onResume:
+            - id: abort
+              type: BOOL
+              defaults: false
+        - id: abort_result
+          type: io.kestra.plugin.core.debug.Return
+          description: Placeholder; native SUCCESS here is not an authoritative aborted factory result.
+          format: aborted
+    defaults:
+      - id: invalid_outcome
+        type: io.kestra.plugin.core.execution.Fail
+outputs:
+  - id: public_result
+    type: STRING
+    value: "{{ inputs.outcome }}"

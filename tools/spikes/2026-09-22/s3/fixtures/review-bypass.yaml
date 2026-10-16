@@ -1,0 +1,7 @@
+id: s3_review_bypass
+namespace: exomachina.s3
+description: Deliberate policy-invalid candidate; no external delivery effect
+tasks:
+  - id: delivery
+    type: io.kestra.plugin.core.debug.Return
+    format: synthetic-unreviewed-delivery

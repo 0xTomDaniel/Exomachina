@@ -1,0 +1,102 @@
+{
+  "status": 200,
+  "body": {
+    "tenantId": "main",
+    "id": "1eTgOO1H44wD6IkcQPn3KK",
+    "namespace": "exomachina.kestra_parity",
+    "flowId": "parity_child",
+    "flowRevision": 1,
+    "taskRunList": [
+      {
+        "id": "S4187kjkoHda1sxmMxScI",
+        "taskId": "director_wait",
+        "attempts": [
+          {
+            "state": {
+              "current": "RUNNING",
+              "histories": [
+                {
+                  "state": "CREATED",
+                  "date": "2026-09-23T13:27:19.253711Z"
+                },
+                {
+                  "state": "RUNNING",
+                  "date": "2026-09-23T13:27:19.253713Z"
+                }
+              ],
+              "startDate": "2026-09-23T13:27:19.253711Z"
+            }
+          }
+        ],
+        "state": {
+          "current": "PAUSED",
+          "histories": [
+            {
+              "state": "CREATED",
+              "date": "2026-09-23T13:27:19.249468Z"
+            },
+            {
+              "state": "RUNNING",
+              "date": "2026-09-23T13:27:19.253721Z"
+            },
+            {
+              "state": "PAUSED",
+              "date": "2026-09-23T13:27:19.264490Z"
+            }
+          ],
+          "startDate": "2026-09-23T13:27:19.249468Z",
+          "endDate": "2026-09-23T13:27:19.264490Z",
+          "duration": "PT0.015022S"
+        }
+      }
+    ],
+    "labels": [
+      {
+        "key": "system.from",
+        "value": "api"
+      },
+      {
+        "key": "system.correlationId",
+        "value": "7JRL9FyEOjcAJQlE4O4QRi"
+      }
+    ],
+    "state": {
+      "current": "PAUSED",
+      "histories": [
+        {
+          "state": "CREATED",
+          "date": "2026-09-23T13:27:19.047263Z"
+        },
+        {
+          "state": "RUNNING",
+          "date": "2026-09-23T13:27:19.253391Z"
+        },
+        {
+          "state": "PAUSED",
+          "date": "2026-09-23T13:27:19.264874Z"
+        }
+      ],
+      "startDate": "2026-09-23T13:27:19.047263Z",
+      "endDate": "2026-09-23T13:27:19.264874Z",
+      "duration": "PT0.217611S"
+    },
+    "originalId": "1eTgOO1H44wD6IkcQPn3KK",
+    "trigger": {
+      "id": "child",
+      "type": "io.kestra.plugin.core.flow.Subflow",
+      "variables": {
+        "flowId": "parity_parent",
+        "taskId": "child",
+        "namespace": "exomachina.kestra_parity",
+        "taskRunId": "6bsMkGi94ZhoWjjKJl6CtW",
+        "executionId": "7JRL9FyEOjcAJQlE4O4QRi",
+        "flowRevision": 1
+      }
+    },
+    "metadata": {
+      "attemptNumber": 1,
+      "originalCreatedDate": "2026-09-23T13:27:19.047266Z",
+      "executionDepth": 1
+    }
+  }
+}

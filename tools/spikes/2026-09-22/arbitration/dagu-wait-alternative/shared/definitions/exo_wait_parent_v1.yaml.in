@@ -1,0 +1,18 @@
+steps:
+  - id: child_gate
+    action: human.task
+    with:
+      prompt: Resume this pinned parent only after its pinned child succeeds
+      form:
+        type: object
+        additionalProperties: false
+        properties:
+          decision:
+            type: string
+            enum: [child_completed]
+          child_run_id:
+            type: string
+        required: [decision, child_run_id]
+  - id: parent_continuation
+    depends: child_gate
+    run: @PYTHON@ -B @BRIDGE@ public-result @RUNTIME@

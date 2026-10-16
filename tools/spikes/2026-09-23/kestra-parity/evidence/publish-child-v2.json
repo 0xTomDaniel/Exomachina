@@ -1,0 +1,140 @@
+{
+  "status": 200,
+  "body": {
+    "id": "parity_child",
+    "namespace": "exomachina.kestra_parity",
+    "revision": 2,
+    "description": "Visible two-branch reference using only native core task types; Quality and release are placeholders.",
+    "inputs": [
+      {
+        "id": "outcome",
+        "type": "STRING",
+        "required": true,
+        "defaults": "repair_success"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "public_result",
+        "value": "{{ inputs.outcome }}",
+        "type": "STRING"
+      }
+    ],
+    "disabled": false,
+    "deleted": false,
+    "draft": false,
+    "tasks": [
+      {
+        "id": "evidence_parallel",
+        "type": "io.kestra.plugin.core.flow.Parallel",
+        "tasks": [
+          {
+            "id": "source",
+            "type": "io.kestra.plugin.core.debug.Return",
+            "format": "source_evidence@1:source-a"
+          },
+          {
+            "id": "counter",
+            "type": "io.kestra.plugin.core.debug.Return",
+            "format": "counter_evidence@1:objection-a"
+          }
+        ],
+        "concurrent": "2"
+      },
+      {
+        "id": "join",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "format": "{{ outputs.source.value }}|{{ outputs.counter.value }}"
+      },
+      {
+        "id": "synthesize_r1",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "format": "candidate-r1:{{ outputs.join.value }}"
+      },
+      {
+        "id": "quality_r1",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "description": "Deterministic placeholder, not independent Quality or identity verification.",
+        "format": "REJECT"
+      },
+      {
+        "id": "repair_route",
+        "type": "io.kestra.plugin.core.flow.Switch",
+        "value": "{{ inputs.outcome }}",
+        "cases": {
+          "repair_success": [
+            {
+              "id": "repair_r2",
+              "type": "io.kestra.plugin.core.debug.Return",
+              "format": "candidate-r2-addressed"
+            },
+            {
+              "id": "quality_r2_positive",
+              "type": "io.kestra.plugin.core.debug.Return",
+              "format": "ACCEPT"
+            },
+            {
+              "id": "acceptance_r2",
+              "type": "io.kestra.plugin.core.debug.Return",
+              "description": "Placeholder, not an authoritative product acceptance.",
+              "format": "accepted-r2"
+            },
+            {
+              "id": "release_r2",
+              "type": "io.kestra.plugin.core.debug.Return",
+              "description": "Placeholder, no external release effect.",
+              "format": "receipt-r2"
+            }
+          ],
+          "exhausted": [
+            {
+              "id": "repair_r2_unresolved",
+              "type": "io.kestra.plugin.core.debug.Return",
+              "format": "candidate-r2-unresolved"
+            },
+            {
+              "id": "quality_r2_negative",
+              "type": "io.kestra.plugin.core.debug.Return",
+              "format": "REJECT"
+            },
+            {
+              "id": "repair_r3_unresolved",
+              "type": "io.kestra.plugin.core.debug.Return",
+              "format": "candidate-r3-unresolved"
+            },
+            {
+              "id": "quality_r3_negative",
+              "type": "io.kestra.plugin.core.debug.Return",
+              "format": "REJECT"
+            },
+            {
+              "id": "director_wait",
+              "type": "io.kestra.plugin.core.flow.Pause",
+              "onResume": [
+                {
+                  "id": "abort",
+                  "type": "BOOL",
+                  "required": true,
+                  "defaults": "false"
+                }
+              ]
+            },
+            {
+              "id": "abort_result",
+              "type": "io.kestra.plugin.core.debug.Return",
+              "description": "Placeholder; native SUCCESS here is not an authoritative aborted factory result.",
+              "format": "aborted"
+            }
+          ]
+        },
+        "defaults": [
+          {
+            "id": "invalid_outcome",
+            "type": "io.kestra.plugin.core.execution.Fail"
+          }
+        ]
+      }
+    ],
+    "source": "id: parity_child\nnamespace: exomachina.kestra_parity\ndescription: Visible two-branch reference using only native core task types; Quality and release are placeholders.\ninputs:\n  - id: outcome\n    type: STRING\n    defaults: repair_success\ntasks:\n  - id: evidence_parallel\n    type: io.kestra.plugin.core.flow.Parallel\n    concurrent: 2\n    tasks:\n      - id: source\n        type: io.kestra.plugin.core.debug.Return\n        format: source_evidence@1:source-a\n      - id: counter\n        type: io.kestra.plugin.core.debug.Return\n        format: counter_evidence@1:objection-a\n  - id: join\n    type: io.kestra.plugin.core.debug.Return\n    format: \"{{ outputs.source.value }}|{{ outputs.counter.value }}\"\n  - id: synthesize_r1\n    type: io.kestra.plugin.core.debug.Return\n    format: \"candidate-r1:{{ outputs.join.value }}\"\n  - id: quality_r1\n    type: io.kestra.plugin.core.debug.Return\n    description: Deterministic placeholder, not independent Quality or identity verification.\n    format: REJECT\n  - id: repair_route\n    type: io.kestra.plugin.core.flow.Switch\n    value: \"{{ inputs.outcome }}\"\n    cases:\n      repair_success:\n        - id: repair_r2\n          type: io.kestra.plugin.core.debug.Return\n          format: candidate-r2-addressed\n        - id: quality_r2_positive\n          type: io.kestra.plugin.core.debug.Return\n          format: ACCEPT\n        - id: acceptance_r2\n          type: io.kestra.plugin.core.debug.Return\n          description: Placeholder, not an authoritative product acceptance.\n          format: accepted-r2\n        - id: release_r2\n          type: io.kestra.plugin.core.debug.Return\n          description: Placeholder, no external release effect.\n          format: receipt-r2\n      exhausted:\n        - id: repair_r2_unresolved\n          type: io.kestra.plugin.core.debug.Return\n          format: candidate-r2-unresolved\n        - id: quality_r2_negative\n          type: io.kestra.plugin.core.debug.Return\n          format: REJECT\n        - id: repair_r3_unresolved\n          type: io.kestra.plugin.core.debug.Return\n          format: candidate-r3-unresolved\n        - id: quality_r3_negative\n          type: io.kestra.plugin.core.debug.Return\n          format: REJECT\n        - id: director_wait\n          type: io.kestra.plugin.core.flow.Pause\n          onResume:\n            - id: abort\n              type: BOOL\n              defaults: false\n        - id: abort_result\n          type: io.kestra.plugin.core.debug.Return\n          description: Placeholder; native SUCCESS here is not an authoritative aborted factory result.\n          format: aborted\n    defaults:\n      - id: invalid_outcome\n        type: io.kestra.plugin.core.execution.Fail\noutputs:\n  - id: public_result\n    type: STRING\n    value: \"{{ inputs.outcome }}\"\n"
+  }
+}

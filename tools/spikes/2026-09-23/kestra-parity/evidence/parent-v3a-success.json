@@ -1,0 +1,151 @@
+{
+  "status": 200,
+  "body": {
+    "tenantId": "main",
+    "id": "7l2abV8xI94tMd7OqGFhMb",
+    "namespace": "exomachina.kestra_parity",
+    "flowId": "parity_parent",
+    "flowRevision": 3,
+    "taskRunList": [
+      {
+        "id": "4cifwNEHnc7dsT3qzRLO2d",
+        "taskId": "child",
+        "attempts": [
+          {
+            "state": {
+              "current": "SUCCESS",
+              "histories": [
+                {
+                  "state": "CREATED",
+                  "date": "2026-09-23T13:31:36.199688Z"
+                },
+                {
+                  "state": "RUNNING",
+                  "date": "2026-09-23T13:31:36.200529Z"
+                },
+                {
+                  "state": "SUCCESS",
+                  "date": "2026-09-23T13:31:40.146859Z"
+                }
+              ],
+              "startDate": "2026-09-23T13:31:36.199688Z",
+              "endDate": "2026-09-23T13:31:40.146859Z",
+              "duration": "PT3.947171S"
+            }
+          }
+        ],
+        "state": {
+          "current": "SUCCESS",
+          "histories": [
+            {
+              "state": "CREATED",
+              "date": "2026-09-23T13:31:36.199688Z"
+            },
+            {
+              "state": "RUNNING",
+              "date": "2026-09-23T13:31:36.200529Z"
+            },
+            {
+              "state": "SUCCESS",
+              "date": "2026-09-23T13:31:40.146859Z"
+            }
+          ],
+          "startDate": "2026-09-23T13:31:36.199688Z",
+          "endDate": "2026-09-23T13:31:40.146859Z",
+          "duration": "PT3.947171S"
+        }
+      },
+      {
+        "id": "67IOOrz1WeokwBBil2a1UC",
+        "taskId": "observed",
+        "attempts": [
+          {
+            "state": {
+              "current": "SUCCESS",
+              "histories": [
+                {
+                  "state": "CREATED",
+                  "date": "2026-09-23T13:31:40.684110Z"
+                },
+                {
+                  "state": "RUNNING",
+                  "date": "2026-09-23T13:31:40.684111Z"
+                },
+                {
+                  "state": "SUCCESS",
+                  "date": "2026-09-23T13:31:40.684536Z"
+                }
+              ],
+              "startDate": "2026-09-23T13:31:40.684110Z",
+              "endDate": "2026-09-23T13:31:40.684536Z",
+              "duration": "PT0.000426S"
+            },
+            "workerId": "2aGefrZMAgBVTiodXMJL51"
+          }
+        ],
+        "state": {
+          "current": "SUCCESS",
+          "histories": [
+            {
+              "state": "CREATED",
+              "date": "2026-09-23T13:31:40.653915Z"
+            },
+            {
+              "state": "SUBMITTED",
+              "date": "2026-09-23T13:31:40.654683Z"
+            },
+            {
+              "state": "RUNNING",
+              "date": "2026-09-23T13:31:40.683927Z"
+            },
+            {
+              "state": "SUCCESS",
+              "date": "2026-09-23T13:31:40.684585Z"
+            }
+          ],
+          "startDate": "2026-09-23T13:31:40.653915Z",
+          "endDate": "2026-09-23T13:31:40.684585Z",
+          "duration": "PT0.03067S"
+        }
+      }
+    ],
+    "inputs": {
+      "outcome": "repair_success"
+    },
+    "labels": [
+      {
+        "key": "system.from",
+        "value": "api"
+      },
+      {
+        "key": "system.correlationId",
+        "value": "7l2abV8xI94tMd7OqGFhMb"
+      }
+    ],
+    "state": {
+      "current": "SUCCESS",
+      "histories": [
+        {
+          "state": "CREATED",
+          "date": "2026-09-23T13:31:36.196056Z"
+        },
+        {
+          "state": "RUNNING",
+          "date": "2026-09-23T13:31:36.202071Z"
+        },
+        {
+          "state": "SUCCESS",
+          "date": "2026-09-23T13:31:40.720148Z"
+        }
+      ],
+      "startDate": "2026-09-23T13:31:36.196056Z",
+      "endDate": "2026-09-23T13:31:40.720148Z",
+      "duration": "PT4.524092S"
+    },
+    "originalId": "7l2abV8xI94tMd7OqGFhMb",
+    "metadata": {
+      "attemptNumber": 1,
+      "originalCreatedDate": "2026-09-23T13:31:36.196059Z"
+    }
+  }
+}

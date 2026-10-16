@@ -1,0 +1,9 @@
+steps:
+  - id: research_child
+    run: exo-arb nested --child exo_arb_research_v3
+    retry_policy:
+      limit: 2
+      interval_sec: 1
+  - id: public_result
+    depends: research_child
+    run: exo-arb parent-result

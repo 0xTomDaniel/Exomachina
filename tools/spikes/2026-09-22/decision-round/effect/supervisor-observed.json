@@ -1,0 +1,405 @@
+{
+  "bundle": "/private/tmp/exomachina-effect-bundle-2",
+  "bundle_manifest": {
+    "node_archive_sha256": "880cf6f35eb9dea84b2373adba13b6023b50cc0decbad47b57824d146373265a",
+    "node_version": "v26.0.0",
+    "package_lock_sha256": "0249a14623d1248f7bc3368c9486205b86d984aa4b9adbeb052cd949eed31626",
+    "python_version": "Python 3.13.1",
+    "runtime_bundle": "/private/tmp/exomachina-effect-bundle-2",
+    "source_sha256": {
+      "director_server.py": "f811a01f1b05f6ed7028b553e6b286f9787a2f98b3f7e9afc02e65abd08efc6a",
+      "helper.mjs": "80563129bfadc690c2ccdb7080978bc3aab36c26b9b50b537ea5a05859b5d977"
+    },
+    "uv_lock_sha256": "66fa0b284ce0e254320061a8b16d37f521e0aefc23d61c793a6cb374aa8ad877"
+  },
+  "completed": {
+    "a": {
+      "artifacts": [
+        {
+          "artifactId": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d",
+          "parts": [
+            {
+              "data": {
+                "content": "fixture-result:verified research 1",
+                "definition": "f997394fc454a944e474f6e9618073748a3c2ce64f1c1240adf9e7c20ee1fd03",
+                "reviewer": "c3660b84-989f-4686-b27a-6ec4990556c6",
+                "revision": "r2",
+                "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "6cdb8213-77ad-4dc6-ae2e-7aab03ad13fa",
+      "id": "29250e49-7e3e-4f03-9793-eb46ac4f886f",
+      "kind": "task",
+      "metadata": {
+        "acceptance_sha256": null,
+        "child": null,
+        "definition": "f997394fc454a944e474f6e9618073748a3c2ce64f1c1240adf9e7c20ee1fd03",
+        "engine": {
+          "execution_id": null,
+          "kind": "effect",
+          "native_state": "Complete",
+          "resume_requests": null
+        },
+        "organization": "org-fixture",
+        "owner": "d661b167-483f-4c2d-987a-31aea07fb7df",
+        "run_id": "supervisor-run-a"
+      },
+      "status": {
+        "state": "completed"
+      }
+    },
+    "b": {
+      "artifacts": [
+        {
+          "artifactId": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d",
+          "parts": [
+            {
+              "data": {
+                "content": "fixture-result:verified research 1",
+                "definition": "f997394fc454a944e474f6e9618073748a3c2ce64f1c1240adf9e7c20ee1fd03",
+                "reviewer": "c3660b84-989f-4686-b27a-6ec4990556c6",
+                "revision": "r2",
+                "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "d0804054-8d05-4ded-bff4-e36442def576",
+      "id": "19736d99-7d12-4bb6-9619-727ca42e3db8",
+      "kind": "task",
+      "metadata": {
+        "acceptance_sha256": null,
+        "child": null,
+        "definition": "f997394fc454a944e474f6e9618073748a3c2ce64f1c1240adf9e7c20ee1fd03",
+        "engine": {
+          "execution_id": null,
+          "kind": "effect",
+          "native_state": "Complete",
+          "resume_requests": null
+        },
+        "organization": "org-fixture",
+        "owner": "19f8646d-7e24-422d-b157-89d938553734",
+        "run_id": "supervisor-run-b"
+      },
+      "status": {
+        "state": "completed"
+      }
+    }
+  },
+  "definition_digest": "f997394fc454a944e474f6e9618073748a3c2ce64f1c1240adf9e7c20ee1fd03",
+  "first_supervisor_exit": -9,
+  "initial": {
+    "bundle_root": "/private/tmp/exomachina-effect-bundle-2",
+    "children": {
+      "capability": {
+        "command": "/private/tmp/exomachina-effect-bundle-2/venv/bin/python /private/tmp/exomachina-effect-bundle-2/app/common/harness_server.py --state /private/tmp/exomachina-effect-bundle-supervisor-root-1/capability --role capability --port 53666",
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "identity": "2a977111-87e8-4424-a00c-e1c9d4b2b01c",
+          "incarnation": 1,
+          "role": "capability"
+        },
+        "log": "/private/tmp/exomachina-effect-bundle-supervisor-root-1/logs/capability-0.log",
+        "lstart": "Tue Sep 22 20:36:58 2026",
+        "pid": 18126
+      },
+      "director_a": {
+        "command": "/private/tmp/exomachina-effect-bundle-2/venv/bin/python /private/tmp/exomachina-effect-bundle-2/app/effect/director_server.py --state /private/tmp/exomachina-effect-bundle-supervisor-root-1/director_a --effect http://127.0.0.1:53668 --port 53669",
+        "health": {
+          "engine": "effect",
+          "identity": "d661b167-483f-4c2d-987a-31aea07fb7df",
+          "incarnation": 1,
+          "role": "factory"
+        },
+        "log": "/private/tmp/exomachina-effect-bundle-supervisor-root-1/logs/director_a-0.log",
+        "lstart": "Tue Sep 22 20:37:00 2026",
+        "pid": 18150
+      },
+      "director_b": {
+        "command": "/private/tmp/exomachina-effect-bundle-2/venv/bin/python /private/tmp/exomachina-effect-bundle-2/app/effect/director_server.py --state /private/tmp/exomachina-effect-bundle-supervisor-root-1/director_b --effect http://127.0.0.1:53668 --port 53670",
+        "health": {
+          "engine": "effect",
+          "identity": "19f8646d-7e24-422d-b157-89d938553734",
+          "incarnation": 1,
+          "role": "factory"
+        },
+        "log": "/private/tmp/exomachina-effect-bundle-supervisor-root-1/logs/director_b-0.log",
+        "lstart": "Tue Sep 22 20:37:01 2026",
+        "pid": 18152
+      },
+      "effect": {
+        "command": "/private/tmp/exomachina-effect-bundle-2/bin/node /private/tmp/exomachina-effect-bundle-2/app/effect/helper.mjs",
+        "health": {
+          "pid": 18148,
+          "ready": true
+        },
+        "log": "/private/tmp/exomachina-effect-bundle-supervisor-root-1/logs/effect-0.log",
+        "lstart": "Tue Sep 22 20:36:59 2026",
+        "pid": 18148
+      },
+      "quality": {
+        "command": "/private/tmp/exomachina-effect-bundle-2/venv/bin/python /private/tmp/exomachina-effect-bundle-2/app/common/harness_server.py --state /private/tmp/exomachina-effect-bundle-supervisor-root-1/quality --role quality --port 53667",
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "identity": "c3660b84-989f-4686-b27a-6ec4990556c6",
+          "incarnation": 1,
+          "role": "quality"
+        },
+        "log": "/private/tmp/exomachina-effect-bundle-supervisor-root-1/logs/quality-0.log",
+        "lstart": "Tue Sep 22 20:36:58 2026",
+        "pid": 18128
+      }
+    },
+    "generation": 1,
+    "ports": {
+      "capability": 53666,
+      "director_a": 53669,
+      "director_b": 53670,
+      "effect": 53668,
+      "quality": 53667
+    },
+    "restart_counts": {
+      "capability": 0,
+      "director_a": 0,
+      "director_b": 0,
+      "effect": 0,
+      "quality": 0
+    },
+    "startup_seconds": 4.175,
+    "state_root": "/private/tmp/exomachina-effect-bundle-supervisor-root-1",
+    "supervisor_pid": 18122
+  },
+  "ledgers": {
+    "a": {
+      "delivery": {
+        "run_id": "supervisor-run-a",
+        "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+      },
+      "outbox": {
+        "command_id": "supervisor-run-a-continue",
+        "run_id": "supervisor-run-a",
+        "state": "signaled"
+      },
+      "run": {
+        "accepted_by": "c3660b84-989f-4686-b27a-6ec4990556c6",
+        "accepted_revision": "r2",
+        "accepted_sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d",
+        "artifact": "{\"author\":\"2a977111-87e8-4424-a00c-e1c9d4b2b01c\",\"content\":\"fixture-result:verified research 1\",\"revision\":\"r2\",\"sha256\":\"d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d\"}",
+        "assignment_task": "e74c727f-18d0-4c78-8bd8-80e9c3fd76ea",
+        "author": "2a977111-87e8-4424-a00c-e1c9d4b2b01c",
+        "body": "{\"name\":\"verified-research\",\"version\":1,\"capabilities\":{\"worker\":{\"identity\":\"2a977111-87e8-4424-a00c-e1c9d4b2b01c\",\"url\":\"http://127.0.0.1:53666\",\"version\":\"v1\"},\"quality\":{\"identity\":\"c3660b84-989f-4686-b27a-6ec4990556c6\",\"url\":\"http://127.0.0.1:53667\",\"version\":\"v1\"}},\"steps\":[\"assign\",\"review\",\"director_wait\",\"deliver\"]}",
+        "digest": "f997394fc454a944e474f6e9618073748a3c2ce64f1c1240adf9e7c20ee1fd03",
+        "id": "supervisor-run-a",
+        "quality_accepted": 1,
+        "review_task": "8db0a0f5-c9b0-4928-96f8-a5a6bffee4fb",
+        "reviewer": "c3660b84-989f-4686-b27a-6ec4990556c6",
+        "revision": "r2",
+        "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+      }
+    },
+    "b": {
+      "delivery": {
+        "run_id": "supervisor-run-b",
+        "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+      },
+      "outbox": {
+        "command_id": "supervisor-run-b-continue",
+        "run_id": "supervisor-run-b",
+        "state": "signaled"
+      },
+      "run": {
+        "accepted_by": "c3660b84-989f-4686-b27a-6ec4990556c6",
+        "accepted_revision": "r2",
+        "accepted_sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d",
+        "artifact": "{\"author\":\"2a977111-87e8-4424-a00c-e1c9d4b2b01c\",\"content\":\"fixture-result:verified research 1\",\"revision\":\"r2\",\"sha256\":\"d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d\"}",
+        "assignment_task": "b6455887-3ef6-468c-9883-36f8870a1dc9",
+        "author": "2a977111-87e8-4424-a00c-e1c9d4b2b01c",
+        "body": "{\"name\":\"verified-research\",\"version\":1,\"capabilities\":{\"worker\":{\"identity\":\"2a977111-87e8-4424-a00c-e1c9d4b2b01c\",\"url\":\"http://127.0.0.1:53666\",\"version\":\"v1\"},\"quality\":{\"identity\":\"c3660b84-989f-4686-b27a-6ec4990556c6\",\"url\":\"http://127.0.0.1:53667\",\"version\":\"v1\"}},\"steps\":[\"assign\",\"review\",\"director_wait\",\"deliver\"]}",
+        "digest": "f997394fc454a944e474f6e9618073748a3c2ce64f1c1240adf9e7c20ee1fd03",
+        "id": "supervisor-run-b",
+        "quality_accepted": 1,
+        "review_task": "1dc27afe-e07f-4f96-873b-d9a914e1a003",
+        "reviewer": "c3660b84-989f-4686-b27a-6ec4990556c6",
+        "revision": "r2",
+        "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+      }
+    }
+  },
+  "old_child_status_after_reclaim": {
+    "capability": "",
+    "director_a": "",
+    "director_b": "",
+    "effect": "",
+    "quality": ""
+  },
+  "orphan_status_before_relaunch": {
+    "capability": "R",
+    "director_a": "S",
+    "director_b": "S",
+    "effect": "S",
+    "quality": "S"
+  },
+  "passed": true,
+  "receipts": {
+    "a": {
+      "assign": {
+        "accepted_count": 1,
+        "action_id": "supervisor-run-a-assign",
+        "artifact": {
+          "author": "2a977111-87e8-4424-a00c-e1c9d4b2b01c",
+          "content": "fixture-result:verified research 1",
+          "revision": "r2",
+          "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+        },
+        "attempts": 1,
+        "definition_digest": "f997394fc454a944e474f6e9618073748a3c2ce64f1c1240adf9e7c20ee1fd03",
+        "role": "capability",
+        "run_id": "supervisor-run-a",
+        "task_id": "e74c727f-18d0-4c78-8bd8-80e9c3fd76ea"
+      },
+      "review": {
+        "accepted_count": 1,
+        "action_id": "supervisor-run-a-review",
+        "artifact": {
+          "accepted": true,
+          "reason": "fixture digest and independent identity",
+          "reviewer": "c3660b84-989f-4686-b27a-6ec4990556c6",
+          "revision": "r2",
+          "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+        },
+        "attempts": 1,
+        "definition_digest": "f997394fc454a944e474f6e9618073748a3c2ce64f1c1240adf9e7c20ee1fd03",
+        "role": "quality",
+        "run_id": "supervisor-run-a",
+        "task_id": "8db0a0f5-c9b0-4928-96f8-a5a6bffee4fb"
+      }
+    },
+    "b": {
+      "assign": {
+        "accepted_count": 1,
+        "action_id": "supervisor-run-b-assign",
+        "artifact": {
+          "author": "2a977111-87e8-4424-a00c-e1c9d4b2b01c",
+          "content": "fixture-result:verified research 1",
+          "revision": "r2",
+          "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+        },
+        "attempts": 1,
+        "definition_digest": "f997394fc454a944e474f6e9618073748a3c2ce64f1c1240adf9e7c20ee1fd03",
+        "role": "capability",
+        "run_id": "supervisor-run-b",
+        "task_id": "b6455887-3ef6-468c-9883-36f8870a1dc9"
+      },
+      "review": {
+        "accepted_count": 1,
+        "action_id": "supervisor-run-b-review",
+        "artifact": {
+          "accepted": true,
+          "reason": "fixture digest and independent identity",
+          "reviewer": "c3660b84-989f-4686-b27a-6ec4990556c6",
+          "revision": "r2",
+          "sha256": "d49d8ec6c8e9d23457cc40299edf05226e1ce6fc8fe910701860e7ff7644bc4d"
+        },
+        "attempts": 1,
+        "definition_digest": "f997394fc454a944e474f6e9618073748a3c2ce64f1c1240adf9e7c20ee1fd03",
+        "role": "quality",
+        "run_id": "supervisor-run-b",
+        "task_id": "1dc27afe-e07f-4f96-873b-d9a914e1a003"
+      }
+    }
+  },
+  "recovered": {
+    "bundle_root": "/private/tmp/exomachina-effect-bundle-2",
+    "children": {
+      "capability": {
+        "command": "/private/tmp/exomachina-effect-bundle-2/venv/bin/python /private/tmp/exomachina-effect-bundle-2/app/common/harness_server.py --state /private/tmp/exomachina-effect-bundle-supervisor-root-1/capability --role capability --port 53666",
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "identity": "2a977111-87e8-4424-a00c-e1c9d4b2b01c",
+          "incarnation": 2,
+          "role": "capability"
+        },
+        "log": "/private/tmp/exomachina-effect-bundle-supervisor-root-1/logs/capability-0.log",
+        "lstart": "Tue Sep 22 20:37:03 2026",
+        "pid": 18193
+      },
+      "director_a": {
+        "command": "/private/tmp/exomachina-effect-bundle-2/venv/bin/python /private/tmp/exomachina-effect-bundle-2/app/effect/director_server.py --state /private/tmp/exomachina-effect-bundle-supervisor-root-1/director_a --effect http://127.0.0.1:53668 --port 53669",
+        "health": {
+          "engine": "effect",
+          "identity": "d661b167-483f-4c2d-987a-31aea07fb7df",
+          "incarnation": 2,
+          "role": "factory"
+        },
+        "log": "/private/tmp/exomachina-effect-bundle-supervisor-root-1/logs/director_a-0.log",
+        "lstart": "Tue Sep 22 20:37:05 2026",
+        "pid": 18199
+      },
+      "director_b": {
+        "command": "/private/tmp/exomachina-effect-bundle-2/venv/bin/python /private/tmp/exomachina-effect-bundle-2/app/effect/director_server.py --state /private/tmp/exomachina-effect-bundle-supervisor-root-1/director_b --effect http://127.0.0.1:53668 --port 53670",
+        "health": {
+          "engine": "effect",
+          "identity": "19f8646d-7e24-422d-b157-89d938553734",
+          "incarnation": 2,
+          "role": "factory"
+        },
+        "log": "/private/tmp/exomachina-effect-bundle-supervisor-root-1/logs/director_b-0.log",
+        "lstart": "Tue Sep 22 20:37:06 2026",
+        "pid": 18201
+      },
+      "effect": {
+        "command": "/private/tmp/exomachina-effect-bundle-2/bin/node /private/tmp/exomachina-effect-bundle-2/app/effect/helper.mjs",
+        "health": {
+          "pid": 18197,
+          "ready": true
+        },
+        "log": "/private/tmp/exomachina-effect-bundle-supervisor-root-1/logs/effect-0.log",
+        "lstart": "Tue Sep 22 20:37:05 2026",
+        "pid": 18197
+      },
+      "quality": {
+        "command": "/private/tmp/exomachina-effect-bundle-2/venv/bin/python /private/tmp/exomachina-effect-bundle-2/app/common/harness_server.py --state /private/tmp/exomachina-effect-bundle-supervisor-root-1/quality --role quality --port 53667",
+        "health": {
+          "a2a_protocol": "0.3.0",
+          "identity": "c3660b84-989f-4686-b27a-6ec4990556c6",
+          "incarnation": 2,
+          "role": "quality"
+        },
+        "log": "/private/tmp/exomachina-effect-bundle-supervisor-root-1/logs/quality-0.log",
+        "lstart": "Tue Sep 22 20:37:04 2026",
+        "pid": 18195
+      }
+    },
+    "generation": 2,
+    "ports": {
+      "capability": 53666,
+      "director_a": 53669,
+      "director_b": 53670,
+      "effect": 53668,
+      "quality": 53667
+    },
+    "restart_counts": {
+      "capability": 0,
+      "director_a": 0,
+      "director_b": 0,
+      "effect": 0,
+      "quality": 0
+    },
+    "startup_seconds": 4.508,
+    "state_root": "/private/tmp/exomachina-effect-bundle-supervisor-root-1",
+    "supervisor_pid": 18159
+  },
+  "recovered_original_tasks": true,
+  "second_supervisor_exit": 0,
+  "state": "/private/tmp/exomachina-effect-bundle-supervisor-root-1",
+  "task_ids": {
+    "a": "29250e49-7e3e-4f03-9793-eb46ac4f886f",
+    "b": "19736d99-7d12-4bb6-9619-727ca42e3db8"
+  }
+}

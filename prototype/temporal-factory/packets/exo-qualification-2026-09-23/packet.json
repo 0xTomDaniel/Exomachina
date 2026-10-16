@@ -1,0 +1,58 @@
+{
+  "kind": "evidence_packet@1",
+  "packet_id": "exo-qualification-2026-09-23",
+  "title": "Qualification evidence for the Exomachina Temporal factory prototype",
+  "default_question": "What has the prototype proven live versus what remains fixture-only, what are the main remaining gaps, and what should the next priority be?",
+  "items": [
+    {
+      "id": "E1",
+      "source": "prototype/temporal-factory/QUALIFICATION.md#L18-L20",
+      "text": "- **observed-real** means real processes (harness, A2A, runner, Temporal and, where stated, the live broker);\n- **observed-synthetic** means real code against a mock;\n- **unit-tested** means an isolated test."
+    },
+    {
+      "id": "E2",
+      "source": "prototype/temporal-factory/QUALIFICATION.md#L22-L22",
+      "text": "A passing fixture is never counted as live proof."
+    },
+    {
+      "id": "E3",
+      "source": "prototype/temporal-factory/QUALIFICATION.md#L30-L32",
+      "text": "| A: independent delayed A2A agent | **Pass** A-1..A-5, observed-real (fixture Director) | External nodes are now pinned by **identity + url-less Agent Card digest + served contract digest**, not by URL. A static snapshot resolves the URL at call time. The remote Task id is journaled and polled. A lost response is reconciled by an idempotent resend **only** when the pinned contract document declares it; otherwise it is an incident. |\n| B: two instances in one home | **Pass** B-1..B-6, observed-real (fixture Director); **B-6 failed on the unmodified code** | Runner ports belong to the **install home** (`$H/runner-config.json`), not to `instance.json`. Provisioning rejects port collisions. A per-instance process lock is taken before the Director claims an incarnation. |\n| C: broker-backed Director | **Pass** C-1..C-5, **live** `gpt-6-sol` through the signed-in broker, plus synthetic | A text brief on the normal A2A endpoint reaches a Strands Director with **semantic tools only**. Code owns the action ids, principal, Task/run binding and Temporal authority. Inspect/abort now also require the run owner and the original context. |"
+    },
+    {
+      "id": "E4",
+      "source": "prototype/temporal-factory/QUALIFICATION.md#L74-L74",
+      "text": "- The agent is a local fixture process, the Director is a fixture, and the release receiver is still an HTTP fixture."
+    },
+    {
+      "id": "E5",
+      "source": "prototype/temporal-factory/QUALIFICATION.md#L116-L119",
+      "text": "| C-1 brief → authorized start | Pass | Pass | One accepted `start_research`; Task observed `working` → `input-required` at the Director wait after two repairs |\n| C-2 one wait decision on the original Task | Pass | Pass | `inspect_run`, then exactly one accepted `decide_wait(abort, r3, <current sha256>)`; Task `completed`/`aborted`; 0 releases |\n| C-3 invalid inputs rejected by code | Pass | Pass | The live model **did** request `outcome_mode: \"forbidden\"`; `authorize_run_inputs` rejected it. For \"choose graph v99\" and unknown-input briefs, the model folded the request into the question; those runs used the active publication and declared inputs only. Extra fields are rejected structurally, proven **fixture-injected** |\n| C-4 stale/unauthorized rejected | Pass | Pass | Stale r2 digest, the `fixture-observer` principal (tool path and a real A2A bearer) and an unbound Task were all rejected. These probes are **fixture-injected**, not spontaneous model behaviour |"
+    },
+    {
+      "id": "E6",
+      "source": "prototype/temporal-factory/QUALIFICATION.md#L135-L140",
+      "text": "- One account, one model, one decision type (abort).\n- The C-1 brief wrote `outcome_mode: never` literally instead of in prose.\n- The abort was directed by the caller's follow-up, not decided autonomously.\n- Quality, capabilities and release remain fixtures.\n- `message/send` blocks for the whole Director turn.\n- Model reliability across broader briefs is unmeasured."
+    },
+    {
+      "id": "E7",
+      "source": "prototype/temporal-factory/QUALIFICATION.md#L172-L176",
+      "text": "- External agents: no signed or attested cards, no remote authentication, no general directory. Workflow-level polling for long remote Tasks is not built.\n- The Director: live proof covers one account, one model and abort only. The Director token in history is unchanged.\n- Topology: two instances only; embedded `create_app()` has no instance lock; no stress testing.\n- Still fixtures: Quality, capability content and the HTTP release receiver.\n- Carried from the README: old-build retirement, contract attestation, operational hardening, and the memory ceiling are out of scope and unbuilt."
+    },
+    {
+      "id": "E8",
+      "source": "prototype/temporal-factory/QUALIFICATION.md#L150-L152",
+      "text": "| Spike B scenario, `/tmp/exo-qual-b-combined-1` | B-1..B-6 pass | observed-real, fixture Director | `evidence/spike-b/final-combined.json` |\n| Spike C synthetic, `/tmp/exo-qual-c-combined-syn-1` | C-1..C-5 pass | observed-synthetic | `evidence/spike-c/final-combined-synthetic.json` |\n| Spike C **live**, `/tmp/exo-qual-c-combined-live-1` | C-1..C-5 pass | observed-real, **live** `gpt-6-sol`, account `sha256:188b022d6e97` | `evidence/spike-c/final-combined-live.json` |"
+    },
+    {
+      "id": "E9",
+      "source": "prototype/temporal-factory/QUALIFICATION.md#L154-L156",
+      "text": "The combined live run in detail:\n- 5 text turns, **11 model calls and 6 tool calls** in total. The heaviest turn used 3 model calls and 2 tool calls, against a limit of 4/4/90 s.\n- The Task was observed `working` → `input-required`, followed by exactly one accepted abort and 0 releases."
+    },
+    {
+      "id": "E10",
+      "source": "prototype/temporal-factory/QUALIFICATION.md#L26-L26",
+      "text": "**All three spikes pass their pre-registered checks, on each spike branch and again on the merged tree** (final combined run below). Each spike also exposed one real defect that the checks or the review caught before integration:"
+    }
+  ]
+}

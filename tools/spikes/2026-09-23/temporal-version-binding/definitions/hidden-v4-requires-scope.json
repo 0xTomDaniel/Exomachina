@@ -1,0 +1,116 @@
+{
+  "child": {
+    "name": "verified_research",
+    "nodes": {
+      "abort": {
+        "type": "abort"
+      },
+      "director": {
+        "next": "abort",
+        "reason": "repair_exhausted",
+        "type": "director_wait"
+      },
+      "done": {
+        "type": "complete"
+      },
+      "draft_clear": {
+        "next": "independent_quality",
+        "resolved": true,
+        "type": "synthesize"
+      },
+      "draft_repair": {
+        "next": "independent_quality",
+        "resolved": "from_run",
+        "type": "synthesize"
+      },
+      "draft_unresolved": {
+        "next": "independent_quality",
+        "resolved": false,
+        "type": "synthesize"
+      },
+      "gather": {
+        "branches": {
+          "counter_scope": {
+            "capability": "counter_evidence@1",
+            "result_type": "counter_evidence",
+            "scope_status": "requires_scope",
+            "service": "counter"
+          },
+          "source_crosscheck": {
+            "capability": "source_evidence@1",
+            "result_type": "source_evidence",
+            "scope_status": null,
+            "service": "source"
+          },
+          "source_primary": {
+            "capability": "source_evidence@1",
+            "result_type": "source_evidence",
+            "scope_status": null,
+            "service": "source"
+          }
+        },
+        "next": "join_evidence",
+        "type": "parallel"
+      },
+      "independent_quality": {
+        "next": "route_verdict",
+        "type": "quality"
+      },
+      "join_evidence": {
+        "branches": [
+          "source_primary",
+          "source_crosscheck",
+          "counter_scope"
+        ],
+        "next": "route_scope",
+        "type": "join"
+      },
+      "publish": {
+        "next": "done",
+        "service": "release",
+        "type": "release"
+      },
+      "repair": {
+        "exhausted": "director",
+        "max_repairs": 2,
+        "next": "draft_repair",
+        "type": "repair"
+      },
+      "route_scope": {
+        "cases": {
+          "clear": "draft_clear",
+          "requires_scope": "draft_unresolved"
+        },
+        "field": "join.route_status",
+        "type": "route"
+      },
+      "route_verdict": {
+        "cases": {
+          "false": "repair",
+          "true": "publish"
+        },
+        "field": "verdict.accepted",
+        "type": "route"
+      }
+    },
+    "revision": "v4-requires-scope",
+    "start": "gather"
+  },
+  "root": {
+    "name": "parent_verified_research",
+    "nodes": {
+      "done": {
+        "type": "complete"
+      },
+      "invoke_child": {
+        "child": "verified_research",
+        "child_digest": "@child",
+        "next": "done",
+        "type": "nested_factory"
+      }
+    },
+    "revision": "v4-requires-scope",
+    "start": "invoke_child"
+  },
+  "schema": 1
+}

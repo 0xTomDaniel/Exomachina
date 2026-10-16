@@ -1,0 +1,104 @@
+id: parity_child
+namespace: exomachina.kestra_parity
+description: Fresh A2B native graph-shape trial. Return tasks are deterministic placeholders, not A2A assignments or digest verification.
+inputs:
+  - id: outcome
+    type: STRING
+    defaults: repair_success
+tasks:
+  - id: evidence_parallel
+    type: io.kestra.plugin.core.flow.Parallel
+    concurrent: 4
+    tasks:
+      - id: source_alpha
+        type: io.kestra.plugin.core.debug.Return
+        format: source_evidence@1|alpha|receipt-source-alpha|a41530e85b8d8fc4421d3d40d6bc6a23d7d52d2f657a0ab4f79fbd4b0b1cc55e
+      - id: source_beta
+        type: io.kestra.plugin.core.debug.Return
+        format: source_evidence@1|beta|receipt-source-beta|26ab1ce1a9b055af077648376fbdebe0df83951b94f6fecbde863c4acd1a2ee6
+      - id: counter_primary_branch
+        type: io.kestra.plugin.core.flow.Sequential
+        tasks:
+          - id: counter_primary_delay
+            type: io.kestra.plugin.core.flow.Sleep
+            duration: PT2S
+          - id: counter_primary
+            type: io.kestra.plugin.core.debug.Return
+            format: counter_evidence@1|primary|clear|receipt-counter-primary|aad6226e6c82e17cad7ed5d17e4414b43a108318236d42d593bc381e1f90bf2e
+      - id: counter_crosscheck
+        type: io.kestra.plugin.core.debug.Return
+        format: counter_evidence@1|crosscheck|requires_scope|receipt-counter-crosscheck|0538fd9cc9febe24c6fa0d2157a87b9c1099e2b87a82d639d71eb42926996c1b
+  - id: join_four
+    type: io.kestra.plugin.core.debug.Return
+    description: Retains all named branch values; static placeholder hashes are not recomputed or type checked.
+    format: "{{ outputs.source_alpha.value }} :: {{ outputs.source_beta.value }} :: {{ outputs.counter_primary.value }} :: {{ outputs.counter_crosscheck.value }}"
+  - id: route_before_synthesis
+    type: io.kestra.plugin.core.flow.If
+    condition: "{{ outputs.counter_primary.value contains 'requires_scope' or outputs.counter_crosscheck.value contains 'requires_scope' }}"
+    then:
+      - id: synthesize_unresolved_r1
+        type: io.kestra.plugin.core.debug.Return
+        format: "candidate-r1-unresolved:{{ outputs.join_four.value }}"
+      - id: quality_r1_negative
+        type: io.kestra.plugin.core.debug.Return
+        description: Placeholder for independent Quality verdict.
+        format: REJECT
+      - id: run_outcome
+        type: io.kestra.plugin.core.flow.Switch
+        value: "{{ inputs.outcome }}"
+        cases:
+          repair_success:
+            - id: repair_r2
+              type: io.kestra.plugin.core.debug.Return
+              format: candidate-r2-addressed
+            - id: quality_r2_positive
+              type: io.kestra.plugin.core.debug.Return
+              format: ACCEPT
+            - id: acceptance_r2
+              type: io.kestra.plugin.core.debug.Return
+              format: accepted-r2-placeholder
+            - id: release_r2
+              type: io.kestra.plugin.core.debug.Return
+              format: receipt-r2-placeholder
+          exhausted:
+            - id: repair_r2_unresolved
+              type: io.kestra.plugin.core.debug.Return
+              format: candidate-r2-unresolved
+            - id: quality_r2_negative
+              type: io.kestra.plugin.core.debug.Return
+              format: REJECT
+            - id: repair_r3_unresolved
+              type: io.kestra.plugin.core.debug.Return
+              format: candidate-r3-unresolved
+            - id: quality_r3_negative
+              type: io.kestra.plugin.core.debug.Return
+              format: REJECT
+            - id: child_director_wait
+              type: io.kestra.plugin.core.flow.Pause
+              onResume:
+                - id: abort
+                  type: BOOL
+                  defaults: false
+            - id: abort_result
+              type: io.kestra.plugin.core.debug.Return
+              format: aborted-placeholder
+        defaults:
+          - id: invalid_outcome
+            type: io.kestra.plugin.core.execution.Fail
+    else:
+      - id: synthesize_resolved_r1
+        type: io.kestra.plugin.core.debug.Return
+        format: "candidate-r1-resolved:{{ outputs.join_four.value }}"
+      - id: quality_r1_positive
+        type: io.kestra.plugin.core.debug.Return
+        format: ACCEPT
+      - id: acceptance_r1
+        type: io.kestra.plugin.core.debug.Return
+        format: accepted-r1-placeholder
+      - id: release_r1
+        type: io.kestra.plugin.core.debug.Return
+        format: receipt-r1-placeholder
+outputs:
+  - id: public_result
+    type: STRING
+    value: "{{ inputs.outcome }}"

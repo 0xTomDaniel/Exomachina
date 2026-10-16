@@ -1,0 +1,197 @@
+{
+  "baseline_source_audit": {
+    "assignment_attempt_binding": "absent",
+    "director_token_excluded_from_history": "absent",
+    "exact_artifact_revision_digest": "present",
+    "independent_author_quality": "partial",
+    "opaque_no_blind_resubmit": "partial",
+    "participating_ambiguous_bounded_reconciliation": "partial",
+    "pinned_quality_agent_card_key": "absent",
+    "pinned_quality_endpoint_identity": "partial",
+    "run_action_binding": "partial",
+    "task_payload_lookup_verdict_agreement": "absent",
+    "trial_fault_profile_excluded_from_start": "absent",
+    "typed_quality_incident": "absent"
+  },
+  "date": "2026-09-23",
+  "development_iteration": {
+    "final_ordinary_attempt": "passed",
+    "first_ordinary_attempt": "failed at Director terminal Task lookup with provisional phase/result mismatch; all processes stopped and state removed",
+    "fix": "public_task_state permits provisional terminal phase before the Workflow result is fetched"
+  },
+  "evidence_scope": [
+    "observed",
+    "source_inference",
+    "unit_level"
+  ],
+  "lane": "tw_quality",
+  "lane_source_changes": {
+    "a2a_outcome": "bounded_pure_transitions_and_sqlite_full_sync_journal",
+    "activity_call_site": "adapter_review_fetches_task_and_action_lookup_then_decides",
+    "incident_projection": "terminal_incident_result_and_failed_original_task_source_path",
+    "port_ranges": {
+      "frontend_http_services": "44000-44999",
+      "postgres_and_membership": "31400-31499"
+    },
+    "quality_authority": "pure_positive_negative_inconsistent_decision",
+    "rejected_fault_profiles_removed_from_lane_director": true,
+    "state_prefix": "/tmp/exo-tq-quality-*"
+  },
+  "live_ambiguous_outcome": "unproved",
+  "live_director_run": {
+    "acceptance": {
+      "attempt": 2,
+      "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+      "quality_task_id": "3eac98f4-7ab2-4d03-ae58-bef2c70c550b",
+      "reviewer": "edfd509c-29eb-4773-a60f-82c32296904d",
+      "revision": "r2",
+      "run": "exo-tq-quality-visible-v3-u6d5s765:child:755d525ac2ef",
+      "sha256": "d861d9cf44d0c244ab1d34e65da4534f6cc16096988c14d53cb0c5006e9d3901"
+    },
+    "authoritative_acceptance_record_count": 1,
+    "child_definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+    "child_id": "exo-tq-quality-visible-v3-u6d5s765:child:755d525ac2ef",
+    "cleanup_evidence_file": "cleanup_check.json",
+    "command": "tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python -B tools/spikes/2026-09-23/temporal-quality-reconciliation/happy_path_probe.py",
+    "evidence_file": "live_observed.json",
+    "history_event_counts": {
+      "child": 50,
+      "parent": 14
+    },
+    "journal_phases": [
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed"
+    ],
+    "journal_row_count": 5,
+    "offline_replay": {
+      "child": "pass",
+      "parent": "pass"
+    },
+    "original_task_id": "12e5df94-e2f3-4559-b582-fda9461e393c",
+    "owned_processes_stopped": 7,
+    "package_digest": "367ca52d66dd0433a474f458729956be1b64d8907fa18ca9679c9c83c9d8929b",
+    "participating_release_rows": [
+      {
+        "accepted_effect_count": 1,
+        "attempts": 1,
+        "release_id": "exo-tq-quality-visible-v3-u6d5s765:child:755d525ac2ef:release:r2",
+        "revision": "r2",
+        "run_id": "exo-tq-quality-visible-v3-u6d5s765:child:755d525ac2ef",
+        "sha256": "d861d9cf44d0c244ab1d34e65da4534f6cc16096988c14d53cb0c5006e9d3901"
+      }
+    ],
+    "ports_closed_after_run": true,
+    "positive_quality_count": 1,
+    "postgres_stopped": true,
+    "release_effect_count": 1,
+    "release_journal_rows": [
+      {
+        "action_id": "exo-tq-quality-visible-v3-u6d5s765:child:755d525ac2ef:release:r2",
+        "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+        "effect_kind": "release",
+        "lookup_count": 0,
+        "lookup_limit": 3,
+        "phase": "confirmed",
+        "reason": null,
+        "receipt": {
+          "accepted_effect_count": 1,
+          "attempts": 1,
+          "definition_digest": "755d525ac2efc435d96c0c8c8385c5689f8d49098eb998d7215a8a91d032957b",
+          "release_id": "exo-tq-quality-visible-v3-u6d5s765:child:755d525ac2ef:release:r2",
+          "revision": "r2",
+          "run_id": "exo-tq-quality-visible-v3-u6d5s765:child:755d525ac2ef",
+          "sha256": "d861d9cf44d0c244ab1d34e65da4534f6cc16096988c14d53cb0c5006e9d3901"
+        },
+        "receiver": "participating",
+        "revision": "r2",
+        "run_id": "exo-tq-quality-visible-v3-u6d5s765:child:755d525ac2ef",
+        "sha256": "d861d9cf44d0c244ab1d34e65da4534f6cc16096988c14d53cb0c5006e9d3901"
+      }
+    ],
+    "run_id": "exo-tq-quality-visible-v3-u6d5s765",
+    "state_removed": true,
+    "status": "passed",
+    "terminal_task_id": "12e5df94-e2f3-4559-b582-fda9461e393c",
+    "terminal_task_state": "completed",
+    "typed_quality_decisions": [
+      {
+        "accepted": false,
+        "decision_kind": "negative",
+        "revision": "r1",
+        "task_id": "0457fead-ad46-4257-b82b-c247672fe95e"
+      },
+      {
+        "accepted": true,
+        "decision_kind": "positive",
+        "revision": "r2",
+        "task_id": "3eac98f4-7ab2-4d03-ae58-bef2c70c550b"
+      }
+    ]
+  },
+  "live_inconsistent_verdict": "unproved",
+  "processes_started": 7,
+  "remaining_gaps": [
+    "No live inconsistent-verdict or ambiguous-outcome proof",
+    "Agent Card digest and service key are absent from the baseline closure",
+    "Opaque lookup capability is not declared in the approved binding schema",
+    "Outcome SQLite journal is a second durable store without integrated backup/restore or multi-owner fencing",
+    "Director credential remains in Temporal Workflow input/history",
+    "Original baseline still admits caller-supplied trial_fault_profile"
+  ],
+  "source_imports": {
+    "command": "cd tools/spikes/2026-09-23/temporal-quality-reconciliation && ../../2026-09-22/arbitration/temporal/.venv/bin/python -B -c 'import adapter, factory, director_server; print(\"adapter/factory/Director imports passed\")'",
+    "exit_code": 0,
+    "result": "adapter/factory/Director imports passed"
+  },
+  "tmp_state_remaining": [],
+  "unit_tests": {
+    "a2a_cases": [
+      "completed_reply",
+      "ambiguous_participating_then_lookup_confirmed",
+      "bounded_lookup_missing_incident",
+      "lookup_unavailable",
+      "lookup_binding_inconsistent",
+      "opaque_unknown_incident",
+      "opaque_completed_reply",
+      "wrong_reply",
+      "illegal_transition",
+      "journal_reopen",
+      "conflicting_action_binding"
+    ],
+    "command": "tools/spikes/2026-09-22/arbitration/temporal/.venv/bin/python -B -m unittest discover -s tools/spikes/2026-09-23/temporal-quality-reconciliation -p 'test_*.py' -v",
+    "errors": 0,
+    "exit_code": 0,
+    "failures": 0,
+    "output": "unit-test-output.txt",
+    "quality_mismatch_cases": [
+      "identity",
+      "endpoint",
+      "task_identity",
+      "author_self_review",
+      "artifact_digest",
+      "attempt",
+      "assignment",
+      "run",
+      "task_id",
+      "task_state",
+      "missing_task_status",
+      "task_lookup_disagreement",
+      "send_task_disagreement",
+      "missing_verdict",
+      "invalid_boolean"
+    ],
+    "release_cases": [
+      "exact_reply_confirmed",
+      "uncertain_participating_lookup_confirmed",
+      "bounded_lookup_exhausted_incident",
+      "opaque_unknown_incident_no_resubmit",
+      "receipt_binding_mismatch",
+      "journal_reopen_exact_binding"
+    ],
+    "test_methods": 16
+  },
+  "verdict": "partial"
+}

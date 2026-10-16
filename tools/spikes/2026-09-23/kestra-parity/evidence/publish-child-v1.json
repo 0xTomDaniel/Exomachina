@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "body": {
+    "id": "parity_child",
+    "namespace": "exomachina.kestra_parity",
+    "revision": 1,
+    "description": "Old pinned child remains at a native Director pause during publication.",
+    "outputs": [
+      {
+        "id": "public_result",
+        "value": "{{ outputs.old_result.value }}",
+        "type": "STRING"
+      }
+    ],
+    "disabled": false,
+    "deleted": false,
+    "draft": false,
+    "tasks": [
+      {
+        "id": "director_wait",
+        "type": "io.kestra.plugin.core.flow.Pause",
+        "onResume": [
+          {
+            "id": "approved",
+            "type": "BOOL",
+            "required": true,
+            "defaults": "false"
+          }
+        ]
+      },
+      {
+        "id": "old_result",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "format": "child-v1"
+      }
+    ],
+    "source": "id: parity_child\nnamespace: exomachina.kestra_parity\ndescription: Old pinned child remains at a native Director pause during publication.\ntasks:\n  - id: director_wait\n    type: io.kestra.plugin.core.flow.Pause\n    onResume:\n      - id: approved\n        type: BOOL\n        defaults: false\n  - id: old_result\n    type: io.kestra.plugin.core.debug.Return\n    format: child-v1\noutputs:\n  - id: public_result\n    type: STRING\n    value: \"{{ outputs.old_result.value }}\"\n"
+  }
+}

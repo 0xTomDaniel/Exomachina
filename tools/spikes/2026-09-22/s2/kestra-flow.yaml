@@ -1,0 +1,20 @@
+id: __FLOW_ID__
+namespace: exomachina.spikes
+description: S2 Strands factory integration, native candidate output and one Director Pause.
+inputs:
+  - id: assignment_id
+    type: STRING
+  - id: brief
+    type: STRING
+tasks:
+  - id: candidate
+    type: io.kestra.plugin.core.debug.Return
+    format: "candidate:{{ inputs.brief }}"
+  - id: director_gate
+    type: io.kestra.plugin.core.flow.Pause
+    onResume:
+      - id: acceptance_sha256
+        type: STRING
+  - id: after
+    type: io.kestra.plugin.core.debug.Return
+    format: "{{ outputs.director_gate.onResume.acceptance_sha256 }}"

@@ -1,0 +1,34 @@
+{
+  "status": 200,
+  "body": {
+    "id": "parity_parent",
+    "namespace": "exomachina.kestra_parity",
+    "revision": 1,
+    "updated": "2026-09-23T13:27:18.442855Z",
+    "outputs": [
+      {
+        "id": "public_result",
+        "value": "{{ outputs.observed.value }}",
+        "type": "STRING"
+      }
+    ],
+    "disabled": false,
+    "deleted": false,
+    "draft": false,
+    "tasks": [
+      {
+        "id": "child",
+        "type": "io.kestra.plugin.core.flow.Subflow",
+        "namespace": "exomachina.kestra_parity",
+        "flowId": "parity_child",
+        "revision": 1
+      },
+      {
+        "id": "observed",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "format": "{{ outputs.child.outputs.public_result }}"
+      }
+    ],
+    "triggers": []
+  }
+}

@@ -1,0 +1,600 @@
+{
+  "after_restart": {
+    "child": {
+      "id": "exo-arb-child-6076b3bacdbc8e5defe3",
+      "nodes": {
+        "abort_after_wait": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "accept_r1": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "accept_r2": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "accept_r3": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "counter": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "director_wait": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "join_evidence": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "quality_r1": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "quality_r2": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "quality_r3": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "release_r1": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "release_r2": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "release_r3": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "repair_r2": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "repair_r3": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "route_r1": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "route_r2": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "route_r3": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "source": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "synthesize_r1": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        }
+      },
+      "status": "succeeded"
+    },
+    "child_row": {
+      "acceptance_count": 1,
+      "accepted_reviewer": "3c9d280f-76aa-4faf-a947-96e68879b13a",
+      "accepted_revision": "r2",
+      "accepted_sha256": "1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f",
+      "bridge_state": "waiting",
+      "current_artifact_json": "{\"author\":\"exo-factory-synthesis\",\"content\":\"{\\\"assessment\\\":\\\"documented limits addressed\\\",\\\"join\\\":{\\\"branch_artifact_sha256\\\":{\\\"counter_evidence\\\":\\\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\\\",\\\"source_evidence\\\":\\\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\\\"},\\\"claims\\\":[{\\\"branch_instance\\\":\\\"source_evidence\\\",\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"branch_instance\\\":\\\"source_evidence\\\",\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"definition_digest\\\":\\\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\\\",\\\"kind\\\":\\\"evidence_join@1\\\",\\\"objections\\\":[{\\\"branch_instance\\\":\\\"counter_evidence\\\",\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"branch_instance\\\":\\\"counter_evidence\\\",\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"requires_scope\\\":true,\\\"route_status\\\":\\\"requires_scope\\\",\\\"run_id\\\":\\\"exo-arb-child-6076b3bacdbc8e5defe3\\\"},\\\"kind\\\":\\\"verified_research_candidate@1\\\",\\\"objections_resolved\\\":true,\\\"revision\\\":\\\"r2\\\"}\",\"revision\":\"r2\",\"sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\"}",
+      "current_revision": "r2",
+      "current_sha256": "1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f",
+      "dag_name": "exo_arb_research_v7",
+      "definition_digest": "c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21",
+      "failure_json": null,
+      "join_json": "{\"branch_artifact_sha256\":{\"counter_evidence\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\",\"source_evidence\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"},\"claims\":[{\"branch_instance\":\"source_evidence\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_evidence\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_evidence\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_evidence\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\"}",
+      "owner_epoch": 1,
+      "parent_id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y",
+      "public_result_json": null,
+      "receipt_json": "{\"accepted_effect_count\":1,\"attempts\":1,\"definition_digest\":\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\",\"release_id\":\"exo-arb-child-6076b3bacdbc8e5defe3:release\",\"revision\":\"r2\",\"run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\",\"sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\"}",
+      "release_count": 1,
+      "release_mode": "participating",
+      "repair_count": 1,
+      "resolve_input": 1,
+      "root_name": "exo_arb_parent_v7",
+      "run_id": "exo-arb-child-6076b3bacdbc8e5defe3",
+      "state": "released"
+    },
+    "events": [
+      {
+        "error": "<HTTPError 503: 'Service Unavailable'>",
+        "kind": "scan_error"
+      },
+      {
+        "child_id": "exo-arb-child-6076b3bacdbc8e5defe3",
+        "kind": "parent_resume_posted",
+        "parent_id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y"
+      },
+      {
+        "child_id": "exo-arb-child-6076b3bacdbc8e5defe3",
+        "failed_step": null,
+        "kind": "bridge_completed",
+        "parent_id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y"
+      }
+    ],
+    "parent": {
+      "id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y",
+      "nodes": {
+        "child_gate": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "public_result": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "start_child": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        }
+      },
+      "status": "succeeded"
+    },
+    "parent_row": {
+      "acceptance_count": 0,
+      "accepted_reviewer": null,
+      "accepted_revision": null,
+      "accepted_sha256": null,
+      "bridge_state": "completed",
+      "current_artifact_json": null,
+      "current_revision": null,
+      "current_sha256": null,
+      "dag_name": "exo_arb_parent_v7",
+      "definition_digest": "c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21",
+      "failure_json": null,
+      "join_json": null,
+      "owner_epoch": 1,
+      "parent_id": null,
+      "public_result_json": "{\"accepted_revision\":\"r2\",\"accepted_sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\",\"artifact\":{\"author\":\"exo-factory-synthesis\",\"content\":\"{\\\"assessment\\\":\\\"documented limits addressed\\\",\\\"join\\\":{\\\"branch_artifact_sha256\\\":{\\\"counter_evidence\\\":\\\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\\\",\\\"source_evidence\\\":\\\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\\\"},\\\"claims\\\":[{\\\"branch_instance\\\":\\\"source_evidence\\\",\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"branch_instance\\\":\\\"source_evidence\\\",\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"definition_digest\\\":\\\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\\\",\\\"kind\\\":\\\"evidence_join@1\\\",\\\"objections\\\":[{\\\"branch_instance\\\":\\\"counter_evidence\\\",\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"branch_instance\\\":\\\"counter_evidence\\\",\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"requires_scope\\\":true,\\\"route_status\\\":\\\"requires_scope\\\",\\\"run_id\\\":\\\"exo-arb-child-6076b3bacdbc8e5defe3\\\"},\\\"kind\\\":\\\"verified_research_candidate@1\\\",\\\"objections_resolved\\\":true,\\\"revision\\\":\\\"r2\\\"}\",\"revision\":\"r2\",\"sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\"},\"child_run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\",\"receipt\":{\"accepted_effect_count\":1,\"attempts\":1,\"definition_digest\":\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\",\"release_id\":\"exo-arb-child-6076b3bacdbc8e5defe3:release\",\"revision\":\"r2\",\"run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\",\"sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\"},\"state\":\"released\"}",
+      "receipt_json": null,
+      "release_count": 0,
+      "release_mode": "participating",
+      "repair_count": 0,
+      "resolve_input": 1,
+      "root_name": "exo_arb_parent_v7",
+      "run_id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y",
+      "state": "released"
+    },
+    "task": {
+      "artifacts": [
+        {
+          "artifactId": "ae886a123478f9e097cfb3d82abd364747802fbede2e6cafee01a9fbd660512f",
+          "parts": [
+            {
+              "data": {
+                "accepted_revision": "r2",
+                "accepted_sha256": "1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f",
+                "artifact": {
+                  "author": "exo-factory-synthesis",
+                  "content": "{\"assessment\":\"documented limits addressed\",\"join\":{\"branch_artifact_sha256\":{\"counter_evidence\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\",\"source_evidence\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"},\"claims\":[{\"branch_instance\":\"source_evidence\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_evidence\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_evidence\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_evidence\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\"},\"kind\":\"verified_research_candidate@1\",\"objections_resolved\":true,\"revision\":\"r2\"}",
+                  "revision": "r2",
+                  "sha256": "1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f"
+                },
+                "child_run_id": "exo-arb-child-6076b3bacdbc8e5defe3",
+                "receipt": {
+                  "accepted_effect_count": 1,
+                  "attempts": 1,
+                  "definition_digest": "c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21",
+                  "release_id": "exo-arb-child-6076b3bacdbc8e5defe3:release",
+                  "revision": "r2",
+                  "run_id": "exo-arb-child-6076b3bacdbc8e5defe3",
+                  "sha256": "1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f"
+                },
+                "state": "released"
+              },
+              "kind": "data"
+            }
+          ]
+        }
+      ],
+      "contextId": "4e405e08-5a47-4542-9ee7-287b06145794",
+      "id": "3449137a-9fc5-41c0-8398-791cc2d1a110",
+      "kind": "task",
+      "metadata": {
+        "child": {
+          "engine_status": "succeeded",
+          "run_id": "exo-arb-child-6076b3bacdbc8e5defe3",
+          "state": "released"
+        },
+        "definition_digest": "c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21",
+        "director_identity": "8c42236d-bec3-4450-9624-1dab6ab5b423",
+        "director_incarnation": 2,
+        "engine": "dagu",
+        "run_id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y"
+      },
+      "status": {
+        "state": "completed"
+      }
+    }
+  },
+  "bridge_events": [
+    {
+      "error": "<HTTPError 503: 'Service Unavailable'>",
+      "kind": "scan_error"
+    },
+    {
+      "child_id": "exo-arb-child-6076b3bacdbc8e5defe3",
+      "kind": "parent_resume_posted",
+      "parent_id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y"
+    },
+    {
+      "child_id": "exo-arb-child-6076b3bacdbc8e5defe3",
+      "failed_step": null,
+      "kind": "bridge_completed",
+      "parent_id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y"
+    }
+  ],
+  "frozen_hashes_after": {
+    "tools/spikes/2026-09-22/arbitration/dagu/director_client.py": {
+      "actual": "88cc2da79a7efafa5d02909fa95ff94d4018d43c7e7438c49541185e9ee111fa",
+      "expected": "88cc2da79a7efafa5d02909fa95ff94d4018d43c7e7438c49541185e9ee111fa"
+    },
+    "tools/spikes/2026-09-22/arbitration/dagu/director_server.py": {
+      "actual": "ceea827b36f5380ae41c4f8a2be9d63e8dbeb678d72d15afd4fc6fc4f52870fd",
+      "expected": "ceea827b36f5380ae41c4f8a2be9d63e8dbeb678d72d15afd4fc6fc4f52870fd"
+    },
+    "tools/spikes/2026-09-22/arbitration/dagu/ops.py": {
+      "actual": "45e6c8578d337fe7c6ed4c5b0f92c5f39446761ce6daa7e26e9fbe366e5edcf0",
+      "expected": "45e6c8578d337fe7c6ed4c5b0f92c5f39446761ce6daa7e26e9fbe366e5edcf0"
+    },
+    "tools/spikes/2026-09-22/arbitration/dagu/publisher.py": {
+      "actual": "fecf2954d523cd18f2d02977a0e76e5d8a579df996dcea23cc180ce07fa1f8f0",
+      "expected": "fecf2954d523cd18f2d02977a0e76e5d8a579df996dcea23cc180ce07fa1f8f0"
+    },
+    "tools/spikes/2026-09-22/arbitration/dagu/reconciler.py": {
+      "actual": "ccfcb465a7dbc2e34bf5984d1bea284d31f9d12e6b15c35cfb13fd79b2de3278",
+      "expected": "ccfcb465a7dbc2e34bf5984d1bea284d31f9d12e6b15c35cfb13fd79b2de3278"
+    },
+    "tools/spikes/2026-09-22/arbitration/dagu/supervisor.py": {
+      "actual": "360482f4c7180348080baa0ac358c9bde2d612cb5722421777f6260bdec19c28",
+      "expected": "360482f4c7180348080baa0ac358c9bde2d612cb5722421777f6260bdec19c28"
+    }
+  },
+  "frozen_hashes_before": {
+    "tools/spikes/2026-09-22/arbitration/dagu/director_client.py": {
+      "actual": "88cc2da79a7efafa5d02909fa95ff94d4018d43c7e7438c49541185e9ee111fa",
+      "expected": "88cc2da79a7efafa5d02909fa95ff94d4018d43c7e7438c49541185e9ee111fa"
+    },
+    "tools/spikes/2026-09-22/arbitration/dagu/director_server.py": {
+      "actual": "ceea827b36f5380ae41c4f8a2be9d63e8dbeb678d72d15afd4fc6fc4f52870fd",
+      "expected": "ceea827b36f5380ae41c4f8a2be9d63e8dbeb678d72d15afd4fc6fc4f52870fd"
+    },
+    "tools/spikes/2026-09-22/arbitration/dagu/ops.py": {
+      "actual": "45e6c8578d337fe7c6ed4c5b0f92c5f39446761ce6daa7e26e9fbe366e5edcf0",
+      "expected": "45e6c8578d337fe7c6ed4c5b0f92c5f39446761ce6daa7e26e9fbe366e5edcf0"
+    },
+    "tools/spikes/2026-09-22/arbitration/dagu/publisher.py": {
+      "actual": "fecf2954d523cd18f2d02977a0e76e5d8a579df996dcea23cc180ce07fa1f8f0",
+      "expected": "fecf2954d523cd18f2d02977a0e76e5d8a579df996dcea23cc180ce07fa1f8f0"
+    },
+    "tools/spikes/2026-09-22/arbitration/dagu/reconciler.py": {
+      "actual": "ccfcb465a7dbc2e34bf5984d1bea284d31f9d12e6b15c35cfb13fd79b2de3278",
+      "expected": "ccfcb465a7dbc2e34bf5984d1bea284d31f9d12e6b15c35cfb13fd79b2de3278"
+    },
+    "tools/spikes/2026-09-22/arbitration/dagu/supervisor.py": {
+      "actual": "360482f4c7180348080baa0ac358c9bde2d612cb5722421777f6260bdec19c28",
+      "expected": "360482f4c7180348080baa0ac358c9bde2d612cb5722421777f6260bdec19c28"
+    }
+  },
+  "gap_before_crash": {
+    "child": {
+      "id": "exo-arb-child-6076b3bacdbc8e5defe3",
+      "nodes": {
+        "abort_after_wait": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "accept_r1": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "accept_r2": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "accept_r3": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "counter": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "director_wait": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "join_evidence": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "quality_r1": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "quality_r2": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "quality_r3": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "release_r1": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "release_r2": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "release_r3": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "repair_r2": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "repair_r3": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "route_r1": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "route_r2": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "route_r3": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "skipped"
+        },
+        "source": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "synthesize_r1": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        }
+      },
+      "status": "succeeded"
+    },
+    "events": [
+      {
+        "error": "<HTTPError 503: 'Service Unavailable'>",
+        "kind": "scan_error"
+      }
+    ],
+    "parent": {
+      "id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y",
+      "nodes": {
+        "child_gate": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        },
+        "public_result": {
+          "done_count": 0,
+          "retry_count": 0,
+          "status": "not_started"
+        },
+        "start_child": {
+          "done_count": 1,
+          "retry_count": 0,
+          "status": "succeeded"
+        }
+      },
+      "status": "waiting"
+    },
+    "parent_row": {
+      "acceptance_count": 0,
+      "accepted_reviewer": null,
+      "accepted_revision": null,
+      "accepted_sha256": null,
+      "bridge_state": "waiting",
+      "current_artifact_json": null,
+      "current_revision": null,
+      "current_sha256": null,
+      "dag_name": "exo_arb_parent_v7",
+      "definition_digest": "c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21",
+      "failure_json": null,
+      "join_json": null,
+      "owner_epoch": 1,
+      "parent_id": null,
+      "public_result_json": "{\"accepted_revision\":\"r2\",\"accepted_sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\",\"child_run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\",\"receipt\":{\"accepted_effect_count\":1,\"attempts\":1,\"definition_digest\":\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\",\"release_id\":\"exo-arb-child-6076b3bacdbc8e5defe3:release\",\"revision\":\"r2\",\"run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\",\"sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\"},\"state\":\"released\"}",
+      "receipt_json": null,
+      "release_count": 0,
+      "release_mode": "participating",
+      "repair_count": 0,
+      "resolve_input": 1,
+      "root_name": "exo_arb_parent_v7",
+      "run_id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y",
+      "state": "child_finished"
+    },
+    "task": {
+      "contextId": "4e405e08-5a47-4542-9ee7-287b06145794",
+      "id": "3449137a-9fc5-41c0-8398-791cc2d1a110",
+      "kind": "task",
+      "metadata": {
+        "child": {
+          "engine_status": "succeeded",
+          "run_id": "exo-arb-child-6076b3bacdbc8e5defe3",
+          "state": "released"
+        },
+        "definition_digest": "c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21",
+        "director_identity": "8c42236d-bec3-4450-9624-1dab6ab5b423",
+        "director_incarnation": 1,
+        "engine": "dagu",
+        "run_id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y"
+      },
+      "status": {
+        "state": "input-required"
+      }
+    }
+  },
+  "killed_service_pids": {
+    "counter_evidence": 73424,
+    "dagu": 73428,
+    "director": 73437,
+    "opaque": 73427,
+    "quality": 73425,
+    "reconciler": 73438,
+    "release": 73426,
+    "source_evidence": 73454
+  },
+  "manifest": {
+    "closure_sha256": "c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21",
+    "files": {
+      "exo_arb_parent_v7.yaml": "a5d1a6e93098367f5785f94ebebfc15aff2f6dfc355e2b385aa54a4030db26c3",
+      "exo_arb_research_v7.yaml": "b2682b66dd1bb12457b664e67ffd699ffb0727dacc815e33eb262fed773c014b"
+    },
+    "root": "exo_arb_parent_v7",
+    "version": "7"
+  },
+  "releases": [
+    {
+      "attempts": 1,
+      "receipt_json": "{\"accepted_effect_count\":1,\"attempts\":1,\"definition_digest\":\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\",\"release_id\":\"exo-arb-child-6076b3bacdbc8e5defe3:release\",\"revision\":\"r2\",\"run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\",\"sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\"}",
+      "release_id": "exo-arb-child-6076b3bacdbc8e5defe3:release",
+      "run_id": "exo-arb-child-6076b3bacdbc8e5defe3",
+      "state": "observed"
+    }
+  ],
+  "runs": [
+    {
+      "acceptance_count": 0,
+      "accepted_reviewer": null,
+      "accepted_revision": null,
+      "accepted_sha256": null,
+      "bridge_state": "completed",
+      "current_artifact_json": null,
+      "current_revision": null,
+      "current_sha256": null,
+      "dag_name": "exo_arb_parent_v7",
+      "definition_digest": "c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21",
+      "failure_json": null,
+      "join_json": null,
+      "owner_epoch": 1,
+      "parent_id": null,
+      "public_result_json": "{\"accepted_revision\":\"r2\",\"accepted_sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\",\"artifact\":{\"author\":\"exo-factory-synthesis\",\"content\":\"{\\\"assessment\\\":\\\"documented limits addressed\\\",\\\"join\\\":{\\\"branch_artifact_sha256\\\":{\\\"counter_evidence\\\":\\\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\\\",\\\"source_evidence\\\":\\\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\\\"},\\\"claims\\\":[{\\\"branch_instance\\\":\\\"source_evidence\\\",\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"branch_instance\\\":\\\"source_evidence\\\",\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"definition_digest\\\":\\\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\\\",\\\"kind\\\":\\\"evidence_join@1\\\",\\\"objections\\\":[{\\\"branch_instance\\\":\\\"counter_evidence\\\",\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"branch_instance\\\":\\\"counter_evidence\\\",\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"requires_scope\\\":true,\\\"route_status\\\":\\\"requires_scope\\\",\\\"run_id\\\":\\\"exo-arb-child-6076b3bacdbc8e5defe3\\\"},\\\"kind\\\":\\\"verified_research_candidate@1\\\",\\\"objections_resolved\\\":true,\\\"revision\\\":\\\"r2\\\"}\",\"revision\":\"r2\",\"sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\"},\"child_run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\",\"receipt\":{\"accepted_effect_count\":1,\"attempts\":1,\"definition_digest\":\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\",\"release_id\":\"exo-arb-child-6076b3bacdbc8e5defe3:release\",\"revision\":\"r2\",\"run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\",\"sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\"},\"state\":\"released\"}",
+      "receipt_json": null,
+      "release_count": 0,
+      "release_mode": "participating",
+      "repair_count": 0,
+      "resolve_input": 1,
+      "root_name": "exo_arb_parent_v7",
+      "run_id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y",
+      "state": "released"
+    },
+    {
+      "acceptance_count": 1,
+      "accepted_reviewer": "3c9d280f-76aa-4faf-a947-96e68879b13a",
+      "accepted_revision": "r2",
+      "accepted_sha256": "1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f",
+      "bridge_state": "waiting",
+      "current_artifact_json": "{\"author\":\"exo-factory-synthesis\",\"content\":\"{\\\"assessment\\\":\\\"documented limits addressed\\\",\\\"join\\\":{\\\"branch_artifact_sha256\\\":{\\\"counter_evidence\\\":\\\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\\\",\\\"source_evidence\\\":\\\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\\\"},\\\"claims\\\":[{\\\"branch_instance\\\":\\\"source_evidence\\\",\\\"claim\\\":\\\"The capability is documented\\\",\\\"source\\\":\\\"source:A\\\"},{\\\"branch_instance\\\":\\\"source_evidence\\\",\\\"claim\\\":\\\"The local contract is versioned\\\",\\\"source\\\":\\\"source:B\\\"}],\\\"definition_digest\\\":\\\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\\\",\\\"kind\\\":\\\"evidence_join@1\\\",\\\"objections\\\":[{\\\"branch_instance\\\":\\\"counter_evidence\\\",\\\"objection\\\":\\\"A documented limit requires explicit scope\\\",\\\"source\\\":\\\"source:C\\\"},{\\\"branch_instance\\\":\\\"counter_evidence\\\",\\\"objection\\\":\\\"A missing receipt must be reconciled\\\",\\\"source\\\":\\\"source:D\\\"}],\\\"requires_scope\\\":true,\\\"route_status\\\":\\\"requires_scope\\\",\\\"run_id\\\":\\\"exo-arb-child-6076b3bacdbc8e5defe3\\\"},\\\"kind\\\":\\\"verified_research_candidate@1\\\",\\\"objections_resolved\\\":true,\\\"revision\\\":\\\"r2\\\"}\",\"revision\":\"r2\",\"sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\"}",
+      "current_revision": "r2",
+      "current_sha256": "1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f",
+      "dag_name": "exo_arb_research_v7",
+      "definition_digest": "c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21",
+      "failure_json": null,
+      "join_json": "{\"branch_artifact_sha256\":{\"counter_evidence\":\"a472bafa92db0b10afa49b5263f2005f3f267e220e9186c7d8c1ccf416188e1b\",\"source_evidence\":\"f226e50570da934024e7839bd72e37ccad1fdcfc8bc1effff1f9caf0a89f2c4d\"},\"claims\":[{\"branch_instance\":\"source_evidence\",\"claim\":\"The capability is documented\",\"source\":\"source:A\"},{\"branch_instance\":\"source_evidence\",\"claim\":\"The local contract is versioned\",\"source\":\"source:B\"}],\"definition_digest\":\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\",\"kind\":\"evidence_join@1\",\"objections\":[{\"branch_instance\":\"counter_evidence\",\"objection\":\"A documented limit requires explicit scope\",\"source\":\"source:C\"},{\"branch_instance\":\"counter_evidence\",\"objection\":\"A missing receipt must be reconciled\",\"source\":\"source:D\"}],\"requires_scope\":true,\"route_status\":\"requires_scope\",\"run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\"}",
+      "owner_epoch": 1,
+      "parent_id": "exo-arb-queue-gap-exo-dagu-queue-gap-p_v7422y",
+      "public_result_json": null,
+      "receipt_json": "{\"accepted_effect_count\":1,\"attempts\":1,\"definition_digest\":\"c0cc57211af65b0a1f596fe9882c786374a54b45ae7f282d3006c531dc8e8a21\",\"release_id\":\"exo-arb-child-6076b3bacdbc8e5defe3:release\",\"revision\":\"r2\",\"run_id\":\"exo-arb-child-6076b3bacdbc8e5defe3\",\"sha256\":\"1c82b8a817265b1efd30262813275f7def3683016b3d1ace12582ccc9f867f4f\"}",
+      "release_count": 1,
+      "release_mode": "participating",
+      "repair_count": 1,
+      "resolve_input": 1,
+      "root_name": "exo_arb_parent_v7",
+      "run_id": "exo-arb-child-6076b3bacdbc8e5defe3",
+      "state": "released"
+    }
+  ],
+  "runtime": "/tmp/exo-dagu-queue-gap-p_v7422y",
+  "source_hashes_after": {
+    "bridge.py": "43d1fbc795e8e81da9d360904f2a30a50393af4a2f56c8e418df4bb0d6bc0850",
+    "director_client.py": "88cc2da79a7efafa5d02909fa95ff94d4018d43c7e7438c49541185e9ee111fa",
+    "director_server.py": "957cc1154e87afaa17053f3ae9ce6c0f06b32bed359ca6503ac23f26f2714a26",
+    "ops.py": "9be63b6d9bdb6c074f3a75f6dfc9c82d74c6e2e956c68c14500313056cdce84f",
+    "publisher.py": "9dd8fb70b4917470cd87895dc8814423fa48b2a077abcda878455fb654abfd3e",
+    "reconciler.py": "a91f5cd1f2f7057945763c2154caa623ff0b151fd07fd3b6ce5b92bed683d4c8",
+    "supervisor.py": "f5987b441d529eab29bed277277c530c64744d69d7f3a21d8a8bd811ebf5a28b",
+    "trial.py": "3c0fa0f9098878cbe761c76b6ae94315df71566133bdb52d75ad2de0ccf438bb"
+  },
+  "source_hashes_before": {
+    "bridge.py": "43d1fbc795e8e81da9d360904f2a30a50393af4a2f56c8e418df4bb0d6bc0850",
+    "director_client.py": "88cc2da79a7efafa5d02909fa95ff94d4018d43c7e7438c49541185e9ee111fa",
+    "director_server.py": "957cc1154e87afaa17053f3ae9ce6c0f06b32bed359ca6503ac23f26f2714a26",
+    "ops.py": "9be63b6d9bdb6c074f3a75f6dfc9c82d74c6e2e956c68c14500313056cdce84f",
+    "publisher.py": "9dd8fb70b4917470cd87895dc8814423fa48b2a077abcda878455fb654abfd3e",
+    "reconciler.py": "a91f5cd1f2f7057945763c2154caa623ff0b151fd07fd3b6ce5b92bed683d4c8",
+    "supervisor.py": "f5987b441d529eab29bed277277c530c64744d69d7f3a21d8a8bd811ebf5a28b",
+    "trial.py": "3c0fa0f9098878cbe761c76b6ae94315df71566133bdb52d75ad2de0ccf438bb"
+  },
+  "status": "passed"
+}

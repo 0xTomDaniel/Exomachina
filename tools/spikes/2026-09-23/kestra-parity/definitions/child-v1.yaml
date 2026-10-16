@@ -1,0 +1,17 @@
+id: parity_child
+namespace: exomachina.kestra_parity
+description: Old pinned child remains at a native Director pause during publication.
+tasks:
+  - id: director_wait
+    type: io.kestra.plugin.core.flow.Pause
+    onResume:
+      - id: approved
+        type: BOOL
+        defaults: false
+  - id: old_result
+    type: io.kestra.plugin.core.debug.Return
+    format: child-v1
+outputs:
+  - id: public_result
+    type: STRING
+    value: "{{ outputs.old_result.value }}"

@@ -1,0 +1,52 @@
+{
+  "a2a_protocol": "A2A 0.3.0",
+  "fixture_only": true,
+  "observed": {
+    "branch_assignments_overlapped": true,
+    "distinct_strands_a2a_identities": 3,
+    "lost_assignment_reply": {
+      "receiver_effects": 1,
+      "submission_attempts": 1
+    },
+    "lost_release_reply": {
+      "receiver_effects": 1,
+      "submission_attempts_after_repeat": 2
+    },
+    "opaque_reply": {
+      "caller_outcome": "unresolved",
+      "evaluator_only_effects": 1,
+      "lookup_available": false
+    },
+    "quality_verdicts_in_order": [
+      false,
+      true,
+      false,
+      false,
+      false
+    ],
+    "rejected_quality_receiver_action_count": 1,
+    "typed_branch_join": [
+      "counter_evidence",
+      "source_evidence"
+    ]
+  },
+  "oracle_verdict": {
+    "kind": "service-fixture",
+    "quality_verdicts": 5,
+    "receiver_effects": 1,
+    "release_effects": 1,
+    "strands_identities": 3,
+    "verified": true
+  },
+  "schema": "exomachina.arbitration.common-observation/1",
+  "source_sha256": {
+    "arbitration/common/fixture.py": "c9caf10595f1ad3e165d647acd7c78989f1fc9889018dccd886a1f0c3b6f5f06",
+    "arbitration/common/oracle.py": "069d54beca526de5c067755ea4508d4674a07998a99f3b8efdccd21dd3d71ac7",
+    "arbitration/common/quality_server.py": "ff1d156b9ba4d91fc37cad9e7c1bf0e8b24c1c304298f8a977a5c8edfc0e30c1",
+    "arbitration/common/receiver_client.py": "67092431d3d537208720413e58772f78067eb9a8a4b85820800e63d291b2b284",
+    "arbitration/common/release_server.py": "7819902e264a42f2d1d5283baa2b8c06b6e1bef0a29da8854c74778a0026c2d7",
+    "arbitration/common/service_probe.py": "bfcf34e002dc04542fd1a5d391bcf3f1af7f485199e1e12ed6026615ca6413e8",
+    "decision-round/common/client.py": "3404659a5020c8769e012cf01500a61d89ade83e2c8f2088d184e8cba7678599",
+    "decision-round/common/harness_server.py": "ace61cbefe2dbb7616bcb97d9139ca27b7c6fcaab36f77b9a4da7a49387c3aac"
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "account_hash": "sha256:188b022d6e97",
+  "checks": {
+    "C-1": {
+      "brief": "Research whether independent evidence supports the documented capability; accept only independently verified evidence and counter evidence. outcome_mode: never",
+      "child_wait": {
+        "current_revision": "r3",
+        "current_sha256": "365442827d060c12efe8689a6ac16df7addc0ad7d51741fe2efd9b68a401ed7a",
+        "phase": "awaiting-director",
+        "repair_count": 2
+      },
+      "message_id": "8d237d2c-2f9c-46c5-841a-71cf0a7e4cdc",
+      "model_calls": [
+        {
+          "accepted": 1,
+          "arguments": {
+            "outcome_mode": "never",
+            "question": "Research whether independent evidence supports the documented capability; accept only independently verified evidence and counter evidence."
+          },
+          "message_id": "8d237d2c-2f9c-46c5-841a-71cf0a7e4cdc",
+          "model_kind": "live",
+          "result": {
+            "accepted_command": "start",
+            "ok": true
+          },
+          "task_id": "c7a912b3-69bc-4783-b7c8-c6c372b09ece",
+          "tool": "start_research"
+        }
+      ],
+      "pass": false,
+      "pinned_build": "b-05b5760359e6",
+      "run_id": "6c701e7d-61cf-49a8-b885-7b2473aeb571.b6b011d551c2a8597272",
+      "send_state": "input-required",
+      "task": {
+        "artifact_data": [],
+        "context_id": "8138f76d-eb8b-4280-b9e4-7fc3348f516f",
+        "id": "c7a912b3-69bc-4783-b7c8-c6c372b09ece",
+        "metadata": {
+          "authorized_input_actor": "fixture-operator",
+          "capability": "verified-research@1",
+          "harness_identity": "6c701e7d-61cf-49a8-b885-7b2473aeb571",
+          "harness_incarnation": 2,
+          "interpreter_build": "b-05b5760359e6",
+          "manifest_digest": "72f6ad7991b00b08bd54a3a8505ec74ea6a12cac1975f41cf80d9e0026355e0d",
+          "package_digest": "4e68d76c22b4a8d92c760a1a4d0c0049f479464be7d62e713381250bc455dfde",
+          "publication_label": "spike-c-v1",
+          "run_id": "6c701e7d-61cf-49a8-b885-7b2473aeb571.b6b011d551c2a8597272",
+          "run_inputs_digest": "de6091c93abb11c7bd471f7d1ac96572668b49dc80d69c451910f0807503daee"
+        },
+        "observed_states": [
+          "input-required"
+        ],
+        "state": "input-required"
+      }
+    },
+    "C-5": {
+      "leak_scan": {
+        "account_hash": "sha256:188b022d6e97",
+        "files_scanned": 2025,
+        "hits": [],
+        "positive_control_detected": true
+      },
+      "pass": true
+    }
+  },
+  "claim": "observed-real",
+  "cold_health": {
+    "a2a_protocol": "0.3.0",
+    "capability": "verified-research@1",
+    "identity": "6c701e7d-61cf-49a8-b885-7b2473aeb571",
+    "incarnation": 2,
+    "name": "research-factory",
+    "role": "factory-harness",
+    "runner_running": false,
+    "startup": {
+      "recovery": null,
+      "runner_started_at_startup": false
+    },
+    "unfinished_runs": 0
+  },
+  "director_model": "live",
+  "failure": {
+    "message": "C-1 failed",
+    "step": "C-1",
+    "type": "AssertionError"
+  },
+  "fixture_services": [
+    "Quality",
+    "source/counter capabilities",
+    "HTTP release receiver"
+  ],
+  "harness_exit": -15,
+  "home": "/private/tmp/exo-qual-c-live-1",
+  "limits": {
+    "deadline_seconds": 90,
+    "max_model_calls": 4,
+    "max_tool_calls": 4
+  },
+  "listeners_after": [],
+  "model_id": "gpt-6-sol",
+  "provider": "codex-subscription",
+  "publication": {
+    "build_id": "b-05b5760359e6",
+    "label": "spike-c-v1",
+    "manifest_digest": "72f6ad7991b00b08bd54a3a8505ec74ea6a12cac1975f41cf80d9e0026355e0d",
+    "package_digest": "4e68d76c22b4a8d92c760a1a4d0c0049f479464be7d62e713381250bc455dfde"
+  },
+  "runner_stop": {
+    "address": "127.0.0.1:44402",
+    "builds": {},
+    "namespace": "exomachina",
+    "pid": null,
+    "pids": {},
+    "rss_kib": {},
+    "running": false,
+    "worker_rss_kib": {}
+  },
+  "status": "fail",
+  "testbed": {
+    "bindings": {
+      "counter_alpha": {
+        "approved": true,
+        "identity": "b287ce7f-1e98-4cc5-b8ac-01557fbcc9b0",
+        "role": "capability",
+        "url": "http://127.0.0.1:45602"
+      },
+      "counter_beta": {
+        "approved": true,
+        "identity": "a51ac9b7-2b9a-49ee-9125-f2da9c30e7aa",
+        "role": "capability",
+        "url": "http://127.0.0.1:45603"
+      },
+      "quality": {
+        "approved": true,
+        "identity": "73e858a0-ce38-4b1f-bb4c-103bf168fd3c",
+        "role": "quality",
+        "url": "http://127.0.0.1:45604"
+      },
+      "release": {
+        "approved": true,
+        "identity": "fe48720c-4869-44d1-a17e-54b510894a07",
+        "role": "release",
+        "url": "http://127.0.0.1:45605"
+      },
+      "source_alpha": {
+        "approved": true,
+        "identity": "82d65126-9c45-4f60-a882-3ab0de002c9d",
+        "role": "capability",
+        "url": "http://127.0.0.1:45600"
+      },
+      "source_beta": {
+        "approved": true,
+        "identity": "8824fb8c-b324-4589-adf1-eefe2bff6780",
+        "role": "capability",
+        "url": "http://127.0.0.1:45601"
+      }
+    },
+    "health": {
+      "counter_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "b287ce7f-1e98-4cc5-b8ac-01557fbcc9b0",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "counter_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "a51ac9b7-2b9a-49ee-9125-f2da9c30e7aa",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "quality": {
+        "a2a_protocol": "0.3.0",
+        "identity": "73e858a0-ce38-4b1f-bb4c-103bf168fd3c",
+        "incarnation": 1,
+        "role": "quality"
+      },
+      "release": {
+        "identity": "fe48720c-4869-44d1-a17e-54b510894a07",
+        "incarnation": 1,
+        "mode": "participating"
+      },
+      "source_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "82d65126-9c45-4f60-a882-3ab0de002c9d",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "source_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "8824fb8c-b324-4589-adf1-eefe2bff6780",
+        "incarnation": 1,
+        "role": "capability"
+      }
+    },
+    "pids": {
+      "counter_alpha": {
+        "identity": "b287ce7f-1e98-4cc5-b8ac-01557fbcc9b0",
+        "pid": 74771,
+        "port": 45602
+      },
+      "counter_beta": {
+        "identity": "a51ac9b7-2b9a-49ee-9125-f2da9c30e7aa",
+        "pid": 74772,
+        "port": 45603
+      },
+      "quality": {
+        "identity": "73e858a0-ce38-4b1f-bb4c-103bf168fd3c",
+        "pid": 74773,
+        "port": 45604
+      },
+      "release": {
+        "identity": "fe48720c-4869-44d1-a17e-54b510894a07",
+        "pid": 74774,
+        "port": 45605
+      },
+      "source_alpha": {
+        "identity": "82d65126-9c45-4f60-a882-3ab0de002c9d",
+        "pid": 74726,
+        "port": 45600
+      },
+      "source_beta": {
+        "identity": "8824fb8c-b324-4589-adf1-eefe2bff6780",
+        "pid": 74755,
+        "port": 45601
+      }
+    }
+  },
+  "testbed_down": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  }
+}

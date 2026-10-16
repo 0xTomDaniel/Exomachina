@@ -1,0 +1,117 @@
+log:
+  stdout: true
+  level: info
+
+persistence:
+  defaultStore: postgres-default
+  visibilityStore: postgres-visibility
+  numHistoryShards: 4
+  datastores:
+    postgres-default:
+      sql:
+        pluginName: "postgres12"
+        databaseName: "temporal"
+        connectAddr: "127.0.0.1:25545"
+        connectProtocol: "tcp"
+        user: "temporal"
+        password: "temporal"
+        maxConns: 20
+        maxIdleConns: 20
+        maxConnLifetime: "1h"
+    postgres-visibility:
+      sql:
+        pluginName: "postgres12"
+        databaseName: "temporal_visibility"
+        connectAddr: "127.0.0.1:25545"
+        connectProtocol: "tcp"
+        user: "temporal"
+        password: "temporal"
+        maxConns: 2
+        maxIdleConns: 2
+        maxConnLifetime: "1h"
+
+global:
+  membership:
+    maxJoinDuration: 30s
+    broadcastAddress: "127.0.0.1"
+  pprof:
+    port: 27936
+  metrics:
+    prometheus:
+      # specify framework to use new approach for initializing metrics and/or use opentelemetry
+      # framework: "opentelemetry"
+      framework: "tally"
+      timerType: "histogram"
+      listenAddress: "127.0.0.1:28000"
+
+services:
+  frontend:
+    rpc:
+      grpcPort: 27233
+      membershipPort: 26933
+      bindOnLocalHost: true
+      httpPort: 27243
+
+  matching:
+    rpc:
+      grpcPort: 27235
+      membershipPort: 26935
+      bindOnLocalHost: true
+
+  history:
+    rpc:
+      grpcPort: 27234
+      membershipPort: 26934
+      bindOnLocalHost: true
+
+  worker:
+    rpc:
+      grpcPort: 27239
+      membershipPort: 26939
+      bindOnLocalHost: true
+
+clusterMetadata:
+  enableGlobalNamespace: false
+  failoverVersionIncrement: 10
+  masterClusterName: "active"
+  currentClusterName: "active"
+  clusterInformation:
+    active:
+      enabled: true
+      initialFailoverVersion: 1
+      rpcName: "frontend"
+      rpcAddress: "localhost:27233"
+
+dcRedirectionPolicy:
+  policy: "noop"
+
+archival:
+  history:
+    state: "enabled"
+    enableRead: true
+    provider:
+      filestore:
+        fileMode: "0666"
+        dirMode: "0766"
+      gstorage:
+        credentialsPath: "/tmp/gcloud/keyfile.json"
+  visibility:
+    state: "enabled"
+    enableRead: true
+    provider:
+      filestore:
+        fileMode: "0666"
+        dirMode: "0766"
+
+namespaceDefaults:
+  archival:
+    history:
+      state: "disabled"
+      URI: "file:///tmp/temporal_archival/development"
+    visibility:
+      state: "disabled"
+      URI: "file:///tmp/temporal_vis_archival/development"
+
+dynamicConfigClient:
+  filepath: "/tmp/exomachina-countertrials/temporal/runtime/config/dynamicconfig/development-sql.yaml"
+  pollInterval: "10s"

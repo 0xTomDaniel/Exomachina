@@ -1,0 +1,43 @@
+{
+  "date": "2026-09-22",
+  "host": "macOS Darwin arm64, Node.js 26.0.0",
+  "versions": {
+    "effect": "3.22.2",
+    "@effect/cluster": "0.60.2",
+    "@effect/workflow": "0.19.1",
+    "@effect/sql": "0.52.1",
+    "@effect/sql-sqlite-node": "0.53.0",
+    "better-sqlite3": "12.11.1"
+  },
+  "topology": "One Node process using ClusterWorkflowEngine.layer + SingleRunner.layer({ runnerStorage: 'sql' }) + a local SQLite database; no Docker or separate server",
+  "processCount": 1,
+  "warmIdle": {
+    "pid": 92849,
+    "rssKiB": 189328,
+    "macosPhysicalFootprintMB": 160
+  },
+  "suspendedOneWorkflow": {
+    "pid": 92583,
+    "rssKiB": 191888,
+    "macosPhysicalFootprintMB": 162
+  },
+  "installedNodeModulesKiB": 85052,
+  "sqliteMainFileKiB": 84,
+  "crashRecovery": {
+    "suspendedProcessKilledBySigkill": true,
+    "completionOnFreshProcess": true,
+    "preWaitActivityExecutions": 1,
+    "deliveryActivityExecutions": 1
+  },
+  "duplicateSignalTrial": {
+    "concurrentApprovalProcesses": 2,
+    "bothReturnedComplete": true,
+    "deliveryActivityExecutions": 1
+  },
+  "measurementLimits": [
+    "Measurements were made on a concurrently busy development Mac and are not directly comparable to other candidate trials.",
+    "The sample excludes the Strands harness, A2A listener, provider clients, and actual factory workload.",
+    "The local SQLite database and installed package tree are separate from a packaged product footprint.",
+    "The duplicate-signal trial does not establish exactly-once external effects or multi-host concurrency."
+  ]
+}

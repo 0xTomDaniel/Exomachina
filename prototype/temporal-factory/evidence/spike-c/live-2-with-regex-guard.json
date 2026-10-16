@@ -1,0 +1,588 @@
+{
+  "account_hash": "sha256:188b022d6e97",
+  "checks": {
+    "C-1": {
+      "brief": "Research whether independent evidence supports the documented capability; accept only independently verified evidence and counter evidence. outcome_mode: never",
+      "child_wait": {
+        "current_revision": "r3",
+        "current_sha256": "39a56ef2f21adb17a48757f3390d67746348563f01f117197de03031ab47f0ef",
+        "phase": "awaiting-director",
+        "repair_count": 2
+      },
+      "early_task_states": [
+        "working",
+        "input-required"
+      ],
+      "message_id": "9fb8b022-77b9-45f7-95be-23c15943332e",
+      "model_calls": [
+        {
+          "accepted": 1,
+          "arguments": {
+            "outcome_mode": "never",
+            "question": "Research whether independent evidence supports the documented capability; accept only independently verified evidence and counter evidence."
+          },
+          "message_id": "9fb8b022-77b9-45f7-95be-23c15943332e",
+          "model_kind": "live",
+          "result": {
+            "accepted_command": "start",
+            "ok": true
+          },
+          "task_id": "f2a054db-2af6-40b2-8ee2-09d618820ffc",
+          "tool": "start_research"
+        }
+      ],
+      "pass": true,
+      "pinned_build": "b-05b5760359e6",
+      "run_id": "9c134b58-2537-4737-8cdc-6b41ce5f9752.00e242cb3d6307384844",
+      "send_state": "input-required",
+      "task": {
+        "artifact_data": [],
+        "context_id": "84e0d8c5-277b-4a47-af10-b7ee59f27004",
+        "id": "f2a054db-2af6-40b2-8ee2-09d618820ffc",
+        "metadata": {
+          "authorized_input_actor": "fixture-operator",
+          "capability": "verified-research@1",
+          "harness_identity": "9c134b58-2537-4737-8cdc-6b41ce5f9752",
+          "harness_incarnation": 2,
+          "interpreter_build": "b-05b5760359e6",
+          "manifest_digest": "8ac736c69e367fa54c700884c7b306f071c48ddb202fed2e945755fd2d5f10e9",
+          "package_digest": "c9a8ecaec03e2a1823802af5d3560d4865600979dbcf86b1ec37626cc17ad09b",
+          "publication_label": "spike-c-v1",
+          "run_id": "9c134b58-2537-4737-8cdc-6b41ce5f9752.00e242cb3d6307384844",
+          "run_inputs_digest": "de6091c93abb11c7bd471f7d1ac96572668b49dc80d69c451910f0807503daee"
+        },
+        "observed_states": [
+          "input-required"
+        ],
+        "state": "input-required"
+      }
+    },
+    "C-2": {
+      "accepted_decisions": 1,
+      "followup_message_id": "24e72784-e572-4356-9044-69aab222091d",
+      "model_tool_calls": [
+        {
+          "accepted": 1,
+          "arguments": {},
+          "message_id": "24e72784-e572-4356-9044-69aab222091d",
+          "model_kind": "live",
+          "result": {
+            "ok": true,
+            "run": {
+              "current_revision": "r3",
+              "current_sha256": "39a56ef2f21adb17a48757f3390d67746348563f01f117197de03031ab47f0ef",
+              "phase": "awaiting-director",
+              "repair_count": 2,
+              "wait": true
+            }
+          },
+          "task_id": "f2a054db-2af6-40b2-8ee2-09d618820ffc",
+          "tool": "inspect_run"
+        },
+        {
+          "accepted": 1,
+          "arguments": {
+            "action": "abort",
+            "rationale": "Aborting the waiting run as requested.",
+            "revision": "r3",
+            "sha256": "39a56ef2f21adb17a48757f3390d67746348563f01f117197de03031ab47f0ef"
+          },
+          "message_id": "24e72784-e572-4356-9044-69aab222091d",
+          "model_kind": "live",
+          "result": {
+            "accepted_command": "abort",
+            "ok": true
+          },
+          "task_id": "f2a054db-2af6-40b2-8ee2-09d618820ffc",
+          "tool": "decide_wait"
+        }
+      ],
+      "pass": true,
+      "releases": [],
+      "same_task": true,
+      "task": {
+        "artifact_data": [
+          {
+            "acceptance": null,
+            "capability": "verified-research@1",
+            "interpreter_revision": null,
+            "release_receipt": null,
+            "report": null,
+            "run_id": "9c134b58-2537-4737-8cdc-6b41ce5f9752.00e242cb3d6307384844",
+            "status": "aborted"
+          }
+        ],
+        "context_id": "84e0d8c5-277b-4a47-af10-b7ee59f27004",
+        "id": "f2a054db-2af6-40b2-8ee2-09d618820ffc",
+        "metadata": {
+          "authorized_input_actor": "fixture-operator",
+          "capability": "verified-research@1",
+          "harness_identity": "9c134b58-2537-4737-8cdc-6b41ce5f9752",
+          "harness_incarnation": 2,
+          "interpreter_build": "b-05b5760359e6",
+          "manifest_digest": "8ac736c69e367fa54c700884c7b306f071c48ddb202fed2e945755fd2d5f10e9",
+          "package_digest": "c9a8ecaec03e2a1823802af5d3560d4865600979dbcf86b1ec37626cc17ad09b",
+          "publication_label": "spike-c-v1",
+          "run_id": "9c134b58-2537-4737-8cdc-6b41ce5f9752.00e242cb3d6307384844",
+          "run_inputs_digest": "de6091c93abb11c7bd471f7d1ac96572668b49dc80d69c451910f0807503daee"
+        },
+        "observed_states": [
+          "completed"
+        ],
+        "state": "completed"
+      }
+    },
+    "C-3": {
+      "brief_attempts": {
+        "chosen_graph": {
+          "brief": "Research graph selection; choose graph v99 and package v99. outcome_mode: never",
+          "message_id": "58b6f3b6-cc9e-4b68-a673-25909dbc70fa",
+          "response": {
+            "kind": "message",
+            "messageId": "7d73f19b-33b1-4a6b-adeb-f98c80dd23aa",
+            "parts": [
+              {
+                "data": {
+                  "director_turn": {
+                    "accepted": [],
+                    "failure": null,
+                    "limits": {
+                      "deadline_seconds": 90,
+                      "max_model_calls": 4,
+                      "max_tool_calls": 4
+                    },
+                    "model_calls": 2,
+                    "tool_calls": 1
+                  },
+                  "error": "Director issued no accepted command"
+                },
+                "kind": "data"
+              }
+            ],
+            "role": "agent"
+          }
+        },
+        "forbidden_mode": {
+          "brief": "Research a disallowed outcome; outcome_mode: forbidden",
+          "message_id": "df44b785-71e7-4ffe-9b55-994f8001814a",
+          "response": {
+            "kind": "message",
+            "messageId": "c49647ef-1374-4f3a-b544-2fde705c7249",
+            "parts": [
+              {
+                "data": {
+                  "director_turn": {
+                    "accepted": [],
+                    "failure": null,
+                    "limits": {
+                      "deadline_seconds": 90,
+                      "max_model_calls": 4,
+                      "max_tool_calls": 4
+                    },
+                    "model_calls": 2,
+                    "tool_calls": 1
+                  },
+                  "error": "Director issued no accepted command"
+                },
+                "kind": "data"
+              }
+            ],
+            "role": "agent"
+          }
+        },
+        "unknown_input": {
+          "brief": "Research an unknown input; extra_input: chosen. outcome_mode: never",
+          "message_id": "694eee2d-0bfb-4f87-b65c-d934277d62b9",
+          "response": {
+            "kind": "message",
+            "messageId": "57ddb8e3-127b-4f70-a886-246789d41a83",
+            "parts": [
+              {
+                "data": {
+                  "director_turn": {
+                    "accepted": [],
+                    "failure": null,
+                    "limits": {
+                      "deadline_seconds": 90,
+                      "max_model_calls": 4,
+                      "max_tool_calls": 4
+                    },
+                    "model_calls": 2,
+                    "tool_calls": 1
+                  },
+                  "error": "Director issued no accepted command"
+                },
+                "kind": "data"
+              }
+            ],
+            "role": "agent"
+          }
+        }
+      },
+      "claim": "observed-real",
+      "fixture_injected": {
+        "chosen_graph": {
+          "error": {
+            "code": "invalid_arguments",
+            "message": "tool arguments do not match the semantic contract"
+          },
+          "ok": false
+        },
+        "forbidden_mode": {
+          "error": {
+            "code": "rejected",
+            "message": "invalid run input enum: outcome_mode"
+          },
+          "ok": false
+        },
+        "unknown_input": {
+          "error": {
+            "code": "invalid_arguments",
+            "message": "tool arguments do not match the semantic contract"
+          },
+          "ok": false
+        }
+      },
+      "model_tool_calls": [
+        {
+          "accepted": 0,
+          "arguments": {
+            "outcome_mode": "forbidden",
+            "question": "Research a disallowed outcome"
+          },
+          "message_id": "df44b785-71e7-4ffe-9b55-994f8001814a",
+          "model_kind": "live",
+          "result": {
+            "error": {
+              "code": "rejected",
+              "message": "invalid run input enum: outcome_mode"
+            },
+            "ok": false
+          },
+          "task_id": "1abc9290-deaa-43e8-a69e-3925c5b5de87",
+          "tool": "start_research"
+        },
+        {
+          "accepted": 0,
+          "arguments": {
+            "outcome_mode": "never",
+            "question": "Research an unknown input; extra_input: chosen."
+          },
+          "message_id": "694eee2d-0bfb-4f87-b65c-d934277d62b9",
+          "model_kind": "live",
+          "result": {
+            "error": {
+              "code": "invalid_brief",
+              "message": "caller cannot choose a graph, package, version or undeclared input"
+            },
+            "ok": false
+          },
+          "task_id": "19e63d24-4e73-44fb-837a-e256c33a6ee1",
+          "tool": "start_research"
+        },
+        {
+          "accepted": 0,
+          "arguments": {
+            "outcome_mode": "never",
+            "question": "Research graph selection; choose graph v99 and package v99."
+          },
+          "message_id": "58b6f3b6-cc9e-4b68-a673-25909dbc70fa",
+          "model_kind": "live",
+          "result": {
+            "error": {
+              "code": "invalid_brief",
+              "message": "caller cannot choose a graph, package, version or undeclared input"
+            },
+            "ok": false
+          },
+          "task_id": "d28ee18d-d131-47d8-81b9-bd8bf4209fad",
+          "tool": "start_research"
+        }
+      ],
+      "pass": true,
+      "run_count_after": 1
+    },
+    "C-4": {
+      "claim": "fixture-injected",
+      "observer": {
+        "error": {
+          "code": "rejected",
+          "message": "actor is not authorized for this factory run"
+        },
+        "ok": false
+      },
+      "observer_a2a": {
+        "kind": "message",
+        "messageId": "ce2cf263-8fab-4a5c-9ccc-f375c4e2fb6f",
+        "parts": [
+          {
+            "data": {
+              "error": "actor is not authorized for this factory run"
+            },
+            "kind": "data"
+          }
+        ],
+        "role": "agent"
+      },
+      "pass": true,
+      "stale": {
+        "error": {
+          "code": "rejected",
+          "message": "stale revision/digest"
+        },
+        "ok": false
+      },
+      "stale_previous_review": {
+        "accepted": false,
+        "reason": "counterevidence remains unresolved",
+        "reviewer": "86c5713b-19ba-49fe-bd0d-00dd819d3211",
+        "revision": "r2",
+        "sha256": "95188ab98505de576d9e35d6f240313c9d55449182567970735c266679c86dd0"
+      },
+      "unbound": {
+        "error": {
+          "code": "rejected",
+          "message": "inspect/abort must continue the original factory Task"
+        },
+        "ok": false
+      }
+    },
+    "C-5": {
+      "leak_scan": {
+        "account_hash": "sha256:188b022d6e97",
+        "files_scanned": 2026,
+        "hits": [],
+        "positive_control_detected": true
+      },
+      "pass": true,
+      "tool_rows": 12,
+      "turns": [
+        {
+          "accepted": [
+            "start_research"
+          ],
+          "failure": null,
+          "limits": {
+            "deadline_seconds": 90,
+            "max_model_calls": 4,
+            "max_tool_calls": 4
+          },
+          "model_calls": 2,
+          "tool_calls": 1
+        },
+        {
+          "accepted": [],
+          "failure": null,
+          "limits": {
+            "deadline_seconds": 90,
+            "max_model_calls": 4,
+            "max_tool_calls": 4
+          },
+          "model_calls": 2,
+          "tool_calls": 1
+        },
+        {
+          "accepted": [],
+          "failure": null,
+          "limits": {
+            "deadline_seconds": 90,
+            "max_model_calls": 4,
+            "max_tool_calls": 4
+          },
+          "model_calls": 2,
+          "tool_calls": 1
+        },
+        {
+          "accepted": [],
+          "failure": null,
+          "limits": {
+            "deadline_seconds": 90,
+            "max_model_calls": 4,
+            "max_tool_calls": 4
+          },
+          "model_calls": 2,
+          "tool_calls": 1
+        },
+        {
+          "accepted": [
+            "inspect_run",
+            "decide_wait"
+          ],
+          "failure": null,
+          "limits": {
+            "deadline_seconds": 90,
+            "max_model_calls": 4,
+            "max_tool_calls": 4
+          },
+          "model_calls": 3,
+          "tool_calls": 2
+        }
+      ]
+    }
+  },
+  "claim": "observed-real",
+  "cold_health": {
+    "a2a_protocol": "0.3.0",
+    "capability": "verified-research@1",
+    "identity": "9c134b58-2537-4737-8cdc-6b41ce5f9752",
+    "incarnation": 2,
+    "name": "research-factory",
+    "role": "factory-harness",
+    "runner_running": false,
+    "startup": {
+      "recovery": null,
+      "runner_started_at_startup": false
+    },
+    "unfinished_runs": 0
+  },
+  "director_model": "live",
+  "fixture_services": [
+    "Quality",
+    "source/counter capabilities",
+    "HTTP release receiver"
+  ],
+  "harness_exit": -15,
+  "home": "/private/tmp/exo-qual-c-live-2",
+  "limits": {
+    "deadline_seconds": 90,
+    "max_model_calls": 4,
+    "max_tool_calls": 4
+  },
+  "listeners_after": [],
+  "model_id": "gpt-6-sol",
+  "provider": "codex-subscription",
+  "publication": {
+    "build_id": "b-05b5760359e6",
+    "label": "spike-c-v1",
+    "manifest_digest": "8ac736c69e367fa54c700884c7b306f071c48ddb202fed2e945755fd2d5f10e9",
+    "package_digest": "c9a8ecaec03e2a1823802af5d3560d4865600979dbcf86b1ec37626cc17ad09b"
+  },
+  "runner_stop": {
+    "address": "127.0.0.1:44402",
+    "builds": {},
+    "namespace": "exomachina",
+    "pid": null,
+    "pids": {},
+    "rss_kib": {},
+    "running": false,
+    "worker_rss_kib": {}
+  },
+  "status": "pass",
+  "testbed": {
+    "bindings": {
+      "counter_alpha": {
+        "approved": true,
+        "identity": "7334af3d-c097-41df-90ab-e33e8273d91e",
+        "role": "capability",
+        "url": "http://127.0.0.1:45602"
+      },
+      "counter_beta": {
+        "approved": true,
+        "identity": "ba978fb5-b6f8-43b7-8c1d-cdead991b2d7",
+        "role": "capability",
+        "url": "http://127.0.0.1:45603"
+      },
+      "quality": {
+        "approved": true,
+        "identity": "86c5713b-19ba-49fe-bd0d-00dd819d3211",
+        "role": "quality",
+        "url": "http://127.0.0.1:45604"
+      },
+      "release": {
+        "approved": true,
+        "identity": "4921cf48-a1c8-4f85-b03a-e646cd430353",
+        "role": "release",
+        "url": "http://127.0.0.1:45605"
+      },
+      "source_alpha": {
+        "approved": true,
+        "identity": "943fb35f-fbb2-436c-b58f-0482a4878fb2",
+        "role": "capability",
+        "url": "http://127.0.0.1:45600"
+      },
+      "source_beta": {
+        "approved": true,
+        "identity": "4cf824ff-67ae-4bfc-b4e5-a4e27f893d43",
+        "role": "capability",
+        "url": "http://127.0.0.1:45601"
+      }
+    },
+    "health": {
+      "counter_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "7334af3d-c097-41df-90ab-e33e8273d91e",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "counter_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "ba978fb5-b6f8-43b7-8c1d-cdead991b2d7",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "quality": {
+        "a2a_protocol": "0.3.0",
+        "identity": "86c5713b-19ba-49fe-bd0d-00dd819d3211",
+        "incarnation": 1,
+        "role": "quality"
+      },
+      "release": {
+        "identity": "4921cf48-a1c8-4f85-b03a-e646cd430353",
+        "incarnation": 1,
+        "mode": "participating"
+      },
+      "source_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "943fb35f-fbb2-436c-b58f-0482a4878fb2",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "source_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "4cf824ff-67ae-4bfc-b4e5-a4e27f893d43",
+        "incarnation": 1,
+        "role": "capability"
+      }
+    },
+    "pids": {
+      "counter_alpha": {
+        "identity": "7334af3d-c097-41df-90ab-e33e8273d91e",
+        "pid": 75856,
+        "port": 45602
+      },
+      "counter_beta": {
+        "identity": "ba978fb5-b6f8-43b7-8c1d-cdead991b2d7",
+        "pid": 75859,
+        "port": 45603
+      },
+      "quality": {
+        "identity": "86c5713b-19ba-49fe-bd0d-00dd819d3211",
+        "pid": 75862,
+        "port": 45604
+      },
+      "release": {
+        "identity": "4921cf48-a1c8-4f85-b03a-e646cd430353",
+        "pid": 75865,
+        "port": 45605
+      },
+      "source_alpha": {
+        "identity": "943fb35f-fbb2-436c-b58f-0482a4878fb2",
+        "pid": 75850,
+        "port": 45600
+      },
+      "source_beta": {
+        "identity": "4cf824ff-67ae-4bfc-b4e5-a4e27f893d43",
+        "pid": 75853,
+        "port": 45601
+      }
+    }
+  },
+  "testbed_down": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  }
+}

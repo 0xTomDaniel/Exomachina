@@ -1,0 +1,682 @@
+{
+  "account_hash": null,
+  "broker_stopped": true,
+  "checks": {
+    "C-1": {
+      "brief": "Research whether independent evidence supports the documented capability; accept only independently verified evidence and counter evidence. outcome_mode: never",
+      "child_wait": {
+        "current_revision": "r3",
+        "current_sha256": "ced8093823c0d35f62a8c4d2609087a100695e52354a14e35c8ac5fe646a0172",
+        "phase": "awaiting-director",
+        "repair_count": 2
+      },
+      "early_task_states": [
+        "working",
+        "input-required"
+      ],
+      "message_id": "cd6a061d-6a7a-4417-bdee-90debeb05972",
+      "model_calls": [
+        {
+          "accepted": 1,
+          "arguments": {
+            "outcome_mode": "never",
+            "question": "whether independent evidence supports the documented capability"
+          },
+          "message_id": "cd6a061d-6a7a-4417-bdee-90debeb05972",
+          "model_kind": "synthetic",
+          "result": {
+            "accepted_command": "start",
+            "ok": true
+          },
+          "task_id": "0a94a852-cb9b-4e00-a310-6924774ddafd",
+          "tool": "start_research"
+        }
+      ],
+      "pass": true,
+      "pinned_build": "b-05b5760359e6",
+      "run_id": "db6092c3-2bcc-430e-86d4-01faea71764e.051640b9bf6835596f99",
+      "send_state": "working",
+      "task": {
+        "artifact_data": [],
+        "context_id": "df20650d-7f75-4109-8142-ee4f501eb1a8",
+        "id": "0a94a852-cb9b-4e00-a310-6924774ddafd",
+        "metadata": {
+          "authorized_input_actor": "fixture-operator",
+          "capability": "verified-research@1",
+          "harness_identity": "db6092c3-2bcc-430e-86d4-01faea71764e",
+          "harness_incarnation": 2,
+          "interpreter_build": "b-05b5760359e6",
+          "manifest_digest": "37926212f94eea0e7922d1f5d6b47ea8e21edccbb20ab210507b6c857c98c0af",
+          "package_digest": "b4ddeb6ae473339748d291ea18bde132dde71d3d52f10346e9e8224a1287e93c",
+          "publication_label": "spike-c-v1",
+          "run_id": "db6092c3-2bcc-430e-86d4-01faea71764e.051640b9bf6835596f99",
+          "run_inputs_digest": "ac846be8eece4d04bd30c8016bbc86c24ff08aa49bc71e73898fe372bbf28a4d"
+        },
+        "observed_states": [
+          "input-required"
+        ],
+        "state": "input-required"
+      }
+    },
+    "C-2": {
+      "accepted_decisions": 1,
+      "followup_message_id": "0893944c-a995-4515-8d18-c3c171e8766d",
+      "model_tool_calls": [
+        {
+          "accepted": 1,
+          "arguments": {},
+          "message_id": "0893944c-a995-4515-8d18-c3c171e8766d",
+          "model_kind": "synthetic",
+          "result": {
+            "ok": true,
+            "run": {
+              "current_revision": "r3",
+              "current_sha256": "ced8093823c0d35f62a8c4d2609087a100695e52354a14e35c8ac5fe646a0172",
+              "phase": "awaiting-director",
+              "repair_count": 2,
+              "wait": true
+            }
+          },
+          "task_id": "0a94a852-cb9b-4e00-a310-6924774ddafd",
+          "tool": "inspect_run"
+        },
+        {
+          "accepted": 1,
+          "arguments": {
+            "action": "abort",
+            "rationale": "repair exhausted",
+            "revision": "r3",
+            "sha256": "ced8093823c0d35f62a8c4d2609087a100695e52354a14e35c8ac5fe646a0172"
+          },
+          "message_id": "0893944c-a995-4515-8d18-c3c171e8766d",
+          "model_kind": "synthetic",
+          "result": {
+            "accepted_command": "abort",
+            "ok": true
+          },
+          "task_id": "0a94a852-cb9b-4e00-a310-6924774ddafd",
+          "tool": "decide_wait"
+        }
+      ],
+      "pass": true,
+      "releases": [],
+      "same_task": true,
+      "task": {
+        "artifact_data": [
+          {
+            "acceptance": null,
+            "capability": "verified-research@1",
+            "interpreter_revision": null,
+            "release_receipt": null,
+            "report": null,
+            "run_id": "db6092c3-2bcc-430e-86d4-01faea71764e.051640b9bf6835596f99",
+            "status": "aborted"
+          }
+        ],
+        "context_id": "df20650d-7f75-4109-8142-ee4f501eb1a8",
+        "id": "0a94a852-cb9b-4e00-a310-6924774ddafd",
+        "metadata": {
+          "authorized_input_actor": "fixture-operator",
+          "capability": "verified-research@1",
+          "harness_identity": "db6092c3-2bcc-430e-86d4-01faea71764e",
+          "harness_incarnation": 2,
+          "interpreter_build": "b-05b5760359e6",
+          "manifest_digest": "37926212f94eea0e7922d1f5d6b47ea8e21edccbb20ab210507b6c857c98c0af",
+          "package_digest": "b4ddeb6ae473339748d291ea18bde132dde71d3d52f10346e9e8224a1287e93c",
+          "publication_label": "spike-c-v1",
+          "run_id": "db6092c3-2bcc-430e-86d4-01faea71764e.051640b9bf6835596f99",
+          "run_inputs_digest": "ac846be8eece4d04bd30c8016bbc86c24ff08aa49bc71e73898fe372bbf28a4d"
+        },
+        "observed_states": [
+          "completed"
+        ],
+        "state": "completed"
+      }
+    },
+    "C-3": {
+      "active_manifest_digest": "37926212f94eea0e7922d1f5d6b47ea8e21edccbb20ab210507b6c857c98c0af",
+      "active_package_digest": "b4ddeb6ae473339748d291ea18bde132dde71d3d52f10346e9e8224a1287e93c",
+      "assessed_runs": [
+        {
+          "active_publication": true,
+          "declared_input_keys": [
+            "outcome_mode",
+            "question"
+          ],
+          "input_keys_declared": true,
+          "input_values_declared": true,
+          "manifest_digest": "37926212f94eea0e7922d1f5d6b47ea8e21edccbb20ab210507b6c857c98c0af",
+          "package_digest": "b4ddeb6ae473339748d291ea18bde132dde71d3d52f10346e9e8224a1287e93c",
+          "run_id": "db6092c3-2bcc-430e-86d4-01faea71764e.051640b9bf6835596f99",
+          "run_inputs": {
+            "outcome_mode": "never",
+            "question": "whether independent evidence supports the documented capability"
+          },
+          "task_id": "0a94a852-cb9b-4e00-a310-6924774ddafd"
+        },
+        {
+          "active_publication": true,
+          "declared_input_keys": [
+            "outcome_mode",
+            "question"
+          ],
+          "input_keys_declared": true,
+          "input_values_declared": true,
+          "manifest_digest": "37926212f94eea0e7922d1f5d6b47ea8e21edccbb20ab210507b6c857c98c0af",
+          "package_digest": "b4ddeb6ae473339748d291ea18bde132dde71d3d52f10346e9e8224a1287e93c",
+          "run_id": "db6092c3-2bcc-430e-86d4-01faea71764e.695bf1add2203813fc6c",
+          "run_inputs": {
+            "outcome_mode": "never",
+            "question": "an unknown input"
+          },
+          "task_id": "ac14d9dd-0d54-4861-aa4b-1674ea65a87f"
+        },
+        {
+          "active_publication": true,
+          "declared_input_keys": [
+            "outcome_mode",
+            "question"
+          ],
+          "input_keys_declared": true,
+          "input_values_declared": true,
+          "manifest_digest": "37926212f94eea0e7922d1f5d6b47ea8e21edccbb20ab210507b6c857c98c0af",
+          "package_digest": "b4ddeb6ae473339748d291ea18bde132dde71d3d52f10346e9e8224a1287e93c",
+          "run_id": "db6092c3-2bcc-430e-86d4-01faea71764e.d922c3ebcf575a137c06",
+          "run_inputs": {
+            "outcome_mode": "never",
+            "question": "graph selection"
+          },
+          "task_id": "107ef2ca-25ea-44d8-88ab-225f81c8cd13"
+        }
+      ],
+      "brief_attempts": {
+        "chosen_graph": {
+          "brief": "Research graph selection; choose graph v99 and package v99. outcome_mode: never",
+          "message_id": "8fc3b676-06aa-4772-93e3-ee2abc70c5bb",
+          "response": {
+            "contextId": "3d9f0e7d-687d-46fc-8dc3-6051b572afd9",
+            "id": "107ef2ca-25ea-44d8-88ab-225f81c8cd13",
+            "kind": "task",
+            "metadata": {
+              "authorized_input_actor": "fixture-operator",
+              "capability": "verified-research@1",
+              "harness_identity": "db6092c3-2bcc-430e-86d4-01faea71764e",
+              "harness_incarnation": 2,
+              "interpreter_build": "b-05b5760359e6",
+              "manifest_digest": "37926212f94eea0e7922d1f5d6b47ea8e21edccbb20ab210507b6c857c98c0af",
+              "package_digest": "b4ddeb6ae473339748d291ea18bde132dde71d3d52f10346e9e8224a1287e93c",
+              "publication_label": "spike-c-v1",
+              "run_id": "db6092c3-2bcc-430e-86d4-01faea71764e.d922c3ebcf575a137c06",
+              "run_inputs_digest": "f67c2631a02f14930a3d8afb5ce21a29a84d6b86f7f27bb822189bad798c8ac2"
+            },
+            "status": {
+              "state": "working"
+            }
+          }
+        },
+        "forbidden_mode": {
+          "brief": "Research a disallowed outcome; outcome_mode: forbidden",
+          "message_id": "a6d7414b-d49c-4391-b2e4-65e726fde3fd",
+          "response": {
+            "kind": "message",
+            "messageId": "07a8fe7b-b65e-446f-919a-11d92971425c",
+            "parts": [
+              {
+                "data": {
+                  "director_turn": {
+                    "accepted": [],
+                    "failure": null,
+                    "limits": {
+                      "deadline_seconds": 90,
+                      "max_model_calls": 4,
+                      "max_tool_calls": 4
+                    },
+                    "model_calls": 2,
+                    "tool_calls": 1
+                  },
+                  "error": "Director issued no accepted command"
+                },
+                "kind": "data"
+              }
+            ],
+            "role": "agent"
+          }
+        },
+        "unknown_input": {
+          "brief": "Research an unknown input; extra_input: chosen. outcome_mode: never",
+          "message_id": "3f2d9c5b-b04c-441d-aca4-f6b9d3d6a924",
+          "response": {
+            "contextId": "f9070c7a-a921-4942-9fcb-24a9b8d1aa1a",
+            "id": "ac14d9dd-0d54-4861-aa4b-1674ea65a87f",
+            "kind": "task",
+            "metadata": {
+              "authorized_input_actor": "fixture-operator",
+              "capability": "verified-research@1",
+              "harness_identity": "db6092c3-2bcc-430e-86d4-01faea71764e",
+              "harness_incarnation": 2,
+              "interpreter_build": "b-05b5760359e6",
+              "manifest_digest": "37926212f94eea0e7922d1f5d6b47ea8e21edccbb20ab210507b6c857c98c0af",
+              "package_digest": "b4ddeb6ae473339748d291ea18bde132dde71d3d52f10346e9e8224a1287e93c",
+              "publication_label": "spike-c-v1",
+              "run_id": "db6092c3-2bcc-430e-86d4-01faea71764e.695bf1add2203813fc6c",
+              "run_inputs_digest": "88ca773b9553345d8a7b270e202b52f9747b338077b67b5ff8780b92517e15a3"
+            },
+            "status": {
+              "state": "working"
+            }
+          }
+        }
+      },
+      "brief_run_outcomes": {
+        "chosen_graph": {
+          "accepted_model_tool_calls": 1,
+          "model_requested_forbidden_mode": false,
+          "started_runs": [
+            {
+              "active_publication": true,
+              "declared_input_keys": [
+                "outcome_mode",
+                "question"
+              ],
+              "input_keys_declared": true,
+              "input_values_declared": true,
+              "manifest_digest": "37926212f94eea0e7922d1f5d6b47ea8e21edccbb20ab210507b6c857c98c0af",
+              "package_digest": "b4ddeb6ae473339748d291ea18bde132dde71d3d52f10346e9e8224a1287e93c",
+              "run_id": "db6092c3-2bcc-430e-86d4-01faea71764e.d922c3ebcf575a137c06",
+              "run_inputs": {
+                "outcome_mode": "never",
+                "question": "graph selection"
+              },
+              "task_id": "107ef2ca-25ea-44d8-88ab-225f81c8cd13"
+            }
+          ]
+        },
+        "forbidden_mode": {
+          "accepted_model_tool_calls": 0,
+          "model_requested_forbidden_mode": true,
+          "started_runs": []
+        },
+        "unknown_input": {
+          "accepted_model_tool_calls": 1,
+          "model_requested_forbidden_mode": false,
+          "started_runs": [
+            {
+              "active_publication": true,
+              "declared_input_keys": [
+                "outcome_mode",
+                "question"
+              ],
+              "input_keys_declared": true,
+              "input_values_declared": true,
+              "manifest_digest": "37926212f94eea0e7922d1f5d6b47ea8e21edccbb20ab210507b6c857c98c0af",
+              "package_digest": "b4ddeb6ae473339748d291ea18bde132dde71d3d52f10346e9e8224a1287e93c",
+              "run_id": "db6092c3-2bcc-430e-86d4-01faea71764e.695bf1add2203813fc6c",
+              "run_inputs": {
+                "outcome_mode": "never",
+                "question": "an unknown input"
+              },
+              "task_id": "ac14d9dd-0d54-4861-aa4b-1674ea65a87f"
+            }
+          ]
+        }
+      },
+      "claim": "observed-synthetic",
+      "fixture_injected": {
+        "chosen_graph": {
+          "error": {
+            "code": "invalid_arguments",
+            "message": "tool arguments do not match the semantic contract"
+          },
+          "ok": false
+        },
+        "forbidden_mode": {
+          "error": {
+            "code": "rejected",
+            "message": "invalid run input enum: outcome_mode"
+          },
+          "ok": false
+        },
+        "unknown_input": {
+          "error": {
+            "code": "invalid_arguments",
+            "message": "tool arguments do not match the semantic contract"
+          },
+          "ok": false
+        }
+      },
+      "model_tool_calls": [
+        {
+          "accepted": 0,
+          "arguments": {
+            "outcome_mode": "forbidden",
+            "question": "a disallowed outcome"
+          },
+          "message_id": "a6d7414b-d49c-4391-b2e4-65e726fde3fd",
+          "model_kind": "synthetic",
+          "result": {
+            "error": {
+              "code": "rejected",
+              "message": "invalid run input enum: outcome_mode"
+            },
+            "ok": false
+          },
+          "task_id": "cb0e39be-8980-4fee-b6d0-3f00e385af83",
+          "tool": "start_research"
+        },
+        {
+          "accepted": 1,
+          "arguments": {
+            "outcome_mode": "never",
+            "question": "an unknown input"
+          },
+          "message_id": "3f2d9c5b-b04c-441d-aca4-f6b9d3d6a924",
+          "model_kind": "synthetic",
+          "result": {
+            "accepted_command": "start",
+            "ok": true
+          },
+          "task_id": "ac14d9dd-0d54-4861-aa4b-1674ea65a87f",
+          "tool": "start_research"
+        },
+        {
+          "accepted": 1,
+          "arguments": {
+            "outcome_mode": "never",
+            "question": "graph selection"
+          },
+          "message_id": "8fc3b676-06aa-4772-93e3-ee2abc70c5bb",
+          "model_kind": "synthetic",
+          "result": {
+            "accepted_command": "start",
+            "ok": true
+          },
+          "task_id": "107ef2ca-25ea-44d8-88ab-225f81c8cd13",
+          "tool": "start_research"
+        }
+      ],
+      "pass": true,
+      "run_count_after": 3
+    },
+    "C-4": {
+      "claim": "fixture-injected",
+      "observer": {
+        "error": {
+          "code": "rejected",
+          "message": "actor is not authorized for this factory run"
+        },
+        "ok": false
+      },
+      "observer_a2a": {
+        "kind": "message",
+        "messageId": "cb744e40-6606-432b-b114-04715fe731e4",
+        "parts": [
+          {
+            "data": {
+              "error": "actor is not authorized for this factory run"
+            },
+            "kind": "data"
+          }
+        ],
+        "role": "agent"
+      },
+      "pass": true,
+      "stale": {
+        "error": {
+          "code": "rejected",
+          "message": "stale revision/digest"
+        },
+        "ok": false
+      },
+      "stale_previous_review": {
+        "accepted": false,
+        "reason": "counterevidence remains unresolved",
+        "reviewer": "dd701d04-d739-41b8-aa82-6f98c0bd8d14",
+        "revision": "r2",
+        "sha256": "7d5a4f3b7f4e4981d5f11784340e27b846e038dafeed324e953b3c5facc13e39"
+      },
+      "unbound": {
+        "error": {
+          "code": "rejected",
+          "message": "inspect/abort must continue the original factory Task"
+        },
+        "ok": false
+      }
+    },
+    "C-5": {
+      "pass": true,
+      "tool_rows": 12,
+      "turns": [
+        {
+          "accepted": [
+            "start_research"
+          ],
+          "failure": null,
+          "limits": {
+            "deadline_seconds": 90,
+            "max_model_calls": 4,
+            "max_tool_calls": 4
+          },
+          "model_calls": 2,
+          "tool_calls": 1
+        },
+        {
+          "accepted": [],
+          "failure": null,
+          "limits": {
+            "deadline_seconds": 90,
+            "max_model_calls": 4,
+            "max_tool_calls": 4
+          },
+          "model_calls": 2,
+          "tool_calls": 1
+        },
+        {
+          "accepted": [
+            "start_research"
+          ],
+          "failure": null,
+          "limits": {
+            "deadline_seconds": 90,
+            "max_model_calls": 4,
+            "max_tool_calls": 4
+          },
+          "model_calls": 2,
+          "tool_calls": 1
+        },
+        {
+          "accepted": [
+            "start_research"
+          ],
+          "failure": null,
+          "limits": {
+            "deadline_seconds": 90,
+            "max_model_calls": 4,
+            "max_tool_calls": 4
+          },
+          "model_calls": 2,
+          "tool_calls": 1
+        },
+        {
+          "accepted": [
+            "inspect_run",
+            "decide_wait"
+          ],
+          "failure": null,
+          "limits": {
+            "deadline_seconds": 90,
+            "max_model_calls": 4,
+            "max_tool_calls": 4
+          },
+          "model_calls": 3,
+          "tool_calls": 2
+        }
+      ]
+    }
+  },
+  "claim": "observed-synthetic",
+  "cold_health": {
+    "a2a_protocol": "0.3.0",
+    "capability": "verified-research@1",
+    "identity": "db6092c3-2bcc-430e-86d4-01faea71764e",
+    "incarnation": 2,
+    "name": "research-factory",
+    "role": "factory-harness",
+    "runner_running": false,
+    "startup": {
+      "recovery": null,
+      "runner_started_at_startup": false
+    },
+    "unfinished_runs": 0
+  },
+  "director_model": "synthetic",
+  "fixture_services": [
+    "Quality",
+    "source/counter capabilities",
+    "HTTP release receiver"
+  ],
+  "harness_exit": -15,
+  "home": "/private/tmp/exo-qual-c-synthetic-6",
+  "limits": {
+    "deadline_seconds": 90,
+    "max_model_calls": 4,
+    "max_tool_calls": 4
+  },
+  "listeners_after": [],
+  "mock_exit": -15,
+  "model_id": "gpt-6-sol",
+  "provider": "synthetic-loopback",
+  "publication": {
+    "build_id": "b-05b5760359e6",
+    "label": "spike-c-v1",
+    "manifest_digest": "37926212f94eea0e7922d1f5d6b47ea8e21edccbb20ab210507b6c857c98c0af",
+    "package_digest": "b4ddeb6ae473339748d291ea18bde132dde71d3d52f10346e9e8224a1287e93c"
+  },
+  "runner_stop": {
+    "address": "127.0.0.1:44402",
+    "builds": {},
+    "namespace": "exomachina",
+    "pid": null,
+    "pids": {},
+    "rss_kib": {},
+    "running": false,
+    "worker_rss_kib": {}
+  },
+  "status": "pass",
+  "testbed": {
+    "bindings": {
+      "counter_alpha": {
+        "approved": true,
+        "identity": "268a0610-bc79-492e-a5b6-81d97988dff3",
+        "role": "capability",
+        "url": "http://127.0.0.1:45602"
+      },
+      "counter_beta": {
+        "approved": true,
+        "identity": "72501d9b-2550-4127-a756-04fb64018177",
+        "role": "capability",
+        "url": "http://127.0.0.1:45603"
+      },
+      "quality": {
+        "approved": true,
+        "identity": "dd701d04-d739-41b8-aa82-6f98c0bd8d14",
+        "role": "quality",
+        "url": "http://127.0.0.1:45604"
+      },
+      "release": {
+        "approved": true,
+        "identity": "dcf910c0-806b-499f-9458-85ecc432aa03",
+        "role": "release",
+        "url": "http://127.0.0.1:45605"
+      },
+      "source_alpha": {
+        "approved": true,
+        "identity": "f6ddfb24-c02a-4994-ab43-736fa8dad547",
+        "role": "capability",
+        "url": "http://127.0.0.1:45600"
+      },
+      "source_beta": {
+        "approved": true,
+        "identity": "961fa881-5472-459d-b37c-b67adb41d6ad",
+        "role": "capability",
+        "url": "http://127.0.0.1:45601"
+      }
+    },
+    "health": {
+      "counter_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "268a0610-bc79-492e-a5b6-81d97988dff3",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "counter_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "72501d9b-2550-4127-a756-04fb64018177",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "quality": {
+        "a2a_protocol": "0.3.0",
+        "identity": "dd701d04-d739-41b8-aa82-6f98c0bd8d14",
+        "incarnation": 1,
+        "role": "quality"
+      },
+      "release": {
+        "identity": "dcf910c0-806b-499f-9458-85ecc432aa03",
+        "incarnation": 1,
+        "mode": "participating"
+      },
+      "source_alpha": {
+        "a2a_protocol": "0.3.0",
+        "identity": "f6ddfb24-c02a-4994-ab43-736fa8dad547",
+        "incarnation": 1,
+        "role": "capability"
+      },
+      "source_beta": {
+        "a2a_protocol": "0.3.0",
+        "identity": "961fa881-5472-459d-b37c-b67adb41d6ad",
+        "incarnation": 1,
+        "role": "capability"
+      }
+    },
+    "pids": {
+      "counter_alpha": {
+        "identity": "268a0610-bc79-492e-a5b6-81d97988dff3",
+        "pid": 78747,
+        "port": 45602
+      },
+      "counter_beta": {
+        "identity": "72501d9b-2550-4127-a756-04fb64018177",
+        "pid": 78750,
+        "port": 45603
+      },
+      "quality": {
+        "identity": "dd701d04-d739-41b8-aa82-6f98c0bd8d14",
+        "pid": 78753,
+        "port": 45604
+      },
+      "release": {
+        "identity": "dcf910c0-806b-499f-9458-85ecc432aa03",
+        "pid": 78756,
+        "port": 45605
+      },
+      "source_alpha": {
+        "identity": "f6ddfb24-c02a-4994-ab43-736fa8dad547",
+        "pid": 78727,
+        "port": 45600
+      },
+      "source_beta": {
+        "identity": "961fa881-5472-459d-b37c-b67adb41d6ad",
+        "pid": 78745,
+        "port": 45601
+      }
+    }
+  },
+  "testbed_down": {
+    "counter_alpha": "stopped",
+    "counter_beta": "stopped",
+    "quality": "stopped",
+    "release": "stopped",
+    "source_alpha": "stopped",
+    "source_beta": "stopped"
+  }
+}

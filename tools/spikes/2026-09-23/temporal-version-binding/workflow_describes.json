@@ -1,0 +1,320 @@
+{
+  "tq-version-r1": {
+    "closeEvent": {
+      "eventId": "14",
+      "eventTime": "2026-09-23T16:31:01.371928Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+      "taskId": "1048999",
+      "workflowExecutionCompletedEventAttributes": {
+        "result": [
+          {
+            "child": {
+              "definition_digest": "1923ee9afeb96d9abfb03efe0b6bb0d07e6dfac00bb63a44b9d54b5f0461335e",
+              "released": false,
+              "revision": "r3",
+              "run": "tq-version-r1:child:1923ee9afeb9",
+              "status": "aborted"
+            },
+            "definition_digest": "d90963c352d320664de54db4e4d38bdb57cde9ee9a21ad1f306b42c8f4f88e06",
+            "released": false,
+            "run": "tq-version-r1",
+            "status": "aborted"
+          }
+        ],
+        "workflowTaskCompletedEventId": "13"
+      }
+    },
+    "executionConfig": {
+      "defaultWorkflowTaskTimeout": "10s",
+      "taskQueue": {
+        "kind": "TASK_QUEUE_KIND_NORMAL",
+        "name": "exo-tq-version-factory"
+      },
+      "workflowExecutionTimeout": "600s",
+      "workflowRunTimeout": "600s"
+    },
+    "result": {
+      "child": {
+        "definition_digest": "1923ee9afeb96d9abfb03efe0b6bb0d07e6dfac00bb63a44b9d54b5f0461335e",
+        "released": false,
+        "revision": "r3",
+        "run": "tq-version-r1:child:1923ee9afeb9",
+        "status": "aborted"
+      },
+      "definition_digest": "d90963c352d320664de54db4e4d38bdb57cde9ee9a21ad1f306b42c8f4f88e06",
+      "released": false,
+      "run": "tq-version-r1",
+      "status": "aborted"
+    },
+    "workflowExecutionInfo": {
+      "autoResetPoints": {
+        "points": [
+          {
+            "buildId": "b1",
+            "createTime": "2026-09-23T16:30:57.768193Z",
+            "firstWorkflowTaskCompletedId": "4",
+            "resettable": true,
+            "runId": "01a0cf1b-24d5-7305-9a51-25ba764fe758"
+          }
+        ]
+      },
+      "closeTime": "2026-09-23T16:31:01.371928Z",
+      "execution": {
+        "runId": "01a0cf1b-24d5-7305-9a51-25ba764fe758",
+        "workflowId": "tq-version-r1"
+      },
+      "executionDuration": "3.622729s",
+      "executionTime": "2026-09-23T16:30:57.749199Z",
+      "firstRunId": "01a0cf1b-24d5-7305-9a51-25ba764fe758",
+      "historyLength": "14",
+      "historySizeBytes": "12044",
+      "memo": {},
+      "mostRecentWorkerVersionStamp": {
+        "buildId": "b1"
+      },
+      "priority": {},
+      "rootExecution": {
+        "runId": "01a0cf1b-24d5-7305-9a51-25ba764fe758",
+        "workflowId": "tq-version-r1"
+      },
+      "searchAttributes": {
+        "indexedFields": {
+          "BuildIds": {
+            "data": "WyJwaW5uZWQ6ZXhvLXRxLXZlcnNpb24tZmFjdG9yeTpiMSIsInVudmVyc2lvbmVkOmIxIl0=",
+            "metadata": {
+              "encoding": "anNvbi9wbGFpbg==",
+              "type": "S2V5d29yZExpc3Q="
+            }
+          },
+          "TemporalUsedWorkerDeploymentVersions": {
+            "data": "WyJleG8tdHEtdmVyc2lvbi1mYWN0b3J5OmIxIl0=",
+            "metadata": {
+              "encoding": "anNvbi9wbGFpbg==",
+              "type": "S2V5d29yZExpc3Q="
+            }
+          },
+          "TemporalWorkerDeployment": {
+            "data": "ImV4by10cS12ZXJzaW9uLWZhY3Rvcnki",
+            "metadata": {
+              "encoding": "anNvbi9wbGFpbg==",
+              "type": "S2V5d29yZA=="
+            }
+          },
+          "TemporalWorkerDeploymentVersion": {
+            "data": "ImV4by10cS12ZXJzaW9uLWZhY3Rvcnk6YjEi",
+            "metadata": {
+              "encoding": "anNvbi9wbGFpbg==",
+              "type": "S2V5d29yZA=="
+            }
+          },
+          "TemporalWorkflowVersioningBehavior": {
+            "data": "IlBpbm5lZCI=",
+            "metadata": {
+              "encoding": "anNvbi9wbGFpbg==",
+              "type": "S2V5d29yZA=="
+            }
+          }
+        }
+      },
+      "startTime": "2026-09-23T16:30:57.749199Z",
+      "stateTransitionCount": "9",
+      "status": "WORKFLOW_EXECUTION_STATUS_COMPLETED",
+      "taskQueue": "exo-tq-version-factory",
+      "type": {
+        "name": "FactoryRun"
+      },
+      "versioningInfo": {
+        "behavior": "VERSIONING_BEHAVIOR_PINNED",
+        "deploymentVersion": {
+          "buildId": "b1",
+          "deploymentName": "exo-tq-version-factory"
+        },
+        "version": "exo-tq-version-factory.b1",
+        "versioningOverride": {
+          "behavior": "VERSIONING_BEHAVIOR_PINNED",
+          "pinned": {
+            "behavior": "PINNED_OVERRIDE_BEHAVIOR_PINNED",
+            "version": {
+              "buildId": "b1",
+              "deploymentName": "exo-tq-version-factory"
+            }
+          },
+          "pinnedVersion": "exo-tq-version-factory.b1"
+        }
+      },
+      "workerDeploymentName": "exo-tq-version-factory"
+    },
+    "workflowExtendedInfo": {
+      "executionExpirationTime": "2026-09-23T16:40:57.749Z",
+      "originalStartTime": "2026-09-23T16:30:57.749199Z",
+      "requestIdInfos": {
+        "cd6b892c-1fcb-4199-a5c4-e0d856d577ec": {
+          "eventId": "1",
+          "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED"
+        }
+      },
+      "runExpirationTime": "2026-09-23T16:40:57.749Z"
+    }
+  },
+  "tq-version-r2": {
+    "closeEvent": {
+      "eventId": "14",
+      "eventTime": "2026-09-23T16:31:01.499885Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+      "taskId": "1049014",
+      "workflowExecutionCompletedEventAttributes": {
+        "result": [
+          {
+            "child": {
+              "definition_digest": "db09ef8474c8bea5fe4df8569dabe102aca54b42d70a07f54e878288b46417ef",
+              "output_shape": 2,
+              "released": false,
+              "revision": "r3",
+              "run": "tq-version-r2:child:db09ef8474c8",
+              "status": "aborted"
+            },
+            "definition_digest": "9e4ab0e3d627315bd8594b4ec392bfa7ccbbaf8d517c0d872cab42af52809442",
+            "output_shape": 2,
+            "released": false,
+            "run": "tq-version-r2",
+            "status": "aborted"
+          }
+        ],
+        "workflowTaskCompletedEventId": "13"
+      }
+    },
+    "executionConfig": {
+      "defaultWorkflowTaskTimeout": "10s",
+      "taskQueue": {
+        "kind": "TASK_QUEUE_KIND_NORMAL",
+        "name": "exo-tq-version-factory"
+      },
+      "workflowExecutionTimeout": "600s",
+      "workflowRunTimeout": "600s"
+    },
+    "result": {
+      "child": {
+        "definition_digest": "db09ef8474c8bea5fe4df8569dabe102aca54b42d70a07f54e878288b46417ef",
+        "output_shape": 2,
+        "released": false,
+        "revision": "r3",
+        "run": "tq-version-r2:child:db09ef8474c8",
+        "status": "aborted"
+      },
+      "definition_digest": "9e4ab0e3d627315bd8594b4ec392bfa7ccbbaf8d517c0d872cab42af52809442",
+      "output_shape": 2,
+      "released": false,
+      "run": "tq-version-r2",
+      "status": "aborted"
+    },
+    "workflowExecutionInfo": {
+      "autoResetPoints": {
+        "points": [
+          {
+            "buildId": "b2",
+            "createTime": "2026-09-23T16:31:00.825736Z",
+            "firstWorkflowTaskCompletedId": "4",
+            "resettable": true,
+            "runId": "01a0cf1b-30c5-76ae-8ab4-2b345e5e15f4"
+          }
+        ]
+      },
+      "closeTime": "2026-09-23T16:31:01.499885Z",
+      "execution": {
+        "runId": "01a0cf1b-30c5-76ae-8ab4-2b345e5e15f4",
+        "workflowId": "tq-version-r2"
+      },
+      "executionDuration": "0.694446s",
+      "executionTime": "2026-09-23T16:31:00.805439Z",
+      "firstRunId": "01a0cf1b-30c5-76ae-8ab4-2b345e5e15f4",
+      "historyLength": "14",
+      "historySizeBytes": "12095",
+      "memo": {},
+      "mostRecentWorkerVersionStamp": {
+        "buildId": "b2"
+      },
+      "priority": {},
+      "rootExecution": {
+        "runId": "01a0cf1b-30c5-76ae-8ab4-2b345e5e15f4",
+        "workflowId": "tq-version-r2"
+      },
+      "searchAttributes": {
+        "indexedFields": {
+          "BuildIds": {
+            "data": "WyJwaW5uZWQ6ZXhvLXRxLXZlcnNpb24tZmFjdG9yeTpiMiIsInVudmVyc2lvbmVkOmIyIl0=",
+            "metadata": {
+              "encoding": "anNvbi9wbGFpbg==",
+              "type": "S2V5d29yZExpc3Q="
+            }
+          },
+          "TemporalUsedWorkerDeploymentVersions": {
+            "data": "WyJleG8tdHEtdmVyc2lvbi1mYWN0b3J5OmIyIl0=",
+            "metadata": {
+              "encoding": "anNvbi9wbGFpbg==",
+              "type": "S2V5d29yZExpc3Q="
+            }
+          },
+          "TemporalWorkerDeployment": {
+            "data": "ImV4by10cS12ZXJzaW9uLWZhY3Rvcnki",
+            "metadata": {
+              "encoding": "anNvbi9wbGFpbg==",
+              "type": "S2V5d29yZA=="
+            }
+          },
+          "TemporalWorkerDeploymentVersion": {
+            "data": "ImV4by10cS12ZXJzaW9uLWZhY3Rvcnk6YjIi",
+            "metadata": {
+              "encoding": "anNvbi9wbGFpbg==",
+              "type": "S2V5d29yZA=="
+            }
+          },
+          "TemporalWorkflowVersioningBehavior": {
+            "data": "IlBpbm5lZCI=",
+            "metadata": {
+              "encoding": "anNvbi9wbGFpbg==",
+              "type": "S2V5d29yZA=="
+            }
+          }
+        }
+      },
+      "startTime": "2026-09-23T16:31:00.805439Z",
+      "stateTransitionCount": "9",
+      "status": "WORKFLOW_EXECUTION_STATUS_COMPLETED",
+      "taskQueue": "exo-tq-version-factory",
+      "type": {
+        "name": "FactoryRun"
+      },
+      "versioningInfo": {
+        "behavior": "VERSIONING_BEHAVIOR_PINNED",
+        "deploymentVersion": {
+          "buildId": "b2",
+          "deploymentName": "exo-tq-version-factory"
+        },
+        "version": "exo-tq-version-factory.b2",
+        "versioningOverride": {
+          "behavior": "VERSIONING_BEHAVIOR_PINNED",
+          "pinned": {
+            "behavior": "PINNED_OVERRIDE_BEHAVIOR_PINNED",
+            "version": {
+              "buildId": "b2",
+              "deploymentName": "exo-tq-version-factory"
+            }
+          },
+          "pinnedVersion": "exo-tq-version-factory.b2"
+        }
+      },
+      "workerDeploymentName": "exo-tq-version-factory"
+    },
+    "workflowExtendedInfo": {
+      "executionExpirationTime": "2026-09-23T16:41:00.805Z",
+      "originalStartTime": "2026-09-23T16:31:00.805439Z",
+      "requestIdInfos": {
+        "5f8faec9-0a08-4be8-a8b8-bd2b6e058350": {
+          "eventId": "1",
+          "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED"
+        }
+      },
+      "runExpirationTime": "2026-09-23T16:41:00.805Z"
+    }
+  }
+}

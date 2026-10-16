@@ -1,0 +1,38 @@
+steps:
+  - id: publication_gate
+    action: human.task
+    with:
+      prompt: Release the pinned v2 factory closure
+      form:
+        type: object
+        properties:
+          accepted:
+            type: boolean
+            enum: [true]
+        required: [accepted]
+  - id: capability
+    depends: publication_gate
+    action: dag.run
+    with:
+      dag: exo_decision_capability_v2
+  - id: verify
+    depends: capability
+    run: exo-dagu-adapter verify --version v2
+  - id: review
+    depends: verify
+    run: exo-dagu-adapter review --version v2
+  - id: director
+    depends: review
+    action: human.task
+    with:
+      prompt: Authorize release of the exact accepted artifact
+      form:
+        type: object
+        properties:
+          accepted:
+            type: boolean
+            enum: [true]
+        required: [accepted]
+  - id: deliver
+    depends: director
+    run: exo-dagu-adapter deliver --version v2

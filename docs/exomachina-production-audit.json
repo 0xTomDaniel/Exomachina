@@ -1,0 +1,1728 @@
+{
+  "assessmentDate": "2026-09-22",
+  "evidenceLevel": "Primary licenses/documentation, pinned artifact/source inspection and bounded 2026-09-22 runtime probes; no production build, load test or complete distributable-bundle license audit.",
+  "scope": "Production self-hosting and embedding/redistributing the named runtime in an open-source or commercial Exomachina product. API integration alone does not transfer the runtime license to all Exomachina code. Internal use, customer-authored service and redistributed runtime are distinct uses.",
+  "rule": "BLOCKED refers to the stated edition/use condition, not every possible deployment. A paid agreement is not a free workaround. Rebuilding a platform or silently losing required guarantees is not an acceptable small integration. Unknown or contradictory evidence stays VERIFY, never cleared by score.",
+  "flags": {
+    "blocked": "BLOCKED",
+    "paid": "PAID",
+    "limit": "LIMIT",
+    "custom": "CUSTOM",
+    "verify": "VERIFY"
+  },
+  "flagDefinitions": {
+    "blocked": "The stated use or required facility is unavailable under the assessed terms; no acceptable free path has been established for that condition.",
+    "paid": "The named native facility needs a commercial edition; details distinguish feasible alternatives from costly replacements.",
+    "limit": "A quota, retention bound or execution constraint applies; configurable defaults are identified separately.",
+    "custom": "A separately owned component or architecture change is required.",
+    "verify": "Evidence conflicts or the build/behavior has not been established; do not count it as production clearance."
+  },
+  "engines": {
+    "conductor": {
+      "runtime": "Documented OSS production server with shared persistence, queues and distributed locking. The SQLite quickstart is a development configuration, not a license-imposed production ceiling.",
+      "runtimeLabel": "OSS production path",
+      "runtimeFlag": "",
+      "ossProduct": "Apache 2.0 core source permits redistribution with notices, but the published v3.32.4 server JAR includes Orkes Community-licensed queue code. Rights for the intended Exomachina product are not established.",
+      "ossLabel": "Stock artifact gate",
+      "ossFlag": "blocked",
+      "commercialProduct": "Apache 2.0 core source permits commercial modification, but that does not clear the Orkes queue dependency inside the stock v3.32.4 assembled server.",
+      "commercialLabel": "Stock artifact gate",
+      "commercialFlag": "blocked",
+      "licenseChecks": "No vendor production key or license-based execution/worker cap identified for the OSS core; infrastructure capacity and configured quotas still apply.",
+      "runtimeClearance": "Stock v3.32.4 server artifact not cleared. A PostgreSQL-only source variant built and retained one simple workflow result across restart; complete product package and S1–S4 remain unproved.",
+      "sources": [
+        {
+          "title": "Production deployment",
+          "url": "https://docs.conductor-oss.org/devguide/running/deploy.html"
+        },
+        {
+          "title": "Core license",
+          "url": "https://github.com/conductor-oss/conductor/blob/4845c0ac97b03130fc4ef768332dd911b7e8c414/LICENSE"
+        },
+        {
+          "title": "Pinned server POM",
+          "url": "https://repo.maven.apache.org/maven2/org/conductoross/conductor-server/3.32.4/conductor-server-3.32.4.pom"
+        },
+        {
+          "title": "Restricted queue license",
+          "url": "https://github.com/orkes-io/licenses/blob/14cd5d6b0619399c205a022cc7b512734ea51911/community/LICENSE.txt"
+        }
+      ],
+      "sourceSnapshot": "4845c0ac97b03130fc4ef768332dd911b7e8c414",
+      "selectionStatus": "conditional",
+      "selectionReason": "Stock assembled artifact requires explicit rights. A narrow PostgreSQL-only source build passed, but its distribution audit, one-install packaging, factory behavior and external authorization remain open.",
+      "recommendationRole": "conditional",
+      "recommendationRoleLabel": "Source variant under evaluation",
+      "sourceVariantCommit": "088de237a185caaeb669035a6d75de65d36cab5a",
+      "sourceVariantEvidence": "conductor-license-follow-up-2026-09-22.md"
+    },
+    "windmill": {
+      "runtime": "Community binaries support ordinary production workers. Paid facilities include dedicated warm-script workers and autoscaling. The named public OSS build includes no_auth and resolves requests to an administrative identity; it is not a secure, equivalent replacement.",
+      "runtimeLabel": "OSS auth blocked; CE runs",
+      "runtimeFlag": "blocked",
+      "ossProduct": "Non-enterprise source is AGPLv3, with applicable source/notice obligations. Community binaries contain additional proprietary components and cannot simply be redistributed under an OSI license.",
+      "ossLabel": "AGPL source allowed; binary restricted",
+      "ossFlag": "verify",
+      "commercialProduct": "AGPL permits commercial use subject to obligations. Distributed Community prohibits selling/wrapping/managed-service use without agreement; internal use and APIs as-is are different.",
+      "commercialLabel": "Wrapped Community blocked",
+      "commercialFlag": "blocked",
+      "licenseChecks": "Enterprise worker source refuses work without a valid license key. Renewal/expiry behavior resides partly in private code and needs contract/build verification. Linux native subworkers are not the same as paid dedicated script workers.",
+      "runtimeClearance": "Unrun: exact build and production behavior not certified",
+      "sources": [
+        {
+          "title": "Source/binary license",
+          "url": "https://github.com/windmill-labs/windmill/blob/main/LICENSE"
+        },
+        {
+          "title": "Production topology",
+          "url": "https://www.windmill.dev/docs/advanced/high_availability"
+        },
+        {
+          "title": "Dedicated workers",
+          "url": "https://www.windmill.dev/docs/core_concepts/dedicated_workers"
+        }
+      ],
+      "sourceSnapshot": "25c8bfaab412d440e51be92af61066af025d334b",
+      "selectionStatus": "excluded",
+      "selectionReason": "The scored distributed Community baseline is excluded for the current product: its free terms restrict wrapping, selling and managed-service use without agreement.",
+      "recommendationRole": "reference",
+      "recommendationRoleLabel": "Comparison only"
+    },
+    "kestra": {
+      "runtime": "Documented production OSS engine with durable storage and database-backed distributed deployment. Enterprise gates concern governance/isolation and operational facilities, not a general dev-only core.",
+      "runtimeLabel": "OSS production path",
+      "runtimeFlag": "",
+      "ossProduct": "Apache 2.0 core permits redistribution with notices. The v2.0.3 JAR dependency audit leaves shaded isorelax license/notice provenance unresolved, and the final JDK/PostgreSQL/dylib bundle has not been cleared.",
+      "ossLabel": "Distribution review",
+      "ossFlag": "verify",
+      "commercialProduct": "Apache 2.0 core permits commercial embedding subject to actual bundle dependency rights and notices; Enterprise features need separate rights.",
+      "commercialLabel": "Distribution review",
+      "commercialFlag": "verify",
+      "licenseChecks": "No mandatory OSS vendor registration/activation or execution cap identified. Server/UI telemetry can be disabled. EE has a license and potentially contractual user/service-account quotas.",
+      "runtimeClearance": "v2.0.3 native restart, contested state, publication, Strands/A2A and host-local macOS arm64 one-command bundle passed bounded development probes; clean-machine installation and production qualification remain open.",
+      "sources": [
+        {
+          "title": "Core license",
+          "url": "https://github.com/kestra-io/kestra/blob/develop/LICENSE"
+        },
+        {
+          "title": "Editions",
+          "url": "https://kestra.io/docs/oss-vs-paid"
+        },
+        {
+          "title": "HA",
+          "url": "https://kestra.io/docs/administrator-guide/high-availability"
+        },
+        {
+          "title": "Pinned v2.0.3 release",
+          "url": "https://github.com/kestra-io/kestra/releases/tag/v2.0.3"
+        },
+        {
+          "title": "Pinned core license",
+          "url": "https://github.com/kestra-io/kestra/blob/v2.0.3/LICENSE"
+        },
+        {
+          "title": "Observed spike report",
+          "url": "spike-results-2026-09-22.md"
+        }
+      ],
+      "selectionStatus": "conditional",
+      "selectionReason": "Observed behavioral baseline only. One ~650 MiB warm-idle Kestra JVM excludes PostgreSQL and Strands; per-harness Kestra is rejected as the default. A shared local engine still needs total-footprint, lifecycle, clean-machine distribution and authorization proof.",
+      "recommendationRole": "provisional",
+      "recommendationRoleLabel": "Behavioral baseline; resource gate"
+    },
+    "temporal": {
+      "runtime": "Self-hosted Server plus production database and separately deployed SDK workers is a documented free production path. The CLI development server is not the production baseline.",
+      "runtimeLabel": "OSS production path",
+      "runtimeFlag": "",
+      "ossProduct": "MIT core permits redistribution with retained license notices; check dependencies separately.",
+      "ossLabel": "Permissive core",
+      "ossFlag": "",
+      "commercialProduct": "MIT core permits commercial embedding and modification; Temporal Cloud is optional.",
+      "commercialLabel": "Permissive core",
+      "commercialFlag": "",
+      "licenseChecks": "No vendor production license key identified for self-hosted core; configurable service limits, storage and hardware capacity still apply.",
+      "runtimeClearance": "A pinned non-development Temporal Server v1.32.0 with PostgreSQL persistence/visibility and Zigflow v0.15.2 passed bounded startup, waiting-run restart and pinned v1/v2 worker probes. Product package, authorization, Strands/A2A integration and production qualification remain open.",
+      "sources": [
+        {
+          "title": "Core license",
+          "url": "https://github.com/temporalio/temporal/blob/main/LICENSE"
+        },
+        {
+          "title": "Self-hosting",
+          "url": "https://docs.temporal.io/self-hosted-guide"
+        },
+        {
+          "title": "Production deployment",
+          "url": "https://docs.temporal.io/self-hosted-guide/deployment"
+        }
+      ],
+      "selectionStatus": "conditional",
+      "selectionReason": "A blocker if no maintained authoring layer can publish documents with immutable run bindings, permitted execution, and an acceptable bundled operating cost. Zigflow worker refresh is allowed when rollout is automatic and old versions remain available.",
+      "recommendationRole": "contender",
+      "recommendationRoleLabel": "Direct candidate; authoring gate"
+    },
+    "n8n": {
+      "runtime": "Community is a real self-hosted runtime with queue mode and separate workers; it is not restricted to a development server. Multi-main availability and other facilities are paid.",
+      "runtimeLabel": "Community production path",
+      "runtimeFlag": "paid",
+      "ossProduct": "The Sustainable Use License is source-available, not OSI. It restricts redistribution and competing automation products; publishing our integration code does not relicense n8n.",
+      "ossLabel": "No OSI runtime grant",
+      "ossFlag": "blocked",
+      "commercialProduct": "Internal/operator-authored workflows are permitted. Customer-controlled workflow authoring, including through an AI agent, requires appropriate commercial rights under the current FAQ.",
+      "commercialLabel": "Customer authoring blocked",
+      "commercialFlag": "blocked",
+      "licenseChecks": "Base Community needs no paid key. Free registration unlocks extras; commercial features require activation/renewal and may carry execution quotas. Telemetry/update/template calls are separately disableable.",
+      "runtimeClearance": "Unrun: exact build and production behavior not certified",
+      "sources": [
+        {
+          "title": "Actual license",
+          "url": "https://github.com/n8n-io/n8n/blob/master/LICENSE.md"
+        },
+        {
+          "title": "Current FAQ",
+          "url": "https://github.com/n8n-io/n8n-docs/blob/main/docs/n8n-community-license/license-faq.md"
+        },
+        {
+          "title": "Community features",
+          "url": "https://docs.n8n.io/deploy/host-n8n/community-edition-features"
+        }
+      ],
+      "selectionStatus": "excluded",
+      "selectionReason": "Excluded from the current factory-authoring product shortlist: the assessed free license does not permit external users or their agents to control workflow logic, or grant unrestricted product redistribution.",
+      "recommendationRole": "reference",
+      "recommendationRoleLabel": "Comparison only"
+    },
+    "langgraph": {
+      "runtime": "MIT core can run in a custom production application. The packaged Agent Server production path requires a license key; langgraph dev is for development/testing, and up uses production licensing.",
+      "runtimeLabel": "Packaged server requires key",
+      "runtimeFlag": "blocked",
+      "ossProduct": "MIT library permits OSS redistribution. Agent Server and LangSmith deployment components have different terms and are not included in this grant.",
+      "ossLabel": "MIT library only",
+      "ossFlag": "custom",
+      "commercialProduct": "MIT library permits commercial embedding. It does not grant free production rights to the packaged server; owner exclusion remains in force.",
+      "commercialLabel": "Packaged platform excluded",
+      "commercialFlag": "blocked",
+      "licenseChecks": "Standalone Agent Server requires license verification/usage reporting. The dev worker concurrency default is configurable; no artificial numeric performance cap is asserted.",
+      "runtimeClearance": "Unrun: exact build and production behavior not certified",
+      "sources": [
+        {
+          "title": "CLI production requirement",
+          "url": "https://docs.langchain.com/langsmith/cli"
+        },
+        {
+          "title": "Development versus production",
+          "url": "https://docs.langchain.com/langsmith/local-dev-testing"
+        },
+        {
+          "title": "Standalone licensing",
+          "url": "https://docs.langchain.com/langsmith/deploy-standalone-server"
+        },
+        {
+          "title": "Core license",
+          "url": "https://github.com/langchain-ai/langgraph/blob/main/LICENSE"
+        }
+      ],
+      "selectionStatus": "excluded",
+      "selectionReason": "Already excluded by the owner because the platform's commercial self-hosting constraints are unacceptable.",
+      "recommendationRole": "reference",
+      "recommendationRoleLabel": "Comparison only"
+    },
+    "strands": {
+      "runtime": "The SDK runs in an ordinary production application without a vendor server license. A pinned core Graph 1.57.0 trial resumed version-bound snapshots after process kills with no separate engine. The application fixture supplied document publication, while two unfenced same-run resume owners both executed delivery. Hosted AgentCore is optional.",
+      "runtimeLabel": "Production SDK / own host",
+      "runtimeFlag": "custom",
+      "ossProduct": "Apache 2.0 SDK permits redistribution with license/notice obligations; separately inspect plugins and tools included in the product.",
+      "ossLabel": "Permissive SDK",
+      "ossFlag": "",
+      "commercialProduct": "Apache 2.0 SDK permits commercial embedding. Managed AWS services are separate products with their own terms and quotas.",
+      "commercialLabel": "Permissive SDK",
+      "commercialFlag": "",
+      "licenseChecks": "No mandatory platform license server or SDK execution quota identified. Provider/model limits and the application host still apply.",
+      "runtimeClearance": "Pinned core Graph 1.57.0 passed bounded checkpoint/restart proof and failed same-run exclusive ownership in a contested fixture; complete factory behavior and product qualification remain open.",
+      "sources": [
+        {
+          "title": "SDK license",
+          "url": "https://github.com/strands-agents/harness-sdk/blob/main/LICENSE.APACHE"
+        },
+        {
+          "title": "Session management",
+          "url": "https://strandsagents.com/docs/user-guide/sdk/agents/session-management/"
+        },
+        {
+          "title": "Production deployment targets",
+          "url": "https://strandsagents.com/docs/user-guide/sdk/deploy/"
+        },
+        {
+          "title": "Operating in production",
+          "url": "https://strandsagents.com/docs/user-guide/sdk/deploy/operating-agents-in-production/"
+        }
+      ],
+      "selectionStatus": "conditional",
+      "selectionReason": "Core Graph is a lightweight outer-runtime challenger, but the same-run duplicate delivery makes fenced ownership and effect idempotency concrete product work alongside publication and remote recovery. Reject it if those owned mechanisms become a bespoke engine beyond the accepted custom-work budget.",
+      "recommendationRole": "provisional",
+      "recommendationRoleLabel": "Harness + Graph trial"
+    },
+    "argo": {
+      "runtime": "Documented free OSS production controller/server on Kubernetes, with native recovery and HA configuration. Kubernetes operation, artifact storage and optional SQL persistence are deployment responsibilities.",
+      "runtimeLabel": "OSS production path",
+      "runtimeFlag": "",
+      "ossProduct": "Apache 2.0 core permits source/object redistribution and modifications with license/notice obligations; bundled container images, plugins and other dependencies need their own review.",
+      "ossLabel": "Permissive core",
+      "ossFlag": "",
+      "commercialProduct": "Apache 2.0 core permits commercial embedding and redistribution, including a customer-authored workflow product; no internal-use-only restriction was identified in the inspected license.",
+      "commercialLabel": "Permissive core",
+      "commercialFlag": "",
+      "licenseChecks": "No vendor production license key, license-server requirement or commercial-only core execution/worker entitlement identified. Configured quotas, Kubernetes limits and infrastructure capacity still apply.",
+      "runtimeClearance": "Unrun: exact release build, tenant isolation and recovery behavior not certified",
+      "sourceSnapshot": "8a6f33f90a2124878db858e04c6999d3c5ab63b2",
+      "selectionStatus": "conditional",
+      "selectionReason": "A blocker if operating Kubernetes is unacceptable or if a safe permitted workflow vocabulary, remote-task recovery and immutable version bindings cannot be achieved within the accepted integration budget.",
+      "sources": [
+        {
+          "title": "Apache 2.0 core license, inspected source snapshot",
+          "url": "https://github.com/argoproj/argo-workflows/blob/8a6f33f90a2124878db858e04c6999d3c5ab63b2/LICENSE"
+        },
+        {
+          "title": "Production availability and controller recovery",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/high-availability/"
+        },
+        {
+          "title": "Untrusted workflow and pod security boundaries",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/security/"
+        },
+        {
+          "title": "Strict and Secure workflow restrictions",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/workflow-restrictions/"
+        }
+      ],
+      "recommendationRole": "provisional",
+      "recommendationRoleLabel": "Provisional challenger"
+    }
+  },
+  "restrictions": [
+    {
+      "id": "c-stock-artifact",
+      "engine": "conductor",
+      "flag": "blocked",
+      "title": "Stock v3.32.4 server artifact is not cleared for this product",
+      "scope": "Published conductor-server:3.32.4 boot JAR in an Exomachina open-source/commercial factory product",
+      "features": [],
+      "fact": "The published server POM declares orkes-conductor-queues:2.0.0.rc3 and the boot JAR ZIP directory contains it. Its Orkes Community License Article 3.3 restricts third-party service and competitive-product uses; Exomachina has no established rights for this assembled package.",
+      "workaround": "Obtain explicit rights for the actual use, or use the pinned PostgreSQL-only source variant that built and ran a simple workflow after removing the direct restricted dependency. Reproducible packaging, a full dependency/notice audit and factory behavior remain unproved.",
+      "workaroundQuality": "Stock artifact remains blocked; source variant is technically viable but not product-qualified",
+      "sources": [
+        {
+          "title": "Server POM",
+          "url": "https://repo.maven.apache.org/maven2/org/conductoross/conductor-server/3.32.4/conductor-server-3.32.4.pom"
+        },
+        {
+          "title": "Queue POM",
+          "url": "https://repo.maven.apache.org/maven2/io/orkes/queues/orkes-conductor-queues/2.0.0.rc3/orkes-conductor-queues-2.0.0.rc3.pom"
+        },
+        {
+          "title": "Orkes terms",
+          "url": "https://github.com/orkes-io/licenses/blob/14cd5d6b0619399c205a022cc7b512734ea51911/community/LICENSE.txt"
+        }
+      ]
+    },
+    {
+      "id": "k-bundle-gate",
+      "engine": "kestra",
+      "flag": "verify",
+      "title": "Host-local bundle passed; clean-machine distribution remains open",
+      "scope": "Kestra OSS v2.0.3 with JDK 25, PostgreSQL 16.15 and copied macOS arm64 dylibs",
+      "features": [],
+      "fact": "A one-command copied local bundle restarted a paused run on the trial host without Homebrew runtime load paths. It was 609 MiB including 66 MiB state. Clean-machine portability, installer/update/backup ownership, two-harness helper lifecycle, final notices and shaded isorelax provenance remain unproved.",
+      "workaround": "Build and test a signed distributable on the supported clean machines, close the dependency/NOTICE audit and qualify product helper supervision and resources.",
+      "workaroundQuality": "Feasible host-local path observed; product package unproved",
+      "sources": [
+        {
+          "title": "Kestra requirements",
+          "url": "https://kestra.io/docs/administrator-guide/requirements"
+        },
+        {
+          "title": "Kestra v2.0.3 license",
+          "url": "https://github.com/kestra-io/kestra/blob/v2.0.3/LICENSE"
+        },
+        {
+          "title": "Woodstox notice issue",
+          "url": "https://github.com/FasterXML/woodstox/issues/130"
+        }
+      ]
+    },
+    {
+      "id": "c-production",
+      "engine": "conductor",
+      "flag": "custom",
+      "title": "Production storage and coordination must be configured",
+      "scope": "OSS production deployment",
+      "features": [
+        "durable",
+        "ownership",
+        "history"
+      ],
+      "fact": "Default standalone SQLite is for local development. Shared database/queue, distributed locking, persistence and operational configuration are required for production.",
+      "workaround": "Use the documented PostgreSQL or other supported production topology. This is deployment work, not a paid runtime unlock.",
+      "workaroundQuality": "Simple PostgreSQL workflow/restart observed on source variant; production topology remains unproved",
+      "sources": [
+        {
+          "title": "Production guide",
+          "url": "https://docs.conductor-oss.org/devguide/running/deploy.html"
+        }
+      ]
+    },
+    {
+      "id": "c-auth",
+      "engine": "conductor",
+      "flag": "paid",
+      "title": "Integrated scoped authorization is outside OSS baseline",
+      "scope": "Conductor OSS versus enterprise inbound authorization",
+      "features": [
+        "rbac",
+        "history",
+        "policy_validation"
+      ],
+      "fact": "OSS REST/A2A are open by default. Commercial integrated authorization cannot be credited as an OSS facility.",
+      "workaround": "Private network plus a trusted authorization/publication gateway and actor audit trail; cover direct API and worker paths.",
+      "workaroundQuality": "Feasible external boundary; not yet proved",
+      "sources": [
+        {
+          "title": "Security",
+          "url": "https://docs.conductor-oss.org/devguide/ai/a2a-integration.html#security"
+        }
+      ]
+    },
+    {
+      "id": "c-remote",
+      "engine": "conductor",
+      "flag": "verify",
+      "title": "Native A2A release and remote guarantees need proof",
+      "scope": "Pinned OSS integration modules",
+      "features": [
+        "a2a_client",
+        "a2a_expose",
+        "remote_reconcile",
+        "ownership"
+      ],
+      "fact": "Current docs describe A2A tasks, but do not certify the selected binary, protocol version, continuation or stale-attempt fencing.",
+      "workaround": "Pin module versions and test a reusable adapter where necessary. An A2A adapter is accepted architecture work.",
+      "workaroundQuality": "Feasible integration; unrun on source variant",
+      "sources": [
+        {
+          "title": "A2A integration",
+          "url": "https://docs.conductor-oss.org/devguide/ai/a2a-integration.html"
+        }
+      ]
+    },
+    {
+      "id": "w-product",
+      "engine": "windmill",
+      "flag": "blocked",
+      "title": "Distributed Community cannot be treated as a freely wrappable product runtime",
+      "scope": "Selling, wrapping or offering distributed Community as a managed service",
+      "features": [
+        "*"
+      ],
+      "fact": "Community binary terms prohibit these uses without agreement. Internal organizational use and API calls as-is do not establish a general product-embedding grant.",
+      "workaround": "Obtain rights for the exact use or choose another runtime. An AGPL source build is a distinct candidate and must pass its own feature/auth audit.",
+      "workaroundQuality": "No code-only workaround for these binary license restrictions",
+      "sources": [
+        {
+          "title": "Actual license",
+          "url": "https://github.com/windmill-labs/windmill/blob/main/LICENSE"
+        },
+        {
+          "title": "Embedding terms",
+          "url": "https://www.windmill.dev/docs/misc/white_labelling"
+        }
+      ]
+    },
+    {
+      "id": "w-source",
+      "engine": "windmill",
+      "flag": "blocked",
+      "title": "Named public OSS build bypasses per-user authorization",
+      "scope": "Unmodified public oss feature-set build when native scoped identity is required",
+      "features": [
+        "rbac",
+        "isolation",
+        "policy_validation",
+        "protected_evaluator",
+        "research_isolation"
+      ],
+      "fact": "At the recorded source revision, the oss feature includes no_auth. The auth path resolves requests to a synthetic admin/superadmin with unrestricted scopes; public user/password functions are unavailable. The Community build includes private auth code.",
+      "workaround": "A trusted external boundary must own all authorization and actor audit, or a separately implemented auth subsystem is needed. Turning off a feature flag alone is not a proven replacement. Do not transplant proprietary auth code.",
+      "workaroundQuality": "No acceptable drop-in OSS production-auth path established",
+      "sources": [
+        {
+          "title": "Pinned build features",
+          "url": "https://github.com/windmill-labs/windmill/blob/25c8bfaab412d440e51be92af61066af025d334b/backend/Cargo.toml"
+        },
+        {
+          "title": "Pinned auth path",
+          "url": "https://github.com/windmill-labs/windmill/blob/25c8bfaab412d440e51be92af61066af025d334b/backend/windmill-api-auth/src/auth.rs#L1047"
+        },
+        {
+          "title": "Public user functions",
+          "url": "https://github.com/windmill-labs/windmill/blob/25c8bfaab412d440e51be92af61066af025d334b/backend/windmill-api/src/users_oss.rs"
+        }
+      ]
+    },
+    {
+      "id": "w-performance",
+      "engine": "windmill",
+      "flag": "paid",
+      "title": "Dedicated high-throughput workers and native autoscaling are paid",
+      "scope": "Community versus Enterprise performance facilities",
+      "features": [
+        "capacity",
+        "priority",
+        "research_isolation"
+      ],
+      "fact": "Ordinary workers incur per-job startup/cleanup. Dedicated script workers that avoid those starts, native autoscaling and advanced worker management are paid; this is not proof that ordinary Community workers are dev-only.",
+      "workaround": "Benchmark ordinary workers at the required load; add worker capacity or external infrastructure autoscaling. Neither establishes identical low-latency behavior.",
+      "workaroundQuality": "Feasible scaling alternative; latency equivalence unproven",
+      "sources": [
+        {
+          "title": "Dedicated workers",
+          "url": "https://www.windmill.dev/docs/core_concepts/dedicated_workers"
+        },
+        {
+          "title": "Edition table",
+          "url": "https://www.windmill.dev/pricing"
+        }
+      ]
+    },
+    {
+      "id": "w-quotas",
+      "engine": "windmill",
+      "flag": "limit",
+      "title": "Community has user, workspace, storage and retention quotas",
+      "scope": "Published free self-hosted edition table",
+      "features": [
+        "rbac",
+        "history",
+        "artifacts",
+        "dependency_bundle"
+      ],
+      "fact": "The table lists 3 workspaces, 50 users, 4 groups, 10 SSO users, 100 app guests per 30 days, 10 GiB workspace object storage and job details retained up to 30 days; Git sync is limited to 2 users. Executions are unlimited; no standard-worker numeric cap is established here.",
+      "workaround": "Use only if the quotas fit, retain required artifacts/evidence in approved external stores, or change edition/runtime. Separate infrastructure does not bypass licensing.",
+      "workaroundQuality": "Feasible only where required scale and retention fit",
+      "sources": [
+        {
+          "title": "Edition table",
+          "url": "https://www.windmill.dev/pricing"
+        }
+      ]
+    },
+    {
+      "id": "w-concurrency",
+      "engine": "windmill",
+      "flag": "paid",
+      "title": "Global concurrency keys, debouncing and priority are paid",
+      "scope": "Native global scheduler controls",
+      "features": [
+        "capacity",
+        "overlap",
+        "priority"
+      ],
+      "fact": "Per-flow/script shared concurrency limits, debounce/coalescing and step priority are commercial features, beyond ordinary worker capacity and loop limits.",
+      "workaround": "Use one durable admission mechanism with leases/reconciliation, or accept simpler whole-pool limits if sufficient. A plain in-process semaphore is not an equivalent distributed guarantee.",
+      "workaroundQuality": "Substantial integration for equivalent global behavior",
+      "sources": [
+        {
+          "title": "Concurrency",
+          "url": "https://www.windmill.dev/docs/core_concepts/concurrency_limits"
+        },
+        {
+          "title": "Edition table",
+          "url": "https://www.windmill.dev/pricing"
+        }
+      ]
+    },
+    {
+      "id": "w-approval",
+      "engine": "windmill",
+      "flag": "paid",
+      "title": "Required approver identity and deployment protection are paid",
+      "scope": "Built-in approval and publication controls",
+      "features": [
+        "commands",
+        "gates",
+        "stale_decisions",
+        "policy_validation",
+        "staged_rollout"
+      ],
+      "fact": "Forms, authenticated/group approvers, disabling self-approval and protection rulesets have paid boundaries. Ordinary waits and branches do not establish independent acceptance.",
+      "workaround": "Trusted publisher and independent acceptance service may enforce the requirement if every bypass path is closed.",
+      "workaroundQuality": "Feasible domain integration; security proof required",
+      "sources": [
+        {
+          "title": "Approval controls",
+          "url": "https://www.windmill.dev/docs/flows/flow_approval"
+        },
+        {
+          "title": "Protection",
+          "url": "https://www.windmill.dev/docs/core_concepts/protection_rulesets"
+        }
+      ]
+    },
+    {
+      "id": "w-audit",
+      "engine": "windmill",
+      "flag": "verify",
+      "title": "Free audit availability conflicts across official sources",
+      "scope": "Community history and operator audit",
+      "features": [
+        "history"
+      ],
+      "fact": "Pricing excludes free audit logs; dedicated documentation describes Community audit retention. A full audit rating is not justified until the selected artifact is verified.",
+      "workaround": "Downgrade to partial; inspect the actual build and prove actor-attributed records and export/retention.",
+      "workaroundQuality": "Unresolved; no production clearance",
+      "sources": [
+        {
+          "title": "Audit docs",
+          "url": "https://www.windmill.dev/docs/core_concepts/audit_logs"
+        },
+        {
+          "title": "Pricing",
+          "url": "https://www.windmill.dev/pricing"
+        }
+      ]
+    },
+    {
+      "id": "w-observability",
+      "engine": "windmill",
+      "flag": "paid",
+      "title": "Advanced operational telemetry is edition-gated",
+      "scope": "Native observability facilities",
+      "features": [
+        "history",
+        "events",
+        "recovery_playbooks"
+      ],
+      "fact": "Pricing gates Prometheus, OpenTelemetry, queue metrics, instance event webhooks, workspace/schedule error handlers and service-log export. Basic run logs remain distinct.",
+      "workaround": "Use host/database monitoring and supported API reconciliation; prove coverage, retention and failure detection rather than assuming paid telemetry is present.",
+      "workaroundQuality": "Feasible partial substitute; completeness unproven",
+      "sources": [
+        {
+          "title": "Edition table",
+          "url": "https://www.windmill.dev/pricing"
+        }
+      ]
+    },
+    {
+      "id": "w-restart",
+      "engine": "windmill",
+      "flag": "paid",
+      "title": "Restart deployed flows from arbitrary nodes is paid",
+      "scope": "Production recovery versus editor preview",
+      "features": [
+        "fork",
+        "preserve_success",
+        "recovery_playbooks"
+      ],
+      "fact": "Editor preview/reuse and durable execution are distinct from the paid facility to restart a deployed flow from a selected node/version.",
+      "workaround": "Use supported retry/checkpoint recovery where sufficient; bespoke arbitrary replay requires side-effect and version controls.",
+      "workaroundQuality": "Limited alternative; not equivalent to arbitrary restart",
+      "sources": [
+        {
+          "title": "Edition table",
+          "url": "https://www.windmill.dev/pricing"
+        }
+      ]
+    },
+    {
+      "id": "w-beta",
+      "engine": "windmill",
+      "flag": "verify",
+      "title": "Agent evaluation and conversational surfaces are beta",
+      "scope": "Documented beta integrations",
+      "features": [
+        "conversation",
+        "candidate_comparison",
+        "proactive_research"
+      ],
+      "fact": "Beta agent sessions/evals do not establish stable whole-factory supervision, protected evaluation or bounded autoresearch.",
+      "workaround": "Keep these outside required production guarantees until pinned and tested; own the domain-specific evaluator and campaign policy.",
+      "workaroundQuality": "Separate domain work; beta status unresolved",
+      "sources": [
+        {
+          "title": "Agent evals",
+          "url": "https://www.windmill.dev/docs/core_concepts/ai_agent_evals"
+        },
+        {
+          "title": "AI sessions",
+          "url": "https://www.windmill.dev/docs/core_concepts/ai_sessions"
+        }
+      ]
+    },
+    {
+      "id": "k-governance",
+      "engine": "kestra",
+      "flag": "paid",
+      "title": "Native granular RBAC and operator audit require Enterprise",
+      "scope": "OSS basic authentication versus operation-level controls",
+      "features": [
+        "rbac",
+        "history",
+        "policy_validation",
+        "recovery_playbooks"
+      ],
+      "fact": "Enterprise supplies scoped RBAC, service accounts, richer identity controls and audit logs. OSS basic authentication is not equivalent.",
+      "workaround": "A private engine with a trusted publisher, scoped gateway and external actor audit can satisfy a deliberately bounded deployment.",
+      "workaroundQuality": "Feasible external boundary; unrun",
+      "sources": [
+        {
+          "title": "Edition comparison",
+          "url": "https://kestra.io/docs/oss-vs-paid"
+        }
+      ]
+    },
+    {
+      "id": "k-isolation",
+      "engine": "kestra",
+      "flag": "paid",
+      "title": "Native worker/tenant isolation and priority pools are paid",
+      "scope": "Multi-tenant and evaluation resource boundaries",
+      "features": [
+        "isolation",
+        "priority",
+        "protected_evaluator",
+        "research_isolation"
+      ],
+      "fact": "Enterprise worker groups, isolation and tenant facilities cannot be assumed in OSS. Core flow concurrency is available and must not be marked wholly paid.",
+      "workaround": "Use separately isolated OSS deployments and credentials, network controls and infrastructure reservations. This adds operational units.",
+      "workaroundQuality": "Feasible but material infrastructure",
+      "sources": [
+        {
+          "title": "Edition comparison",
+          "url": "https://kestra.io/docs/oss-vs-paid"
+        },
+        {
+          "title": "Flow concurrency",
+          "url": "https://kestra.io/docs/workflow-components/concurrency"
+        }
+      ]
+    },
+    {
+      "id": "k-secrets",
+      "engine": "kestra",
+      "flag": "paid",
+      "title": "External secret-management facilities are paid extras",
+      "scope": "Native secret-store and secret governance extensions",
+      "features": [
+        "secrets"
+      ],
+      "fact": "OSS environment-backed secret references satisfy basic secret binding. External vaults, managed secret facilities and fine-grained audit/access add Enterprise requirements.",
+      "workaround": "Inject environment-backed secrets into the intended process with external secret tooling and separation of instances.",
+      "workaroundQuality": "Good workaround for basic binding; full external-vault feature absent",
+      "sources": [
+        {
+          "title": "Edition comparison",
+          "url": "https://kestra.io/docs/oss-vs-paid"
+        }
+      ]
+    },
+    {
+      "id": "k-tests",
+      "engine": "kestra",
+      "flag": "paid",
+      "title": "Native unit-test fixtures and promotion facilities are paid",
+      "scope": "Built-in testing, release and incident tooling",
+      "features": [
+        "testing",
+        "pinned_debug",
+        "trace_regressions",
+        "staged_rollout",
+        "incident_cases",
+        "work_management",
+        "candidate_comparison"
+      ],
+      "fact": "Enterprise Unit Tests, Promote and Cases do not belong to the free execution engine. Playground and ordinary test flows have narrower contracts.",
+      "workaround": "Use an external fixture runner, version-controlled publisher and incident store. This does not count as native capability or a zero-cost replacement.",
+      "workaroundQuality": "Feasible domain/tooling work; effort must be accepted",
+      "sources": [
+        {
+          "title": "Edition comparison",
+          "url": "https://kestra.io/docs/oss-vs-paid"
+        }
+      ]
+    },
+    {
+      "id": "k-recursion",
+      "engine": "kestra",
+      "flag": "limit",
+      "title": "Recursive Subflow calls are prohibited",
+      "scope": "Native direct/indirect self-recursion",
+      "features": [
+        "recursive"
+      ],
+      "fact": "Nested workflows are available; calling a flow recursively through Subflow is prohibited.",
+      "workaround": "Use bounded loops or explicit external nested-factory delegation. Self-recursion is optional here.",
+      "workaroundQuality": "Good workaround for current requirements",
+      "sources": [
+        {
+          "title": "Subflows",
+          "url": "https://kestra.io/docs/workflow-components/subflows"
+        }
+      ]
+    },
+    {
+      "id": "t-authoring",
+      "engine": "temporal",
+      "flag": "custom",
+      "title": "Factory documents need a separately assessed authoring layer",
+      "scope": "Document-only authoring requirement",
+      "features": [
+        "native_definition",
+        "publish_no_deploy",
+        "agent_authoring",
+        "schema_discovery",
+        "validate_only"
+      ],
+      "fact": "The native runtime executes SDK workflow code. An interpreter can accept documents without per-definition code deployment, but Temporal core does not supply the managed factory language/publication platform.",
+      "workaround": "Reuse an existing layer or explicitly own a restricted interpreter. Stock Zigflow v0.15.2 needs worker refresh for new definitions; Tracecat supplies publication but brings platform and license constraints. Local pinning/recovery probes do not resolve this gate.",
+      "workaroundQuality": "Feasible paths; publication and ownership gate unresolved",
+      "sources": [
+        {
+          "title": "Workflow model",
+          "url": "https://docs.temporal.io/workflow-definition"
+        },
+        {
+          "title": "Zigflow pinned release",
+          "url": "https://github.com/zigflow/zigflow/releases/tag/v0.15.2"
+        },
+        {
+          "title": "Worker versioning",
+          "url": "https://docs.temporal.io/worker-versioning"
+        }
+      ]
+    },
+    {
+      "id": "t-policy",
+      "engine": "temporal",
+      "flag": "custom",
+      "title": "Product roles and credential policy require application ownership",
+      "scope": "Self-hosted authorization and capability bindings",
+      "features": [
+        "rbac",
+        "secrets",
+        "policy_validation",
+        "gates"
+      ],
+      "fact": "Server authorization extension points and workflow logic exist, but Exomachina roles, publication policy and a credential catalog are not turnkey runtime facilities.",
+      "workaround": "Configure supported authorization and an explicit trusted publisher; keep credential issuance in a separate approved service.",
+      "workaroundQuality": "Feasible integration; unrun",
+      "sources": [
+        {
+          "title": "Security",
+          "url": "https://docs.temporal.io/self-hosted-guide/security"
+        }
+      ]
+    },
+    {
+      "id": "t-artifacts",
+      "engine": "temporal",
+      "flag": "verify",
+      "title": "Payload offloading is preview and not an artifact repository",
+      "scope": "Official External Storage versus application artifacts",
+      "features": [
+        "artifacts"
+      ],
+      "fact": "Official payload offloading is preview. Workflow history is not unlimited artifact storage; service limits and retention apply.",
+      "workaround": "Use durable object storage and validated references through Activities, independently of preview payload offloading.",
+      "workaroundQuality": "Good artifact-reference workaround; unrun",
+      "sources": [
+        {
+          "title": "Limits",
+          "url": "https://docs.temporal.io/self-hosted-guide/defaults"
+        },
+        {
+          "title": "External Storage",
+          "url": "https://docs.temporal.io/external-storage"
+        }
+      ]
+    },
+    {
+      "id": "n-product",
+      "engine": "n8n",
+      "flag": "blocked",
+      "title": "Customer-authored factory products lack a free license grant",
+      "scope": "External users controlling workflows / competing product / unrestricted redistribution",
+      "features": [
+        "*"
+      ],
+      "fact": "The current FAQ excludes external users determining workflow logic through UI, API, MCP or an AI agent. SUL also restricts redistribution and competing automation products; publishing source or hiding the editor does not remove the restriction.",
+      "workaround": "Use only permitted internal/operator-authored automation, obtain commercial rights covering the exact product, or choose another engine.",
+      "workaroundQuality": "No code-only or wrapper workaround",
+      "sources": [
+        {
+          "title": "Actual license",
+          "url": "https://github.com/n8n-io/n8n/blob/master/LICENSE.md"
+        },
+        {
+          "title": "Current FAQ",
+          "url": "https://github.com/n8n-io/n8n-docs/blob/main/docs/n8n-community-license/license-faq.md"
+        }
+      ]
+    },
+    {
+      "id": "n-main",
+      "engine": "n8n",
+      "flag": "paid",
+      "title": "Multi-main availability is paid",
+      "scope": "Production control-plane failover",
+      "features": [
+        "durable",
+        "ownership",
+        "triggers",
+        "overlap"
+      ],
+      "fact": "Community queue mode has workers but does not include multi-main availability. Worker scaling is not the same as main-process failover.",
+      "workaround": "Use supervised single-main restart if its downtime and missed-trigger behavior are acceptable. Do not claim equivalent zero-downtime multi-main.",
+      "workaroundQuality": "Limited workaround; not equivalent when HA main is mandatory",
+      "sources": [
+        {
+          "title": "Community features",
+          "url": "https://docs.n8n.io/deploy/host-n8n/community-edition-features"
+        }
+      ]
+    },
+    {
+      "id": "n-controls",
+      "engine": "n8n",
+      "flag": "paid",
+      "title": "Sharing, projects, SSO and source-control environments are paid",
+      "scope": "Native collaboration and release governance",
+      "features": [
+        "rbac",
+        "isolation",
+        "dependency_bundle",
+        "policy_validation",
+        "staged_rollout"
+      ],
+      "fact": "Community excludes project/workflow/credential sharing and source-control environments; advanced identity and review facilities are also paid.",
+      "workaround": "Use private instances, a trusted publisher and independently enforced credentials and identities. Separate instances increase operations.",
+      "workaroundQuality": "Feasible constrained deployment; not native collaboration parity",
+      "sources": [
+        {
+          "title": "Community features",
+          "url": "https://docs.n8n.io/deploy/host-n8n/community-edition-features"
+        }
+      ]
+    },
+    {
+      "id": "n-vault",
+      "engine": "n8n",
+      "flag": "paid",
+      "title": "External vault and external binary storage are paid extras",
+      "scope": "Basic credential references versus enterprise storage integrations",
+      "features": [
+        "secrets",
+        "artifacts"
+      ],
+      "fact": "Community supports encrypted credential references and appropriate filesystem/database binary storage, but external secret-store and external binary-storage integrations are paid.",
+      "workaround": "Use supported core storage, or application-owned object storage through permitted nodes with explicit authorization and retention.",
+      "workaroundQuality": "Good basic-binding alternative; storage recovery must be tested",
+      "sources": [
+        {
+          "title": "Community features",
+          "url": "https://docs.n8n.io/deploy/host-n8n/community-edition-features"
+        }
+      ]
+    },
+    {
+      "id": "n-observability",
+      "engine": "n8n",
+      "flag": "paid",
+      "title": "Native log streaming is paid",
+      "scope": "Execution polling versus full lifecycle audit delivery",
+      "features": [
+        "events",
+        "history"
+      ],
+      "fact": "Community has ordinary logging and execution records; full log-streaming integrations require a paid edition.",
+      "workaround": "Poll supported APIs and retain an external authenticated audit trail where needed; validate gaps and event ordering.",
+      "workaroundQuality": "Feasible partial substitute; not full streaming parity",
+      "sources": [
+        {
+          "title": "Community features",
+          "url": "https://docs.n8n.io/deploy/host-n8n/community-edition-features"
+        }
+      ]
+    },
+    {
+      "id": "n-recovery",
+      "engine": "n8n",
+      "flag": "verify",
+      "title": "Queued work does not prove interrupted-node recovery",
+      "scope": "Failure during active remote work",
+      "features": [
+        "durable",
+        "remote_reconcile",
+        "unknown",
+        "preserve_success"
+      ],
+      "fact": "Persisted waits, node progress and queues do not establish automatic continuation of every interrupted action or discovery of an accepted remote submission after a lost response.",
+      "workaround": "Persist intent and task identity, reconcile remote work and stop on unresolved effects. Test actual crash points.",
+      "workaroundQuality": "Feasible adapter; actual guarantees unrun",
+      "sources": [
+        {
+          "title": "Queue mode",
+          "url": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/enable-queue-mode"
+        }
+      ]
+    },
+    {
+      "id": "l-server",
+      "engine": "langgraph",
+      "flag": "blocked",
+      "title": "Packaged production Agent Server requires a license",
+      "scope": "Using the vendor production server without commercial entitlement",
+      "features": [
+        "rbac",
+        "a2a_expose"
+      ],
+      "fact": "Official CLI requires a production license key for up; standalone servers require license verification. MIT graph-library rights do not include that packaged platform entitlement.",
+      "workaround": "Pay for the platform or build a separate host around the MIT core. The latter is substantial platform work and does not reverse the user exclusion.",
+      "workaroundQuality": "No acceptable free packaged-production workaround established",
+      "sources": [
+        {
+          "title": "CLI",
+          "url": "https://docs.langchain.com/langsmith/cli"
+        },
+        {
+          "title": "Standalone licensing",
+          "url": "https://docs.langchain.com/langsmith/deploy-standalone-server"
+        }
+      ]
+    },
+    {
+      "id": "l-dev",
+      "engine": "langgraph",
+      "flag": "limit",
+      "title": "Development server is not the production architecture",
+      "scope": "langgraph dev rather than a custom MIT-library host",
+      "features": [
+        "durable",
+        "ownership",
+        "capacity",
+        "history"
+      ],
+      "fact": "The dev path uses local/in-memory persistence and targets development/testing. Configurable worker concurrency defaults are not a verified licensing throttle.",
+      "workaround": "A real custom production host needs durable persistence, scheduling, concurrency/ownership and operations, or use the licensed server.",
+      "workaroundQuality": "Not an acceptable drop-in production workaround",
+      "sources": [
+        {
+          "title": "Local development",
+          "url": "https://docs.langchain.com/langsmith/local-dev-testing"
+        },
+        {
+          "title": "CLI options",
+          "url": "https://docs.langchain.com/langsmith/cli"
+        }
+      ]
+    },
+    {
+      "id": "s-host",
+      "engine": "strands",
+      "flag": "custom",
+      "title": "SDK does not include a managed outer factory platform",
+      "scope": "Production hosting of factory graph workflows",
+      "features": [
+        "native_definition",
+        "publish_no_deploy",
+        "agent_authoring",
+        "schema_discovery",
+        "validate_only",
+        "history",
+        "work_management"
+      ],
+      "fact": "The Apache SDK is usable in production without a vendor license, but publication, execution hosting and operational control are application responsibilities.",
+      "workaround": "Use it inside A2A services or explicitly own the missing host and publication system.",
+      "workaroundQuality": "Substantial platform work if selected as outer runtime",
+      "sources": [
+        {
+          "title": "Graph model",
+          "url": "https://strandsagents.com/docs/user-guide/sdk/multi-agent/graph/"
+        },
+        {
+          "title": "Session management",
+          "url": "https://strandsagents.com/docs/user-guide/sdk/agents/session-management/"
+        }
+      ]
+    },
+    {
+      "id": "s-lock",
+      "engine": "strands",
+      "flag": "custom",
+      "title": "Session persistence has no distributed writer lock",
+      "scope": "Multiple processes operating the same graph/session",
+      "features": [
+        "ownership",
+        "durable",
+        "research_isolation"
+      ],
+      "fact": "Session management does not provide distributed locking; competing writers can overwrite state. Recovery checkpoints do not establish attempt ownership.",
+      "workaround": "Use a single authoritative owner with durable leases and fencing, or an external execution engine.",
+      "workaroundQuality": "Substantial ownership/recovery work; unrun",
+      "sources": [
+        {
+          "title": "Session management",
+          "url": "https://strandsagents.com/docs/user-guide/sdk/agents/session-management/"
+        }
+      ]
+    },
+    {
+      "id": "w-license-worker",
+      "engine": "windmill",
+      "flag": "paid",
+      "title": "Enterprise workers depend on valid licensing",
+      "scope": "Enterprise worker runtime, distinct from Community",
+      "features": [
+        "capacity",
+        "durable",
+        "ownership"
+      ],
+      "fact": "Pinned worker code stops accepting work when the license is invalid. Offline rights and renewal behavior cannot be inferred from the AGPL core or public stub code.",
+      "workaround": "Use a licensed deployment whose exact offline/expiry terms are acceptable, or evaluate a permitted free distribution.",
+      "workaroundQuality": "No free substitute for proprietary runtime entitlement",
+      "sources": [
+        {
+          "title": "Pinned worker license check",
+          "url": "https://github.com/windmill-labs/windmill/blob/25c8bfaab412d440e51be92af61066af025d334b/backend/windmill-worker/src/worker.rs#L3150"
+        }
+      ]
+    },
+    {
+      "id": "w-sandbox",
+      "engine": "windmill",
+      "flag": "verify",
+      "title": "NSJAIL production entitlement conflicts across docs/source",
+      "scope": "NSJAIL isolation in a non-enterprise build",
+      "features": [
+        "isolation",
+        "protected_evaluator",
+        "research_isolation"
+      ],
+      "fact": "Source labels NSJAIL an Enterprise feature available for testing; broader isolation docs do not state that boundary consistently. Ordinary container/PID isolation is a separate mechanism.",
+      "workaround": "Do not count NSJAIL as cleared free production isolation. Prove a container/VM/PID alternative against the required threat and credential boundaries.",
+      "workaroundQuality": "Narrower alternatives exist; NSJAIL entitlement unresolved",
+      "sources": [
+        {
+          "title": "Pinned isolation check",
+          "url": "https://github.com/windmill-labs/windmill/blob/25c8bfaab412d440e51be92af61066af025d334b/backend/windmill-worker/src/worker.rs#L2604"
+        },
+        {
+          "title": "Isolation documentation",
+          "url": "https://www.windmill.dev/docs/advanced/security_isolation"
+        }
+      ]
+    },
+    {
+      "id": "w-email-quota",
+      "engine": "windmill",
+      "flag": "limit",
+      "title": "Non-enterprise email trigger has a daily cap",
+      "scope": "Built-in email-trigger parent jobs",
+      "features": [
+        "triggers",
+        "catchup"
+      ],
+      "fact": "Pinned worker code caps non-enterprise parent email-trigger jobs at 100 per day. This is distinct from the general unlimited-executions claim.",
+      "workaround": "A separate permitted mail receiver can invoke ordinary API/webhook flows, or use an appropriate licensed edition.",
+      "workaroundQuality": "Feasible connector alternative; verify delivery/idempotency",
+      "sources": [
+        {
+          "title": "Pinned trigger limit",
+          "url": "https://github.com/windmill-labs/windmill/blob/25c8bfaab412d440e51be92af61066af025d334b/backend/windmill-worker/src/worker.rs#L4594"
+        }
+      ]
+    },
+    {
+      "id": "k-transport",
+      "engine": "kestra",
+      "flag": "paid",
+      "title": "Native secured worker-controller transport is Enterprise",
+      "scope": "Current 2.0 distributed worker transport",
+      "features": [
+        "isolation",
+        "secrets",
+        "research_isolation"
+      ],
+      "fact": "Current architecture docs describe plaintext OSS gRPC; native TLS, mTLS and JWT worker authentication are Enterprise features. Private addressing alone is not authenticated encrypted transport.",
+      "workaround": "Operate an independently authenticated encrypted tunnel/mesh or isolated trusted deployment, then prove both identity and traffic protection.",
+      "workaroundQuality": "Feasible external transport; material configuration and validation",
+      "sources": [
+        {
+          "title": "Architecture",
+          "url": "https://kestra.io/docs/architecture"
+        },
+        {
+          "title": "Enterprise transport settings",
+          "url": "https://kestra.io/docs/configuration/enterprise-and-advanced"
+        }
+      ]
+    },
+    {
+      "id": "k-plugins",
+      "engine": "kestra",
+      "flag": "paid",
+      "title": "Native versioned plugins and alternate queue backends are paid",
+      "scope": "Plugin dependency versions and scaling backend choice",
+      "features": [
+        "version_binding",
+        "dependency_bundle",
+        "capacity"
+      ],
+      "fact": "Enterprise adds per-plugin versioning and alternative backend choices. OSS database-backed HA is available; it must not be mislabeled Enterprise-only.",
+      "workaround": "Pin complete worker images/dependency sets and use supported JDBC production storage.",
+      "workaroundQuality": "Good bounded deployment alternative; per-run dependency isolation needs proof",
+      "sources": [
+        {
+          "title": "Versioned plugins",
+          "url": "https://kestra.io/docs/enterprise/instance/versioned-plugins"
+        },
+        {
+          "title": "Architecture",
+          "url": "https://kestra.io/docs/architecture"
+        },
+        {
+          "title": "OSS HA",
+          "url": "https://kestra.io/docs/administrator-guide/high-availability"
+        }
+      ]
+    },
+    {
+      "id": "k-telemetry",
+      "engine": "kestra",
+      "flag": "limit",
+      "title": "Telemetry and purge policy need explicit configuration",
+      "scope": "OSS network independence and retained evidence",
+      "features": [
+        "history"
+      ],
+      "fact": "Server and UI telemetry have separate default-on switches; purge flows govern retained executions/logs. No license-imposed OSS retention or worker-count cap was found.",
+      "workaround": "Disable unwanted telemetry with documented configuration and define backups/purge policy. EE keys and user/service-account limits are separate.",
+      "workaroundQuality": "Good supported configuration path",
+      "sources": [
+        {
+          "title": "Telemetry configuration",
+          "url": "https://kestra.io/docs/configuration/observability-and-networking"
+        },
+        {
+          "title": "Purge policy",
+          "url": "https://kestra.io/docs/administrator-guide/purge"
+        }
+      ]
+    },
+    {
+      "id": "t-limits",
+      "engine": "temporal",
+      "flag": "limit",
+      "title": "Payload/history/fan-out have technical limits",
+      "scope": "Self-hosted defaults, not paid capacity tiers",
+      "features": [
+        "artifacts",
+        "history",
+        "dynamic_map",
+        "parallel_join",
+        "commands"
+      ],
+      "fact": "Documented defaults include 2 MB payloads, 50 MB/51,200-event histories and 2,000 pending activities/children/signals/cancel requests. Some thresholds are configurable; large histories and unbounded fan-out still need design limits.",
+      "workaround": "Use object references, bounded fan-out and Continue-As-New where applicable; tune supported limits only after load testing.",
+      "workaroundQuality": "Good architectural/configuration paths; no payment unlock",
+      "sources": [
+        {
+          "title": "Self-hosted defaults",
+          "url": "https://docs.temporal.io/self-hosted-guide/defaults"
+        }
+      ]
+    },
+    {
+      "id": "n-concurrency",
+      "engine": "n8n",
+      "flag": "limit",
+      "title": "Concurrency knobs do not cover every execution type",
+      "scope": "Regular mode, queue workers and evaluation runs",
+      "features": [
+        "capacity",
+        "budget",
+        "research_isolation"
+      ],
+      "fact": "Regular self-hosted production has no default concurrency cap; its optional limiter excludes manual, subworkflow, error and CLI executions. Queue concurrency defaults to 10 per worker and is configurable, not a worker-count license cap.",
+      "workaround": "Size worker pools and enforce admission across all relevant entry paths. Do not claim a single setting bounds all factory work.",
+      "workaroundQuality": "Feasible admission design; scope must be proved",
+      "sources": [
+        {
+          "title": "Concurrency scope",
+          "url": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/control-concurrency"
+        },
+        {
+          "title": "Queue mode",
+          "url": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/enable-queue-mode"
+        }
+      ]
+    },
+    {
+      "id": "n-retention",
+      "engine": "n8n",
+      "flag": "verify",
+      "title": "Definition-history retention has a docs/code conflict",
+      "scope": "Workflow versions, distinct from execution logs",
+      "features": [
+        "history",
+        "version_binding",
+        "fork",
+        "dependency_bundle",
+        "trace_regressions"
+      ],
+      "fact": "Docs describe unlimited definition retention via -1, while the active source helper clamps it to a license limit with a 24-hour unlicensed default. Do not promise unlimited Community history without a pinned-release check. Execution pruning separately defaults to 336 hours/10,000 records and is configurable.",
+      "workaround": "Retain approved immutable definitions and required execution evidence independently; verify exact release retention and recovery semantics.",
+      "workaroundQuality": "Feasible external archive; native history limit unresolved",
+      "sources": [
+        {
+          "title": "Definition-history helper",
+          "url": "https://github.com/n8n-io/n8n/blob/master/packages/cli/src/workflows/workflow-history/workflow-history-helper.ts"
+        },
+        {
+          "title": "License implementation",
+          "url": "https://github.com/n8n-io/n8n/blob/master/packages/cli/src/license.ts"
+        },
+        {
+          "title": "Default constants",
+          "url": "https://github.com/n8n-io/n8n/blob/master/packages/%40n8n/constants/src/index.ts"
+        },
+        {
+          "title": "Definition-history settings",
+          "url": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/workflow-history"
+        },
+        {
+          "title": "Execution pruning",
+          "url": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/executions"
+        }
+      ]
+    },
+    {
+      "id": "n-evaluation",
+      "engine": "n8n",
+      "flag": "paid",
+      "title": "Native metric evaluations cover only one Registered Community workflow",
+      "scope": "Evaluation availability, not merely run concurrency",
+      "features": [
+        "testing",
+        "candidate_comparison",
+        "trace_regressions",
+        "learning"
+      ],
+      "fact": "Registered Community enables native metric evaluation for one workflow; broader self-hosted availability is Enterprise. The default single concurrent evaluation can be overridden by a documented setting, but that does not remove feature-availability restrictions.",
+      "workaround": "Use an independent evaluator/test runner with a protected dataset and results store, or appropriate licensing.",
+      "workaroundQuality": "Feasible domain evaluator; not native multi-workflow eval parity",
+      "sources": [
+        {
+          "title": "Evaluation availability",
+          "url": "https://docs.n8n.io/build/integrate-ai/test-and-improve-ai-workflows/use-metrics-to-measure-quality"
+        }
+      ]
+    },
+    {
+      "id": "n-registration",
+      "engine": "n8n",
+      "flag": "limit",
+      "title": "Some free tooling requires registration",
+      "scope": "Registered Community extras",
+      "features": [
+        "pinned_debug",
+        "history",
+        "trace_regressions"
+      ],
+      "fact": "Debug-in-editor, folders and custom execution metadata require optional free registration/email/key; base Community runtime does not.",
+      "workaround": "Use base pinning/manual tests without registration, or accept the registration requirement.",
+      "workaroundQuality": "Good basic-testing alternative; exact tooling differs",
+      "sources": [
+        {
+          "title": "Community features",
+          "url": "https://docs.n8n.io/deploy/host-n8n/community-edition-features"
+        }
+      ]
+    },
+    {
+      "id": "n-renewal",
+      "engine": "n8n",
+      "flag": "paid",
+      "title": "Licensed features add renewal and execution-metering dependency",
+      "scope": "Paid self-hosted features, not the base Community runtime",
+      "features": [
+        "rbac",
+        "events",
+        "staged_rollout",
+        "candidate_comparison"
+      ],
+      "fact": "Paid self-hosted plans ordinarily renew through the license server and meter production executions. Licensed features can deactivate if renewal fails; vendor-issued air-gap certificates are a separate route. Community telemetry/update/template calls can be disabled.",
+      "workaround": "Stay within permitted Community use or obtain a contract/certificate whose offline, usage and expiry behavior meet the deployment requirements.",
+      "workaroundQuality": "No code-only substitute for paid entitlement; offline terms need verification",
+      "sources": [
+        {
+          "title": "License configuration",
+          "url": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/license"
+        },
+        {
+          "title": "License certificates",
+          "url": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/manage-your-license"
+        },
+        {
+          "title": "Community isolation",
+          "url": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/configuration-examples/isolate-n8n"
+        },
+        {
+          "title": "Paid plans",
+          "url": "https://n8n.io/pricing/"
+        }
+      ]
+    },
+    {
+      "id": "l-platform-rights",
+      "engine": "langgraph",
+      "flag": "blocked",
+      "title": "Agent Server package has separate managed-service restrictions",
+      "scope": "langgraph-api 0.14.3 and commercial deployment components",
+      "features": [
+        "a2a_expose",
+        "rbac"
+      ],
+      "fact": "The publisher identifies langgraph-api 0.14.3 as Elastic License 2.0, with hosted/managed-service and license-key restrictions. The MIT core license does not grant these components equivalent embedding rights.",
+      "workaround": "Use only the MIT library in independently owned infrastructure, obtain suitable vendor terms, or retain the current exclusion.",
+      "workaroundQuality": "No license-key bypass or repackaging workaround",
+      "sources": [
+        {
+          "title": "Pinned API package",
+          "url": "https://pypi.org/project/langgraph-api/0.14.3/"
+        },
+        {
+          "title": "Standalone server",
+          "url": "https://docs.langchain.com/langsmith/deploy-standalone-server"
+        }
+      ]
+    },
+    {
+      "id": "l-host-ops",
+      "engine": "langgraph",
+      "flag": "verify",
+      "title": "Standalone server deployment has operational constraints",
+      "scope": "Licensed standalone Agent Server",
+      "features": [
+        "durable",
+        "ownership",
+        "triggers",
+        "overlap"
+      ],
+      "fact": "Production documentation identifies Kubernetes as the maintained deployment path, requires license verification/usage reporting and warns standalone scale-to-zero can lose tasks.",
+      "workaround": "Use the supported paid topology and explicit drain/availability policy if reconsidered; currently excluded.",
+      "workaroundQuality": "No free platform workaround established",
+      "sources": [
+        {
+          "title": "Standalone server",
+          "url": "https://docs.langchain.com/langsmith/deploy-standalone-server"
+        }
+      ]
+    },
+    {
+      "id": "c-orkes",
+      "engine": "conductor",
+      "flag": "paid",
+      "title": "Orkes Developer Edition is not the OSS production distribution",
+      "scope": "Optional Orkes commercial deployment, not Conductor OSS",
+      "features": [],
+      "fact": "Free Orkes Developer Edition is an experimentation environment. Current on-prem image instructions require paid entitlement and an authorization token. OSS licensing does not establish commercial Orkes redistribution or offline rights.",
+      "workaround": "Use the documented Conductor OSS production topology, or obtain a commercial contract specifying production, embedding, capacity, renewal and offline rights.",
+      "workaroundQuality": "Good free OSS runtime alternative; commercial entitlements remain separate",
+      "sources": [
+        {
+          "title": "Orkes installation",
+          "url": "https://orkes.io/content/get-orkes-conductor"
+        },
+        {
+          "title": "OSS production",
+          "url": "https://docs.conductor-oss.org/devguide/running/deploy.html"
+        }
+      ]
+    },
+    {
+      "id": "a-kubernetes",
+      "engine": "argo",
+      "flag": "custom",
+      "title": "Kubernetes is the execution control plane",
+      "scope": "Self-hosted Argo Workflows OSS",
+      "features": [
+        "durable",
+        "capacity",
+        "research_isolation"
+      ],
+      "fact": "Workflow state, scheduling and pod execution depend on Kubernetes. Production HA requires resource allocation, controller leader-election/rollout configuration and a healthy Kubernetes API; this is not an edition restriction.",
+      "workaround": "Operate the documented Kubernetes topology, artifact repository and optional SQL persistence. If Kubernetes operation is unacceptable, Argo is an architectural mismatch.",
+      "workaroundQuality": "Feasible deployment path; infrastructure responsibility and load/recovery proof remain",
+      "sources": [
+        {
+          "title": "Workflow resources and template model",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/workflow-concepts/"
+        },
+        {
+          "title": "Production availability and controller recovery",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/high-availability/"
+        },
+        {
+          "title": "Artifact repositories and storage security",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/configure-artifact-repository/"
+        }
+      ]
+    },
+    {
+      "id": "a-authority",
+      "engine": "argo",
+      "flag": "custom",
+      "title": "Customer authors need a controlled publication boundary",
+      "scope": "Untrusted authors of Workflow and WorkflowTemplate resources",
+      "features": [
+        "rbac",
+        "policy_validation",
+        "gates",
+        "protected_evaluator",
+        "isolation"
+      ],
+      "fact": "Workflow creation can cause the controller to create arbitrary pods and use namespace service accounts. Strict/Secure restrictions constrain submitted Workflows, but approved-template authoring and allowed entrypoint overrides still need governance.",
+      "workaround": "Give customers restricted authoring/publication APIs; enforce approved templates, service accounts and public entrypoints through admission controls and RBAC. Separate controller, candidate and evaluator namespaces; apply pod/network policy.",
+      "workaroundQuality": "Feasible bounded admission and cluster-policy integration; bypass resistance unproved",
+      "sources": [
+        {
+          "title": "Untrusted workflow and pod security boundaries",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/security/"
+        },
+        {
+          "title": "Strict and Secure workflow restrictions",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/workflow-restrictions/"
+        },
+        {
+          "title": "Workflow service-account permissions",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/workflow-rbac/"
+        }
+      ]
+    },
+    {
+      "id": "a-auth-mode",
+      "engine": "argo",
+      "flag": "verify",
+      "title": "Authentication mode must preserve caller authorization",
+      "scope": "Server/client/SSO authentication configuration",
+      "features": [
+        "rbac",
+        "history"
+      ],
+      "fact": "Client mode uses caller Kubernetes permissions. Server mode uses the server service account; SSO also needs explicit SSO RBAC to map users to scoped service accounts. Login alone does not establish tenant isolation.",
+      "workaround": "Choose client authorization or configure and test SSO RBAC mappings. Retain distinct caller audit evidence and prevent broad server-account access from bypassing the publication boundary.",
+      "workaroundQuality": "Native configuration path; deployment-specific proof pending",
+      "sources": [
+        {
+          "title": "Kubernetes and SSO authentication modes",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/argo-server-auth-mode/"
+        },
+        {
+          "title": "SSO group-to-service-account RBAC",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/argo-server-sso/"
+        },
+        {
+          "title": "Workflow creator identity labels",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/workflow-creator/"
+        }
+      ]
+    },
+    {
+      "id": "a-template-binding",
+      "engine": "argo",
+      "flag": "custom",
+      "title": "Name references require immutable publication discipline",
+      "scope": "Template references, active runs and rollout",
+      "features": [
+        "version_binding",
+        "nested",
+        "staged_rollout",
+        "recovery_playbooks"
+      ],
+      "fact": "TemplateRef has no version/digest field. Referenced templates are cached when resolved, so unvisited references may resolve changed names. Secure restriction errors on underlying template changes rather than providing transparent version isolation.",
+      "workaround": "Publish dependencies under immutable versioned names, prohibit mutation/deletion while referenced, pin container images and environment bindings, and record the complete dependency set. Test updates during waiting runs.",
+      "workaroundQuality": "Feasible publication contract; stricter than mutable template updates and unrun",
+      "sources": [
+        {
+          "title": "Workflow status, node IDs, parameter and TemplateRef types",
+          "url": "https://github.com/argoproj/argo-workflows/blob/8a6f33f90a2124878db858e04c6999d3c5ab63b2/pkg/apis/workflow/v1alpha1/workflow_types.go"
+        },
+        {
+          "title": "Referenced templates are cached when resolved",
+          "url": "https://github.com/argoproj/argo-workflows/blob/8a6f33f90a2124878db858e04c6999d3c5ab63b2/workflow/templateresolution/context.go"
+        },
+        {
+          "title": "Strict and Secure workflow restrictions",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/workflow-restrictions/"
+        }
+      ]
+    },
+    {
+      "id": "a-remote-contract",
+      "engine": "argo",
+      "flag": "custom",
+      "title": "Remote A2A lifecycle and external-effect safety remain integrations",
+      "scope": "Opaque external services and custom HTTP/plugin tasks",
+      "features": [
+        "a2a_client",
+        "a2a_expose",
+        "remote_reconcile",
+        "external_dedupe",
+        "unknown",
+        "ownership",
+        "cancel"
+      ],
+      "fact": "HTTP/plugin execution is not native A2A. Persisted engine state, retry nodes and locks do not atomically record an external effect or establish remote stale-attempt fencing after an ambiguous reply.",
+      "workaround": "Use a reusable protocol adapter with durable task correlation, service-supported idempotency/status lookup, scoped cancellation and fenced result acceptance. Preserve unknown outcomes when the service cannot prove success or non-execution.",
+      "workaroundQuality": "Feasible adapter only where remote contracts support it; no universal exactly-once workaround",
+      "sources": [
+        {
+          "title": "HTTP templates and Agent task state",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/http-template/"
+        },
+        {
+          "title": "Executor plugin extension model",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/plugins/"
+        },
+        {
+          "title": "Workflow and template synchronization",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/synchronization/"
+        },
+        {
+          "title": "Controller task-result reconciliation implementation",
+          "url": "https://github.com/argoproj/argo-workflows/blob/8a6f33f90a2124878db858e04c6999d3c5ab63b2/workflow/controller/taskresult.go"
+        }
+      ]
+    },
+    {
+      "id": "a-artifact-scope",
+      "engine": "argo",
+      "flag": "custom",
+      "title": "Artifact prefixes are not an access-control boundary",
+      "scope": "Shared artifact repository credentials and tenant data",
+      "features": [
+        "artifacts",
+        "isolation",
+        "protected_evaluator",
+        "research_isolation"
+      ],
+      "fact": "Artifact repository documentation explicitly permits keys containing parent-directory traversal. Directory-like prefixes alone do not isolate tenants or protect evaluator data; authority follows the credentials supplied to workflows.",
+      "workaround": "Enforce least-privilege storage IAM and credential separation, restrict artifact repository overrides and validate references. Protect evaluator objects from candidate credentials independently of workflow path conventions.",
+      "workaroundQuality": "Feasible storage-policy integration; tenant access tests pending",
+      "sources": [
+        {
+          "title": "Artifact repositories and storage security",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/configure-artifact-repository/"
+        },
+        {
+          "title": "Untrusted workflow and pod security boundaries",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/security/"
+        },
+        {
+          "title": "Strict and Secure workflow restrictions",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/workflow-restrictions/"
+        }
+      ]
+    },
+    {
+      "id": "a-state-size",
+      "engine": "argo",
+      "flag": "limit",
+      "title": "Workflow state is bounded by Kubernetes resource size",
+      "scope": "Large graphs, fan-out and node histories",
+      "features": [
+        "dynamic_map",
+        "durable",
+        "history",
+        "dependency_bundle"
+      ],
+      "fact": "Workflow resources face the documented roughly 1 MB object limit. Node compression and SQL offloading mitigate status growth, but do not make arbitrarily large workflow specifications valid.",
+      "workaround": "Configure SQL node offloading where needed, reuse templates and split large compositions. Load-test expected fan-out, output sizes and Kubernetes API throughput.",
+      "workaroundQuality": "Documented scaling options; structural limits remain and workload capacity is unrun",
+      "sources": [
+        {
+          "title": "Kubernetes object limits and SQL node offloading",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/offloading-large-workflows/"
+        },
+        {
+          "title": "Production availability and controller recovery",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/high-availability/"
+        }
+      ]
+    },
+    {
+      "id": "a-history-retention",
+      "engine": "argo",
+      "flag": "custom",
+      "title": "Execution archive, logs and operator audit are separate",
+      "scope": "Production history and audit retention",
+      "features": [
+        "history",
+        "trace_regressions",
+        "learning"
+      ],
+      "fact": "The optional SQL archive stores completed workflow status and outcomes, not pod logs. Kubernetes Events can be lost or aggregated; creator labels are not a complete record of operator actions.",
+      "workaround": "Configure SQL retention, external log/artifact retention and Kubernetes/API actor auditing; capture evidence before workflow or artifact garbage collection. Reconcile authoritative workflow state rather than driving automation from Kubernetes Events.",
+      "workaroundQuality": "Feasible deployment and audit integration; retention/restore proof pending",
+      "sources": [
+        {
+          "title": "SQL workflow archive and log limitations",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/workflow-archive/"
+        },
+        {
+          "title": "Kubernetes event delivery limitations",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/workflow-events/"
+        },
+        {
+          "title": "Workflow creator identity labels",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/workflow-creator/"
+        }
+      ]
+    },
+    {
+      "id": "a-release-proof",
+      "engine": "argo",
+      "flag": "verify",
+      "title": "Current documentation is not a certified runtime release",
+      "scope": "Exact production build and enabled Argo features",
+      "features": [
+        "durable",
+        "ownership",
+        "capacity",
+        "policy_validation"
+      ],
+      "fact": "Assessment combines current documentation with inspected source snapshot 8a6f33f90a2124878db858e04c6999d3c5ab63b2. No pinned production release, controller-failover test, hostile-author test or dependency-license audit was executed.",
+      "workaround": "Select and pin a supported release; verify feature availability, licensed dependencies, leader-election rollout, retries, reference binding and customer permission boundaries with representative workloads.",
+      "workaroundQuality": "Verification work required before production approval; no claimed runtime clearance",
+      "sources": [
+        {
+          "title": "Apache 2.0 core license, inspected source snapshot",
+          "url": "https://github.com/argoproj/argo-workflows/blob/8a6f33f90a2124878db858e04c6999d3c5ab63b2/LICENSE"
+        },
+        {
+          "title": "Production availability and controller recovery",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/high-availability/"
+        },
+        {
+          "title": "Strict and Secure workflow restrictions",
+          "url": "https://argo-workflows.readthedocs.io/en/latest/workflow-restrictions/"
+        },
+        {
+          "title": "Referenced templates are cached when resolved",
+          "url": "https://github.com/argoproj/argo-workflows/blob/8a6f33f90a2124878db858e04c6999d3c5ab63b2/workflow/templateresolution/context.go"
+        }
+      ]
+    }
+  ],
+  "selectionPolicy": "Eligibility and accepted topology precede weighted coverage and operational judgment. LangGraph is excluded by owner decision; n8n Community and distributed Windmill Community remain excluded for the assessed customer-authored product use. Conductor stock v3.32.4 is not cleared because of a restricted bundled dependency; its PostgreSQL-only source variant is unqualified. Kestra v2.0.3 is the observed behavioral development baseline, but a separate Kestra/PostgreSQL pair per harness is rejected as the default. A shared local helper remains conditional on whole-install resources, lifecycle, distribution and authorization. Bounded Dagu, non-development Temporal and core Strands Graph countertrials have run: Dagu is a light declarative challenger with transitive child-pinning work; Zigflow still requires worker refresh; core Strands Graph requires fenced same-run ownership after duplicate fixture delivery. Their full product gates remain open. All eight technical options remain selectable in the comparison; UI selection does not grant product eligibility."
+}

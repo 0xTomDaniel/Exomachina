@@ -1,0 +1,40 @@
+{
+  "status": 200,
+  "body": {
+    "id": "parity_child",
+    "namespace": "exomachina.kestra_parity",
+    "revision": 1,
+    "updated": "2026-09-23T13:27:18.162762Z",
+    "description": "Old pinned child remains at a native Director pause during publication.",
+    "outputs": [
+      {
+        "id": "public_result",
+        "value": "{{ outputs.old_result.value }}",
+        "type": "STRING"
+      }
+    ],
+    "disabled": false,
+    "deleted": false,
+    "draft": false,
+    "tasks": [
+      {
+        "id": "director_wait",
+        "type": "io.kestra.plugin.core.flow.Pause",
+        "onResume": [
+          {
+            "id": "approved",
+            "type": "BOOL",
+            "required": true,
+            "defaults": "false"
+          }
+        ]
+      },
+      {
+        "id": "old_result",
+        "type": "io.kestra.plugin.core.debug.Return",
+        "format": "child-v1"
+      }
+    ],
+    "triggers": []
+  }
+}

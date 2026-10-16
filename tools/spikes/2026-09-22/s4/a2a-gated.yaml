@@ -1,0 +1,36 @@
+id: exomachina_s4_a2a_gated
+namespace: exomachina.spikes
+description: Native A2A call pauses before any accepted delivery.
+tasks:
+  - id: assign
+    type: io.kestra.plugin.core.http.Request
+    uri: http://127.0.0.1:28092/
+    method: POST
+    contentType: application/json
+    headers:
+      Authorization: Bearer director-test-token
+    body: |
+      {
+        "jsonrpc": "2.0",
+        "id": "kestra-native-s4-gated",
+        "method": "message/send",
+        "params": {
+          "message": {
+            "role": "user",
+            "messageId": "kestra-native-s4-gated-message",
+            "parts": [{
+              "kind": "data",
+              "data": {
+                "op": "start",
+                "key": "kestra-native-s4-gated-assignment",
+                "brief": "Accepted output must pass the product gate"
+              }
+            }]
+          }
+        }
+      }
+  - id: quality_gate
+    type: io.kestra.plugin.core.flow.Pause
+  - id: deliver
+    type: io.kestra.plugin.core.log.Log
+    message: Product-authorized continuation after revision acceptance.

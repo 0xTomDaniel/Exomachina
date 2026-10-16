@@ -1,0 +1,210 @@
+{
+  "approval": {
+    "approver": "authoring-session",
+    "package_digest": "6459129e34f7d7ac0469f9a3facf0c0f66fa6e1a48c6b3792bd4efd7326d5422",
+    "policy": "auto",
+    "status": "approved"
+  },
+  "live_path": "untested: ANTHROPIC_API_KEY absent; AWS credentials/configuration absent; OPENAI_API_KEY absent",
+  "model": {
+    "id": "scripted-authoring-fixture",
+    "kind": "scripted",
+    "live": false
+  },
+  "rounds": [
+    {
+      "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+      "errors": [
+        {
+          "code": "validation_error",
+          "message": "route must cover each typed value",
+          "missing_cases": [
+            "requires_scope"
+          ],
+          "path": "child.nodes.route_scope.cases"
+        }
+      ],
+      "round": 1,
+      "valid": false
+    },
+    {
+      "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+      "errors": [],
+      "round": 2,
+      "valid": true
+    }
+  ],
+  "status": "approved",
+  "tool_calls": [
+    {
+      "result": {
+        "bindings": {
+          "counter_alpha": {
+            "approved": true,
+            "role": "capability"
+          },
+          "counter_beta": {
+            "approved": true,
+            "role": "capability"
+          },
+          "quality": {
+            "approved": true,
+            "role": "quality"
+          },
+          "release": {
+            "approved": true,
+            "role": "release"
+          },
+          "source_alpha": {
+            "approved": true,
+            "role": "capability"
+          },
+          "source_beta": {
+            "approved": true,
+            "role": "capability"
+          }
+        },
+        "bounds": {
+          "max_repairs": [
+            1,
+            2
+          ],
+          "nodes_per_definition": 32,
+          "parallel_branches": [
+            2,
+            4
+          ],
+          "run_input_fields": 16
+        },
+        "input_sources": [
+          "caller",
+          "director",
+          "verified_artifact"
+        ],
+        "input_types": [
+          "boolean",
+          "integer",
+          "number",
+          "string"
+        ],
+        "node_fields": {
+          "abort": [
+            "type"
+          ],
+          "complete": [
+            "type"
+          ],
+          "director_wait": [
+            "next",
+            "reason",
+            "type"
+          ],
+          "join": [
+            "branches",
+            "next",
+            "type"
+          ],
+          "nested_factory": [
+            "child",
+            "child_digest",
+            "next",
+            "type"
+          ],
+          "parallel": [
+            "branches",
+            "next",
+            "type"
+          ],
+          "quality": [
+            "next",
+            "type"
+          ],
+          "release": [
+            "next",
+            "service",
+            "type"
+          ],
+          "repair": [
+            "exhausted",
+            "max_repairs",
+            "next",
+            "type"
+          ],
+          "route": [
+            "cases",
+            "field",
+            "type"
+          ],
+          "synthesize": [
+            "next",
+            "resolved",
+            "type"
+          ]
+        },
+        "result_types": {
+          "counter_evidence": "counter_evidence@1",
+          "source_evidence": "source_evidence@1"
+        },
+        "route_values": {
+          "join.requires_scope": [
+            "false",
+            "true"
+          ],
+          "join.route_status": [
+            "clear",
+            "requires_scope"
+          ],
+          "verdict.accepted": [
+            "false",
+            "true"
+          ]
+        },
+        "rules": [
+          "All route cases must cover their typed values.",
+          "Source and counter evidence must meet at a typed join.",
+          "Quality must review a candidate before release.",
+          "Repair must have a bounded exhausted edge to Director wait and abort.",
+          "The root may only invoke its digest-pinned child and complete."
+        ],
+        "schema": 1,
+        "template_fields": [
+          "schema",
+          "root",
+          "child",
+          "run_inputs"
+        ]
+      },
+      "tool": "describe_vocabulary"
+    },
+    {
+      "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+      "result": {
+        "draft_digest": "967e62f216a978447ab5d35a0e9eaf5053367382e4292dbfd5fbc34a8e3160de",
+        "errors": [
+          {
+            "code": "validation_error",
+            "message": "route must cover each typed value",
+            "missing_cases": [
+              "requires_scope"
+            ],
+            "path": "child.nodes.route_scope.cases"
+          }
+        ],
+        "ok": false
+      },
+      "tool": "validate_draft"
+    },
+    {
+      "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+      "result": {
+        "draft_digest": "0c3a78eb18e84909f68f3e82d2fe7eca6b63eb110e6bbd2ef1becfe68aabbaa1",
+        "errors": [],
+        "ok": true,
+        "package_digest": "6459129e34f7d7ac0469f9a3facf0c0f66fa6e1a48c6b3792bd4efd7326d5422"
+      },
+      "tool": "submit_draft"
+    }
+  ],
+  "v1_package_digest": "f68e253dec0b61abba65115c731eec173f93317fb2dd0a3c1274526052575b44",
+  "v2_package_digest": "6459129e34f7d7ac0469f9a3facf0c0f66fa6e1a48c6b3792bd4efd7326d5422"
+}

@@ -1,0 +1,12 @@
+id: pause_restart
+namespace: exomachina.spike
+
+tasks:
+  - id: before
+    type: io.kestra.plugin.core.log.Log
+    message: Before S0 restart
+  - id: approval
+    type: io.kestra.plugin.core.flow.Pause
+  - id: after
+    type: io.kestra.plugin.core.log.Log
+    message: After S0 restart

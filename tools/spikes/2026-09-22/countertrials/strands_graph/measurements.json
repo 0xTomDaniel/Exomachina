@@ -1,0 +1,312 @@
+{
+  "disk_kib": {
+    "environment": 82524,
+    "harness_one_state": 48,
+    "harness_two_state": 48
+  },
+  "distinct_harness_identities": true,
+  "events_after_restart": {
+    "1": {
+      "run-v1": {
+        "deliver": 1,
+        "join": 1,
+        "research_a": 1,
+        "research_b": 1,
+        "review": 1
+      },
+      "run-v2": {
+        "deliver": 1,
+        "join": 1,
+        "research_a": 1,
+        "research_b": 1,
+        "review": 1,
+        "verify": 1
+      }
+    },
+    "2": {
+      "run-v1": {
+        "deliver": 1,
+        "join": 1,
+        "research_a": 1,
+        "research_b": 1,
+        "review": 1
+      },
+      "run-v2": {
+        "deliver": 1,
+        "join": 1,
+        "research_a": 1,
+        "research_b": 1,
+        "review": 1,
+        "verify": 1
+      }
+    }
+  },
+  "events_before_restart": {
+    "1": {
+      "run-v1": {
+        "join": 1,
+        "research_a": 1,
+        "research_b": 1,
+        "review": 1
+      },
+      "run-v2": {
+        "join": 1,
+        "research_a": 1,
+        "research_b": 1,
+        "review": 1,
+        "verify": 1
+      }
+    },
+    "2": {
+      "run-v1": {
+        "join": 1,
+        "research_a": 1,
+        "research_b": 1,
+        "review": 1
+      },
+      "run-v2": {
+        "join": 1,
+        "research_a": 1,
+        "research_b": 1,
+        "review": 1,
+        "verify": 1
+      }
+    }
+  },
+  "first_harness": {
+    "harness_id": "6c2584c5-7878-445d-9f56-98f0623b4671",
+    "v1": {
+      "digest": "13006bf806f984afc400f33b717fda748f7e1bfac03ae8321276585d6c8e1e56",
+      "execution_order": [
+        "research_b",
+        "research_a",
+        "join",
+        "review"
+      ],
+      "interrupts": [
+        {
+          "id": "v1:before_node_call:20254391-964b-5683-8248-eb871916c406:8265aa86-1b0a-5996-ba91-057fb3bb7b1a",
+          "name": "director_gate",
+          "reason": {
+            "revision": 1,
+            "run_id": "run-v1"
+          }
+        }
+      ],
+      "node_statuses": {
+        "join": "completed",
+        "research_a": "completed",
+        "research_b": "completed",
+        "review": "completed"
+      },
+      "revision": 1,
+      "run_id": "run-v1",
+      "status": "interrupted"
+    },
+    "v2": {
+      "digest": "8d8a56bd8b775e8b72d35f5c7f88bdac4f74137cf12a16ad5631d5a9ef604379",
+      "execution_order": [
+        "research_b",
+        "research_a",
+        "join",
+        "verify",
+        "review"
+      ],
+      "interrupts": [
+        {
+          "id": "v1:before_node_call:20254391-964b-5683-8248-eb871916c406:8265aa86-1b0a-5996-ba91-057fb3bb7b1a",
+          "name": "director_gate",
+          "reason": {
+            "revision": 2,
+            "run_id": "run-v2"
+          }
+        }
+      ],
+      "node_statuses": {
+        "join": "completed",
+        "research_a": "completed",
+        "research_b": "completed",
+        "review": "completed",
+        "verify": "completed"
+      },
+      "revision": 2,
+      "run_id": "run-v2",
+      "status": "interrupted"
+    }
+  },
+  "harnesses": 2,
+  "memory": {
+    "harness_one_with_two_alive": 73664,
+    "harness_two_with_two_alive": 73664,
+    "one_harness_alone": 73664,
+    "two_process_rss_sum": 147328,
+    "unit": "KiB RSS per process; sums double-count shared pages"
+  },
+  "platform": "darwin",
+  "provider_calls": 0,
+  "python": "3.14.3",
+  "resumed": {
+    "1": {
+      "run-v1": {
+        "digest": "13006bf806f984afc400f33b717fda748f7e1bfac03ae8321276585d6c8e1e56",
+        "execution_order": [
+          "research_b",
+          "research_a",
+          "join",
+          "review",
+          "deliver"
+        ],
+        "interrupts": [],
+        "node_statuses": {
+          "deliver": "completed",
+          "join": "completed",
+          "research_a": "completed",
+          "research_b": "completed",
+          "review": "completed"
+        },
+        "revision": 1,
+        "run_id": "run-v1",
+        "status": "completed"
+      },
+      "run-v2": {
+        "digest": "8d8a56bd8b775e8b72d35f5c7f88bdac4f74137cf12a16ad5631d5a9ef604379",
+        "execution_order": [
+          "research_b",
+          "research_a",
+          "join",
+          "verify",
+          "review",
+          "deliver"
+        ],
+        "interrupts": [],
+        "node_statuses": {
+          "deliver": "completed",
+          "join": "completed",
+          "research_a": "completed",
+          "research_b": "completed",
+          "review": "completed",
+          "verify": "completed"
+        },
+        "revision": 2,
+        "run_id": "run-v2",
+        "status": "completed"
+      }
+    },
+    "2": {
+      "run-v1": {
+        "digest": "13006bf806f984afc400f33b717fda748f7e1bfac03ae8321276585d6c8e1e56",
+        "execution_order": [
+          "research_a",
+          "research_b",
+          "join",
+          "review",
+          "deliver"
+        ],
+        "interrupts": [],
+        "node_statuses": {
+          "deliver": "completed",
+          "join": "completed",
+          "research_a": "completed",
+          "research_b": "completed",
+          "review": "completed"
+        },
+        "revision": 1,
+        "run_id": "run-v1",
+        "status": "completed"
+      },
+      "run-v2": {
+        "digest": "8d8a56bd8b775e8b72d35f5c7f88bdac4f74137cf12a16ad5631d5a9ef604379",
+        "execution_order": [
+          "research_a",
+          "research_b",
+          "join",
+          "verify",
+          "review",
+          "deliver"
+        ],
+        "interrupts": [],
+        "node_statuses": {
+          "deliver": "completed",
+          "join": "completed",
+          "research_a": "completed",
+          "research_b": "completed",
+          "review": "completed",
+          "verify": "completed"
+        },
+        "revision": 2,
+        "run_id": "run-v2",
+        "status": "completed"
+      }
+    }
+  },
+  "review_bypass_rejected_by_fixture_validator": true,
+  "runs_per_harness": 2,
+  "same_process_publication": true,
+  "second_harness": {
+    "harness_id": "6626e7cc-1473-47ae-8fe7-59dc83a819b4",
+    "v1": {
+      "digest": "13006bf806f984afc400f33b717fda748f7e1bfac03ae8321276585d6c8e1e56",
+      "execution_order": [
+        "research_a",
+        "research_b",
+        "join",
+        "review"
+      ],
+      "interrupts": [
+        {
+          "id": "v1:before_node_call:20254391-964b-5683-8248-eb871916c406:8265aa86-1b0a-5996-ba91-057fb3bb7b1a",
+          "name": "director_gate",
+          "reason": {
+            "revision": 1,
+            "run_id": "run-v1"
+          }
+        }
+      ],
+      "node_statuses": {
+        "join": "completed",
+        "research_a": "completed",
+        "research_b": "completed",
+        "review": "completed"
+      },
+      "revision": 1,
+      "run_id": "run-v1",
+      "status": "interrupted"
+    },
+    "v2": {
+      "digest": "8d8a56bd8b775e8b72d35f5c7f88bdac4f74137cf12a16ad5631d5a9ef604379",
+      "execution_order": [
+        "research_a",
+        "research_b",
+        "join",
+        "verify",
+        "review"
+      ],
+      "interrupts": [
+        {
+          "id": "v1:before_node_call:20254391-964b-5683-8248-eb871916c406:8265aa86-1b0a-5996-ba91-057fb3bb7b1a",
+          "name": "director_gate",
+          "reason": {
+            "revision": 2,
+            "run_id": "run-v2"
+          }
+        }
+      ],
+      "node_statuses": {
+        "join": "completed",
+        "research_a": "completed",
+        "research_b": "completed",
+        "review": "completed",
+        "verify": "completed"
+      },
+      "revision": 2,
+      "run_id": "run-v2",
+      "status": "interrupted"
+    }
+  },
+  "sigkill_then_new_process_resume": true,
+  "startup_to_two_paused_runs_seconds": {
+    "harness_one": 0.789,
+    "harness_two": 0.719
+  },
+  "strands_agents": "1.57.0"
+}

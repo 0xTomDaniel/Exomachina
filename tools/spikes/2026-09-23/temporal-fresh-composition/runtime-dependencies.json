@@ -1,0 +1,28 @@
+{
+  "binaries": {
+    "postgres": {
+      "bytes": 8367984,
+      "path": "/opt/homebrew/opt/postgresql@16/bin/postgres",
+      "sha256": "1436f8edadd644ca3bdf7a2b7f7712b30cb23319ce310050bc3e179433921957"
+    },
+    "temporal_cli": {
+      "bytes": 150806194,
+      "path": "/tmp/exomachina-temporal-evaluation/temporal",
+      "sha256": "33c298d41f6eefebf01a28a3511f444480e939e21d3518cb0c12a4abad467c4b"
+    },
+    "temporal_server": {
+      "bytes": 143368082,
+      "path": "/tmp/exomachina-countertrials/temporal/runtime/temporal-server",
+      "sha256": "f1663788fd4d8d702576b659db212b4d45a8dbfc0909eb7f7a86d0d442de6a60"
+    },
+    "temporal_sql_tool": {
+      "bytes": 39794690,
+      "path": "/tmp/exomachina-countertrials/temporal/runtime/temporal-sql-tool",
+      "sha256": "ae3f05c59696f3466800cb5a0e1d57d3809ffc35834e7de9ca2e6bd2c747e71b"
+    }
+  },
+  "python_environment_lock": "tools/spikes/2026-09-23/temporal-fresh-composition/uv.lock",
+  "schema": "exomachina.temporal-fresh.runtime-dependencies/1",
+  "strands_a2a_environment_lock": "tools/spikes/2026-09-22/s2/uv.lock",
+  "temporalio_python_sdk": "1.33.0"
+}
